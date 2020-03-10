@@ -60,4 +60,5 @@ def prefix_prefix(w, m):
     else:
       PREF[i] = (s_max - i + 1) + naive_scan(s_max + 1, s_max - i + 2)
       s = i
+  PREF[1] = m
   return PREF
