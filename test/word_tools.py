@@ -1,12 +1,12 @@
 class ComparisonCount:
   def __init__(self, w, debug = False):
-    self.w, self.compared, self.debug = w, 0, debug
+    self.word, self.compared, self.debug = w, 0, debug
 
   def __getitem__(self, key):
     self.compared += 1
     if self.debug:
-      print(key, self.w[key])
-    return self.w[key]
+      print(key, self.word[key])
+    return self.word[key]
 
   def __len__(self):
-    return len(self.w)
+    return len(self.word)

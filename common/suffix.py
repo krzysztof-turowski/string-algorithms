@@ -46,7 +46,7 @@ def boyer_moore_shift(w, m):
     BM[m - S[k]] = m - k
   return BM
 
-def last_occurrence(w, m):
+def last_occurrence(w):
   LAST = {}
   for i, v in enumerate(w[1:]):
     LAST[v] = i + 1
