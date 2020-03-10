@@ -1,4 +1,4 @@
-from common import prefix, varia
+from common import prefix
 
 def weak_boyer_moore_shift_brute_force(w, m):
   B = prefix.prefix_suffix(w, m)
