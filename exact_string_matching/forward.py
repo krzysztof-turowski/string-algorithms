@@ -1,12 +1,14 @@
 from common import prefix
 
 def brute_force(t, w, n, m):
-  for i in range(1, n - m + 2):
+  i = 1
+  while i <= n - m + 1:
     j = 0
     while j < m and t[i + j] == w[j + 1]:
       j = j + 1
     if j == m:
       yield i
+    i = i + 1
 
 def morris_pratt(t, w, n, m):
   B = prefix.prefix_suffix(w, m)
