@@ -18,9 +18,7 @@ def morris_pratt(t, w, n, m):
       j = j + 1
     if j == m:
       yield i
-      i, j = i + j - B[j], max(0, B[j])
-    else:
-      i, j = i + j - B[j], max(0, B[j])
+    i, j = i + j - B[j], max(0, B[j])
 
 def knuth_morris_pratt(t, w, n, m):
   sB = prefix.strong_prefix_suffix(w, m)

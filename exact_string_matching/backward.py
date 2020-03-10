@@ -41,7 +41,7 @@ def boyer_moore_bad_shift(t, w, n, m):
       j = j - 1
     if j == 0:
       yield i
-    bad_character = LAST.get(t[i + j - 1], 0) if i + j - 1 <= n else 0
+    bad_character = LAST.get(t[i + j - 1], 0) if j > 0 else 0
     i = i + max(BM[j], j - bad_character)
 
 def bad_shift_heuristic(t, w, n, m):
@@ -53,7 +53,7 @@ def bad_shift_heuristic(t, w, n, m):
       j = j - 1
     if j == 0:
       yield i
-    bad_character = LAST.get(t[i + j - 1], 0) if i + j - 1 <= n else 0
+    bad_character = LAST.get(t[i + j - 1], 0)
     i = i + max(1, j - bad_character)
 
 def quick_search(t, w, n, m):
@@ -72,11 +72,12 @@ def horspool(t, w, n, m):
   LAST = suffix.last_occurrence(w[:-1])
   i = 1
   while i <= n - m + 1:
-    if t[i + m - 1] == w[m]:
+    c = t[i + m - 1]
+    if w[m] == c:
       j = 1
       while j < m and t[i + j - 1] == w[j]:
         j = j + 1
       if j == m:
         yield i
-    bad_character = LAST.get(t[i + m - 1], 0) if i + m - 1 <= n else 0
+    bad_character = LAST.get(c, 0)
     i = i + (m - bad_character)
