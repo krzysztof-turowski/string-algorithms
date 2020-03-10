@@ -3,7 +3,7 @@ class ComparisonCount:
     self.word, self.compared, self.debug = w, 0, debug
 
   def __getitem__(self, key):
-    self.compared += 1
+    self.compared += len(self.word[key]) if isinstance(key, slice) else 1
     if self.debug:
       print(key, self.word[key])
     return self.word[key]
