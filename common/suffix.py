@@ -16,9 +16,8 @@ def weak_boyer_moore_shift(w, m):
   return weak_boyer_moore_shift_brute_force(w, m)
 
 def boyer_moore_shift_brute_force(w, m):
-  p = prefix.period(w, m)
-  BM = [m - p] + [m] * m
-  for i in range(m):
+  BM = [m] * (m + 1)
+  for i in range(m + 1):
     for s in range(1, m):
       start = max(i, s) + 1
       if w[start - s:-s] == w[start:] and (s >= i or w[i - s] != w[i]):
