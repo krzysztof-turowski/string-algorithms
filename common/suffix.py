@@ -1,8 +1,7 @@
 from common import prefix
 
 def weak_boyer_moore_shift_brute_force(w, m):
-  B = prefix.prefix_suffix(w, m)
-  wBM = [m - B[m]] + [m] * m
+  wBM = [m] * (m + 1)
   for i in range(1, m + 1):
     for s in range(1, m + 1):
       start = max(i, s) + 1
@@ -17,8 +16,8 @@ def weak_boyer_moore_shift(w, m):
   return weak_boyer_moore_shift_brute_force(w, m)
 
 def boyer_moore_shift_brute_force(w, m):
-  B = prefix.prefix_suffix(w, m)
-  BM = [m - B[m]] + [m] * m
+  p = prefix.period(w, m)
+  BM = [m - p] + [m] * m
   for i in range(m):
     for s in range(1, m):
       start = max(i, s) + 1
@@ -34,8 +33,8 @@ def maximum_suffixes(w, m):
   return S
 
 def boyer_moore_shift(w, m):
-  B = prefix.prefix_suffix(w, m)
-  BM = [m - B[m]] + [m] * m
+  p = prefix.period(w, m)
+  BM = [m - p] + [m] * m
   S, j = maximum_suffixes(w, m), 0
   for k in range(m - 1, -1, -1):
     if k == S[k]:

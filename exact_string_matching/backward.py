@@ -46,7 +46,7 @@ def boyer_moore_galil(t, w, n, m):
       i, memory = i + BM[j], 0
 
 def boyer_moore_bad_shift(t, w, n, m):
-  BM, LAST = suffix.boyer_moore_shift(w, m), suffix.last_occurrence(w)
+  BM, LAST = suffix.boyer_moore_shift(w, m), suffix.last_occurrence(w[:-1])
   i = 1
   while i <= n - m + 1:
     j = m
@@ -54,7 +54,7 @@ def boyer_moore_bad_shift(t, w, n, m):
       j = j - 1
     if j == 0:
       yield i
-    bad_character = LAST.get(t[i + j - 1], 0) if j > 0 else 0
+    bad_character = LAST.get(t[i + j - 1], 0)
     i = i + max(BM[j], j - bad_character)
 
 def bad_shift_heuristic(t, w, n, m):
