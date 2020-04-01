@@ -8,15 +8,15 @@ class TrieNode:
     self.children[child.label[0]] = child
     child.parent = self
 
-  def contains(self, w):
-    if len(w) == 0:
+  def contains(self, word, m):
+    if m == 0:
       return True
-    if w[0] not in self.children:
+    if word[0] not in self.children:
       return False
-    child = self.children[w[0]]
-    if len(w) <= len(child.label):
-      return w == child.label[:len(w)]
-    return w[:len(child.label)] and child.contains(w[len(child.label):])
+    child = self.children[word[0]]
+    if m <= len(child.label):
+      return child.label.startswith(word)
+    return word.startswith(child.label) and child.contains(word[len(child.label):], m - len(child.label))
 
   @staticmethod
   def compare(this, other):
