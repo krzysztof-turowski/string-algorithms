@@ -59,7 +59,7 @@ def mccreight(text, n):
     leaf = trie.TrieNode(text[-remaining:])
     head.add_child(leaf)
   return root, S
-  
+
 def ukkonen(text, n):
   text = text + '$'
   root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])

@@ -1,4 +1,3 @@
-from common import trie
 from string_indexing import suffix_tree
 
 def naive(text, n):

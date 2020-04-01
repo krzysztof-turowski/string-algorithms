@@ -14,9 +14,10 @@ class TrieNode:
     if word[0] not in self.children:
       return False
     child = self.children[word[0]]
-    if m <= len(child.label):
+    label = child.label
+    if m <= len(label):
       return child.label.startswith(word)
-    return word.startswith(child.label) and child.contains(word[len(child.label):], m - len(child.label))
+    return word.startswith(label) and child.contains(word[len(label):], m - len(label))
 
   @staticmethod
   def compare(this, other):
