@@ -7,14 +7,14 @@ def break_node(parent, child, index):
   parent.add_child(u)
   return u
 
-def fast_find(v, w):
+def fast_find(v, w, split):
   index = 0
   while index < len(w) and w[index] in v.children:
     child = v.children[w[index]]
     if index + len(child.label) > len(w):
-      return break_node(v, child, len(w) - index)
+      return (break_node(v, child, len(w) - index) if split else v), len(w) - index
     v, index = child, index + len(child.label)
-  return v
+  return v, len(w) - index
 
 def slow_find(v, w):
   index = 0
@@ -53,9 +53,42 @@ def mccreight(text, n):
       else:
         beta = head.parent.children[head.label[0]].label
       gamma = head.children[leaf.label[0]].label
-      v = fast_find(S[head.parent], beta)
+      v, _ = fast_find(S[head.parent], beta, split = True)
     S[head] = v
     head, remaining = slow_find(v, gamma)
     leaf = trie.TrieNode(text[-remaining:])
     head.add_child(leaf)
-  return root
+  return root, S
+  
+def ukkonen(text, n):
+  text = text + '$'
+  root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
+  root.add_child(leaf)
+  S, head, shift = { }, root, 0
+  for i in range(2, n + 2):
+    previous_head = None
+    while True:
+      v = head
+      if shift > 0:
+        child = head.children.get(text[i - shift])
+        if child is not None and shift < len(child.label) and child.label[shift] == text[i]:
+          break
+        v = break_node(head, child, shift)
+      elif text[i] in head.children:
+        break
+      v.add_child(trie.TrieNode(text[i:]))
+      if previous_head is not None and previous_head != root:
+        S[previous_head] = v
+      previous_head = v
+      if head == root:
+        shift -= 1
+      else:
+        head = S[head]
+      if shift > 0:
+        head, shift = fast_find(head, text[i - shift:i], split = False)
+    if previous_head is not None and previous_head != root:
+      S[previous_head] = v
+    shift += 1
+    if shift > 0:
+      head, shift = fast_find(head, text[i - shift + 1:i + 1], split = False)
+  return root, S
