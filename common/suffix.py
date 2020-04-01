@@ -18,7 +18,7 @@ def weak_boyer_moore_shift(w, m):
 def boyer_moore_shift_brute_force(w, m):
   BM = [m] * (m + 1)
   for i in range(m + 1):
-    for s in range(1, m):
+    for s in range(1, m + 1):
       start = max(i, s) + 1
       if w[start - s:-s] == w[start:] and (s >= i or w[i - s] != w[i]):
         BM[i] = s
