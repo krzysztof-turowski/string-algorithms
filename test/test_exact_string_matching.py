@@ -1,5 +1,6 @@
 from common import prefix, suffix
 from exact_string_matching import forward, backward, other
+from string_indexing import suffix_array
 
 def test_prefix_suffix(t, n, reference):
   assert prefix.prefix_suffix(t, n) == reference
@@ -29,7 +30,8 @@ def test_get_first_exact_match(t, w, n, m, reference):
   assert next(backward.horspool(t, w, n, m)) == reference
   assert next(backward.boyer_moore_galil(t, w, n, m)) == reference
   assert next(other.fast_on_average(t, w, n, m)) == reference
-  # TODO: suffix_tree and suffix_array matching
+  # TODO: suffix_tree matching
+  assert next(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m)) == reference
 
 def test_get_all_exact_matches(t, w, n, m, reference):
   assert list(forward.brute_force(t, w, n, m)) == reference
@@ -43,6 +45,7 @@ def test_get_all_exact_matches(t, w, n, m, reference):
   assert list(backward.horspool(t, w, n, m)) == reference
   assert list(backward.boyer_moore_galil(t, w, n, m)) == reference
   assert list(other.fast_on_average(t, w, n, m)) == reference
+  assert list(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m)) == reference
 
 def test_no_match(t, w, n, m):
   assert not list(forward.brute_force(t, w, n, m))
@@ -56,6 +59,7 @@ def test_no_match(t, w, n, m):
   assert not list(backward.horspool(t, w, n, m))
   assert not list(backward.boyer_moore_galil(t, w, n, m))
   assert not list(other.fast_on_average(t, w, n, m))
+  assert not list(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m))
 
 test_prefix_suffix('#abaab', 5, [-1, 0, 0, 1, 1, 2])
 test_prefix_suffix('#abababababb', 11, [-1, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0])
