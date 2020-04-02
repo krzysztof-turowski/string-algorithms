@@ -41,6 +41,7 @@ def prefix_prefix_brute_force(w, m):
       if w[i:i+j] == w[1:1+j]:
         PREF[i] = j
         break
+  PREF[1] = m
   return PREF
 
 def prefix_prefix(w, m):
