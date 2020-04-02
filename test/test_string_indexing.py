@@ -1,11 +1,4 @@
-# pylint: skip-file
-
-import os
-import sys
-
-sys.path.append(os.path.abspath('.'))
-
-from string_indexing import suffix_tree, suffix_array
+from string_indexing import suffix_array
 
 # TODO: test suffix_tree
 
