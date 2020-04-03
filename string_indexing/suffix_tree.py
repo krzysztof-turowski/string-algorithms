@@ -69,7 +69,7 @@ def ukkonen(text, n):
   text = text + '$'
   root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
   root.add_child(leaf)
-  S, head, shift = { }, root, 0
+  S, head, shift = {root : root}, root, 0
   for i in range(2, n + 2):
     previous_head = None
     while True:

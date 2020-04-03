@@ -2,10 +2,11 @@ class TrieNode:
   def __init__(self, w):
     self.label = w
     self.children = {}
-    self.parent, self.depth = None, None
+    self.index, self.parent, self.depth = None, None, None
 
   def add_child(self, child):
     self.children[child.label[0]] = child
+    child.parent = self
 
   def get_all_leaves(self, f):
     if len(self.children) == 0:
@@ -13,10 +14,11 @@ class TrieNode:
     return [value for _, child in sorted(self.children.items())
             for value in child.get_all_leaves(f)]
 
-  def set_parent(self):
-    for _, child in self.children.items():
-      child.parent = self
-      child.set_parent()
+  def set_index(self, index = 0):
+    for _, child in sorted(self.children.items()):
+      index = child.set_index(index)
+    self.index = index
+    return index + 1
 
   def set_depth(self, depth = 0):
     self.depth = depth
