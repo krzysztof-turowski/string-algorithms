@@ -26,6 +26,11 @@ def slow_find(v, w):
     v, index = child, index + len(child.label)
   return v, len(w) - index
 
+def contains(ST, _, word, n, m):
+  ST.set_depth()
+  v = ST.find_node(word[1:], m)
+  yield from sorted(v.get_all_leaves(lambda x: n + 2 - x.depth)) if v is not None else []
+
 def naive(text, n):
   text = text + '$'
   root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])

@@ -3,12 +3,8 @@ def naive(text, n):
   return [i for _, i in sorted([(text[i:], i) for i in range(1, n + 2)])]
 
 def suffix_array_from_suffix_tree(ST, n):
-  def traverse(v, depth):
-    depth -= len(v.label)
-    if len(v.children) == 0:
-      return [depth]
-    return [d for _, child in sorted(v.children.items()) for d in traverse(child, depth)]
-  return traverse(ST, n + 2)
+  ST.set_depth()
+  return ST.get_all_leaves(lambda x: n + 2 - x.depth)
 
 def contains(SA, text, word, n, m):
   def binary_search(f):
