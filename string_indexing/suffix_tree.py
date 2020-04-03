@@ -71,29 +71,24 @@ def ukkonen(text, n):
   root.add_child(leaf)
   S, head, shift = {root : root}, root, 0
   for i in range(2, n + 2):
-    previous_head = None
-    while True:
-      v = head
-      if shift > 0:
-        child = head.children.get(text[i - shift])
-        if child is not None and shift < len(child.label) and child.label[shift] == text[i]:
-          break
-        v = break_node(head, child, shift)
-      elif text[i] in head.children:
-        break
-      v.add_child(trie.TrieNode(text[i:]))
-      if previous_head is not None and previous_head != root:
-        S[previous_head] = v
-      previous_head = v
-      if head == root:
-        shift -= 1
-      else:
-        head = S[head]
-      if shift > 0:
-        head, shift = fast_find(head, text[i - shift:i], split = False)
-    if previous_head is not None and previous_head != root:
-      S[previous_head] = v
-    shift += 1
-    if shift > 0:
-      head, shift = fast_find(head, text[i - shift + 1:i + 1], split = False)
+    child = head.children.get(text[i - shift])
+    if child is None or shift >= len(child.label) or text[i] != child.label[shift]:
+      previous_head = None
+      while shift > 0 or text[i] not in head.children:
+        v = break_node(head, head.children[text[i - shift]], shift) if shift > 0 else head
+        v.add_child(trie.TrieNode(text[i:]))
+        if head == root:
+          shift -= 1
+        if previous_head is not None:
+          S[previous_head] = v
+        previous_head, head = v, S[head]
+        if shift > 0:
+          head, shift = fast_find(head, text[i - shift:i], split = False)
+      if previous_head is not None:
+        S[previous_head] = head
+      child = head.children.get(text[i - shift]) if shift >= 0 else None
+    if child is not None and len(child.label) == shift + 1:
+      head, shift = head.children[text[i - shift]], 0
+    else:
+      shift += 1
   return root, S
