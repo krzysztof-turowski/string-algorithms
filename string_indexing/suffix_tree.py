@@ -26,11 +26,6 @@ def slow_find(v, w):
     v, index = child, index + len(child.label)
   return v, len(w) - index
 
-def contains(ST, _, word, n, m):
-  ST.set_depth()
-  v = ST.find_node(word[1:], m)
-  yield from sorted(v.get_all_leaves(lambda x: n + 2 - x.depth)) if v is not None else []
-
 def naive(text, n):
   text = text + '$'
   root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
@@ -40,6 +35,25 @@ def naive(text, n):
     leaf = trie.TrieNode(text[-remaining:])
     head.add_child(leaf)
   return root
+
+def weiner(text, n):
+  text = text + '$'
+  root = trie.TrieNode("")
+  link, head = { }, root
+  for i in range(n + 1, 0, -1):
+    # niezmiennik: link[v][c] = u jest zdefiniowane zawsze gdy word(u) = c word(v)
+    v, depth = head, -1
+    while v != root and link.get((v, text[i])) is None:
+      v, depth = v.parent, depth - len(v.label)
+    u = link.get((v, text[i])) if v != root else root
+    if text[i] in u.children:
+      v, shift = slow_find(u, text[depth:])
+      depth = -shift
+    leaf = trie.TrieNode(text[depth:])
+    v.add_child(leaf)
+    link[(head, text[i])] = leaf
+    head = leaf
+  return root, link
 
 def mccreight(text, n):
   text = text + '$'
@@ -71,6 +85,7 @@ def ukkonen(text, n):
   root.add_child(leaf)
   S, head, shift = {root : root}, root, 0
   for i in range(2, n + 2):
+    # niezmiennik: S[v] jest zdefiniowane dla wszystkich v != head(i - 1)
     child = head.children.get(text[i - shift])
     if child is None or shift >= len(child.label) or text[i] != child.label[shift]:
       previous_head = None
@@ -92,3 +107,8 @@ def ukkonen(text, n):
     else:
       shift += 1
   return root, S
+
+def contains(ST, _, word, n, m):
+  ST.set_depth()
+  v = ST.find_node(word[1:], m)
+  yield from sorted(v.get_all_leaves(lambda x: n + 2 - x.depth)) if v is not None else []

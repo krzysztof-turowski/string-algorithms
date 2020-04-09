@@ -2,10 +2,16 @@ from common import trie
 from generator import rand
 from string_indexing import suffix_tree
 
+SUFFIX_TREE_ALGORITHMS = [
+    suffix_tree.weiner,
+    suffix_tree.mccreight,
+    suffix_tree.ukkonen,
+]
+
 def random_suffix_tree_test(n, A):
   t = rand.random_word(n, A)
   reference_result = suffix_tree.naive(t, n)
-  for algorithm in [suffix_tree.mccreight, suffix_tree.ukkonen]:
+  for algorithm in SUFFIX_TREE_ALGORITHMS:
     result, _ = algorithm(t, n)
     assert trie.TrieNode.compare(reference_result, result)
 
