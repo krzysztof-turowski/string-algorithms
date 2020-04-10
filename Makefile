@@ -1,13 +1,7 @@
 all: check
 
 check:
-	find . -type f -name "*.py" | grep -v "backup" | xargs pylint --indent-string='  ' --variable-naming-style=any --argument-naming-style=any --class-attribute-naming-style=any --disable=missing-docstring,bad-whitespace,fixme
+	find . -type f -name "*.py" | grep -v "backup" | xargs pylint --indent-string='  ' --variable-naming-style=any --argument-naming-style=any --class-attribute-naming-style=any --disable=missing-docstring,bad-whitespace,too-many-arguments,fixme --max-line-length=80
 
-CPP_DIR := backup
-CPP_SRCS := $(wildcard $(CPP_DIR)/*.cpp)
-CPP_EXEC := $(patsubst $(CPP_DIR)/%.cpp,$(CPP_DIR)/%.exe,$(CPP_SRCS))
-
-backup-g++: $(CPP_EXEC)
-
-%.exe: %.cpp
-	g++ -O3 $< -o $@
+test:
+	python3 -B -m unittest discover test -v
