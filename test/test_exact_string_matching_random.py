@@ -23,7 +23,8 @@ def random_exact_string_matching_test(n, m, A):
 
 def random_boyer_moore_shift_test(m, A):
   w = rand.random_word(m, A)
-  assert suffix.boyer_moore_shift_brute_force(w, m) == suffix.boyer_moore_shift(w, m)
+  assert (suffix.boyer_moore_shift_brute_force(w, m) ==
+          suffix.boyer_moore_shift(w, m))
 
 for _ in range(200):
   random_exact_string_matching_test(3000, 50, ['a', 'b'])

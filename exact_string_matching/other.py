@@ -10,5 +10,6 @@ def fast_on_average(text, word, n, m):
     if ST.find_node(text[(i - r):(i + 1)], r + 1) is not None:
       subtext = text[0] + text[(i - m + 1):(i + m - r)]
       subn = min(i + m - r, n + 1) - (i - m + 1)
-      yield from [v + i - m for v in forward.knuth_morris_pratt(subtext, word, subn, m)]
+      yield from [v + i - m
+                  for v in forward.knuth_morris_pratt(subtext, word, subn, m)]
     i = i + m - r

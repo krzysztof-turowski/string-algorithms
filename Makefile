@@ -1,7 +1,7 @@
 all: check
 
 check:
-	find . -type f -name "*.py" | grep -v "backup" | xargs pylint --indent-string='  ' --variable-naming-style=any --argument-naming-style=any --class-attribute-naming-style=any --disable=missing-docstring,bad-whitespace,fixme
+	find . -type f -name "*.py" | grep -v "backup" | xargs pylint --indent-string='  ' --variable-naming-style=any --argument-naming-style=any --class-attribute-naming-style=any --disable=missing-docstring,bad-whitespace,fixme --max-line-length=80
 
 CPP_DIR := backup
 CPP_SRCS := $(wildcard $(CPP_DIR)/*.cpp)

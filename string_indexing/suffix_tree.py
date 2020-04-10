@@ -12,7 +12,8 @@ def fast_find(v, w, split):
   while index < len(w) and w[index] in v.children:
     child = v.children[w[index]]
     if index + len(child.label) > len(w):
-      return (break_node(v, child, len(w) - index) if split else v), len(w) - index
+      return (
+          break_node(v, child, len(w) - index) if split else v), len(w) - index
     v, index = child, index + len(child.label)
   return v, len(w) - index
 
@@ -48,7 +49,7 @@ def weiner(text, n):
   root = trie.TrieNode("")
   link, head = { (root, ""): root }, root
   for i in range(n + 1, 0, -1):
-    # niezmiennik: link[v][c] = u dla wewnętrznych u i v takich, że word(u) = c word(v)
+    # niezmiennik: link[v][c] = u dla u i v takich, że word(u) = c word(v)
     v, depth = head, n + 2
     while v != root and link.get((v, text[i])) is None:
       v, depth = v.parent, depth - len(v.label)
@@ -99,10 +100,12 @@ def ukkonen(text, n):
   for i in range(2, n + 2):
     # niezmiennik: S[v] jest zdefiniowane dla wszystkich v != head(i - 1)
     child = head.children.get(text[i - shift])
-    if child is None or shift >= len(child.label) or text[i] != child.label[shift]:
+    if (child is None or shift >= len(child.label)
+        or text[i] != child.label[shift]):
       previous_head = None
       while shift > 0 or text[i] not in head.children:
-        v = break_node(head, head.children[text[i - shift]], shift) if shift > 0 else head
+        v = (break_node(head, head.children[text[i - shift]], shift)
+             if shift > 0 else head)
         v.add_child(trie.TrieNode(text[i:]))
         if head == root:
           shift -= 1
@@ -123,4 +126,5 @@ def ukkonen(text, n):
 def contains(ST, _, word, n, m):
   ST.set_depth()
   v = ST.find_node(word[1:], m)
-  yield from sorted(v.get_all_leaves(lambda x: n + 2 - x.depth)) if v is not None else []
+  yield from sorted(
+      v.get_all_leaves(lambda x: n + 2 - x.depth)) if v is not None else []

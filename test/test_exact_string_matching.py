@@ -30,8 +30,10 @@ def test_get_first_exact_match(t, w, n, m, reference):
   assert next(backward.horspool(t, w, n, m)) == reference
   assert next(backward.boyer_moore_galil(t, w, n, m)) == reference
   assert next(other.fast_on_average(t, w, n, m)) == reference
-  assert next(suffix_tree.contains(suffix_tree.mccreight(t, n)[0], t, w, n, m)) == reference
-  assert next(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m)) == reference
+  assert next(suffix_tree.contains(
+      suffix_tree.mccreight(t, n)[0], t, w, n, m)) == reference
+  assert next(suffix_array.contains(
+      suffix_array.naive(t, n), t, w, n, m)) == reference
 
 def test_get_all_exact_matches(t, w, n, m, reference):
   assert list(forward.brute_force(t, w, n, m)) == reference
@@ -45,8 +47,10 @@ def test_get_all_exact_matches(t, w, n, m, reference):
   assert list(backward.horspool(t, w, n, m)) == reference
   assert list(backward.boyer_moore_galil(t, w, n, m)) == reference
   assert list(other.fast_on_average(t, w, n, m)) == reference
-  assert list(suffix_tree.contains(suffix_tree.mccreight(t, n)[0], t, w, n, m)) == reference
-  assert list(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m)) == reference
+  assert list(suffix_tree.contains(
+      suffix_tree.mccreight(t, n)[0], t, w, n, m)) == reference
+  assert list(suffix_array.contains(
+      suffix_array.naive(t, n), t, w, n, m)) == reference
 
 def test_no_match(t, w, n, m):
   assert not list(forward.brute_force(t, w, n, m))
@@ -60,7 +64,8 @@ def test_no_match(t, w, n, m):
   assert not list(backward.horspool(t, w, n, m))
   assert not list(backward.boyer_moore_galil(t, w, n, m))
   assert not list(other.fast_on_average(t, w, n, m))
-  assert not list(suffix_tree.contains(suffix_tree.mccreight(t, n)[0], t, w, n, m))
+  assert not list(suffix_tree.contains(
+      suffix_tree.mccreight(t, n)[0], t, w, n, m))
   assert not list(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m))
 
 test_prefix_suffix('#abaab', 5, [-1, 0, 0, 1, 1, 2])
