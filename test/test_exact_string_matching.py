@@ -1,10 +1,17 @@
+# pylint: skip-file
+
+import os
+import sys
+
+sys.path.append(os.path.abspath('.'))
+
 from common import prefix, suffix
 from exact_string_matching import forward, backward, other
+from string_indexing import suffix_array
 
 def test_prefix_suffix(t, n, reference):
   assert prefix.prefix_suffix(t, n) == reference
-  assert prefix.prefix_suffix_from_strong_prefix_suffix(
-      prefix.strong_prefix_suffix(t, n)) == reference
+  assert prefix.prefix_suffix_from_strong_prefix_suffix(prefix.strong_prefix_suffix(t, n)) == reference
 
 def test_strong_prefix_suffix(t, n, reference):
   assert prefix.strong_prefix_suffix(t, n) == reference
