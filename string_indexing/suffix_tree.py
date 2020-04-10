@@ -12,7 +12,8 @@ def fast_find(v, w, split):
   while index < len(w) and w[index] in v.children:
     child = v.children[w[index]]
     if index + len(child.label) > len(w):
-      return (break_node(v, child, len(w) - index) if split else v), len(w) - index
+      return (
+          break_node(v, child, len(w) - index) if split else v), len(w) - index
     v, index = child, index + len(child.label)
   return v, len(w) - index
 
@@ -28,7 +29,7 @@ def slow_find(v, w):
 
 def naive(text, n):
   text = text + '$'
-  root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
+  root, leaf = trie.TrieNode(''), trie.TrieNode(text[1:])
   root.add_child(leaf)
   for i in range(2, n + 2):
     head, remaining = slow_find(root, text[i:])
@@ -36,19 +37,43 @@ def naive(text, n):
     head.add_child(leaf)
   return root
 
+def weiner(text, n):
+  text = text + '$'
+  root = trie.TrieNode('')
+  link, head = { (root, ''): root }, root
+  for i in range(n + 1, 0, -1):
+    # niezmiennik: link[v][c] = u dla u i v takich, ze word(u) = c word(v)
+    v, depth = head, n + 2
+    while v != root and link.get((v, text[i])) is None:
+      v, depth = v.parent, depth - len(v.label)
+    u = link.get((v, text[i]))
+    if u is None or text[depth] in u.children:
+      if u is None:
+        u, remaining = slow_find(root, text[depth - 1:])
+      else:
+        u, remaining = slow_find(u, text[depth:])
+      v, _ = fast_find(v, text[depth:-remaining], False)
+      depth = len(text) - remaining
+      if u != root:
+        link[(v, text[i])] = u
+    leaf = trie.TrieNode(text[depth:])
+    u.add_child(leaf)
+    head = leaf
+  return root, link
+
 def mccreight(text, n):
   text = text + '$'
-  root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
+  root, leaf = trie.TrieNode(''), trie.TrieNode(text[1:])
   root.add_child(leaf)
   S, head = { }, root
   for _ in range(2, n + 2):
     # niezmiennik: S[v] jest zdefiniowane dla wszystkich v != head(i - 1)
     if head == root:
-      # wyjątek 1: drzewo z jednym liściem
-      beta, gamma, v = "", head.children[leaf.label[0]].label[1:], root
+      # wyjatek 1: drzewo z jednym lisciem
+      beta, gamma, v = '', head.children[leaf.label[0]].label[1:], root
     else:
       if head.parent == root:
-        # wyjątek 2: head.parent jest rootem
+        # wyjatek 2: head.parent jest rootem
         beta = head.parent.children[head.label[0]].label[1:]
       else:
         beta = head.parent.children[head.label[0]].label
@@ -62,33 +87,37 @@ def mccreight(text, n):
 
 def ukkonen(text, n):
   text = text + '$'
-  root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
+  root, leaf = trie.TrieNode(''), trie.TrieNode(text[1:])
   root.add_child(leaf)
-  S, head, shift = { }, root, 0
+  S, head, shift = {root : root}, root, 0
   for i in range(2, n + 2):
-    previous_head = None
-    while True:
-      v = head
-      if shift > 0:
-        child = head.children.get(text[i - shift])
-        if child is not None and shift < len(child.label) and child.label[shift] == text[i]:
-          break
-        v = break_node(head, child, shift)
-      elif text[i] in head.children:
-        break
-      v.add_child(trie.TrieNode(text[i:]))
-      if previous_head is not None and previous_head != root:
-        S[previous_head] = v
-      previous_head = v
-      if head == root:
-        shift -= 1
-      else:
-        head = S[head]
-      if shift > 0:
-        head, shift = fast_find(head, text[i - shift:i], split = False)
-    if previous_head is not None and previous_head != root:
-      S[previous_head] = v
-    shift += 1
-    if shift > 0:
-      head, shift = fast_find(head, text[i - shift + 1:i + 1], split = False)
+    # niezmiennik: S[v] jest zdefiniowane dla wszystkich v != head(i - 1)
+    child = head.children.get(text[i - shift])
+    if (child is None or shift >= len(child.label)
+        or text[i] != child.label[shift]):
+      previous_head = None
+      while shift > 0 or text[i] not in head.children:
+        v = (break_node(head, head.children[text[i - shift]], shift)
+             if shift > 0 else head)
+        v.add_child(trie.TrieNode(text[i:]))
+        if head == root:
+          shift -= 1
+        if previous_head is not None:
+          S[previous_head] = v
+        previous_head, head = v, S[head]
+        if shift > 0:
+          head, shift = fast_find(head, text[i - shift:i], split = False)
+      if previous_head is not None:
+        S[previous_head] = head
+      child = head.children.get(text[i - shift]) if shift >= 0 else None
+    if child is not None and len(child.label) == shift + 1:
+      head, shift = head.children[text[i - shift]], 0
+    else:
+      shift += 1
   return root, S
+
+def contains(ST, _, word, n, m):
+  ST.set_depth()
+  v = ST.find_node(word[1:], m)
+  yield from sorted(
+      v.get_all_leaves(lambda x: n + 2 - x.depth)) if v is not None else []

@@ -41,6 +41,7 @@ def prefix_prefix_brute_force(w, m):
       if w[i:i+j] == w[1:1+j]:
         PREF[i] = j
         break
+  PREF[1] = m
   return PREF
 
 def prefix_prefix(w, m):
@@ -51,7 +52,7 @@ def prefix_prefix(w, m):
     return r
   PREF, s = [-1] * 2 + [0] * (m - 1), 1
   for i in range(2, m + 1):
-    # niezmiennik: s jest takie, ze s + PREF[s] - 1 jest maksymalne i PREF[s] > 0
+    # niezmiennik: s takie, że PREF[s] > 0 i s + PREF[s] - 1 jest maksymalne
     k = i - s + 1
     s_max = s + PREF[s] - 1
     if s_max < i:
