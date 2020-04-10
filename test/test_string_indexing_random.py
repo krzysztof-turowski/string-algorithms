@@ -26,7 +26,20 @@ def random_suffix_links_test(n, A):
   assert trie.TrieNode.compare(mccreight[0], ukkonen[0])
   assert mccreight_result == ukkonen_result
 
+def random_backward_suffix_links_test(n, A):
+  t = rand.random_word(n, A)
+  mccreight = suffix_tree.mccreight(t, n)
+  mccreight[0].set_index()
+  mccreight_result = sorted([(u.index, v.index) for u, v in mccreight[1].items()])
+  weiner = suffix_tree.weiner(t, n)
+  weiner[0].set_index()
+  weiner_result = sorted([(v.index, u.index) for (u, _), v in weiner[1].items()])
+  assert trie.TrieNode.compare(mccreight[0], weiner[0])
+  assert mccreight_result == weiner_result
+
 for _ in range(200):
   random_suffix_tree_test(1000, ['a', 'b'])
 for _ in range(200):
   random_suffix_links_test(1000, ['a', 'b'])
+for _ in range(200):
+  random_backward_suffix_links_test(1000, ['a', 'b'])
