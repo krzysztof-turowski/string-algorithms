@@ -1,11 +1,15 @@
 from common import trie
 from generator import rand
-from string_indexing import suffix_tree
+from string_indexing import suffix_tree, suffix_array
 
 SUFFIX_TREE_ALGORITHMS = [
     suffix_tree.weiner,
     suffix_tree.mccreight,
     suffix_tree.ukkonen,
+]
+
+SUFFIX_ARRAY_ALGORITHMS = [
+    suffix_array.prefix_doubling,
 ]
 
 def random_suffix_tree_test(n, A):
@@ -40,9 +44,20 @@ def random_backward_suffix_links_test(n, A):
   assert trie.TrieNode.compare(mccreight[0], weiner[0])
   assert mccreight_result == weiner_result
 
+def random_suffix_array_test(n, A):
+  t = rand.random_word(n, A)
+  reference_result = suffix_array.naive(t, n)
+  for algorithm in SUFFIX_ARRAY_ALGORITHMS:
+    result = algorithm(t, n)
+    assert result == reference_result
+  assert suffix_array.suffix_array_from_suffix_tree(
+      suffix_tree.mccreight(t, n)[0], n) == reference_result
+
 for _ in range(200):
   random_suffix_tree_test(1000, ['a', 'b'])
 for _ in range(200):
   random_suffix_links_test(1000, ['a', 'b'])
 for _ in range(200):
   random_backward_suffix_links_test(1000, ['a', 'b'])
+for _ in range(200):
+  random_suffix_array_test(1000, ['a', 'b'])

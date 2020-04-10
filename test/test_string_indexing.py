@@ -4,6 +4,7 @@ from string_indexing import suffix_tree, suffix_array
 
 def test_suffix_array(t, n, reference):
   assert suffix_array.naive(t, n) == reference
+  assert suffix_array.prefix_doubling(t, n) == reference
   assert suffix_array.suffix_array_from_suffix_tree(
       suffix_tree.mccreight(t, n)[0], n) == reference
 
