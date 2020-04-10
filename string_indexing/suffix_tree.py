@@ -29,7 +29,7 @@ def slow_find(v, w):
 
 def naive(text, n):
   text = text + '$'
-  root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
+  root, leaf = trie.TrieNode(''), trie.TrieNode(text[1:])
   root.add_child(leaf)
   for i in range(2, n + 2):
     head, remaining = slow_find(root, text[i:])
@@ -37,19 +37,12 @@ def naive(text, n):
     head.add_child(leaf)
   return root
 
-def reconstruct(v):
-  out = ''
-  while v.parent is not None:
-    out = v.label + out
-    v = v.parent
-  return out
-
 def weiner(text, n):
   text = text + '$'
-  root = trie.TrieNode("")
-  link, head = { (root, ""): root }, root
+  root = trie.TrieNode('')
+  link, head = { (root, ''): root }, root
   for i in range(n + 1, 0, -1):
-    # niezmiennik: link[v][c] = u dla u i v takich, że word(u) = c word(v)
+    # niezmiennik: link[v][c] = u dla u i v takich, ze word(u) = c word(v)
     v, depth = head, n + 2
     while v != root and link.get((v, text[i])) is None:
       v, depth = v.parent, depth - len(v.label)
@@ -70,17 +63,17 @@ def weiner(text, n):
 
 def mccreight(text, n):
   text = text + '$'
-  root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
+  root, leaf = trie.TrieNode(''), trie.TrieNode(text[1:])
   root.add_child(leaf)
   S, head = { }, root
   for _ in range(2, n + 2):
     # niezmiennik: S[v] jest zdefiniowane dla wszystkich v != head(i - 1)
     if head == root:
-      # wyjątek 1: drzewo z jednym liściem
-      beta, gamma, v = "", head.children[leaf.label[0]].label[1:], root
+      # wyjatek 1: drzewo z jednym lisciem
+      beta, gamma, v = '', head.children[leaf.label[0]].label[1:], root
     else:
       if head.parent == root:
-        # wyjątek 2: head.parent jest rootem
+        # wyjatek 2: head.parent jest rootem
         beta = head.parent.children[head.label[0]].label[1:]
       else:
         beta = head.parent.children[head.label[0]].label
@@ -94,7 +87,7 @@ def mccreight(text, n):
 
 def ukkonen(text, n):
   text = text + '$'
-  root, leaf = trie.TrieNode(""), trie.TrieNode(text[1:])
+  root, leaf = trie.TrieNode(''), trie.TrieNode(text[1:])
   root.add_child(leaf)
   S, head, shift = {root : root}, root, 0
   for i in range(2, n + 2):

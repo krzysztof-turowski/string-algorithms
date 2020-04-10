@@ -37,12 +37,14 @@ class TrieNode:
     return child.find_node(
         word[len(label):], m - len(label)) if word.startswith(label) else None
 
-  @staticmethod
-  def compare(this, other):
-    if (this.label != other.label
-        or this.children.keys() != other.children.keys()):
+  def __hash__(self):
+    return object.__hash__(self)
+
+  def __eq__(self, other):
+    if (self.label != other.label
+        or self.children.keys() != other.children.keys()):
       return False
-    for key in this.children.keys():
-      if not TrieNode.compare(this.children[key], other.children[key]):
+    for key in self.children:
+      if self.children[key] != other.children[key]:
         return False
     return True

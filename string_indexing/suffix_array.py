@@ -21,7 +21,7 @@ def prefix_doubling(text, n):
     return result
   return sort_suffixes(range(1, n + 2), 1)
 
-def suffix_array_from_suffix_tree(ST, n):
+def from_suffix_tree(ST, n):
   ST.set_depth()
   return ST.get_all_leaves(lambda x: n + 2 - x.depth)
 
