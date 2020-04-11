@@ -127,3 +127,16 @@ class TestSuffixArrays(unittest.TestCase):
         t = '#' + ''.join(t)
         reference = suffix_array.naive(t, n)
         self.check_suffix_array(t, n, reference)
+
+class TestLcpArrays(unittest.TestCase):
+  run_large = unittest.skipUnless(
+      os.environ.get('LARGE', False), 'Skip test in small runs')
+
+  def check_lcp_array(self, t, n, reference):
+    self.assertEqual(
+        suffix_array.lcp_from_suffix_array(suffix_array.prefix_doubling(t, n), t, n),
+        reference,
+        'LCP array from suffix array')
+
+  def test_lcp_array(self):
+    self.check_lcp_array('#banana', 6, [-1, 0, 1, 3, 0, 0, 2])
