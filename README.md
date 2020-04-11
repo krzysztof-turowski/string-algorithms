@@ -10,7 +10,7 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 
 ### String indexing
 1. Suffix tree: Weiner, McCreight and Ukkonen algorithms
-2. Suffix array: Manber-Myers algorithm
+2. Suffix array: Karp-Miller-Rosenberg and Kärkkäinen-Sanders algorithms
 
 ## Testing
 
