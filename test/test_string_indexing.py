@@ -145,3 +145,22 @@ class TestLcpArrays(unittest.TestCase):
 
   def test_lcp_array(self):
     self.check_lcp_array('#banana', 6, [-1, 0, 1, 3, 0, 0, 2])
+
+  @run_large
+  def test_random_lcp_array(self):
+    T, n, A = 100, 500, ['a', 'b']
+    for _ in range(T):
+      t = rand.random_word(n, A)
+      reference = suffix_array.lcp_from_suffix_array(
+          suffix_array.prefix_doubling(t, n), t, n)
+      self.check_lcp_array(t, n, reference)
+
+  @run_large
+  def test_all_lcp_array(self):
+    N, A = 12, ['a', 'b']
+    for n in range(2, N + 1):
+      for t in itertools.product(A, repeat = n):
+        t = '#' + ''.join(t)
+        reference = suffix_array.lcp_from_suffix_array(
+            suffix_array.prefix_doubling(t, n), t, n)
+        self.check_lcp_array(t, n, reference)
