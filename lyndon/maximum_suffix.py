@@ -1,5 +1,3 @@
-from common import prefix
-
 def from_prefix_suffix(text, n):
   B, t, out = [-1] + [0] * n, -1, 1
   for i in range(1, n + 1):
@@ -15,4 +13,13 @@ def from_prefix_suffix(text, n):
   return out
 
 def constant_space(text, n):
-  raise NotImplementedError
+  out, p, i = 1, 1, 2
+  while i <= n:
+    r = (i - out) % p
+    if text[i] == text[out + r]:
+      i = i + 1
+    elif text[i] < text[out + r]:
+      i, p = i + 1, i + 1 - out
+    else:
+      out, i, p = i - r, i - r + 1, 1
+  return out
