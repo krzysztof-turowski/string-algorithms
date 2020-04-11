@@ -134,9 +134,14 @@ class TestLcpArrays(unittest.TestCase):
 
   def check_lcp_array(self, t, n, reference):
     self.assertEqual(
-        suffix_array.lcp_from_suffix_array(suffix_array.prefix_doubling(t, n), t, n),
+        suffix_array.lcp_from_suffix_array(
+            suffix_array.prefix_doubling(t, n), t, n),
         reference,
         'LCP array from suffix array')
+    self.assertEqual(
+        suffix_array.lcp_from_suffix_tree(suffix_tree.mccreight(t, n)[0]),
+        reference,
+        'LCP array from suffix tree')
 
   def test_lcp_array(self):
     self.check_lcp_array('#banana', 6, [-1, 0, 1, 3, 0, 0, 2])
