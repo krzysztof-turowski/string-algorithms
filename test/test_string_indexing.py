@@ -142,6 +142,10 @@ class TestLcpArrays(unittest.TestCase):
         suffix_array.lcp_from_suffix_tree(suffix_tree.mccreight(t, n)[0]),
         reference,
         'LCP array from suffix tree')
+    self.assertEqual(
+        suffix_array.lcp_kasai(suffix_array.prefix_doubling(t, n), t, n),
+        reference,
+        'Algorithm: kasai')
 
   def test_lcp_array(self):
     self.check_lcp_array('#banana', 6, [-1, 0, 1, 3, 0, 0, 2])
