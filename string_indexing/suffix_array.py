@@ -112,5 +112,5 @@ def lcp_kasai(SA, text, n):
       j = SA[R[i - 1]]
       while i + k <= n and j + k <= n and text[i + k] == text[j + k]:
         k += 1
-      L[R[i - 1]] = k;
+      L[R[i - 1]] = k
   return L
