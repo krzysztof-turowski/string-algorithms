@@ -104,13 +104,12 @@ def lcp_kasai(SA, text, n):
   L = [-1] * (n + 1)
   R, k = _reverse(SA), 0
   for i in range(1, n + 2):
-    if k > 0:
-      k -= 1
-    if R[i - 1] == n + 1:
-      k = 0
-    else:
+    if R[i - 1] != n + 1:
       j = SA[R[i - 1]]
       while i + k <= n and j + k <= n and text[i + k] == text[j + k]:
         k += 1
       L[R[i - 1]] = k
+      k = max(k - 1, 0)
+    else:
+      k = 0
   return L
