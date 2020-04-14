@@ -13,13 +13,13 @@ class TestBurrowsWheeler(unittest.TestCase):
     self.assertEqual(burrows_wheeler.transform_from_suffix_array(
         suffix_array.naive(t, n), t, n), reference)
 
-  def check_inverse_burrows_wheeler(self, bwt, reference):
-    self.assertEqual(burrows_wheeler.inverse_transform_naive(bwt), reference)
+  def check_inverse_burrows_wheeler(self, bwt, n, reference):
+    self.assertEqual(burrows_wheeler.inverse_transform_naive(bwt, n), reference)
 
   def test_burrows_wheeler(self):
     self.check_burrows_wheeler('#abaaba', 6, '#abba$aa')
     self.check_burrows_wheeler('#banana', 6, '#annb$aa')
 
   def test_inverse_burrows_wheeler(self):
-    self.check_inverse_burrows_wheeler('#abba$aa', '#abaaba')
-    self.check_inverse_burrows_wheeler('#annb$aa', '#banana')
+    self.check_inverse_burrows_wheeler('#abba$aa', 6, '#abaaba')
+    self.check_inverse_burrows_wheeler('#annb$aa', 6, '#banana')
