@@ -18,7 +18,7 @@ class TestMaximumSuffix(unittest.TestCase):
   def check_maximum_suffix(self, t, n, reference):
     for algorithm in MAXIMUM_SUFFIX_ALGORITHMS:
       self.assertEqual(
-          algorithm(t, n),
+          algorithm(t, n)[0],
           reference,
           'Algorithm: {0}'.format(algorithm.__name__))
     self.assertEqual(
