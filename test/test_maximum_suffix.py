@@ -32,6 +32,7 @@ class TestMaximumSuffix(unittest.TestCase):
     self.check_maximum_suffix('#abaaaaaaa', 9, 2)
     self.check_maximum_suffix('#yabbadabbado', 12, 1)
     self.check_maximum_suffix('#aabaabaabba', 11, 9)
+    self.check_maximum_suffix('#eembambmaaa', 11, 6)
 
   @run_large
   def test_random_maximum_suffix(self):
