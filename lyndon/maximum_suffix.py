@@ -1,5 +1,14 @@
 import operator
 
+from common import prefix
+
+def naive(text, n):
+  out = 1
+  for i in range(2, n + 1):
+    if text[out:] < text[i:]:
+      out = i
+  return out, prefix.period(text[0] + text[out:], n + 1 - out)
+
 def from_prefix_suffix(text, n, less = operator.__lt__):
   def equal(a, b):
     return not less(a, b) and not less(b, a)
@@ -14,7 +23,7 @@ def from_prefix_suffix(text, n, less = operator.__lt__):
       t = B[t]
     t = t + 1
     B[i - out + 1] = t
-  return out, None
+  return out, (n + 1 - out) - B[n + 1 - out]
 
 def constant_space(text, n, less = operator.__lt__):
   def equal(a, b):
