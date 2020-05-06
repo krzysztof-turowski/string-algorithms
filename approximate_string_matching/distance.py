@@ -1,15 +1,15 @@
-def hamming_distance(text, word, n, m):
-  if n != m:
+def hamming_distance(text_1, text_2, n_1, n_2):
+  if n_1 != n_2:
     raise ValueError('Hamming distance is defined only for equal strings')
-  return sum(ci != cj for ci, cj in zip(text[1:], word[1:]))
+  return sum(ci != cj for ci, cj in zip(text_1[1:], text_2[1:]))
 
-def edit_distance(text, word, n, m):
-  if n < m:
-    return edit_distance(word, text, m, n)
-  previous_row, current_row = None, range(m + 1)
-  for i, ci in enumerate(text[1:]):
-    previous_row, current_row = current_row, [i + 1] + [None] * m
-    for j, cj in enumerate(word[1:]):
+def edit_distance(text_1, text_2, n_1, n_2):
+  if n_1 < n_2:
+    return edit_distance(text_2, text_1, n_2, n_1)
+  previous_row, current_row = None, range(n_2 + 1)
+  for i, ci in enumerate(text_1[1:]):
+    previous_row, current_row = current_row, [i + 1] + [None] * n_2
+    for j, cj in enumerate(text_2[1:]):
       insertion = previous_row[j + 1] + 1
       deletion = current_row[j] + 1
       substitution = previous_row[j] + (ci != cj)
