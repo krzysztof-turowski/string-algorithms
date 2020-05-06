@@ -17,6 +17,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     backward.quick_search,
     backward.horspool,
     other.fast_on_average,
+    other.two_way,
 ]
 
 class TestPrefixSuffixArrays(unittest.TestCase):
@@ -84,42 +85,45 @@ class TestExactStringMatching(unittest.TestCase):
       self.assertEqual(
           next(algorithm(t, w, n, m)),
           reference,
-          'Algorithm {0}'.format(algorithm.__name__))
+          'Algorithm {}, text {}, pattern {}'.format(
+              algorithm.__name__, t, w))
     self.assertEqual(
         next(suffix_tree.contains(suffix_tree.naive(t, n), t, w, n, m)),
         reference,
-        'Suffix tree')
+        'Suffix tree, text {}, pattern {}'.format(t, w))
     self.assertEqual(
         next(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m)),
         reference,
-        'Suffix array')
+        'Suffix array, text {}, pattern {}'.format(t, w))
 
   def check_get_all_exact_matches(self, t, w, n, m, reference):
     for algorithm in EXACT_STRING_MATCHING_ALGORITHMS:
       self.assertEqual(
           list(algorithm(t, w, n, m)),
           reference,
-          'Algorithm {0}'.format(algorithm.__name__))
+          'Algorithm {}, text {}, pattern {}'.format(
+              algorithm.__name__, t, w))
     self.assertEqual(
         list(suffix_tree.contains(suffix_tree.naive(t, n), t, w, n, m)),
         reference,
-        'Suffix tree')
+        'Suffix tree, text {}, pattern {}'.format(t, w))
     self.assertEqual(
         list(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m)),
         reference,
-        'Suffix array')
+        'Suffix array, text {}, pattern {}'.format(t, w))
 
   def check_no_match(self, t, w, n, m):
     for algorithm in EXACT_STRING_MATCHING_ALGORITHMS:
       self.assertFalse(
           list(algorithm(t, w, n, m)),
-          'Algorithm {0}'.format(algorithm.__name__))
+          'Algorithm {}, text {}, pattern {}'.format(
+              algorithm.__name__, t, w))
     self.assertFalse(
         list(suffix_tree.contains(suffix_tree.naive(t, n), t, w, n, m)),
-        'Suffix tree')
+        'Suffix tree, text {}, pattern {}'.format(t, w))
     self.assertFalse(
         list(suffix_array.contains(suffix_array.naive(t, n), t, w, n, m)),
-        'Suffix array')
+        'Suffix array, text {}, pattern {}'.format(t, w))
 
   def test_get_first_exact_match(self):
     self.check_get_first_exact_match('#abaaba', '#aab', 6, 3, 3)
