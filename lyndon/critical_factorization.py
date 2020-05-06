@@ -12,6 +12,7 @@ def local_period_naive(text_left, text_right):
     w = text_right + text_left[-i:]
     if text_left.endswith(w) or w.endswith(text_left):
       return w
+  return None
 
 def naive_all(text, n):
   p = prefix.period(text, n)

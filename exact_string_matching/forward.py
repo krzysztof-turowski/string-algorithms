@@ -25,7 +25,7 @@ def knuth_morris_pratt(t, w, n, m):
   i, j = 1, 0
   while i <= n - m + 1:
     while j < m and t[i + j] == w[j + 1]:
-      j += 1
+      j = j + 1
     if j == m:
       yield i
     i, j = i + j - sB[j], max(0, sB[j])
