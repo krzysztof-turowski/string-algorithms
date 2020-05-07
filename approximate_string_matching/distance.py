@@ -29,8 +29,7 @@ def edit_distance(text_1, text_2, n_1, n_2):
       substitute = lambda ci, cj: 1, match = lambda ci: 0)
   if n_1 >= n_2:
     return distance_row(text_1, text_2, n_1, n_2, S)[-1]
-  else:
-    return distance_row(text_2, text_1, n_2, n_1, S)[-1]
+  return distance_row(text_2, text_1, n_2, n_1, S)[-1]
 
 def indel_distance_row(text_1, text_2, n_1, n_2):
   S = ScoreMatrix(
