@@ -7,10 +7,19 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 1. Morris-Pratt and Knuth-Morris-Pratt algorithms
 2. Boyer-Moore algorithm with many variants
 3. _fast-on-average_ algorithm
+4. Constant space: two-way (Crochemore-Perrin) algorithm
+5. Karp-Rabin hashing-based algorithm
 
 ### String indexing
 1. Suffix tree: Weiner, McCreight and Ukkonen algorithms
 2. Suffix array: Karp-Miller-Rosenberg and Kärkkäinen-Sanders algorithms
+
+### Lyndon factorization
+1. Maximum suffix algorithms: based on prefix-suffix array, in constant space
+
+### Approximate string matching
+1. Longest common subsequence: Needleman-Wunsch and Hirschberg algorithms
+2. String matching with don't care symbols: algorithm based on FFT
 
 ## Testing
 
