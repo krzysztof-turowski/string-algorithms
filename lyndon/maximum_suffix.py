@@ -1,11 +1,40 @@
-def maximum_suffix(w, m):
-  B, out = [-1] + [0] * m, 1
-  for i in range(1, m + 1):
-    # niezmiennik: B[j] = prefix_suffix(maximum_suffix(w[1..j])) dla j < i
-    t = B[i - 1]
-    while t >= 0 and w[out + t] < w[i]:
+import operator
+
+from common import prefix
+
+def naive(text, n):
+  out = 1
+  for i in range(2, n + 1):
+    if text[out:] < text[i:]:
+      out = i
+  return out, prefix.period(text[0] + text[out:], n + 1 - out)
+
+def from_prefix_suffix(text, n, less = operator.__lt__):
+  def equal(a, b):
+    return not less(a, b) and not less(b, a)
+  B, t, out = [-1] + [0] * n, -1, 1
+  for i in range(1, n + 1):
+    # niezmiennik: out = maximum_suffix(text[0..i - 1]))
+    # niezmiennik: B[0..i - out] = prefix_suffix(text[out..i - 1])
+    # niezmiennik: t = B[i - out]
+    while t >= 0 and less(text[out + t], text[i]):
       out, t = i - t, B[t]
-    while t >= 0 and w[out + t] != w[i]:
+    while t >= 0 and not equal(text[out + t], text[i]):
       t = B[t]
-    B[i] = t + 1
-  return out
+    t = t + 1
+    B[i - out + 1] = t
+  return out, (n + 1 - out) - B[n + 1 - out]
+
+def constant_space(text, n, less = operator.__lt__):
+  def equal(a, b):
+    return not less(a, b) and not less(b, a)
+  out, p, i = 1, 1, 2
+  while i <= n:
+    r = (i - out) % p
+    if equal(text[i], text[out + r]):
+      i = i + 1
+    elif less(text[i], text[out + r]):
+      i, p = i + 1, i + 1 - out
+    else:
+      out, i, p = i - r, i - r + 1, 1
+  return out, p

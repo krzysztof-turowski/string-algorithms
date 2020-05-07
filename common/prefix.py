@@ -10,7 +10,7 @@ def prefix_suffix(w, m):
   return B
 
 def period(w, m):
-  return prefix_suffix(w, m)[m]
+  return m - prefix_suffix(w, m)[m]
 
 def strong_prefix_suffix(w, m):
   '''Computes table of strong prefix-suffix lengths for a word w'''

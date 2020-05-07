@@ -32,8 +32,7 @@ def maximum_suffixes(w, m):
   return S
 
 def boyer_moore_shift(w, m):
-  p = prefix.period(w, m)
-  BM = [m - p] + [m] * m
+  BM = [prefix.period(w, m)] + [m] * m
   S, j = maximum_suffixes(w, m), 0
   for k in range(m - 1, -1, -1):
     if k == S[k]:
