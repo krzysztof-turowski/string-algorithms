@@ -1,0 +1,57 @@
+\section{Największy sufiks}
+
+\begin{algorithm}[H]
+    \caption{Największy leksykograficznie sufiks}
+    \Input{Słowo $w \in \A^+$ ($|w| = m$)}
+    \Output{Liczba $1 \le i \le m$ taka, że $w[i..m]$ jest największym leksykograficznie sufiksem $w$.}
+\end{algorithm}
+
+\subsection{Algorytm na bazie tablicy prefikso-sufiksów}
+
+\begin{lemma}{}{}
+  Jeśli dla dowolnego słowa $w$ słowo $u$ jest maksymalnym sufiksem $w[1..(j - 1)]$ a słowo $v$ jest takim sufiksem słowa $w[1..(j - 1)]$, że $u w[j] < v w[j]$, to $v$ jest prefikso-sufiksem $u$.
+\end{lemma}
+
+\begin{proof}
+  Skoro $u$ jest maksymalnym sufiksem $w[1..(j - 1)]$, to $u > v$. Jeśli $v$ nie było prefiksem $u$, to istniałaby pozycja $1 \le i \le |v|$ taka, że $v[i] < u[i]$. Ale wówczas $uy \ge u > vy$ dla dowolnego $y \in \A^*$ -- sprzeczność z tym, że $u w[j] < v w[j]$.
+\end{proof}
+
+\begin{lemma}{}{}
+  Jeśli dla dowolnego słowa $w$ słowo $u$ jest maksymalnym sufiksem $w[1..(j - 1)]$ oraz dla pewnego prefikso-sufiksu $v$ słowa $u$ zachodzi $u w[j] < v w[j]$, to dla wszystkich słów $v'$ takich, że $v'$ jest prefikso-sufiksem $u$ i $v$ jest prefikso-sufiksem $v'$ zachodzi $u w[j] < v' w[j] < v w[j]$.
+\end{lemma}
+
+\begin{proof}
+  Dla dowolnego $v'$ będącego prefikso-sufiksem $u$ istnieje słowo $x$ takie, że $u = v' x$.
+  Ponieważ $u$ jest maksymalnym sufiksem $w[1..(j - 1)]$, to $u = v' x > v x$, ponieważ $v x$ też jest sufiksem $w[1..(j - 1)]$.
+  Wówczas zachodzi $v x < u < u w[j] < v w[j]$, a zatem $x < w[j]$.
+  Wobec tego $u w[j] = v' x w[j] < v' w[j]$.
+  
+  Wiemy, że $v w[j] > u w[j]$. Skoro $|u| > |v|$, to $v w[j] > u[1..(|v| + 1)] y$ dla dowolnego $y \in \A^*$.
+  Łatwo sprawdzić, że każde $v'$ takie, że $v'$ jest prefikso-sufiksem $u$ i $v$ jest prefikso-sufiksem $v$ jest postaci $u[1..(|v| + 1)] y$.
+\end{proof}
+
+\begin{corollary}{}{}
+  Jeśli dla dowolnego słowa $w$ słowo $u$ jest maksymalnym sufiksem $w[1..(j - 1)]$ a słowo $v w[j]$ jest maksymalnym sufiksem słowa $w[1..j]$, to wystarczy schodzić po prefikso-sufiksach $u$ dopóki to możliwe.
+\end{corollary}
+
+\begin{code}
+\captionof{listing}{Wyszukiwanie największego leksykograficznie sufiksu}
+\inputminted{python}{code/maximum-suffix/from-prefix-suffix.py}
+\label{alg:maximum-suffix-from-prefix-suffix}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż, że $B[j]$ to taka liczba, że $w[1..B[j]]$ jest największym prefikso-sufiksem maksymalnego sufiksu $w[1..j]$.
+\end{problem}
+
+\subsection{Algorytm o stałej pamięci}
+
+\begin{code}
+\captionof{listing}{Wyszukiwanie największego leksykograficznie sufiksu w pamięci $O(1)$}
+\inputminted{python}{code/maximum-suffix/constant-space.py}
+\label{alg:maximum-suffix-constant-space}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż, że algorytm \ref{alg:maximum-suffix-constant-space} wyznacza poprawnie największy leksykograficznie sufiks.
+\end{problem}

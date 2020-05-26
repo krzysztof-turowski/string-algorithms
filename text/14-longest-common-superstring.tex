@@ -1,0 +1,106 @@
+\section{Odległość edycyjna}
+
+\begin{algorithm}[H]
+    \caption{Odległość edycyjna}
+    \Input{Słowa $t_1, t_2 \in \A^+$ ($|t_i| = n_i$ dla $i = 1, 2$)}
+    \Output{Minimalna liczba operacji typu \emph{insert}, \emph{delete} i \emph{substitute} przeprowadzająca słowo $t_1$ w $t_2$.}
+\end{algorithm}
+
+Zwróćmy uwagę, że analogiczny problem, w którym dozwolona jest tylko operacja \emph{substitute} to obliczanie odległości Hamminga. Można ją wprost wyznaczyć przeglądając $t_1$ i $t_2$ od lewej do prawej, zliczając pozycje, dla których $t_1[i] \neq t_2[i]$.
+
+Podstawowy algorytm obliczania odległości edycyjnej sprowadza się do sekwencyjnego obliczania wartości funkcji rekurencyjnej
+\begin{align*}
+  d_e(i, j) =
+  \begin{cases}
+    0 & \text{gdy $i = 0$ lub $j = 0$,} \\
+    d_e(i - 1, j - 1) & \text{gdy $t_1[i] = t_2[j]$,} \\
+    \min\{d_e(i - 1, j - 1), d_e(i - 1, j), d_e(i - 1, j - 1)\} + 1 & \text{gdy $t_1[i] \neq t_2[j]$.}
+  \end{cases}
+\end{align*}
+Poprawność algorytmu wynika z indukcji ze względu na porządek par $(i, j)$. Czas działania algorytmu to $O(n_1 n_2)$.
+Jak widać z powyższego wzoru, do obliczeń wystarczy zapamiętanie poprzedniego wiersza lub kolumny, więc wymagana pamięć wynosi $O(\min\{n_1, n_2\})$.
+
+\begin{code}
+\captionof{listing}{Obliczanie odległości edycyjnej w czasie $O(n_1 n_2)$ i pamięci $O(\min\{n_1, n_2\})$}
+\inputminted{python}{code/other/edit-distance.py}
+\label{alg:edit-distance}
+\end{code}
+
+Technika może być łatwo uogólniona do dowolnych macierzy ocen, przypisujących różne wagi za odległości dla operacji \emph{insert}, \emph{delete} i \emph{substitute}. Przykładem takiego wykorzystania są rodziny macierzy PAM i BLOSUM dla algorytmów dopasowań ciągów w zastosowaniach bioinformatycznych.
+
+Można również łatwo zamienić problem na obliczanie funkcji podobieństwa jako maksymalnej (zamiast minimalnej) wartości dla danej macierzy operacji, tym razem interpretowanej jako macierz nagród \citep{sellers1974theory}.
+
+\subsection{Technika czterech Rosjan}
+
+Dla obliczeń macierzowych istnieje ogólna technika przyspieszania obliczeń, nazywana \emph{Four Russians speedup}\footnote{Najbardziej znanym z autorów był Jefim Dinic, znany również z algorytmu dla znajdowania maksymalnego przepływu w grafach.}.
+
+Główna idea tej metody polega na podziale wejścia na małe bloki o niewielkim zakresie wartości.
+Załóżmy, że pewien problem jest w ogólności rozwiązywany przez funkcję $y_n = f(y_{n - 1}, x_n)$, a jedna iteracja wymaga czasu $F(n)$ -- więc całość wykonuje się w czasie $\sum_{i = 1}^{n - 1} F(i)$.
+
+Załóżmy teraz, że każda pozycja wejściowa pochodzi z małego zbioru $X$, a każda pozycja wyjściowa również z małego zbioru $Y$.
+Wówczas dla dowolnego $k$ zawsze możemy obliczyć z wyprzedzeniem tablicę wszystkich $|X|^k |Y|$ wartości funkcji $f^{(k)}$, czyli $k$-krotnego złożenia $f$.
+Wówczas można policzyć $f_n$ wykorzystując $\frac{n}{k}$ wyszukiwania w tablicy. Całkowity czas działania (zakładając stały dostęp do tablicy wartości) wynosi zatem
+\begin{align*}
+  |X|^k |Y| \sum_{i = 1}^{k - 1} F(i) + \frac{n}{k}.
+\end{align*}
+Przykładowo dla $F(n) = n^2$, $|X| = O(1)$ i $|Y| = O(n)$ wystarczy dobrać $k = \log_{|X|}{n}$, aby zmniejszyć czas wykonania z $O(n^3)$ do $O(n^2 \log^3{n})$.
+
+Metoda ta używana jest m.in. do mnożenia i odwracania macierzy binarnych, a także do efektywnego liczenia domknięcia przechodniego grafu. Można ją również wykorzystać do optymalizacji algorytmu obliczającego odległość edycyjną \citep{masek1980faster}. Technika ta również uogólnia się na różnorodne macierze nagród i kar.
+
+\todo[inline]{Algorytm i dowód}
+% Gusfield 302-307
+% w czasie $O\left(nm \frac{1}{\log{m}}\right)$
+
+\section{Najdłuższy wspólny podciąg}
+
+\begin{algorithm}[H]
+    \caption{Najdłuższy wspólny podciąg}
+    \Input{Zbiór słów $T = \{t_1, t_2, ..., t_k\} \subseteq \A^+$ takich, że $|t_i| \le n$ dla $1 \le i \le k$.}
+    \Output{Słowo $t$ będące najdłuższym podciągiem wszystkich słów z $T$.}
+\end{algorithm}
+
+Problem najdłuższego wspólnego podciągu jest powiązany z problemem odległości edycyjnej.
+Dla $|T| = 2$ niech $d(t_1, t_2)$ oznacza odległość dla dopuszczalnych operacji \emph{insert} i \emph{delete}.
+Wówczas zachodzi
+\begin{align*}
+    |t_1| + |t_2| = 2 |t| + d(t_1, t_2),
+\end{align*}
+wystarczy bowiem zauważyć, że $t_1$ w $t$ przeprowadzają wszystkie operacje \emph{delete} a $t$ w $t_2$ -- \emph{insert}.
+
+\subsection{Algorytm Needlemana-Wunscha}
+
+Podstawowy algorytm obliczania najdłuższego wspólnego podciągu dla dwóch słów jest prostym rozszerzeniem algorytmu \ref{alg:edit-distance}. Jedyna różnica polega na konieczności trzymania całej tablicy odległości.
+Odtwarzanie wyniku następuje na podstawie przejścia po ścieżce od ostatniej wartości tj. $d(t_1, t_2)$ do początku, odpowiadającemu $d(\epsilon, \epsilon)$.
+Wybieramy rzecz jasna tylko te przejścia, które spełniają relację $\min$ w równaniu rekurencyjnym.
+
+Oczywiście można odtwarzać kolejne przejścia i uzgodnione litery na podstawie $t_1$, $t_2$ porównując odpowiednie wartości macierzy $d$ -- lub też można zapisywać odpowiednie informacje równolegle w trakcie wypełniania tablicy $d$.
+
+\begin{code}
+\captionof{listing}{Obliczanie najdłuższego wspólnego podsłowa w czasie i pamięci $O(n_1 n_2)$}
+\inputminted{python}{code/approximate-string-matching/needleman-wunsch.py}
+\label{alg:lcs-needleman-wunsch}
+\end{code}
+
+\subsection{Algorytm Hirschberga}
+
+Ponieważ dla dostatecznie dużych $n_1$ i $n_2$ w praktyce pamięć jest bardziej dotkliwą barierą niż czas, można zastanowić się nad usprawnieniem algorytmu, aby wykorzystywał tylko $O(\min\{n_1, n_2\})$ pamięci.
+
+Okazuje się, że wystarczy zastosować podejście dziel-i-rządź. Z jednej strony jasne jest, że odpowiadająca najdłuższemu podciągowi optymalna ścieżka od punktu $(0, 0)$ do $(n_1, n_2)$ w macierzy $d$ musi przejść przez pewien punkt $(i, j)$ dla dowolnego $0 \le i \le n_1$. Możemy zatem wybrać $i$ w połowie aktualnie rozpatrywanego przedziału.
+
+Znalezienie $j$ nie jest trudne. Okazuje się, że wystarczy do tego obserwacja z poniższego lematu:
+\begin{problem}{}{}
+  Punkt $(i, j)$ leży na (pewnej) optymalnej ścieżce w macierzy $d$ wtedy i tylko wtedy, gdy
+  \begin{align*}
+      j = \arg\max \{0 \le k \le n_2: d(t_1[1..i], t_2[1..k]) + d(\bar{t_1[i..n_2]}, \bar{t_2[k..n_2]})\}.
+  \end{align*}
+\end{problem}
+
+\begin{code}
+\captionof{listing}{Obliczanie najdłuższego wspólnego podsłowa w czasie $O(n_1 n_2)$ i pamięci $O(\min\{n_1, n_2\})$}
+\inputminted{python}{code/approximate-string-matching/hirschberg.py}
+\label{alg:lcs-hirschberg}
+\end{code}
+
+\subsection{Inne wyniki}
+
+W ramach wyników negatywnych dla problemu odległości edycyjnej wiadomo, że nie istnieje żaden algorytm dla obliczania odległości edycyjnej o złożoności $\Theta(n^{2 - \varepsilon})$ dla dowolnego $\varepsilon > 0$, o ile Strong Exponential Time Hypothesis jest prawdziwa \citep{backurs2015edit}. Twierdzenie to zachodzi nawet dla przypadku alfabetu binarnego \citep{bringmann2015quadratic}.

@@ -1,0 +1,54 @@
+\section{Najkrótsze wspólne nadsłowo}
+
+\begin{algorithm}[H]
+    \caption{Najkrótsze wspólne nadsłowo}
+    \Input{Zbiór słów $T = \{t_1, t_2, \ldots, t_k\} \subseteq \A^+$ takich, że $|t_i| \le n$ dla $1 \le i \le k$.}
+    \Output{Słowo $t$ będące najkrótszym nadsłowem wszystkich słów z $T$.}
+\end{algorithm}
+
+Bez straty ogólności zakładamy, że dla żadnej pary słów $t_i$ i $t_j$ nie zachodzi sytuacja, że $t_i$ jest podsłowem $t_j$. Gdyby taka sytuacja wystąpiła, to moglibyśmy usunąć $t_i$ z $T$ bez zmiany optymalnego rozwiązania.
+
+W ogólności problem jest trudny, zarówno dla krótkich słów, jak i dla małych alfabetów.
+\begin{theorem}{gallant1980finding}{}
+  Niech $T = \{t_1, t_2, ..., t_k\}$ i $|t_i| = 3$ dla $1 \le i \le k$.
+  Problem znalezienia najkrótszego nadsłowa dla $T$ jest NP-trudny.
+\end{theorem}
+
+\begin{theorem}{gallant1980finding}{}
+  Niech $T = \{t_1, t_2, ..., t_k\}$ oraz $|\A| = 2$.
+  Problem znalezienia najkrótszego nadsłowa dla $T$ jest NP-trudny.
+\end{theorem}
+
+Pokazano, że problem znalezienia najkrótszego nadsłowa należy do klasy złożoności MAX-SNP, a zatem istnieje stała $c > 1$, dla której nie istnieje algorytm $c$-przybliżony dla tego problemu. \citet{vassilevska2005explicit} dowiodła, że $c \ge \frac{1217}{1216}$, \citet{karpinski2013improved} poprawili to do $c \ge \frac{333}{332}$.
+
+\begin{problem}{apostolico-galil}{Theorem 8.2, s. 239-240}
+  Niech $T = \{t_1, t_2, ..., t_k\}$ przy $|t_i| \le 2$ dla $1 \le i \le k$.
+  Pokaż, jak możliwe jest wyznaczenie najkrótszego nadsłowa $t$ dla $T$ w czasie wielomianowym.
+\end{problem}
+
+\subsection{Algorytm zachłanny}
+
+\todo[inline]{Kod i dowód złożoności}
+
+Niech $T = \{c(ab)^k, (ba)^k, (ab)^kc\}$, wówczas algorytm zachłanny najpierw złoży ze sobą dwa skrajne ciągi, a zatem $t_{APX} = (ba)^kc(ab)^kc$, $|t_{APX}| = 4 k + 2$, podczas gdy $t_{OPT} = c(ab)^{k + 1}c$, $|t_{OPT}| = 2 k + 4$.
+
+Została postawiona hipoteza, że algorytm zachłanny jest $2$-przybliżony, ale dotychczas udało się tylko pokazać współczynnik aproksymacji równy $4$ \citep{blum1994linear}, a następnie poprawić współczynnik go do $3.5$ \citep{kaplan2005approximation}.
+
+Zamiast porównywać długości słowa optymalnego i zwróconego przez algorytm możemy też zmienić kryterium optymalizacji.
+Naturalnym alternatywnym kryterium wydaje się wielkość kompresji:
+
+\begin{algorithm}[H]
+    \caption{Wspólne nadsłowo o największej kompresji}
+    \Input{Zbiór słów $T = \{t_1, t_2, \ldots, t_k\} \subseteq \A^+$ takich, że $|t_i| \le n$ dla $1 \le i \le k$.}
+    \Output{Słowo $t$ będące nadsłowem wszystkich słów z $T$ i maksymalizujące $d = \sum_{i = 1}^k |t_i| - |t|$.}
+\end{algorithm}
+Oczywiście zbiór rozwiązań optymalnych dla obu problemów jest identyczny.
+
+Okazuje się, że przy tych założeniach można pokazać, że algorytm zachłanny jest $2$-przybliżony tj. osiąga kompresję taką, że $2 d_{APX} \ge d_{OPT}$ \citep{tarhio1988greedy}.
+
+\subsection{Inne wyniki}
+
+Oprócz algorytmu zachłannego opracowywano inne algorytmy o współczynnikach aproksymacji kolejno $\frac{8}{3}$ \citep{armen19962}, $\frac{5}{2}$ \citep{kaplan2005approximation, sweedyk2000boldmath}, $\frac{57}{23}$ \citep{mucha2013lyndon} i -- obecnie najlepszego -- $\frac{71}{30}$ \citep{paluch2014better}.
+Większość z tych rezultatów polega na odpowiednio sprytnej redukcji do odpowiednio efektywnego algorytmu dla problemu maksymalnej ścieżki komiwojażera w grafie asymetrycznym.
+
+Dodatkowo, jeśli przyjmiemy, że $|t_i| = r \ge 3$, to istnieje algorytm $\frac{r^2 + r - 4}{4r - 6}$-przybliżony \citep{golovnev2013approximating}. W \citet{braquelaire2018improving} ten wynik został nieznacznie poprawiony -- pozostaje on nadal jednak lepszy niż algorytm ogólny tylko dla $2 \le r \le 7$.

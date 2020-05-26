@@ -1,0 +1,103 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage{polski}
+\usepackage{fullpage}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{thmtools}
+\usepackage[polish]{babel}
+\usepackage{ebgaramond,ebgaramond-maths}
+\usepackage[cmintegrals,cmbraces]{newtxmath}
+\usepackage{braket}
+\usepackage{enumitem}
+\usepackage{color}
+\usepackage{ifthen}
+
+\setlength{\marginparwidth}{2cm}
+\usepackage[backgroundcolor=lightgray]{todonotes}
+
+\usepackage[newfloat]{minted}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage[titlenumbered,ruled]{algorithm2e}
+\usepackage{algpseudocode}
+\renewcommand*{\algorithmcfname}{Problem}
+\SetKwInOut{Input}{Wejście}
+\SetKwInOut{Output}{Wyjście}
+
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Algorytm}
+
+\PassOptionsToPackage{
+backend=bibtex8,bibencoding=ascii, % alternatively: backend=biber
+language=auto,
+style=authoryear-comp, % alternatively: style=numeric-comp
+%bibstyle=authoryear,dashed=false, % dashed: substitute rep. author with ---
+sorting=nyt,
+maxbibnames=10,
+natbib=true
+}{biblatex}
+\usepackage{biblatex}
+
+\addbibresource{bibliography.bib}
+
+\theoremstyle{plain}
+\newtheorem{theorem-thm}{Twierdzenie}[section]
+\newtheorem{lemma-thm}[theorem-thm]{Lemat}
+\theoremstyle{definition}
+\newtheorem{definition-thm}[theorem-thm]{Definicja}
+\newtheorem{corollary-thm}[theorem-thm]{Wniosek}
+\newtheorem{remark-thm}[theorem-thm]{Obserwacja}
+\newtheorem{problem-thm}{Problem}[section]
+
+\newenvironment{theorem}[2]
+  {\ifthenelse{\not\equal{#1}{}}{\begin{theorem-thm}[{\citealt[#2]{#1}}]}{\begin{theorem-thm}}}
+  {\end{theorem-thm}}
+
+\newenvironment{lemma}[2]
+  {\ifthenelse{\not\equal{#1}{}}{\begin{lemma-thm}[{\citealt[#2]{#1}}]}{\begin{lemma-thm}}}
+  {\end{lemma-thm}}
+
+\newenvironment{definition}[2]
+  {\ifthenelse{\not\equal{#1}{}}{\begin{definition-thm}[{\citealt[#2]{#1}}]}{\begin{definition-thm}}}
+  {\end{definition-thm}}
+
+\newenvironment{corollary}[2]
+  {\ifthenelse{\not\equal{#1}{}}{\begin{corollary-thm}[{\citealt[#2]{#1}}]}{\begin{corollary-thm}}}
+  {\end{corollary-thm}}
+
+\newboolean{show-problem-refs}
+\setboolean{show-problem-refs}{false}
+\newenvironment{problem}[2]
+  {\ifthenelse{\boolean{show-problem-refs} \and \not\equal{#1}{} }{\begin{problem-thm}[{\citealt[#2]{#1}}]}{\begin{problem-thm}}}
+  {\end{problem-thm}}
+
+\setlist{nosep}
+
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+
+\setlength\parskip{2mm}
+
+\begin{document}
+\title{Algorytmy tekstowe\vspace{-2ex}}
+\author{Krzysztof \textsc{Turowski}\vspace{-2ex}}
+\date{}
+\maketitle
+
+\input{01-notacja.tex}
+\input{11-exact-string-matching.tex}
+\input{12-string-indexing.tex}
+\input{13-factorization.tex}
+\input{14-longest-common-superstring}
+\input{15-wildcard-pattern-matching}
+%\input{16-approximate-pattern-matching}
+\input{17-shortest-common-superstring}
+
+\nocite{*}
+\printbibliography
+
+\end{document}
