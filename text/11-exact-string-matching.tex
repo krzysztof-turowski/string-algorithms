@@ -1,0 +1,514 @@
+\section{Dokładne dopasowanie wzorca}
+
+\begin{algorithm}[H]
+    \caption{Dokładne dopasowanie wzorca}
+    \Input{Słowa $t, w \in \A^+$ ($|t| = n$, $|w| = m$)}
+    \Output{\textsc{True} jeśli $w$ jest podsłowem $t$, \textsc{False} w przeciwnym przypadku}
+\end{algorithm}
+
+\begin{algorithm}[H]
+    \caption{Wyszukiwanie wszystkich wystąpień wzorca w tekście}
+    \Input{Słowa $t, w \in \A^+$ ($|t| = n$, $|w| = m$)}
+    \Output{Zbiór liczb $S = \{1 \le i \le n: t[i..(i + m - 1)] = w\}$.}
+\end{algorithm}
+
+\subsection{Algorytm naiwny}
+
+\begin{code}
+\captionof{listing}{Naiwne szukanie wzorca $w$ w tekście $t$}
+\inputminted{python}{code/exact-string-matching/naive-forward.py}
+\label{alg:exact-string-matching-naive-forward}
+\end{code}
+
+\begin{problem}{}{}
+  Dla ustalonego $n$ i $m$ znajdź przykład słowa $w$ i tekstu $t$ z $|t| = n$, $|w| = m$, dla którego Algorytm \ref{alg:exact-string-matching-naive-forward} wykonuje najwięcej porównań.
+\end{problem}
+
+\begin{proof}
+Najprostszym przykładem jest poszukiwanie wzorca $w=a^{m-1}b$ w tekście $t=a^n$. Dla takiego zestawu algorytm naiwny nie znajdzie dopasowania, a wcześniej będzie dopasowywał prawie całe słowo $w$, rozpoczynając od każdej pozycji słowa $t$. Prowadzi to do wykonania dokładnie $m (n - m + 1)$ porównań.
+\end{proof}
+
+Można również zaimplementować algorytm naiwny, który dopasowywałby wzorzec do tekstu od końca.
+
+\begin{code}
+\captionof{listing}{Naiwne szukanie wzorca $w$ w tekście $t$}
+\inputminted{python}{code/exact-string-matching/naive-backward.py}
+\label{alg:exact-string-matching-naive-backward}
+\end{code}
+
+\subsection{Algorytm Morrisa-Pratta}
+
+Algorytm naiwny dokonuje w razie wykrycia niedopasowania przesunięcia wzorca tekstu o $1$.
+Załóżmy, że zachodzi $t[i + k + 1] = w[k + 1]$ dla pewnego $k$ oraz $t[i + j] = w[j]$ dla $1 \le j \le k$ tj. mamy zgodność wzorca z tekstem na $k$ literach.
+
+Jasne jest jednak, że jeśli $v$ nie jest prefikso-sufiksem $w[1..k]$, to istnieje pozycja $0 \le l \le k - 1$ taka, że $v[|v| - l] \neq w[k - l] = t[i + k - l]$ -- a zatem nie ma sensu dopasowywać $w$. Z kolei jeśli $v$ jest prefikso-sufiksem $w[1..k]$, to z góry wiemy, że jest zgodne z $t[(i + k - |v|)..(i + k)]$.
+
+Wobec tego najmniejsze sensowne przesunięcie to przejście do sprawdzania dla największego prefikso-sufisku $w[1..k]$ -- czyli przesunięcie o $p(w[1..k])$.
+
+Dla słowa $w$ można zdefiniować tablice najdłuższych prefikso-sufiksów dla każdego prefiksu:
+\begin{align*}
+  B[i] = 
+  \begin{cases}
+    -1 & \text{dla $i = 0$,} \\
+    \max\{k \ge 0:\text{$w[1 \ldots k]$ jest właściwym sufiksem $w[1\ldots i]$}\} & \text{dla $1 \le i \le |w|$.}
+  \end{cases}
+\end{align*}
+
+\begin{lemma}{}{}
+  \label{lem:pref-suf}
+  Jeśli $u$ jest prefikso-sufiksem $v$ i $v$ jest prefikso-sufiksem $w$, to $u$ jest prefikso-sufiksem $w$.
+\end{lemma}
+
+\begin{corollary}{}{}
+  Ciąg $(B[|w|], B[B[|w|]], \ldots, 0)$ zawiera długości wszystkich prefikso-sufiksów słowa $w$ w kolejności malejącej.
+\end{corollary}
+
+\begin{corollary}{}{}
+  Ciąg $(|w|, \ldots, |w| - B[B[|w|]], |w| - B[|w|])$ zawiera długości wszystkich okresów słowa $w$ w kolejności malejącej.
+\end{corollary}
+
+\begin{code}
+\captionof{listing}{Tablica prefikso-sufiksów}
+\inputminted{python}{code/other/prefix-suffix.py}
+\label{alg:prefix-suffix}
+\end{code}
+
+\begin{problem}{crochemore2002jewels}{Lemma 3.1, s. 34-35}
+  Pokaż, jaki dokładny pesymistyczny czas działania ma Algorytm \ref{alg:prefix-suffix}.
+\end{problem}
+
+%$2m-3$. Wynik osiągalny dla $pat = 010^{m-2}$.
+
+\begin{code}
+\captionof{listing}{Algorytm Morrisa-Pratta}
+\inputminted{python}{code/exact-string-matching/morris-pratt.py}
+\label{alg:exact-string-matching-morris-pratt}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż, ile razy w najgorszym razie pojedynczy symbol tekstu $t$ może zostać porównany z wzorcem w Algorytmie \ref{alg:exact-string-matching-morris-pratt}.
+\end{problem}
+
+\begin{problem}{}{}
+  Pokaż, ile dokładnie porównań wykonuje w najgorszym przypadku zmodyfikowany Algorytm \ref{alg:exact-string-matching-morris-pratt}, zwracający wszystkie wystąpienia (tj. pozycje indeksów początkowych) $w$ w $t$.
+\end{problem}
+
+\subsection{Algorytm Knutha-Morrisa-Pratta}
+
+Przesunięcie o $p(w[1..k]) = k - B[k]$ nie musi być najlepsze możliwe. Jeśli niedopasowanie zaszło na znakach $t[i + k + 1] \neq w[j + 1]$ oraz wiadomo z analizy wzorca, że $w[k + 1] = w[k - p(w) + 1]$, to wiadomo, że nie znajdziemy wzorca przez przesunięcie tylko o $p(w)$. Za to możemy szukać prefikso-sufiksu $w'$ dla słowa $w[1..j]$ takiego, że następuje po nim znak inny niż $w[j + 1]$ -- czyli tzw. silnego prefikso-sufiksu.
+
+Dla słowa $w$ można zdefiniować tablice silnych prefikso-sufiksów następująco:
+\begin{align*}
+  sB[i] = 
+  \begin{cases}
+    \max\{0 \le k < i:\text{$w[1 \ldots k]$ jest sufiksem $w[1\ldots i]$} & \text{dla $1 \le i \le |w| - 1$,} \\
+    \qquad\qquad\quad\text{i $w[k + 1] = w[i + 1]$}\} \\
+    B[i] & \text{dla $i = |w|$,} \\
+    -1 & \text{w pozostałych przypadkach.}
+  \end{cases}
+\end{align*}
+
+\begin{code}
+\captionof{listing}{Tablica silnych prefikso-sufiksów}
+\inputminted{python}{code/other/strong-prefix-suffix.py}
+\label{alg:strong-prefix-suffix}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż, jaki dokładny pesymistyczny czas działania ma Algorytm \ref{alg:strong-prefix-suffix}.
+\end{problem}
+
+%$3m-5$. Wynik osiągalny dla $pat = 010^{m-2}$.
+
+\begin{code}
+\captionof{listing}{Algorytm Knutha-Morrisa-Pratta}
+\inputminted{python}{code/exact-string-matching/knuth-morris-pratt.py}
+\label{alg:exact-string-matching-knuth-morris-pratt}
+\end{code}
+
+\begin{problem}{galil1997pattern}{}
+  Pokaż, ile razy w najgorszym razie pojedynczy symbol tekstu $t$ może zostać porównany z wzorcem w Algorytmie \ref{alg:exact-string-matching-knuth-morris-pratt}.
+\end{problem}
+
+\begin{problem}{galil1997pattern}{}
+  Pokaż, ile dokładnie porównań wykonuje w najgorszym przypadku zmodyfikowany Algorytm \ref{alg:exact-string-matching-knuth-morris-pratt}, zwracający wszystkie wystąpienia (tj. pozycje indeksów początkowych) $w$ w $t$.
+\end{problem}
+
+\subsection{Algorytm Boyera-Moore'a}
+
+Algorytm Boyera-Moore'a polega na ulepszeniu naiwnego dopasowywania wzorca od prawej do lewej.
+Schemat jest taki sam jak dla algorytmów Morrisa-Pratta i Knutha-Morrisa-Pratta: wykonujemy dopasowanie dla danej pozycji okna, w razie znalezienia niedopasowania przesuwamy okno o pewną wartość.
+
+Sprawdzanie dopasowania wzorca od prawej do lewej umożliwia, żeby algorytm wykonał $O\left(\frac{m}{n}\right)$ porównań np. dla $t = 0^n$, $w = 0^{m - 1}1$. Wystarczy np. wiedzieć, że wzorzec nie jest okresowy tj. $p(w) = |w|$ oraz że zachodzi $t[i] \neq w[m]$, aby następne sprawdzanie rozpocząć od pozycji $i + m$. Zauważmy, że w algorytmie KMP zawsze musimy porównać każdą literę tekstu ze wzorcem.
+
+W praktyce to powoduje, że algorytm Boyera-Moore'a jest zauważalnie szybszy niż KMP lub MP.
+
+Sednem algorytmu Boyera-Moore'a są 2 niezmienniki:
+\begin{itemize}
+  \item $cond_1(j, s)$ -- dla każdego $j  < k \le m$ zachodzi $s \ge k$ lub $w[k - s] = w[k]$,
+  \item $cond_2(j, s)$ -- dla $s < j$ zachodzi $w[j - s] \neq w[j]$.
+\end{itemize}
+
+Wówczas możemy zdefiniować tablicę $BM$ w następujący sposób:
+\begin{align*}
+  BM[j] =
+  \begin{cases}
+    \min \{s > 0: cond_1(j, s) \land cond_2(j, s)\} & \text{dla $1 \le j < m$}, \\
+    p(w) & \text{dla $j \in \{0, m\}$}.
+  \end{cases}
+\end{align*}
+Tablica ta, podobnie jak tablica silnych prefikso-sufiksów w algorytmie KMP, określa o ile możemy przesunąć wzorzec względem tekstu w razie niedopasowania -- tylko od końca.
+
+Aby efektywnie obliczyć tablicę $BM$ będzie potrzebna tablica prefikso-prefiksów:
+\begin{align*}
+  PREF[j] =
+  \begin{cases}
+    \max \{s \ge 0: \text{$w[j:j + s - 1]$ jest prefiksem $w$}\} & \text{dla $1 \le j \le m$}, \\
+    -1 & \text{dla $j = 0$}.
+  \end{cases}
+\end{align*}
+
+\begin{code}
+\captionof{listing}{Tablica prefiksowo-prefiksowa}
+\inputminted{python}{code/other/prefix-prefix.py}
+\label{alg:prefix-prefix}
+\end{code}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:prefix-prefix} wyznacza poprawną tablicę prefikso-prefiksów dla słowa $w$ długości $m$.
+\end{theorem}
+
+\begin{proof}
+  Niech tablica $PREF$ będzie poprawnie wypełniona dla wszystkich $2 \le j < i$ oraz niech $1 \le s < i$ będzie wartością, dla której $s + PREF[s]$ jest maksymalne.
+  Niech ponadto $s_{max} = s + PREF[s] - 1$, $k = i - s + 1$ oraz $r = PREF[k]$
+  
+  Wówczas mamy 3 sytuacje:
+  \begin{enumerate}
+      \item $s + PREF[s] < i$ -- wówczas obliczamy wartość $PREF[i]$ naiwnie porównując $w$ i $w[i:m]$,
+      \item $s + PREF[s] \ge i$ oraz $PREF[k] + k - 1 < PREF[s]$ dla $k = i - s + 1$ -- wówczas z definicji $s$ wiemy, że $w[s:s_{max}] = w[1:(s_{max} - s + 1)]$ oraz $i \in [s, s_{max}]$ (z pierwszego) oraz $w[1:r] = w[k:(r + k - 1)]$, $w[r + 1] \neq w[r + k]$ (z drugiego), wobec czego również $w[1:r] = w[i:(r + i - 1)]$ i $w[r + 1] \neq w[r + i]$, a więc $PREF[i] = r$,
+      \item $s + PREF[s] \ge i$ oraz $PREF[k] + k - 1 \ge PREF[s]$ dla $k = i - s + 1$ -- wówczas podobnie jak powyżej mamy $w[1:(s_{max} - i + 1)] = w[i:s_{max}]$, więc sprawdzamy wydłużanie zgodności, naiwnie porównując $w[s_{max} - i:m]$ oraz $w[s_{max} + 1:m]$.
+  \end{enumerate}
+\end{proof}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:prefix-prefix} dla słowa długości $m$ działa w czasie $O(m)$.
+\end{theorem}
+
+\begin{proof}
+  Wystarczy zauważyć, że w funkcji \texttt{naive\_scan} kolejne wartości $j + r$ w ramach wszystkich wywołań tworzą ciąg rosnący.
+\end{proof}
+
+\begin{code}
+\captionof{listing}{Tablica maksymalnych sufiksów}
+\inputminted{python}{code/other/maximum-suffixes.py}
+\label{alg:maximum-suffixes}
+\end{code}
+
+\begin{code}
+\captionof{listing}{Tablica przesunięć według dobrych sufiksów}
+\inputminted{python}{code/other/boyer-moore-shift.py}
+\label{alg:boyer-moore-shift}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż, że Algorytm \ref{alg:boyer-moore-shift} poprawnie oblicza wartości tablicy $BM$ w czasie $O(m)$.
+\end{problem}
+
+% Fakt: jeśli $BM[j] = m - k < j$, to $S[k] = m - j$.
+
+\begin{problem}{}{}
+    Pokaż, jak policzyć tablicę $wBM = \min\{s > 0: cond_1(j, s)\}$ w czasie $O(m)$.
+\end{problem}
+
+\begin{code}
+\captionof{listing}{Algorytm Boyera-Moore'a}
+\inputminted{python}{code/exact-string-matching/boyer-moore.py}
+\label{alg:exact-string-matching-boyer-moore}
+\end{code}
+
+\begin{problem}{crochemore2002jewels}{s. 41}
+  Pokaż, że dla wszystkich $n$, $m$ istnieje tekst $t$ i wzorzec $w$ ($|t| = n$, $|w| = m$) takie, że wyszukanie wzorca $w$ w tekście $t$
+  z użyciem algorytmu Boyera-Moore'a wymaga czasu $O(n + m)$ a dla algorytmu wykorzystującego tablicę $wBM = \min\{s > 0: cond_1(j, s)\}$ zamiast $BM$ wymaga czasu $\Omega(n m)$.
+\end{problem}
+
+%Odpowiedź: w = ca(ba)^k, t = a^{2k + 2}ba
+
+\subsubsection{Znajdowanie wszystkich wystąpień wzorca}
+
+Tak jak algorytm KMP, tak algorytm BM można łatwo zmodyfikować, by zwracał wszystkie wystąpienia wzorca w tekście. Wystarczy przyjąć, że $BM[0] = p(w)$.
+\begin{problem}{}{}
+  Pokaż, że jeśli tekst $t$ zawiera $r$ wystąpień wzorca $w$, to czas działania algorytmu Boyera-Moore'a wynosi $\Omega(r m)$.
+\end{problem}
+
+\begin{corollary}{}{}
+  Jeśli wzorzec występuje w tekście $\Theta(n)$ razy, to czas działania algorytmu Boyera-Moore'a wynosi $\Omega(n m)$.
+\end{corollary}
+
+Rozwiązaniem jest wykorzystanie zmiennej $memory$, zawierającej numer pierwszego indeksu, którego nie musimy sprawdzać.
+W większości obrotów pętli $memory = 0$, jedynym wyjątkiem jest sytuacja, gdy zaszło dopasowanie -- wtedy wiemy, że $m - p(w)$ pierwszych symboli już jest dopasowanych i wystarczy porównać $w[(m - p(w) + 1)..m]$ z tekstem.
+
+\begin{code}
+\captionof{listing}{Algorytm Boyera-Moore'a-Galila}
+\inputminted{python}{code/exact-string-matching/boyer-moore-galil.py}
+\label{alg:exact-string-matching-boyer-moore-galil}
+\end{code}
+
+\subsubsection{Dowód liniowej złożoności algorytmu}
+
+\todo[inline]{Dowód Cole'a}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:exact-string-matching-boyer-moore} wymaga $O(n' + m)$ czasu do stwierdzenia pierwszego wystąpienia wzorca $w$ z tekście $t$, gdy to wystąpienie zostało znalezione na pozycji $n'$.
+\end{theorem}
+
+\begin{corollary}{}{}
+  Algorytm \ref{alg:exact-string-matching-boyer-moore} wymaga $O(n + m)$ czasu do stwierdzenia, czy słowo $t$ zawiera podsłowo $w$.
+\end{corollary}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:exact-string-matching-boyer-moore-galil} działa w czasie $O(n + m)$.
+\end{theorem}
+
+\begin{proof}
+  Z poprzedniego twierdzenia łatwo wykazać, że znalezienie wszystkich wystąpień wymaga czasu $O(n + r m)$ dla $r$ wystąpień wzorca w tekście dla Algorytmu \ref{alg:exact-string-matching-boyer-moore}, a więc również dla Algorytmu \ref{alg:exact-string-matching-boyer-moore-galil}.
+  
+  Jeśli $p(w) \ge \frac{m}{2}$, to z faktu $r \le \frac{n}{p(w)}$ wynika, że całkowita złożoność wynosi $O(n)$.
+  
+  Jeśli $p(w) < \frac{m}{2}$, to możemy pogrupować wystąpienia wzorca jeśli dwa kolejne w ciągu są odległe o $p(w)$. W każdym takim łańcuchu w Algorytmie \ref{alg:exact-string-matching-boyer-moore-galil} przejrzymy każdy symbol w łańcuchu tylko raz.
+  Jeśli natomiast wykryjemy niedopasowanie, to wiemy, że następne przesuniecie zgodnie z dobrym sufiksem wynosi $|w| - p(w) \ge \frac{m}{2}$. Wobec każdy symbol poza łańcuchami odczytamy co najwyżej $2$ razy, a zatem złożoność również będzie liniowa.
+\end{proof}
+
+\subsubsection{Heurystyka \emph{occurrence shift}}
+
+W oryginalnym artykule Boyera i Moore'a zaproponowano również dodatkową heurystykę \emph{occurrence shift}, opartą na znajomości wystąpień liter z alfabetu we wzorcu.
+
+Zdefiniujmy tablicę $LAST$ w następujący sposób:
+\begin{align*}
+  L[x] =
+  \begin{cases}
+    \max \{1 \le i \le m: w[i] = x \land \forall_{i < j \le m} w[j] \neq m\} & \text{gdy $x$ występuje w $w$}, \\
+    0 & \text{w przeciwnym przypadku}.
+  \end{cases}
+\end{align*}
+Jeśli wiemy, że niedopasowanie nastąpiło na $w[j] \neq t[i + j]$, to wiemy również, że nie ma sensu sprawdzać przesunięć krótszych niż $j - LAST[t[i + j]]$. Mówiąc prościej, jeśli $t[i + j] = x$ oraz $x$ występuje w $w$ najpóźniej na pozycji $k$ (tj. $k = LAST[t[i + j]]$), to mamy 2 sytuacje:
+\begin{itemize}
+  \item albo $k > j$, wtedy wiedza z tablicy $LAST$ nam nic nie pomaga,
+  \item albo $k < j$, wtedy wiemy, że pierwszą okazją na znalezienie dopasowania jest zestawienie ze sobą $w[k]$ i $t[i + j]$ -- czyli właśnie przesunięcie o $j - k$.
+\end{itemize}
+Dla znanego, skończonego alfabetu widać wprost, że wyznaczenie tablicy $LAST$ wymaga czasu i pomięci $O(m + |\A|)$.
+
+Ponieważ heurystyka nie wyklucza się z obserwacjami dokonanymi na bazie tablicy $BM$, jej zastosowanie polega na zastąpieniu przesunięć o $BM[j]$ przesunięciami o $\max\{BM[j], j - LAST[t[i + j]]\}$.
+
+W praktyce heurystyka ma sens wtedy, gdy alfabety są większe, ale dla alfabetu binarnego jest mało skuteczna.
+Co ciekawe, brakuje teoretycznych analiz skuteczności użycia tej heurystyki np. względem podstawowego algorytmu Boyera-Moore'a.
+
+\begin{problem}{}{}
+  Niech w Algorytmie \ref{alg:exact-string-matching-boyer-moore} w linii ??? będzie miał zamiast $i = i + BM[j]$ polecenie $i = i + \max\{1, j - LAST[t[i + j]]\}$.
+  Pokaż dla dowolnych $n$ i $m$ przykłady słów $t$ i $w$ ($|t| = n$, $|w| = m$) takich, że zmodyfikowany algorytm wymaga $\Omega(n m)$ porównań.
+\end{problem}
+
+Ten sam pomysł pojawia się u Horspoola, który postanowił korzystać tylko z przesuwania o \emph{occurrence shift} zgodnie z ostatnim znakiem aktualnie przetwarzanego tekstu.
+
+\begin{code}
+\captionof{listing}{Algorytm Horspoola}
+\inputminted{python}{code/exact-string-matching/horspool.py}
+\label{alg:exact-string-matching-horspool}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż dla dowolnych $n$ i $m$ przykłady słów $t$ i $w$ ($|t| = n$, $|w| = m$) takich, że algorytm Horspoola wymaga $\Omega(n m)$ porównań.
+\end{problem}
+
+Raita zaproponował dodatkowo, żeby zamiast przechodzić do porównania tekstu z wzorcem za każdym razem wykonać najpierw porównanie symbolu ostatniego, pierwszego i środkowego.
+Uzasadniał to tym, że wyszukiwanie słów w językach naturalnych często natrafia na problem częstych sufiksów (np. w angielskim \emph{-ing}, \emph{-ion}, \emph{-ed}) \cite{raita1992tuning}, aczkolwiek dalsze eksperymenty na tekstach losowych również przyniosły podobne rezultaty, co sugeruje że korzyści mogą być spowodowane czymś innym \cite{smith1994tuning}.
+
+\subsubsection{Quick search}
+
+Można zaproponować również inną heurystykę opartą o \emph{occurrence shift}: jeśli zaszło niedopasowanie na fragmencie tekstu $t[(i - j)..(i - 1)]$, to wiemy, że następne porównanie tekstu z wzorcem będzie zawierało $t[i]$. Wobec tego można od razu przesunąć tekst tak, aby uzgodnić ostatnie wystąpienie litery $t[i]$ we wzorcu z tekstem.
+
+\begin{code}
+\captionof{listing}{Algorytm \emph{quick search}}
+\inputminted{python}{code/exact-string-matching/quick-search.py}
+\label{alg:exact-string-matching-quick-search}
+\end{code}
+
+Smith zauważył, że można połączyć podejście Horspoola i Quick Search tj. brać maksimum z obu zalecanych przesunięć, aby otrzymać praktyczne przyspieszenie algorytmu \cite{smith1991experiments}.
+
+\subsection{Algorytm \emph{fast-on-average}}
+
+\begin{code}
+\captionof{listing}{Algorytm \emph{fast-on-average}}
+\inputminted{python}{code/exact-string-matching/fast-on-average.py}
+\label{alg:exact-string-matching-fast-on-average}
+\end{code}
+
+\begin{theorem}{crochemore2002jewels}{Theorem 2.5}
+  Algorytm \ref{alg:exact-string-matching-fast-on-average} działa w czasie oczekiwanym $O\left(n \frac{\log{m}}{m}\right)$ i pesymistycznym $O(n)$. Przetwarzanie wstępne wzorca wymaga czasu $O(m)$.
+\end{theorem}
+
+\begin{proof}
+  Stworzenie struktury do sprawdzania, czy słowo $t[(i - r)..i]$ jest podsłowem $w$ (np. drzewa sufiksowego lub DAWG) wymaga czasu $O(m)$.
+  
+  Jeśli $t[(i - r)..i]$ nie jest podsłowem $w$, to $w$ nie może być podsłowem $t$ rozpoczynającym się na żadnej z pozycji od $i - m + 1$ do $i - r$.
+  
+  Słowo $t[(i - r)..i]$ ma $2^{r + 1} \ge m^2$ możliwych wartości. Z drugiej strony, wiemy że $w$ zawiera mniej niż $m$ podsłów długości $r + 1$.
+  Jeśli $t$ jest losowy, to prawdopodobieństwo, że $t[(i - r)..i]$ jest podsłowem $w$ jest mniejsze niż $\frac{1}{m}$.
+  Wobec tego po sprawdzeniu czy słowo $t[(i - r)..i]$ jest podsłowem $w$ (w czasie $O(r)$) jedynie z prawdopodobieństwem mniejszym niż $\frac{1}{m}$ będziemy musieli wykonać algorytm KMP na tekście $t[(i - m + 1)..(i - r + m - 1)]$ oraz wzorcu $w$ (w czasie $O(m)$). Łączny oczekiwany czas działania tej procedury jest równy zatem $O(r)$, natomiast pesymistyczny $O(m)$.
+  
+  Każda pojedyncza iteracja rozstrzyga dopasowanie dla $m - r$ możliwych początków indeksów. Wystarczy zatem uruchamiać algorytm dla $i = 1, m - r + 1, 2 (m - r) + 1, \ldots$ -- a zatem $O\left(\frac{n}{m}\right)$ razy -- i rozwiązać problem niezależnie dla każdego podprzypadku.
+\end{proof}
+
+\subsection{Algorytm \emph{two-way}}
+
+\begin{definition}{}{}
+  Dla dowolnych słów $u$, $v$ niepuste słowo $w$ jest \emph{powtórzeniem} (repetition) $(u, v)$, jeśli:
+  \begin{itemize}
+    \item $w$ jest sufiksem $u$ lub $u$ jest sufiksem $w$,
+    \item $w$ jest prefiksem $v$ lub $v$ jest prefiksem $w$.
+  \end{itemize}
+\end{definition}
+Zwróćmy uwagę, że dla dowolnych słów $u$, $v$ zawsze istnieje co najmniej jedno powtórzenie $(u, v)$: $w = vu$.
+
+\begin{definition}{}{}
+  Dla dowolnych słów $u$, $v$ lokalny okres jest zdefiniowany jako minimalna długość słowa będącego powtórzeniem $(u, v)$.
+
+  \begin{align*}
+    lp(u, v) = \min\{|w|: \text{$w$ jest powtórzeniem $(u, v)$}\}
+  \end{align*}
+\end{definition}
+
+\begin{problem}{}{}
+  Pokaż, że $1 \le lp(u, v) \le p(uv)$ dla dowolnych słów $u$, $v$.
+\end{problem}
+
+\begin{problem}{}{}
+  Pokaż jak w czasie $O(n)$ dla dowolnego słowa $w$ obliczyć tablicę $lp(u, v)$ dla wszystkich $u$, $v$ takich, że $w = uv$.
+\end{problem}
+% Obliczanie lokalnych okresów w czasie liniowym: [Duval, Kolpakov, Kucherov, Lecroq, Lefebvre, 2003]
+
+\begin{definition}{}{}
+  Faktoryzacją krytyczną słowa $w$ nazywamy parę słów $(u, v)$ takich, że $uv = w$ i $lp(u, v) = p(w)$.
+\end{definition}
+
+\begin{problem}{galil1997pattern}{Theorem 1.17, s. 40}
+  Pokaż, że dla dowolnego niepustego słowa $w$ istnieje faktoryzacja krytyczna $(u, v)$ spełniająca $|u| < p(w)$.
+\end{problem}
+
+Potrzebne będzie znalezienie faktoryzacji krytycznej. Okazuje się, że można to zrobić na bazie algorytmu znajdującego maksymalny sufiks słowa.
+
+\begin{code}
+\captionof{listing}{Wyznaczanie faktoryzacji krytycznej dla tekstu $t$}
+\inputminted{python}{code/factorization/critical-factorization.py}
+\label{alg:critical-factorization}
+\end{code}
+
+\begin{theorem}{galil1997pattern}{Theorem 1.18, s. 40}
+  Algorytm \ref{alg:critical-factorization} zwraca faktoryzację krytyczną $(u, v)$ dla słowa $w$. Dodatkowo, $|u| < p(w)$.
+\end{theorem}
+
+\begin{proof}
+  Niech $\le$ będzie porządkiem leksykograficznym zgodnym z kolejnością liter w alfabecie, natomiast $\le^*$ porządkiem leksykograficznym zgodnym z odwrotną kolejnością liter w alfabecie.
+
+  Dla dowolnego niepustego słowa $w$ niech $w = uv$ z $v$ jako maksymalnym sufiksem według $\le$ oraz $w = u'v'$ z $v'$ jako maksymalnym sufiksem według $\le^*$.
+
+  Jeśli $w = a^n$ dla pewnego $a \in \A$, to każde $(u, v)$ takie, że $w = uv$ jest faktoryzacją krytyczna.
+  Jeśli nie, to $v \neq v'$. Bez straty ogólności załóżmy, że $|v| < |v'|$.
+
+  Niech $x$ będzie najkrótszym powtórzeniem dla $(u, v)$.
+  Wystarczy tylko dowieść, że $|x|$ jest okresem $w$, bo z lematu wyżej wiadomo, że $|x| = lp(u, v) \le p(w)$.
+
+  Możemy wyróżnić cztery przypadki:
+  \begin{enumerate}
+    \item $x$ jest sufiksem $u$, $v$ jest prefiksem $x$ -- ale wtedy $v < x < xv$ i $xv$ jest sufiksem $w$, więc $v$ nie byłoby maksymalnym sufiksem $w$,
+    \item $x$ jest sufiksem $u$, $x$ jest właściwym prefiksem $v$ z $v = xz$ dla pewnego $z \in \A^+$ -- wtedy $z$ jest również sufiksem $w$, wobec tego $z < v$ i $v = x z < x v$, więc $v$ nie byłoby maksymalnym sufiksem $w$,
+    \item $u$ jest właściwym sufiksem $x$, $v$ jest prefiksem $x$ -- wtedy $|x|$ jest okresem $w$,
+    \item $u$ jest właściwym sufiksem $x$, $x$ jest właściwym prefiksem $v$ z $v = x z$ dla pewnego $z \in \A^+$ -- wtedy $v' = y v$ dla pewnego $y \in \A^+$. Skoro $v'$ jest sufiksem $w = u v$, to $y$ jest sufiksem $u$, a zatem jest też sufiksem $x$. Wobec tego $y z$ jest sufiksem $v$ oraz całego $w$, a więc $y z \le^* v' = y v$, czyli $z \le^* v$. Zarazem $z \le v$, bo z definicji $z$ też jest sufiksem $w$ -- a zatem $z$ jest prefiksem $v$. Wobec tego $z$ jest prefikso-sufiksem $v$ a $|x|$ jest okresem $v$. $|x|$ jest ostatecznie okresem całego $w$, bo $w$ jest podsłowem $x^2 z$.
+  \end{enumerate}
+
+  Ponieważ pierwsze dwa przypadki kończą się sprzecznością, to wiemy, że $u$ jest właściwym sufiksem $x$ -- a więc $|u| < |x| = p(w)$.
+\end{proof}
+
+Powyższe obserwacje stały się podstawą pierwszego optymalnego (tj. działającego w czasie liniowym i ze stałą dodatkową pamięcią) algorytmu wyszukiwania wzorca z tekście, tzw. \emph{two-way algorithm}.
+
+Załóżmy, że mamy $(u, v)$, faktoryzację krytyczną wzorca $w$. Wówczas możemy najpierw sprawdzać dopasowanie odpowiedniej części tekstu do $v$ od lewej do prawej (jak w algorytmie Morrisa-Pratta), a następnie sprawdzać dopasowanie wcześniejszej części do $u$ od prawej do lewej (jak w algorytmie Boyera-Moore'a). Jak zwykle, w razie niedopasowania wykonujemy odpowiednie przesunięcia.
+
+\begin{code}
+\captionof{listing}{Algorytm Two-Way}
+\inputminted{python}{code/exact-string-matching/two-way.py}
+\label{alg:exact-string-matching-two-way}
+\end{code}
+
+Jak widać, dla jednego z przypadków zostało wykorzystane zapamiętywanie dopasowania, analogicznie jak w algorytmie Boyera-Moore'a-Galila.
+Okazuje się, że dla drugiego nie jest ono potrzebne, ponieważ okres wzorca jest dostatecznie długi.
+
+\begin{lemma}{galil1997pattern}{Lemma 1.19, s. 43}
+  Niech $(u, v)$ jest faktoryzacją krytyczną $w$ taką, że $|u| < p(w)$. Jeśli $u$ nie jest sufiksem $v[1 \ldots p(v)]$, to $u$ występuje dokładnie raz w $w$.
+\end{lemma}
+
+\begin{proof}
+  Załóżmy, że $u$ nie jest sufiksem $v[1 \ldots p(v)]$, ale występuje w $w$ drugi raz.
+  Z okresowości $v$ wiemy, że $v$ musi zaczynać się pewnym sufiksem $u$ -- ale wtedy $lp(u, v) \le |u|$.
+  To przeczy jednak założeniu, że $(u, v)$ jest faktoryzacją krytyczną, a więc $lp(u, v) = p(w) > |u|$.
+\end{proof}
+
+\begin{corollary}{}{}
+  \label{col:long-period}
+  Niech $(u, v)$ jest faktoryzacją krytyczną $w$ taką, że $|u| < p(w)$. Jeśli $u$ nie jest sufiksem $v[1 \ldots p(v)]$, to
+  \begin{align*}
+    p(w) \ge \max\{|u|, |v|\} + 1 > \frac{|w|}{2}.
+  \end{align*}
+\end{corollary}
+
+\begin{proof}
+  Wprost z założenia wynika, że $p(w) \ge |u| + 1$.
+  Z poprzedniego lematu wiemy, że $u$ występuje dokładnie raz w $w$, a zatem największy możliwy prefikso-sufiks $w$ jest nie dłuższy niż $|u| - 1$.
+  Wobec tego $p(w) \ge |w| - (|u| - 1) = |v| + 1$.
+  
+  Druga nierówność jest oczywista na mocy faktu $w = uv$.
+\end{proof}
+
+\begin{theorem}{galil1997pattern}{Theorem 1.18, s. 43}
+  Algorytm \ref{alg:exact-string-matching-two-way} zwraca poprawnie wszystkie wystąpienia podsłów w tekście.
+\end{theorem}
+
+\begin{proof}
+  Przy przeglądaniu w prawo w razie niedopasowania po prostu przesuwamy wzorzec o tyle znaków, ile przejrzeliśmy.
+  %\todo[inline]{Zrekonstruować dowód}
+
+  Przy przeglądaniu w lewo mamy dwa przypadki, w zależności od tego, czy dla wzorca $w$ i jego faktoryzacji krytycznej $(u, v)$ rzeczywiście $u$ jest sufiksem $v[1 \ldots p(v)]$.
+  Jeśli tak, to postępujemy dokładnie jak w algorytmie \ref{alg:exact-string-matching-boyer-moore-galil}. W tym przypadku zachodzi $p(w) = p(v)$.
+
+  Jeśli nie, to z \ref{col:long-period} wiemy, że $p(w) \ge \max\{|u|, |v|\} + 1$ -- a zatem możemy ustawić minimalne przesunięcie na tę drugą wartość.
+  Gwarantuje to zarazem, że nie musimy się martwić o przypadek nakładających się wystąpień wzorca na siebie, więc nie potrzebujemy zapamiętywania prefiksu zgodnie z regułą Galila.
+\end{proof}
+
+% galil-apostolico s. 43-...
+\begin{theorem}{}{}
+  Algorytm \ref{alg:exact-string-matching-two-way} działa w czasie $O(n + m)$ i wymaga $O(1)$ dodatkowej pamięci.
+\end{theorem}
+
+\begin{proof}
+  W dowodzie zakładamy, że wyznaczanie maksymalnego sufiksu jest wykonywane w czasie $O(n + m)$ i w $O(1)$ dodatkowej pamięci np. wykorzystując \ref{alg:maximum-suffix-constant-space}. Wykorzystanie pamięci $O(1)$ przez cały algorytm jest oczywiste.
+
+  Jeśli patrzymy na pozycje tekstu $t$ porównywane tylko przy przeglądaniu w prawo w ciągu całego algorytmu, to tworzą one ciąg rosnący. Wobec tego takich porównań mamy co najwyżej $n$.
+  % TODO: rozszerzyć
+
+  Jeśli patrzymy na pozycje tekstu $t$ porównywane tylko przy przeglądaniu w prawo w ciągu całego algorytmu, to żadna nie zostanie porównana dwa razy, ponieważ między kolejnymi iteracjami głównej pętli przesuwamy okno o $p > |u|$ (na mocy dodatkowego warunku dla faktoryzacji krytycznej), a w każdym oknie sprawdzamy co najwyżej $|u|$ znaków w ten sposób.
+  Takich porównań również mamy co najwyżej $n$.
+\end{proof}
+
+\subsection{Algorytm Karpa-Rabina}
+
+Alternatywne podejście można oprzeć o obliczanie funkcji skrótu $h$ dla poszczególnych podsłów długości $m$. Jeśli funkcja jest zwykłą liniową funkcją modulo, to łatwo obliczyć $h(t[i + 1..m + i + 1])$ na podstawie $h(t[i..m + i])$.
+
+\begin{code}
+\captionof{listing}{Algorytm Karpa-Rabina}
+\inputminted{python}{code/exact-string-matching/karp-rabin.py}
+\label{alg:exact-string-matching-karp-rabin}
+\end{code}
+
+Warto zwrócić uwagę, że algorytm można zaimplementować w dwóch wersjach:
+\begin{itemize}
+    \item Monte Carlo -- zwracamy dopasowanie od razu, gdy wykryjemy równość haszy, więc czas działania to $O(n)$, ale możliwe fałszywe dopasowania,
+    \item Las Vegas -- zwracamy dopasowanie jedynie, gdy wykryjemy równość haszy i sprawdzimy z całym wzorcem, stąd brak błędów, ale pesymistyczny czas działania to $O(n m)$.
+\end{itemize}

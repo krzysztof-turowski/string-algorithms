@@ -1,0 +1,47 @@
+\section{Dopasowanie wzorca z wieloznacznikami}
+
+Wprowadźmy teraz symbol specjalny $?$ jako wieloznacznik lokalny (\emph{don't care symbol}), pasujący do każdego pojedynczego symbolu z $\A$.
+
+\begin{definition}{}{}
+  Relacja $\simeq$ jest relacją {\bf\textit{dopasowania z wieloznacznikiem lokalnym}} tj. $u \simeq v$ wtedy i tylko wtedy, gdy $|u| = |v|$ oraz dla wszystkich $1 \le i \le |u|$ zachodzi $u[i] = v[i]$ lub $u[i] =\,?$, lub też $v[i] =\,?$.
+\end{definition}
+
+\begin{algorithm}[H]
+    \caption{Wyszukiwanie wszystkich wystąpień wzorca z wieloznacznikami lokalnymi w tekście}
+    \Input{Słowa $t, w \in (\A \cup \{?\})^+$ ($|t| = n$, $|w| = m$)}
+    \Output{Zbiór liczb $S = \{1 \le i \le n: t[i..(i + m - 1)] \simeq w\}$.}
+\end{algorithm}
+
+Istnieje bardzo pomysłowy algorytm obliczania wszystkich wystąpień wzorca z wieloznacznikami lokalnymi w tekście, oparty o szybką transformatę Fouriera.
+Jak wiadomo, FFT umożliwia obliczanie dla dwóch wektorów $X$ i $Y$ o długości odpowiednio $n$ i $m$ (zakładając, że $n \ge m$) w czasie $O(n \log{n})$ operacji splotu tj. takiego $Z$, że dla wszystkich $0 \le i \le n - m$ zachodzi
+\begin{align*}
+  Z[i] = \sum_{j = 0}^{m - 1} X[i + j] Y[m - 1 - j].
+\end{align*}
+Zwróćmy uwagę, że -- wyjątkowo -- mamy w tym przypadku indeksowanie od $0$.
+
+\begin{code}
+\captionof{listing}{Obliczanie wszystkie wystąpień wzorca z wieloznacznikami lokalnymi w tekście}
+\inputminted{python}{code/approximate-string-matching/basic-fft.py}
+\label{alg:string-matching-dont-care-basic-fft}
+\end{code}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:string-matching-dont-care-basic-fft} wyznacza poprawnie wszystkie wystąpień wzorca z wieloznacznikami lokalnymi w tekście.
+\end{theorem}
+
+\begin{proof}
+Kluczowa obserwacja jest następująca: wybierzmy dwie różne litery $a, b \in \A$ i wyznaczmy odpowiednio dla wszystkich $0 \le i \le n - 1$ oraz $0 \le j \le m - 1$
+\begin{align*}
+    X[i] = \text{$1$ gdy $t[i + 1] = a$}, & \text{w przeciwnym przypadku $X[i] = 0$,} \\
+    Y[j] = \text{$1$ gdy $w[m - j] = b$}, & \text{w przeciwnym przypadku $Y[j] = 0$.}
+\end{align*}
+Wówczas
+\begin{align*}
+    Z[i] = \sum_{j = 0}^{m - 1} X[i + j] Y[m - 1 - j] = |\{0 \le j \le m - 1: t[i + j + 1] = a \land w[j + 1] = b \}|,
+\end{align*}
+a zatem $Z[i]$ jest po prostu zliczeniem wszystkich niedopasowań między tekstem $t[i + 1..i + m]$ a wzorcem $w$,
+takich że w tekście występuje $a$, a we wzorcu $b$.
+Powtarzając to dla wszystkich par liter w alfabecie możemy zliczyć wszystkie niedopasowania między $t[i + 1..i + m]$ a $w$ -- a zatem dopasowania będą na na tych pozycjach, na których niedopasowań brak.
+\end{proof}
+
+Jak łatwo zauważyć, algorytm \ref{alg:string-matching-dont-care-basic-fft} działa w czasie $O(n \log{n} |\A|^2)$.
