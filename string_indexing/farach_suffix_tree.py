@@ -150,9 +150,7 @@ def extend_text(text, symbol):
 
 def initialise_data():
     global odd_even_pairs, d_links, depth_in_d_tree, nextIndex
-    odd_even_pairs = {}
-    d_links = {}
-    depth_in_d_tree = {}
+    odd_even_pairs, d_links, depth_in_d_tree = {}, {}, {}
     nextIndex = 0
 
 
@@ -277,11 +275,7 @@ def get_faulty_merge_recurse(node, odd, even, text):
             o_len = len(o_child.label)
             e_len = len(e_child.label)
             if o_len != e_len:
-                odd_shorter = True
-                short_label = o_child.label
-                if e_len < o_len:
-                    odd_shorter = False
-                    short_label = e_child.label
+                odd_shorter, short_label = (True, o_child.label) if e_len > o_len else (False, e_child.label)
                 new_node = trie.TrieNode(short_label)
                 node.add_child(new_node)
                 if odd_shorter:
@@ -299,10 +293,7 @@ def get_faulty_merge_recurse(node, odd, even, text):
                     get_faulty_merge_recurse(new_node, split_node, e_child, text)
             else:  # o_len == e_len and o_char == e_char
                 new_node = trie.TrieNode(o_child.label)
-                if e_child.index <= len(text):
-                    set_index(new_node, e_child)
-                else:
-                    set_index(new_node, o_child)
+                set_index(new_node, e_child if e_child.index <= len(text) else o_child)
                 node.add_child(new_node)
                 setattr(new_node, "odd", True)
                 setattr(new_node, "even", True)
@@ -356,10 +347,7 @@ def suffix_and_LCP_array_to_tree(A, LCP, text):
             currentNode = currentNode.parent
         if currentNode.depth == LCP[i - 1]:
             if currentNode.depth == len(suffix):
-                currentNode.index = len(text) - len(suffix) + 1
-                # dummy object creation; won't have any effect
-                # done to suppress warning 'newNode might be referenced before assignment' at the end of the for loop
-                newNode = trie.TrieNode('')
+                newNode = currentNode
             else:
                 newNode = trie.TrieNode(suffix[currentNode.depth:])
                 currentNode.add_child(newNode)
@@ -391,11 +379,9 @@ def substitute_with_ranks(S):
 # returns suffix tree for odd suffixes of text
 def get_odd_suffix_tree(text):
     n = len(text)
-    S = [(text[i], text[i + 1]) for i in range(n) if i % 2 == 0]
-    S = substitute_with_ranks(S)
+    S = substitute_with_ranks([(text[i], text[i + 1]) for i in range(n) if i % 2 == 0])
     TS, A_TS, LCP_TS = get_suffix_tree(S)
-    A_To = []
-    LCP_To = []
+    A_To, LCP_To = [], []
     for i in range(n // 2):
         A_To.append(2 * A_TS[i] - 1)
     for i in range(n // 2 - 1):
@@ -413,8 +399,7 @@ def get_even_suffix_tree(text, To, A_To, LCP_To):
     S = [(text[A_To[i] - 2], A_To[i]) for i in range(len(A_To)) if A_To[i] > 1]
     S.append((text[-1], len(text) + 1))
     radix_sort(S, 1)
-    A_Te = [t[1] - 1 for t in S]
-    LCP_Te = []
+    A_Te, LCP_Te = [t[1] - 1 for t in S], []
     lca = LCA()
     lca.preprocess(To)
     for i in range(len(A_Te) - 1):
