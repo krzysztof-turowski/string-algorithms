@@ -2,13 +2,12 @@ from operator import itemgetter
 
 from common import trie
 from string_indexing import suffix_tree
-from common.LCA import LCA
+from common.lca import LCA
 
 ODD_EVEN_PAIRS = {}
 D_LINKS = {}
 DEPTH_IN_D_TREE = {}
 NEXT_INDEX = 0
-
 
 # takes A - array of tuples and sorts it stably according to ind index in tuple
 def counting_sort(A, ind):
