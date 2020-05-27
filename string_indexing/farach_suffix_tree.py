@@ -46,24 +46,20 @@ def initialise_odd_even_pairs_rec(node, n, odd_even_pairs):
 
   for child in node.children.values():
     initialise_odd_even_pairs_rec(child, n, odd_even_pairs)
-  odd1 = odd2 = even1 = even2 = -1
-  odd1_ind = even1_ind = -1
+  odd1 = odd2 = even1 = even2 = odd1_ind = even1_ind = -1
   for child in node.children.values():
     o, e = odd_even_pairs[child.index]
     if o != -1:
       if odd1 == -1:
-        odd1 = o
-        odd1_ind = child.index
+        odd1, odd1_ind = o, child.index
       elif odd2 == -1:
         odd2 = o
     if e != -1:
       if even1 == -1:
-        even1 = e
-        even1_ind = child.index
+        even1, even1_ind = e, child.index
       elif even2 == -1:
         even2 = e
-  odd = odd1
-  even = even1
+  odd, even = odd1, even1
   if odd1_ind == even1_ind:
     if odd2 != -1:
       odd = odd2
@@ -80,9 +76,8 @@ def compute_d_links(lca, n, root):
   d_links = getattr(root, "d_links")
   odd_even_pairs = getattr(root, "odd_even_pairs")
   for k, (o, e) in odd_even_pairs.items():
-    if o != -1 and e != -1 and k != n + 1:
-      if o + 1 <= n and e + 1 <= n:
-        d_links[k] = lca.query(o + 1, e + 1)
+    if o != -1 and e != -1 and k != n + 1 and o + 1 <= n and e + 1 <= n:
+      d_links[k] = lca.query(o + 1, e + 1)
 
 
 def compute_depth_in_d_tree(k, depth_in_d_tree, d_links):
@@ -172,8 +167,7 @@ def build_suffix_tree(text):
   extend_text(text, 0)
   T, A_T, LCP_T = get_suffix_tree(text)
   k = len(text) - n
-  A_T = A_T[k:]
-  LCP_T = LCP_T[k:]
+  A_T, LCP_T = A_T[k:], LCP_T[k:]
   T = suffix_and_lcp_array_to_tree(A_T, LCP_T, text[:n])
   return T, A_T, LCP_T
 
@@ -181,10 +175,9 @@ def build_suffix_tree(text):
 # function created to ensure compatibility with already existing tests
 def farach_suffix_tree(text, n):
   T, A_T, LCP_T = build_suffix_tree(text)
-  A_T.append(len(text))
+  A_T.append(n + 1)
   LCP_T.append(0)
-  text = text.replace('#', '')
-  T = suffix_and_lcp_array_to_tree(A_T, LCP_T, text + '$')
+  T = suffix_and_lcp_array_to_tree(A_T, LCP_T, text[1:] + '$')
   return T, None
 
 
@@ -196,7 +189,7 @@ def farach_suffix_array(text, n):
 
 
 # function created to ensure compatibility with already existing tests
-def farach_lcp_array(text, n):
+def farach_lcp_array(text, _):
   LCP_T = build_suffix_tree(text)[2]
   LCP_T.insert(0, 0)
   LCP_T.insert(0, -1)
