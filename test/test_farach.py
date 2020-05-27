@@ -7,7 +7,7 @@ from string_indexing import farach_suffix_tree
 class TestSuffixArrays(unittest.TestCase):
   def test_example(self):
     text = [1, 2, 1, 1, 1, 2, 2, 1, 2, 2, 2, 1]
-    T, A_T, LCP_T = farach_suffix_tree.build_suffix_tree(text)
+    _, A_T, LCP_T = farach_suffix_tree.build_suffix_tree(text)
     self.assertEqual(A_T, [12, 3, 4, 1, 5, 8, 11, 2, 7, 10, 6, 9])
     self.assertEqual(LCP_T, [1, 2, 1, 2, 3, 0, 2, 2, 1, 3, 2])
 
@@ -47,10 +47,12 @@ class TestSuffixArrays(unittest.TestCase):
                       4, 15, 10, 21,
                       5, 16, 11])
     self.assertEqual(LCP_T,
-                     [1, 8, 4, 2, 6, 7, 3, 1, 5, 6, 2, 0, 2, 3, 1, 4, 5, 1, 0, 3, 4, 0])
+                     [1, 8, 4, 2, 6, 7, 3, 1, 5, 6, 2, 0, 2, 3, 1, 4, 5, 1, 0,
+                      3, 4, 0])
 
     _, A_T, LCP_T = farach_suffix_tree.build_suffix_tree(
         [1, 1, 2, 2, 1, 3, 2, 1, 3, 2, 1, 1, 2, 3, 2, 2, 3])
     self.assertEqual(A_T,
-                     [1, 11, 2, 12, 8, 5, 10, 7, 4, 3, 15, 16, 13, 17, 9, 6, 14])
+                     [1, 11, 2, 12, 8, 5, 10, 7, 4, 3, 15, 16, 13, 17, 9, 6, 14]
+                    )
     self.assertEqual(LCP_T, [3, 1, 2, 1, 4, 0, 2, 5, 1, 2, 1, 2, 0, 1, 3, 2])
