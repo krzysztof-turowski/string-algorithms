@@ -1,6 +1,8 @@
 import math
 
 
+# preprocesses tree and handles lca queries
+# preprocessing takes O(nlgn) and query answering - O(1)
 class LCA:
 
     def __init__(self):
