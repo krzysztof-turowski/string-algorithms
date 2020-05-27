@@ -151,7 +151,7 @@ class TestLcpArrays(unittest.TestCase):
     self.assertEqual(
         farach_suffix_tree.farach_lcp_array(t, n),
         reference,
-        'Algorithm: Farach'
+        'Algorithm: farach'
     )
 
   def test_lcp_array(self):

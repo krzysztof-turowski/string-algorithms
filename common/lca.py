@@ -1,10 +1,8 @@
 import math
 
-
 # preprocesses tree and handles lca queries
 # preprocessing takes O(nlgn) and query answering - O(1)
 class LCA:
-
   def __init__(self):
     self.rmq_array = []
     self.sparse_table = []
@@ -12,7 +10,7 @@ class LCA:
     self.depth = {}
     self.internal_indexing = {}
     self.internal_indexing_reversed = {}
-    self.internalIndex = 0
+    self.internal_index = 0
 
   def create_rmq_array(self, node):
     self.rmq_array.append(self.internal_indexing[node.index])
@@ -50,9 +48,9 @@ class LCA:
       self.create_depth(child, depth + len(child.label))
 
   def create_internal_indexing(self, node):
-    self.internalIndex += 1
-    self.internal_indexing[node.index] = self.internalIndex
-    self.internal_indexing_reversed[self.internalIndex] = node.index
+    self.internal_index += 1
+    self.internal_indexing[node.index] = self.internal_index
+    self.internal_indexing_reversed[self.internal_index] = node.index
     for child in node.children.values():
       self.create_internal_indexing(child)
 
@@ -67,22 +65,12 @@ class LCA:
     return self.depth[self.query(a, b)]
 
   def query(self, a, b):
-    a = self.internal_indexing[a]
-    b = self.internal_indexing[b]
-    a = self.first_index_of[a]
-    b = self.first_index_of[b]
-    if a > b:
-      tmp = a
-      a = b
-      b = tmp
+    a = self.first_index_of[self.internal_indexing[a]]
+    b = self.first_index_of[self.internal_indexing[b]]
+    a, b = min(a, b), max(a, b)
     if a == b:
       return self.internal_indexing_reversed[self.rmq_array[a]]
-    else:
-      d = int(math.log2(b - a))
-    if self.rmq_array[self.sparse_table[d][a]] > self.rmq_array[
-        self.sparse_table[d][b - 2 ** d]]:
-      return self.internal_indexing_reversed[
-          self.rmq_array[self.sparse_table[d][b - 2 ** d]]]
-    else:
-      return self.internal_indexing_reversed[
-          self.rmq_array[self.sparse_table[d][a]]]
+    d = int(math.log2(b - a))
+    return self.internal_indexing_reversed[
+        min(self.rmq_array[self.sparse_table[d][a]],
+            self.rmq_array[self.sparse_table[d][b - 2 ** d]])]

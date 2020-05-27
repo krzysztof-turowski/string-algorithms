@@ -54,7 +54,3 @@ class TestSuffixArrays(unittest.TestCase):
     self.assertEqual(A_T,
                      [1, 11, 2, 12, 8, 5, 10, 7, 4, 3, 15, 16, 13, 17, 9, 6, 14])
     self.assertEqual(LCP_T, [3, 1, 2, 1, 4, 0, 2, 5, 1, 2, 1, 2, 0, 1, 3, 2])
-
-
-if __name__ == '__main__':
-  unittest.main()
