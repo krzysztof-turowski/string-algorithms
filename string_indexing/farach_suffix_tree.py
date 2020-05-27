@@ -4,16 +4,16 @@ from common import trie
 from string_indexing import suffix_tree
 from common.LCA import LCA
 
-odd_even_pairs = {}
-d_links = {}
-depth_in_d_tree = {}
-nextIndex = 0
+ODD_EVEN_PAIRS = {}
+D_LINKS = {}
+DEPTH_IN_D_TREE = {}
+NEXT_INDEX = 0
 
 
 # takes A - array of tuples and sorts it stably according to ind index in tuple
 def counting_sort(A, ind):
   n = max(max(A, key=itemgetter(0))[0], max(A, key=itemgetter(1))[1],
-    len(A)) + 1
+          len(A)) + 1
   result = [0] * n
   count = [0] * n
   for tp in A:
@@ -42,7 +42,7 @@ def initialise_odd_even_pairs(node, n):
       odd = node.index
     if hasattr(node, "even"):
       even = node.index
-    odd_even_pairs[node.index] = (odd, even)
+    ODD_EVEN_PAIRS[node.index] = (odd, even)
     return
 
   for child in node.children.values():
@@ -50,7 +50,7 @@ def initialise_odd_even_pairs(node, n):
   odd1 = odd2 = even1 = even2 = -1
   odd1_ind = even1_ind = -1
   for child in node.children.values():
-    o, e = odd_even_pairs[child.index]
+    o, e = ODD_EVEN_PAIRS[child.index]
     if o != -1:
       if odd1 == -1:
         odd1 = o
@@ -74,29 +74,29 @@ def initialise_odd_even_pairs(node, n):
     odd = node.index
   if even == -1 and hasattr(node, "even"):
     even = node.index
-  odd_even_pairs[node.index] = (odd, even)
+  ODD_EVEN_PAIRS[node.index] = (odd, even)
 
 
 def compute_d_links(lca, n):
-  for k, (o, e) in odd_even_pairs.items():
+  for k, (o, e) in ODD_EVEN_PAIRS.items():
     if o != -1 and e != -1 and k != n + 1:
       if o + 1 <= n and e + 1 <= n:
-        d_links[k] = lca.query(o + 1, e + 1)
+        D_LINKS[k] = lca.query(o + 1, e + 1)
 
 
 def compute_depth_in_d_tree(k):
-  if k not in depth_in_d_tree:
-    if k in d_links.keys():
-      compute_depth_in_d_tree(d_links[k])
-      depth_in_d_tree[k] = depth_in_d_tree[d_links[k]] + 1
+  if k not in DEPTH_IN_D_TREE:
+    if k in D_LINKS.keys():
+      compute_depth_in_d_tree(D_LINKS[k])
+      DEPTH_IN_D_TREE[k] = DEPTH_IN_D_TREE[D_LINKS[k]] + 1
     else:
-      depth_in_d_tree[k] = 0
+      DEPTH_IN_D_TREE[k] = 0
 
 
 def compute_depths_in_d_tree():
-  global depth_in_d_tree
-  depth_in_d_tree = {}
-  for k in odd_even_pairs.keys():
+  global DEPTH_IN_D_TREE
+  DEPTH_IN_D_TREE = {}
+  for k in ODD_EVEN_PAIRS.keys():
     compute_depth_in_d_tree(k)
 
 
@@ -110,7 +110,7 @@ def merge_suffix_arrays(A_To, A_Te, LCP_To, LCP_Te, lca, text):
   i = j = 0
   while i < len(A_To) or j < len(A_Te):
     if i < len(A_To) and j < len(A_Te):
-      lcp = depth_in_d_tree[lca.query(A_To[i], A_Te[j])]
+      lcp = DEPTH_IN_D_TREE[lca.query(A_To[i], A_Te[j])]
       if text[lcp + A_To[i] - 1] <= text[lcp + A_Te[j] - 1]:
         A_T.append(A_To[i])
         i += 1
@@ -135,7 +135,7 @@ def merge_suffix_arrays(A_To, A_Te, LCP_To, LCP_Te, lca, text):
         e += 1
       LCP_T.append(LCP_Te[e])
     else:
-      LCP_T.append(depth_in_d_tree[lca.query(A_T[i], A_T[i + 1])])
+      LCP_T.append(DEPTH_IN_D_TREE[lca.query(A_T[i], A_T[i + 1])])
   return A_T, LCP_T
 
 
@@ -154,9 +154,9 @@ def extend_text(text, symbol):
 
 
 def initialise_data():
-  global odd_even_pairs, d_links, depth_in_d_tree, nextIndex
-  odd_even_pairs, d_links, depth_in_d_tree = {}, {}, {}
-  nextIndex = 0
+  global ODD_EVEN_PAIRS, D_LINKS, DEPTH_IN_D_TREE, NEXT_INDEX
+  ODD_EVEN_PAIRS, D_LINKS, DEPTH_IN_D_TREE = {}, {}, {}
+  NEXT_INDEX = 0
 
 
 # runs Farach's algorithm on extended text and then discards extra nodes /
@@ -177,7 +177,7 @@ def build_suffix_tree(text):
   k = len(text) - n
   A_T = A_T[k:]
   LCP_T = LCP_T[k:]
-  T = suffix_and_LCP_array_to_tree(A_T, LCP_T, text[:n])
+  T = suffix_and_lcp_array_to_tree(A_T, LCP_T, text[:n])
   return T, A_T, LCP_T
 
 
@@ -187,7 +187,7 @@ def farach_suffix_tree(text, n):
   A_T.append(len(text))
   LCP_T.append(0)
   text = text.replace('#', '')
-  T = suffix_and_LCP_array_to_tree(A_T, LCP_T, text + '$')
+  T = suffix_and_lcp_array_to_tree(A_T, LCP_T, text + '$')
   return T, None
 
 
@@ -210,23 +210,23 @@ def farach_lcp_array(text, n):
 # merges them into correct suffix tree of the
 # entire text
 def get_suffix_tree(text):
-  global nextIndex
+  global NEXT_INDEX
   root, leaf = trie.TrieNode(''), trie.TrieNode(text[0:])
   root.add_child(leaf)
   if len(text) == 1:
     return root, [1], [0]
   (To, A_To, LCP_To) = get_odd_suffix_tree(text)
   (Te, A_Te, LCP_Te) = get_even_suffix_tree(text, To, A_To, LCP_To)
-  nextIndex = len(text) + 2
+  NEXT_INDEX = len(text) + 2
   Tovermerged = get_faulty_merge(To, Te, text)
   initialise_odd_even_pairs(Tovermerged, len(text))
   lca = LCA()
   lca.preprocess(Tovermerged)
   compute_d_links(lca, len(text))
-  depth_in_d_tree[Tovermerged] = 0
+  DEPTH_IN_D_TREE[Tovermerged] = 0
   compute_depths_in_d_tree()
   A_T, LCP_T = merge_suffix_arrays(A_To, A_Te, LCP_To, LCP_Te, lca, text)
-  T = suffix_and_LCP_array_to_tree(A_T, LCP_T, text)
+  T = suffix_and_lcp_array_to_tree(A_T, LCP_T, text)
   return T, A_T, LCP_T
 
 
@@ -238,13 +238,13 @@ def get_suffix_tree(text):
 # word(nd) is a suffix of text starting at i
 def get_faulty_merge_recurse(node, odd, even, text):
   def set_index(new_nd, old_nd):
-    global nextIndex
+    global NEXT_INDEX
     n = len(text)
     if old_nd.index <= n:
       new_nd.index = old_nd.index
     else:
-      new_nd.index = nextIndex
-      nextIndex += 1
+      new_nd.index = NEXT_INDEX
+      NEXT_INDEX += 1
 
   if node.parent is None:
     node.index = len(text) + 1
@@ -290,7 +290,7 @@ def get_faulty_merge_recurse(node, odd, even, text):
       e_len = len(e_child.label)
       if o_len != e_len:
         odd_shorter, short_label = (True, o_child.label) if e_len > o_len else (
-        False, e_child.label)
+            False, e_child.label)
         new_node = trie.TrieNode(short_label)
         node.add_child(new_node)
         if odd_shorter:
@@ -342,9 +342,9 @@ def get_faulty_merge(To, Te, text):
 # creates in linear time the suffix tree of text using A and LCP arrays
 # algorithm implemented based on
 # https://en.wikipedia.org/wiki/LCP_array#Suffix_tree_construction
-def suffix_and_LCP_array_to_tree(A, LCP, text):
-  global nextIndex
-  nextIndex = len(text) + 1
+def suffix_and_lcp_array_to_tree(A, LCP, text):
+  global NEXT_INDEX
+  NEXT_INDEX = len(text) + 1
   n = len(A)
   root = trie.TrieNode('')
   leaf = trie.TrieNode(text[A[0] - 1:])
@@ -352,8 +352,8 @@ def suffix_and_LCP_array_to_tree(A, LCP, text):
   root.add_child(leaf)
   leaf.set_depth(len(leaf.label))
   leaf.index = len(text) + 1 - leaf.depth
-  root.index = nextIndex
-  nextIndex += 1
+  root.index = NEXT_INDEX
+  NEXT_INDEX += 1
 
   lastNode = leaf
   for i in range(1, n):
@@ -371,13 +371,13 @@ def suffix_and_LCP_array_to_tree(A, LCP, text):
       rightmostChild = \
       sorted(currentNode.children.items())[len(currentNode.children) - 1][1]
       splitNode = suffix_tree.break_node(currentNode, rightmostChild,
-        LCP[i - 1] - currentNode.depth)
+                                         LCP[i - 1] - currentNode.depth)
       splitNode.set_depth(LCP[i - 1])
       if len(suffix[LCP[i - 1]:]) >= 1:
         newNode = trie.TrieNode(suffix[LCP[i - 1]:])
         splitNode.add_child(newNode)
-        splitNode.index = nextIndex
-        nextIndex += 1
+        splitNode.index = NEXT_INDEX
+        NEXT_INDEX += 1
       else:
         newNode = splitNode
     newNode.index = len(text) - len(suffix) + 1
@@ -398,25 +398,24 @@ def substitute_with_ranks(S):
 def get_odd_suffix_tree(text):
   n = len(text)
   S = substitute_with_ranks(
-    [(text[i], text[i + 1]) for i in range(n) if i % 2 == 0])
+      [(text[i], text[i + 1]) for i in range(n) if i % 2 == 0])
   TS, A_TS, LCP_TS = get_suffix_tree(S)
   A_To, LCP_To = [], []
   for i in range(n // 2):
     A_To.append(2 * A_TS[i] - 1)
   for i in range(n // 2 - 1):
     if text[A_To[i] - 1 + 2 * LCP_TS[i]] == text[
-      A_To[i + 1] - 1 + 2 * LCP_TS[i]]:
+        A_To[i + 1] - 1 + 2 * LCP_TS[i]]:
       LCP_To.append(2 * LCP_TS[i] + 1)
     else:
       LCP_To.append(2 * LCP_TS[i])
-  To = suffix_and_LCP_array_to_tree(A_To, LCP_To, text)
+  To = suffix_and_lcp_array_to_tree(A_To, LCP_To, text)
   return To, A_To, LCP_To
 
 
 # returns suffix tree for even suffixes of text based on already created odd
 # suffix tree and odd suffix array
 def get_even_suffix_tree(text, To, A_To, LCP_To):
-  n = len(text)
   S = [(text[A_To[i] - 2], A_To[i]) for i in range(len(A_To)) if A_To[i] > 1]
   S.append((text[-1], len(text) + 1))
   radix_sort(S, 1)
@@ -428,5 +427,5 @@ def get_even_suffix_tree(text, To, A_To, LCP_To):
       LCP_Te.append(lca.query_depth(A_Te[i] + 1, A_Te[i + 1] + 1) + 1)
     else:
       LCP_Te.append(0)
-  Te = suffix_and_LCP_array_to_tree(A_Te, LCP_Te, text)
+  Te = suffix_and_lcp_array_to_tree(A_Te, LCP_Te, text)
   return Te, A_Te, LCP_Te
