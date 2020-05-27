@@ -149,7 +149,7 @@ class TestLcpArrays(unittest.TestCase):
         reference,
         'Algorithm: kasai')
     self.assertEqual(
-        farach_suffix_tree.farach_LCP_array(t, n),
+        farach_suffix_tree.farach_lcp_array(t, n),
         reference,
         'Algorithm: Farach'
     )
