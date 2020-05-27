@@ -3,17 +3,19 @@ import os
 import unittest
 
 from generator import rand
-from string_indexing import suffix_tree, suffix_array
+from string_indexing import suffix_tree, suffix_array, farach_suffix_tree
 
 SUFFIX_TREE_ALGORITHMS = [
     suffix_tree.weiner,
     suffix_tree.mccreight,
     suffix_tree.ukkonen,
+    farach_suffix_tree.farach_suffix_tree,
 ]
 
 SUFFIX_ARRAY_ALGORITHMS = [
     suffix_array.prefix_doubling,
     suffix_array.skew,
+    farach_suffix_tree.farach_suffix_array,
 ]
 
 class TestSuffixTrees(unittest.TestCase):
@@ -146,6 +148,11 @@ class TestLcpArrays(unittest.TestCase):
         suffix_array.lcp_kasai(suffix_array.prefix_doubling(t, n), t, n),
         reference,
         'Algorithm: kasai')
+    self.assertEqual(
+        farach_suffix_tree.farach_lcp_array(t, n),
+        reference,
+        'Algorithm: farach'
+    )
 
   def test_lcp_array(self):
     self.check_lcp_array('#banana', 6, [-1, 0, 1, 3, 0, 0, 2])
