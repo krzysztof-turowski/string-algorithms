@@ -1,0 +1,194 @@
+\documentclass[
+12pt
+]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsthm}
+\usepackage{amsmath} 
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{sectsty}
+\usepackage{algorithmicx,algpseudocode}
+
+\MakeRobust{\Call}
+
+\sectionfont{\fontsize{15}{15}\selectfont}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+
+\algnewcommand\algorithmicinput{\textbf{INPUT:}}
+\algnewcommand\Input{\item[\algorithmicinput]}
+
+\algnewcommand\algorithmicoutput{\textbf{OUTPUT:}}
+\algnewcommand\Output{\item[\algorithmicoutput]}
+
+\begin{document}
+
+\begin{center}
+\Huge Algorytm small-large
+\end{center}
+
+
+\section*{Tablica sufiksów}
+Dla słowa s niech $T_i$ oznacza sufiks rozpoczynający się na indeksie $i$, a $t_i$ to znak na $i$-tej pozycji. Tablica sufiksów słowa $s$ to tablica zawierająca indeksy sufiksów $s$ posortowanych według porządku leksykograficznego tych sufiksów. Tablica ta przydaje się np. przy budowaniu drzew sufiksowych. Poniżej przedstawiony jest algorytm budujący tablicę sufiksów w czasie i pamięci liniowej.
+
+W poniższych rozważaniach bez straty ogólności zakładamy, że każde słowo $s$ kończy się znakiem unikalnym i najmniejszym w słowie. Zakładamy również że alfabet to $\{1,2,...,n\}$.
+
+\section*{SL - kategoryzacja sufiksów}
+
+Na początek przedstawimy kategoryzacje prefiksów na typy S (small) i L (large). Główna idea algorytmu jest oparta właśnie na tej kategoryzacji i jej własnościach.
+
+\begin{definition}
+Sufiks $i$ jest typu S/L, gdy jest mniejszy/większy od sufiksu $i+1$. Sufiks $n$ jest S i L (zależnie od potrzeby).
+\end{definition}
+
+Można, używając poniższego faktu, w czasie i pamięci liniowej dokonać kategoryzacji sufiksów na typy S/L.
+
+\begin{remark}
+Dla sufiksu $T_i \ (i<n)$:
+
+\begin{itemize}
+\item jeśli $t_i \neq t_{i+1}$, to wystarczy porównać jeden znak aby dowiedzieć się jakiego typu jest $T_i$
+\item
+jeśli $t_{i} = t_{i+1}$, to znajdź pierwszy $j > i$, taki że $t_j \neq t_i$, wtedy \\
+$ t_j > t_i \Rightarrow T_i,T_{i+1},...,T_{j-1}$ są typu S \\
+$ t_j < t_i \Rightarrow T_i,T_{i+1},...,T_{j-1}$ są typu L
+\end{itemize}
+
+\end{remark}
+
+Przedstawmy również ważną własność kategoryzacji SL.
+
+\begin{lemma}\label{SL_order}
+Sufiks typu S jest leksykograficznie większy od każdego sufiksu typu L, który rozpoczyna się tym samym znakiem.
+\end{lemma}
+\begin{proof}
+Dowód nie wprost - załóżmy że istnieją sufiksy: $T_i = c \alpha c_1 \beta$ typ S i $T_j = c\alpha c_2 \gamma$ typ L, $c, c_1, c_2 \in \Sigma$, $\alpha, \beta, \gamma \in \Sigma^*$, $c_1 \neq c_2$, takie że $T_i < T_j$.
+
+\item[Case 1:] $\alpha$ zawiera znak inny niż $c$\\
+Niech $c_3$ - znak $\neq c$ najbardziej na lewo w $\alpha$. $T_i$ jest typu S, więc $c_3>c$. Podobnie z $T_j$ typu L otrzymujemy $c_3<c$, sprzeczność.
+
+\item[Case 2:] $\alpha$ zawiera tylko $c$ lub jest puste\\
+Z typów $T_i$ i $T_j$ mamy $c_1 \geq c$ i $c \geq c_2$ (dowód podobnie jak case 1). Stąd $c_1 \geq c_2$, co daje sprzeczność z $T_i < T_j$.
+
+\end{proof}
+
+\section*{Algorytm small-large}
+
+Na algorytm można patrzeć w dwóch fazach - sortowanie sufiksów S/L, w zależności których z nich jest mniej. Następnie wykorzystujemy otrzymane informacje utworzenie porządku na wszystkich sufiksach. Wybieranie gałęzi z mniejszą ilością prefiksów danego typu jest konieczne aby zachować złożoność, ale nie wpływa na poprawność algorytmu.
+
+
+\begin{algorithmic}
+\Procedure{small-large}{$s$}\Comment{compute suffix array}
+\State $SL \gets$ \Call{SL-categorization}{$s$}
+\If{$SL.count("S") < len(n)/2$}
+	\State $sortedS \gets$ \Call{sortS}{$s$, $SL$}
+	\State \Return \Call{finishS}{$s$, $SL$, $sortedS$}
+\Else
+	\State $sortedL \gets$ \Call{sortL}{$s$, $SL$}
+	\State \Return \Call{finishL}{$s$, $SL$, $sortedS$}
+\EndIf
+\EndProcedure
+\end{algorithmic}
+
+W kolejnych sekcjach opisane zostaną bardziej szczegółowo funkcje $sortS$ i $finishS$. Procedury dla typu L są bardzo podobne - należy przeglądać niektóre listy w odwrotnej kolejności, operacje przeniesienia na początek/koniec grupy zamienić na przeniesienie na koniec/początek i zastąpić odniesienia do typu S odniesieniami do typu L.
+
+\section*{Sortowanie S sufiksów - faza 1}
+
+\begin{definition}
+S odległość - dystans od $i$ do najbliższego na lewo S sufiksu (nie wliczając $i$).
+\end{definition}
+
+\begin{definition}
+S podsłowo - podsłowo $t[i,i+1,...,j]$, gdzie $i$ oraz $j$ to S sufiksy, a pomiędzy są same L sufiksy.
+\end{definition}
+
+\begin{definition}
+Jeśli słowo $t[i,i+1,...,j]$ jest S podsłowem, to każdy jego prefiks nazywamy prefiksem S podsłowa.
+\end{definition}
+
+S podsłowa są ściśle powiązane z S sufiksami - gdy weźmiemy ciąg kolejnych S podsłów i skleimy je ze sobą, otrzymamy S sufiks modulo duplikaty znaków na zetknięciu podsłów.
+
+\begin{algorithmic}
+\Procedure{sortS}{s, SL}
+\State $SsubstrPrefixes \gets$ S substring prefixes, divided by Sdist, bucketed and sorted by first character
+\State $Ssubstr \gets$ S substrings, bucketed and sorted by first character
+\For{$d \gets 1,...,max\_Sdist$}
+\For{$j$ in $SsubstrPrefixes[d]$}
+\State move $j-d$ to the front of its group in $Ssubstr$
+\EndFor
+\State update groups in $Ssubstr$ using old $Ssubstr$ and $SsubstrPrefixes[d]$ 
+\EndFor
+\State $s' \gets$ map $Ssubstr$ to its buckets number, ordered as in $s$
+\State \Return \Call{unmap}{\Call{small-large}{$s'$}}
+\EndProcedure
+\end{algorithmic}
+
+Po pętli for S podsłowa są uporządkowane w kolejności prawie leksyko-graficznej. Jedyny wyjątek to gdy $\alpha$ jest podsłowem $\beta$, wtedy $\alpha > \beta$ w tym porządku.
+
+Oznaczmy jako $T'_i$ sufiks w $s'$ odpowiadający S sufiksowi $T_i$. Poprawność sortowania wynika z poniższego faktu.
+
+\begin{lemma}
+$T_i < T_j \iff T'_i < T'_j$
+\end{lemma}
+\begin{proof}
+\item[$T_i < T_j \Rightarrow T'_i < T'_j$] - trywialnie z mapowania
+\item[$T_i < T_j \Leftarrow T'_i < T'_j$] - opis idei\\
+Rozważa się pierwszy znak różniący $T'_i < T'_j$. Jest to numer jakiejś grupy, która indukuje S podsłowo. Odzyskujemy te podsłowa $\alpha,\beta$ i rozważamy dwa przypadki - $\beta$ to prefiks $\alpha$ lub nie. Z tego można wywnioskować $T_i < T_j$.
+\end{proof}
+
+
+\section*{Sortowanie całości - faza 2}
+\begin{algorithmic}
+\Procedure{finishS}{s, SL, sortedS}
+\State $A \gets$ bucket and sort $s$ suffixes by first character
+\For{$x$ in $reversed(sortedS)$}\Comment{\cref{SL_order}}
+\State move $x$ to the end of its bucket in $A$
+\State move that buckets end to the left by one
+\EndFor
+\For{$i \gets 1,...,n$ }\Comment{\cref{phase2-invariant}}
+\If{$SL[A[i]-1] == "L"$}
+\State move $A[i]-1$ to the front of its bucket
+\State move that buckets front to the right by one
+\EndIf
+\EndFor
+\State \Return A
+\EndProcedure
+\end{algorithmic}
+
+Po pierwszej pętli sufiksy typu S są już na poprawnych pozycjach. Pętla druga porządkuje resztę.
+
+\begin{lemma}\label{phase2-invariant}
+W kroku i drugiej pętli algorytmu, sufiks $T_{A[i]}$ jest już na poprawnej pozycji w tablicy sufiksów.
+\end{lemma}
+\begin{proof}
+Indukcja.
+\item[Baza indukcji:] wynika z tego, że najmniejszy sufiks jest typu S wiec jest już na poprawnej pozycji
+\item[Krok indukcyjny $i \rightarrow i+1$:] nie wprost - istnieje sufiks $k > i+1$, który w tablicy sufiksów powinien zająć miejsce $A[i+1]$.\\
+Wprost z założenia $T_{A[k]} < T_{A[i+1]}$ i obydwa te sufiksy są typu L - sufiksy S są na poprawnych miejscach.\\
+$T_{A[k]}$ i $T_{A[i+1]}$ muszą rozpoczynać się tą samą literą $c$ - przez wcześniejsze dzielenie na grupy przez pierwszą literę $T_{A[i+1]}$ ma jako pierwszą najmniejszą literę z sufiksów $A[i+1],A[i+2],...,A[n]$. Niech $T_{A[i+1]}=c \alpha$ i $T_{A[k]}=c \beta$.\\
+\begin{gather*}
+T_{A[k]}\ is\ type\ L \Rightarrow \beta < T_{A[k]}\\
+T_{A[k]} < T_{A[i+1]} \Rightarrow \beta < \alpha\\
+(T_{A[k]}\ is\ A[i+1]th\ in\ suffix\ array) \land \beta < T_{A[k]} \Rightarrow \beta \in \{A[1],A[2],...,A[i]\}
+\end{gather*}
+$\beta < \alpha$, więc $T_{A[k]}$ był przesunięty na początek grupy (w gałęzi if) przed $T_{A[i+1]}$. Sufiksy te należą do tej samej grupy, zatem $T_{A[k]}$ leży na lewo od $T_{A[i+1]}$, sprzeczność.
+\end{proof}
+
+Z \cref{SL_order} i \cref{phase2-invariant} wynika poprawność algorytmu.
+
+
+\section*{Złożoność}
+Ze względu na rekurencję $T(n) = T(n/2) + \mathcal{O}(n)$ otrzymujemy złożoność czasową i pamięciową liniową w stosunku do długości słowa.
+
+
+\end{document}
