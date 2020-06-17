@@ -52,6 +52,8 @@ def ternary_sort(I, beginG, endG, V, getKeyForIdx):
 
 def larsson_sadakane_suffix_array(text, n):
     text += '$'
+    n += 1
+    print("text: {}".format(text))
     I = [i for i in range(1, n + 1)]
 
     """ STEP 1 """
@@ -69,7 +71,8 @@ def larsson_sadakane_suffix_array(text, n):
             curr_idx = n - idx - 1
         print("Suffix: {} belongs to group {}".format(val, curr_idx))
         V[val - 1] = curr_idx
-
+    print(I)
+    print(V)
     # Find all groups of size 1 and set their length.
     curr_len = 0
     curr_symbol = '$'
@@ -106,7 +109,7 @@ def larsson_sadakane_suffix_array(text, n):
     for i in range(n):
         I[V[i]] = i+1
 
-    return I, V
+    return I
 
 
 if __name__ == "__main__":

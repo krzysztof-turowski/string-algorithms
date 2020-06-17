@@ -3,7 +3,7 @@ import os
 import unittest
 
 from generator import rand
-from string_indexing import suffix_tree, suffix_array, farach_suffix_tree, sl_suffix_array
+from string_indexing import suffix_tree, suffix_array, farach_suffix_tree, sl_suffix_array, larsson_sadakane_suffix_array
 
 SUFFIX_TREE_ALGORITHMS = [
     suffix_tree.weiner,
@@ -17,6 +17,7 @@ SUFFIX_ARRAY_ALGORITHMS = [
     suffix_array.skew,
     farach_suffix_tree.farach_suffix_array,
     sl_suffix_array.small_large,
+    larsson_sadakane_suffix_array.larsson_sadakane_suffix_array
 ]
 
 class TestSuffixTrees(unittest.TestCase):
@@ -92,7 +93,7 @@ class TestSuffixTrees(unittest.TestCase):
 
 class TestSuffixArrays(unittest.TestCase):
   run_large = unittest.skipUnless(
-      os.environ.get('LARGE', False), 'Skip test in small runs')
+      os.environ.get('LARGE', True), 'Skip test in small runs')
 
   def check_suffix_array(self, t, n, reference):
     for algorithm in SUFFIX_ARRAY_ALGORITHMS:
