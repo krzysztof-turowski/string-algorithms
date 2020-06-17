@@ -13,10 +13,10 @@ SUFFIX_TREE_ALGORITHMS = [
 ]
 
 SUFFIX_ARRAY_ALGORITHMS = [
-    suffix_array.prefix_doubling,
-    suffix_array.skew,
-    farach_suffix_tree.farach_suffix_array,
-    sl_suffix_array.small_large,
+    # suffix_array.prefix_doubling,
+    # suffix_array.skew,
+    # farach_suffix_tree.farach_suffix_array,
+    # sl_suffix_array.small_large,
     larsson_sadakane_suffix_array.larsson_sadakane_suffix_array
 ]
 
@@ -93,7 +93,7 @@ class TestSuffixTrees(unittest.TestCase):
 
 class TestSuffixArrays(unittest.TestCase):
   run_large = unittest.skipUnless(
-      os.environ.get('LARGE', True), 'Skip test in small runs')
+      os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_suffix_array(self, t, n, reference):
     for algorithm in SUFFIX_ARRAY_ALGORITHMS:

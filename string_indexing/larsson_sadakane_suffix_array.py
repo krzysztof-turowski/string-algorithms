@@ -1,4 +1,3 @@
-from itertools import accumulate
 
 
 def swap(L, idx1, idx2):
@@ -12,7 +11,6 @@ def ternary_sort(I, beginG, endG, V, getKeyForIdx):
     if beginG >= endG-1:
         return
     pivot = getKeyForIdx(I[beginG])
-    print("Calling ternary sort for params beginG: {}, endG: {}, pivot: {}, arr: {}".format(beginG, endG, pivot, I[beginG:endG]))
 
     fst_eq = beginG
     last_eq = beginG+1
@@ -37,11 +35,9 @@ def ternary_sort(I, beginG, endG, V, getKeyForIdx):
         idx = I[fst_eq]
         V[idx - 1] = fst_eq
         I[fst_eq] = -1
-        print("Updated suffix: {} to {}".format(idx, fst_eq))
     else:
         # process unsorted group
         for i in range(fst_eq, last_eq):
-            print("Updating suffix: {} to group: {}".format(I[i], last_eq-1))
             idx = I[i]
             V[idx - 1] = last_eq - 1
 
@@ -53,7 +49,6 @@ def ternary_sort(I, beginG, endG, V, getKeyForIdx):
 def larsson_sadakane_suffix_array(text, n):
     text += '$'
     n += 1
-    print("text: {}".format(text))
     I = [i for i in range(1, n + 1)]
 
     """ STEP 1 """
@@ -69,10 +64,8 @@ def larsson_sadakane_suffix_array(text, n):
         if curr_symbol != text[val]:
             curr_symbol = text[val]
             curr_idx = n - idx - 1
-        print("Suffix: {} belongs to group {}".format(val, curr_idx))
         V[val - 1] = curr_idx
-    print(I)
-    print(V)
+
     # Find all groups of size 1 and set their length.
     curr_len = 0
     curr_symbol = '$'
@@ -89,7 +82,6 @@ def larsson_sadakane_suffix_array(text, n):
         i = 0
         while i < n:
             # The group to which suffix_i belongs is combined sorted group. Skip over it (and try to merge with next)
-            print("i is: {}".format(i))
             if I[i] < 0:
                 next_i = i - I[i]
                 # Merge if next group is also combined sorted group
@@ -102,10 +94,8 @@ def larsson_sadakane_suffix_array(text, n):
                 toSkip = (V[I[i] - 1] - i + 1)
                 ternary_sort(I, i, V[I[i] - 1]+1, V, lambda idx: V[idx + h - 1])
                 i += toSkip
-        print("After step for h: {} I is: {}".format(h, I))
         h *= 2
 
-    # print([I[V[i]] for i in range(0, n)])
     for i in range(n):
         I[V[i]] = i+1
 
@@ -113,4 +103,4 @@ def larsson_sadakane_suffix_array(text, n):
 
 
 if __name__ == "__main__":
-    print(larsson_sadakane_suffix_array('#tobeornottobe', 14))
+    print(larsson_sadakane_suffix_array('#tobeornottobe', 13))
