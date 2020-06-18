@@ -94,3 +94,26 @@ def horspool(t, w, n, m):
         yield i
     bad_character = LAST.get(c, 0)
     i = i + (m - bad_character)
+
+def boyer_moore_turbo(t, w, n, m):
+  BM = suffix.boyer_moore_shift(w, m)
+  i, memory, shift = 0, 0, 0
+  while i <= n - m:
+    j = m
+    while j > 0 and t[i + j] == w[j]:
+      # print(memory)
+      if memory != 0 and j == m - shift:
+        j = j - memory
+      else:
+        j = j - 1
+    if j == 0:
+      yield i + 1
+    match = m - j
+    turbo_shift = memory - match
+    shift = max(BM[j], turbo_shift)
+    if shift > BM[j]:
+      i = i + max(shift, match+1)
+      memory = 0
+    else:
+      i = i + shift
+      memory = min(m-shift, match)
