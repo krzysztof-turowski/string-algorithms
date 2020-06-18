@@ -52,8 +52,7 @@ class TestAhoCorasick(unittest.TestCase):
       expected = set()
       for p in patterns:
         starts = brute_force(t, f'#{p}', n, len(p) + 1)
-        indices = map(lambda i: (i, i + len(p)), starts)
-        expected.union(set(indices))
+        expected.union({(i, i + len(p)) for i in starts})
 
       found = set(find_occurrences(t, n, automaton))
 
