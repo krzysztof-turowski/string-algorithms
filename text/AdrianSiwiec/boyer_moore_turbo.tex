@@ -29,15 +29,6 @@ Sam pomysł algorytmu \TBM jest bardzo prosty -- podczas skanowania będziemy za
 
 Opiszmy sytuację, w której możemy wykonać Turbo-shift. Niech $x$ będzie najdłuższym suffixem wzorca, który pasuje do tekstu na danej pozycji, $a$ będzie pierwszą literą wzorca która nie pasuje, a niech $y$ ($memory$) będzie poprzednio zapamiętanym podsłowem, które również pasuje do wzorca (patrz fig. \ref{turboshift}). Załóżmy również, że $x$ i $y$ są rozłączne i $y$ jest dłuższy od $x$. Po wykonaniu Turbo-shift zapominamy o $y$ (patrz kod \emph{boyer\_moore\_turbo}), więc w poprzednim kroku wykonaliśmy zwykłe przesunięcie (zgodnie z tablicą $BM$), znane z algorytmu Boyera-Moore'a. W tej sytuacji $ax$ jest suffixem $y$, oraz litery $a$ i $b$ tekstu są o siebie oddalone o $|y|$. Ale suffix $y\ldots x$ ma okres długości $|y|$ (z definicji $BM$). Możemy więc przesunąć wzorzec o $|y| - |x|$ do przodu i to właśnie przesunięcie nazywać będziemy \emph{Turbo-shift}.
 
-% Spójrzmy na kod algorytmu \TBM:
-% \begin{code}
-% 	\captionof{listing}{Algorytm Boyera-Moore'a}
-%   \begin{minted}{python}
-%     import numpy as np
-%   \end{minted}
-% 	\label{alg:exact-string-matching-boyer-moore}
-% \end{code}
-
 \begin{figure}[h]
 	\centering
 	\begin{tikzpicture}
