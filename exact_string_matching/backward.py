@@ -97,17 +97,17 @@ def horspool(t, w, n, m):
 
 def boyer_moore_turbo(t, w, n, m):
   BM = suffix.boyer_moore_shift(w, m)
-  i, memory, shift = 0, 0, 0
-  while i <= n - m:
+  i, memory, shift = 1, 0, 0
+  while i <= n - m + 1:
     j = m
-    while j > 0 and t[i + j] == w[j]:
+    while j > 0 and t[i + j - 1] == w[j]:
       # print(memory)
       if memory != 0 and j == m - shift:
         j = j - memory
       else:
         j = j - 1
     if j == 0:
-      yield i + 1
+      yield i
     match = m - j
     turbo_shift = memory - match
     shift = max(BM[j], turbo_shift)
