@@ -60,6 +60,6 @@ class TestAhoCorasick(unittest.TestCase):
 
   @staticmethod
   def _create_from(patterns):
-    keywords = [(f'#{p}', len(p)) for p in patterns]
+    keywords = ((f'#{p}', len(p)) for p in patterns)
     alphabet = {a for p in patterns for a in p}
     return create_aho_corasick_automaton(keywords, alphabet)

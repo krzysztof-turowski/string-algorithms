@@ -42,14 +42,14 @@ class AhoCorasickAutomaton:
 
   def _construct_fail(self, alphabet):
     q = Queue()
-    for s in [self._root.goto(a) for a in alphabet]:
+    for s in (self._root.goto(a) for a in alphabet):
       if s != self._root:
         q.put(s)
         s.update_fail(self._root)
 
     while not q.empty():
       current = q.get()
-      for a, child in [(a, current.goto(a)) for a in alphabet]:
+      for a, child in ((a, current.goto(a)) for a in alphabet):
         if child is not None:
           q.put(child)
 
@@ -72,7 +72,7 @@ class AhoCorasickAutomaton:
 
     while not q.empty():
       current = q.get()
-      for a, child in [(a, current.goto(a)) for a in alphabet]:
+      for a, child in ((a, current.goto(a)) for a in alphabet):
         if child is not None:
           q.put(child)
           current.update_nxt(a, child)
