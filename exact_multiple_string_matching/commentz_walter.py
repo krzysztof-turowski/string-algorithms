@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from collections import deque
 
-@dataclass
+@dataclass(init=True)
 class Node():
   def __init__(self, char, depth, parent):
     self.char = char
@@ -12,7 +12,7 @@ class Node():
     self.ac_output = None
     self.children = {}
 
-@dataclass
+@dataclass(init=True)
 class CommentzWalterNode(Node):
   def __init__(self, char, depth, parent):
     Node.__init__(self, char, depth, parent)
@@ -34,8 +34,7 @@ class Trie():
 
   def add_word(self, word):
     curr_node = self.root
-    curr_depth = 1
-    for char in word:
+    for curr_depth, char in enumerate(word, start = 1):
       next_node = curr_node.children.get(char)
       if not next_node:
         next_node = self.create_node(char, curr_depth, curr_node)
@@ -44,11 +43,9 @@ class Trie():
       curr_node = next_node
       curr_depth += 1
 
-    if curr_node.word is not None:
-      return
-
-    curr_node.word = word
-    self.size += 1
+    if curr_node.word is None:
+      curr_node.word = word
+      self.size += 1
 
 class CommentzWalterAutomaton(Trie):
   def create_node(self, char, depth, parent):
@@ -60,11 +57,9 @@ class CommentzWalterAutomaton(Trie):
     self.char_arr = {}
 
   def add_word(self, word):
-    word = word[::-1]
-    super().add_word(word)
-    pos = 1
+    super().add_word(word[::-1])
 
-    for char in word:
+    for pos, char in enumerate(word, start = 1):
       min_char_depth = self.char_arr.get(char)
       if (min_char_depth is None) or (min_char_depth > pos):
         self.char_arr[char] = pos
@@ -74,28 +69,20 @@ class CommentzWalterAutomaton(Trie):
       self.min_depth = len(word)
 
   def init_shift_values(self):
+    self.root.shift1, self.root.shift2 = 1, self.min_depth
     bfs_queue = deque()
-    self.root.shift1 = 1
-    self.root.shift2 = self.min_depth
-
-    for key in self.root.children:
-      bfs_queue.append(self.root.children[key])
+    bfs_queue.extend(self.root.children[key] for key in self.root.children)
 
     while bfs_queue:
       curr_node = bfs_queue.popleft()
 
-      if curr_node.cw_suffix is None:
-        curr_node.shift1 = self.min_depth
-      else:
-        curr_node.shift1 = curr_node.min_diff_s1
+      curr_node.shift1 = (self.min_depth \
+        if curr_node.cw_suffix is None else curr_node.min_diff_s1)
 
-      if curr_node.cw_output is None:
-        curr_node.shift2 = curr_node.parent.shift2
-      else:
-        curr_node.shift2 = curr_node.min_diff_s2
+      curr_node.shift2 = (curr_node.parent.shift2 \
+        if curr_node.cw_output is None else curr_node.min_diff_s2)
 
-      for key in curr_node.children:
-        bfs_queue.append(curr_node.children[key])
+      bfs_queue.extend(curr_node.children[key] for key in curr_node.children)
 
   def create_failure_links(self):
     bfs_queue = deque()
@@ -103,19 +90,16 @@ class CommentzWalterAutomaton(Trie):
     for key in self.root.children:
       child = self.root.children[key]
       child.ac_suffix = self.root
-
-      for key2 in child.children:
-        bfs_queue.append(child.children[key2])
+      bfs_queue.extend(child.children[key2] for key2 in child.children)
 
     while bfs_queue:
       curr_node = bfs_queue.popleft()
-      for key in curr_node.children:
-        bfs_queue.append(curr_node.children[key])
+      bfs_queue.extend(curr_node.children[key] for key in curr_node.children)
 
       search = curr_node.parent.ac_suffix
 
-      while (not search.char is None) and \
-      (not search.children.get(curr_node.char) is not None):
+      while (search.char is not None) and \
+      (search.children.get(curr_node.char) is None):
         search = search.ac_suffix
 
       if search.children.get(curr_node.char) is not None:
@@ -150,9 +134,7 @@ class CommentzWalterAutomaton(Trie):
     if node.char is None:
       max_min_diff_s1_char = node.shift1
     else:
-      min_depth = self.char_arr.get(node.char)
-      if min_depth is None:
-        min_depth = self.min_depth + 1
+      min_depth = self.char_arr.get(node.char, self.min_depth + 1)
       max_min_diff_s1_char = max(min_depth - j - 1, node.shift1)
     return min(max_min_diff_s1_char, node.shift2)
 
