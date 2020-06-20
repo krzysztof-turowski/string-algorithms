@@ -16,9 +16,12 @@ def boyer_moore_multi_dim_shift(A, p, m, k):
   return BM_k
 
 
-def boyer_moore_k_mismatches(text, p, n, m, k=0, A=None):
+def approximate_boyer_moore(text, p, n, m, k=None, A=None):
   if A is None:
-    A = ['a', 'b', '?']
+    A = set(list(text[1:] + p[1:]))
+
+  if k is None:
+    k = p.count('?')
 
   BM_k = boyer_moore_multi_dim_shift(A, p, m, k)
   BAD = boyer_moore_bad_environment(A, p, m, k)
@@ -28,7 +31,10 @@ def boyer_moore_k_mismatches(text, p, n, m, k=0, A=None):
   D_curr = D_0.copy()
   curr_col, j = next_possible_occurence(text, n, m, k, BM_k, BAD, j)
 
-  last_col = curr_col + m + 2 * k - 1
+  if curr_col <= 0:
+    curr_col = 1
+
+  last_col = curr_col + m + 2 * k
 
   while curr_col <= n:
     for r in range(curr_col, last_col + 1):
@@ -47,7 +53,8 @@ def boyer_moore_k_mismatches(text, p, n, m, k=0, A=None):
 
       # if D[m] <= k we have a match
       if top == m:
-        yield r
+        if r <= n:
+          yield r
       else:
         top += 1
 
@@ -65,10 +72,10 @@ def next_possible_occurence(text, n, m, k, BM_k, BAD, j):
     r, i, bad, d = j, m, 0, m
 
     while i > k >= bad:
-      if i >= m - k and r <= m:
+      if i >= m - k and r <= n:
         d = min(d, BM_k[(i, text[r])])
 
-      if r <= m and BAD[(i, text[r])]:
+      if r <= n and BAD[(i, text[r])]:
         bad = bad + 1
 
       i, r = i - 1, r - 1
@@ -86,7 +93,10 @@ def next_possible_occurence(text, n, m, k, BM_k, BAD, j):
   return n + 1, j
 
 
-def simple_dynamic(text, p, n, m, k=0):
+def simple_dynamic_edit_distance(text, p, n, m, k=None):
+  if k is None:
+    k = p.count('?')
+
   D = {(0, j): 0 for j in range(n + 1)}
 
   for i in range(m + 1):
@@ -97,14 +107,6 @@ def simple_dynamic(text, p, n, m, k=0):
       D[(i, j)] = min(D[(i - 1, j)] + 1, D[(i, j - 1)] +
                       1, D[(i - 1, j - 1)] + int(p[i] != text[j]))
 
-  for j in range(n + 1):
+  for j in range(1, n + 1):
     if D[(m, j)] <= k:
       yield j
-
-
-tex = '#aaabababbabaabbabababbababababbabababbabbbabababbabaaaaabbbababbbbba'
-pat = '#a?a???b'
-print(list(simple_dynamic(tex, pat, len(tex) - 1, len(pat) - 1, 4)))
-print(list(boyer_moore_k_mismatches(tex, pat, len(tex) - 1,
-                                    len(pat) - 1, 4)))
-# '#abaaabbaababb', '#a?b', 13, 3, [4, 5, 8, 11]
