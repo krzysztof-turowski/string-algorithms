@@ -1,0 +1,91 @@
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\newtheorem*{theorem}{Twierdzenie}
+
+\title{Manber, Myers: zapytania do tablicy sufiksowej w czasie $O(m + \log{} n)$}
+\author{Jan Havránek}
+\date{20.06.2020}
+
+
+\begin{document}
+
+\maketitle
+
+\section*{Wprowadzenie}
+Tablica sufiksowa $SA$ zawiera początkowe indeksy leksykograficznie uporządkowanych sufiksów słowa $t$. Oznaczmy taki sufiks wskazany przez indeks $a$ w $SA$ jako $t_a = t[SA[a]\ldots n]$. Mając tablicę sufiksową, można ją wykorzystać do indeksowania tekstu -- poprzez zwykłe wyszukiwanie binarne można odnaleźć pierwszą ($l_w$) i ostatnią ($r_w$) pozycję w $SA$ taką, że $w$ jest prefiksem $t_i, i \in l_w \leq i \leq r_w$. Wtedy $SA[i]$ wskazują wszystkie wystąpienia $w$ w $t$. Jednak to podejście wymaga $O(m \log{} n)$ czasu.
+
+Manber i Myers w 1993 r. zaproponowali prosty algorytm przyśpieszający takie zapytania do $O(m + \log{} n)$. Wykorzystywana jest do tego struktura $LCP\textrm{-}LR$ zawierająca najdłuższe wspólne prefiksy (\textit{lcp}) sufiksów $w$. 
+
+\section*{Zapytania do $SA$ z wykorzystaniem $LCP\textrm{-}LR$}
+
+Załóżmy, że mamy tablicę $SA$ oraz $LCP\textrm{-}LR$ (jej konstrukcja zostanie omówiona w następnej sekcji). Informację o \textit{lcp} sufiksów $t$ można wykorzystać do przyśpieszenia wyszukiwania binarnego, ograniczając liczbę wykonywanych porównań symboli. 
+
+Oznaczmy jako $l$ i $r$ lewą i prawą granicę rozpatrywanego przedziału $SA$ w wyszukiwaniu binarnym. $c = (l + r) / 2 $ jest zatem pozycja oznaczająca sufiks $t_c$, z którym porównywamy wyszukiwane słowo $w$. Dalej oznaczmy $L = lcp(t_l, w)$ i $R = lcp(t_r, w)$. Podczas biegu algorytmu będą wartości $L$ i $R$ aktualizowane (niezmiennik), i to z wykorzystaniem minimalnej ilości porównań. Niech $H = \max (L, R)$ i $C = lcp(t_c, w)$. 
+
+Bez straty ogólności załóżmy, że w danym cyklu wyszukiwania $H = L \geq R$. Mogą zajść trzy przypadki (w praktyce można pierwsze dwa implementować razem):
+
+\begin{enumerate}
+    \item $lcp(t_l, t_m) > L$ \\
+          Wtedy $C = L$, skoro zgodność prefiksów jest relacją tranzytywną.
+    \item $lcp(t_l, t_m) = L$ \\
+          W takim przypadku musimy porównać $L+1, L+2\ldots$-ty symbol $w$ i $t_c$ póki nie znajdziemy $i$ takie, że $w[L+i] \neq t_c[L+i]$. Wtedy $C = L + i - 1$. 
+    \item $lcp(t_l, t_m) < L$ \\
+          Wtedy $C = lcp(t_l, t_m)$.
+\end{enumerate}
+
+Kiedy znamy $C$, wystarczy porównać $C+1$-szy symbol $w$ i $t_c$, żeby zdecydować, czy przesunąć lewą lub prawą granicę przeszukiwania oraz czy zaktualizować wartość $L$ lub $R = C$. W przypadku, kiedy $C = m$, decydujemy według tego, czy szukamy $l_w$ (przesuwamy $r$) albo $r_w$ (przesuwamy $l$).
+
+\begin{theorem}
+Algorytm poprawnie znajduje $l_w$/$r_w$.
+\end{theorem}
+
+\begin{proof}[Dowód]
+Algorytm działa na takiej samej zasadzie, co podstawowe wyszukiwanie binarne, tylko z szybką identyfikacją pierwszego różniącego się symbolu.
+\end{proof}
+
+\begin{theorem}
+Algorytm działa w czasie $O(m + \log{} n)$.
+\end{theorem}
+
+\begin{proof}[Dowód]
+Tak samo, jak w wyszukiwaniu binarnym, będziemy musieli wykonać w najgorszym przypadku $O(\log n)$ cykli. Zauważmy, że poza jednym obowiązkowym porównaniem znaku w każdym cyklu, dodatkowe porównywania są wykonywane tylko w opcji 2 z wyżej wymienionych. Biorąc pod uwagę, że jest to jedyna opcja, przy której się zmienia $H$ (jeżeli zachodzi opcja 3, wtedy szukane $l_w$/$r_w$ znajduje się w lewej połowie i w związku z tym aktualizujemy $R$, czyli mniejszą z wartości $L$, $R$), że $H$ może tylko rosnąć (przybliżamy się do szukanej pozycji) oraz że $H$ jest z definicji ograniczone przez $m$, takich porównań będzie maksymalnie $m$. Łącznie więc otrzymujemy $O(m + \log{} n)$ porównań.
+\end{proof}
+
+\section*{$LCP\textrm{-}LR$ i jej konstrukcja}
+
+$LCP\textrm{-}LR$ pozwala na zapytania o \textit{lcp} dwu sufiksów $t$ w czasie $O(1)$. Jeżeli mielibyśmy przechowywać tę informację o każdych dwu sufiksach $t$, $LCP\textrm{-}LR$ zajmowałaby $O(n^2)$ pamięci, jednak ograniczenie się do par potrzebnych w trakcie wyszukiwania binarnego redukuje wymagania pamięciowe do $O(n)$.
+
+Manber i Meyers proponują implementację $LCP\textrm{-}LR$ jako dwu tablic $Llcp$ i $Rlcp$, gdzie dla każdej trójki pozycji $(r, c, l)$, która może zostać rozpatrzona w trakcie wyszukiwania binarnego, $Llcp[c] = lcp(t_l, t_c)$ i $Rlcp[c] = lcp(t_r, t_c)$. Alternatywnie można zastosować słownik (hash table) indeksowany dwójkami $LCP\textrm{-}LR[(a, b)] = lcp(t_a, t_b)$.
+
+Mając tablicę LCP (obliczoną np. algorytmem Kasai), potrzebne $lcp$ można łatwo uzyskać z wykorzystaniem rekursji:
+
+\begin{align*}
+   lcp(t_l, t_r) = 
+   \begin{cases}
+        LCP[r] & \text{jeżeli } r = l + 1 \\
+        min(lcp(t_l, t_c), lcp(t_c, t_r)) & \text{wpp}
+   \end{cases}
+\end{align*} 
+gdzie $c = (l + r) / 2$.
+
+\begin{theorem}
+Powyższy algorytm zwraca poprawne wartości $LCP\textrm{-}LR$ dla wszystkich potrzebnych $(a, b)$.
+\end{theorem}
+
+\begin{proof}[Dowód]
+Algorytm wybiera pary $(a, b)$ w dokładnie ten sam sposób co wyszukiwanie binarne, uzyskamy więc dokładnie te same $(a, b)$. Biorąc pod uwagę, że sufiksy w $SA$ są uporządkowane leksykograficznie, $lcp(t_a, t_b) = \min(lcp(t_a, t_{a + 1}), \allowbreak lcp(t_{a + 1}, t_{a + 2}) \ldots \allowbreak lcp(t_{b-1}, t_{b}))= \min_{a + 1 \leq i \leq b} LCP[i] $, co gwarantuje poprawność wyników.
+\end{proof}
+
+\begin{theorem}
+$LCP\textrm{-}LR$ uzyskujemy w czasie $O(n)$.
+\end{theorem}
+
+\begin{proof}[Dowód]
+Ilość porównań jest z góry ograniczona przez $$\lim_{n \to \infty} \sum_{i=0}^{\log_2{n}} \frac{n}{2^i} = 2n \in O(n)$$
+\end{proof}
+
+\end{document}
