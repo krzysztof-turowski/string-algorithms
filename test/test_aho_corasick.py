@@ -13,21 +13,21 @@ class TestAhoCorasick(unittest.TestCase):
     automaton = self._create_from(['abc'])
 
     found = list(find_occurrences(text, n, automaton))
-    self.assertListEqual(found, [(2, 5), (6, 9)])
+    self.assertListEqual(found, [('abc', 2), ('abc', 6)])
 
   def test_non_overlapping(self):
     text, n = '#aabccabcab', 10
     automaton = self._create_from(['aa', 'bcc', 'bcab'])
 
     found = list(find_occurrences(text, n, automaton))
-    self.assertListEqual(found, [(1, 3), (3, 6), (7, 11)])
+    self.assertListEqual(found, [('aa', 1), ('bcc', 3), ('bcab', 7)])
 
   def test_overlapping(self):
     text, n = '#eshers', 6
     automaton = self._create_from(['he', 'she', 'his', 'her', 'hers'])
 
     found = set(find_occurrences(text, n, automaton))
-    self.assertSetEqual(found, {(2, 5), (3, 5), (3, 6), (3, 7)})
+    self.assertSetEqual(found, {('she', 2), ('he', 3), ('hers', 3), ('her', 3)})
 
   def test_pessimistic(self):
     text, n = '#' + 'a' * 20, 20
@@ -52,7 +52,7 @@ class TestAhoCorasick(unittest.TestCase):
       expected = set()
       for p in patterns:
         starts = brute_force(t, f'#{p}', n, len(p) + 1)
-        expected.union({(i, i + len(p)) for i in starts})
+        expected.union({(p, i) for i in starts})
 
       found = set(find_occurrences(t, n, automaton))
 

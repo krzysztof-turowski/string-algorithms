@@ -86,7 +86,8 @@ class AhoCorasickAutomaton:
     for i in range(1, n + 1):
       state = state.nxt(text[i])
       for keyword_len in state.output():
-        yield i - keyword_len + 1, i + 1
+        start_pos = i - keyword_len + 1
+        yield text[start_pos:i + 1], start_pos
 
   class Node:
     def __init__(self):
