@@ -21,7 +21,7 @@
 \let\geq\geqslant
 
 \DeclareMathOperator{\rot}{\mathfrak{r}}
-\DeclareMathOperator{\K}{\mathcal{K}}
+\DeclareMathOperator{\W}{\mathcal{W}}
 \DeclareMathOperator{\A}{\mathcal{A}}
 \DeclareMathOperator{\Otime}{\mathcal{O}}
 \DeclareMathOperator{\states}{\mathcal{S}}
@@ -48,13 +48,13 @@
 
 \section{Wprowadzenie}
 
-Niech $\K=\{k_1,...,k_n\}$ będzie zbiorem wzorców (niepustych słów nad alfabetem $\Sigma$). Otrzymawszy słowo $T\in\Sigma^m$ chcemy wyznaczyć wszystkie indeksy z $[m]$, na których w $T$ zaczyna się pewien wzorzec z $\K$. Naturalnym rozwiązaniem jest $n$-krotne użycie jednego z wydajnych (liniowych) algorytmów do szukania pojedynczego wzorca. Podejście takie oczywiście jest poprawne, niestety skutkuje złożonością czasową $\Theta(nm)$. Okazuje się, że na podstawie $\K$ jesteśmy w stanie skonstruować w czasie $\Theta(\sum_{i\in[n]}|k_i|)$ odpowiednią strukturę, która będzie potrafiła znaleźć naraz wszystkie wystąpienia wzorców oglądając $T$ wyłącznie raz. Przed nami: automat Aho-Corasick.
+Niech $\W=\{w_1,...,w_k\}$ będzie zbiorem wzorców (niepustych słów nad alfabetem $\Sigma$). Otrzymawszy słowo $T\in\Sigma^m$ chcemy wyznaczyć wszystkie indeksy z $[m]$, na których w $T$ zaczyna się pewien wzorzec z $\W$. Naturalnym rozwiązaniem jest $k$-krotne użycie jednego z wydajnych (liniowych) algorytmów do szukania pojedynczego wzorca. Podejście takie oczywiście jest poprawne, niestety skutkuje złożonością czasową $\Theta(km)$. Okazuje się, że na podstawie $\W$ jesteśmy w stanie skonstruować w czasie $\Theta(\sum_{i\in[k]}|w_i|)$ odpowiednią strukturę, która będzie potrafiła znaleźć naraz wszystkie wystąpienia wzorców oglądając $T$ wyłącznie raz. Przed nami: automat Aho-Corasick.
 
 \section{Idea}
 
-Pomysł polega na zbudowaniu odpowiedniego deterministycznego automatu skończonego $\A$. Czytając $T$ będziemy podróżować zgodnie z krawędziami $\A$. W każdym stanie $s$ będziemy mieć zapisaną listę tych wzorców z $\K$, które \textit{kończą się} w $s$ -- tzn. aby znaleźć się w stanie $s$ musieliśmy przejść skądś krawędziami etykietowanymi kolejnymi literami pewnego wzorca. Spacerowanie po $\A$ wzdłuż $T$ możemy interpretować jako poruszanie się \textit{jednocześnie} po wszystkich słowach z $\K$.
+Pomysł polega na zbudowaniu odpowiedniego deterministycznego automatu skończonego $\A$. Czytając $T$ będziemy podróżować zgodnie z krawędziami $\A$. W każdym stanie $s$ będziemy mieć zapisaną listę tych wzorców z $\W$, które \textit{kończą się} w $s$ -- tzn. aby znaleźć się w stanie $s$ musieliśmy przejść skądś krawędziami etykietowanymi kolejnymi literami pewnego wzorca. Spacerowanie po $\A$ wzdłuż $T$ możemy interpretować jako poruszanie się \textit{jednocześnie} po wszystkich słowach z $\W$.
 
-Zaczniemy konstrukcję od utworzenia \textit{drzewa trie} na podstawie $\K$. Następnie dodamy do każdego stanu informacje o wzorcach które się w nim kończą i podniesiemy funkcję przejścia z częściowej do totalnej. Na koniec uprościmy automat. Po tych zabiegach otrzymamy strukturę, dzięki której wyszukiwanie wielu wzorców okaże się bardzo proste:
+Zaczniemy konstrukcję od utworzenia \textit{drzewa trie} na podstawie $\W$. Następnie dodamy do każdego stanu informacje o wzorcach które się w nim kończą i podniesiemy funkcję przejścia z częściowej do totalnej. Na koniec uprościmy automat. Po tych zabiegach otrzymamy strukturę, dzięki której wyszukiwanie wielu wzorców okaże się bardzo proste:
 
 \begin{minted}[xleftmargin=20pt,linenos]{python}
 def find_occurrences(self, text, n):
@@ -71,17 +71,17 @@ Warto zwrócić uwagę na fakt, że jeśli dany zbiór wzorców chcemy wyszukać
 \textit{Uwaga: sednem naszych rozważań jest opis sposobu, w jaki można przechodzić pomiędzy stanami automatu. Wygodnie nam będzie utożsamić ze sobą różne podejścia realizacji -- równoważne dla nas będą pojęcia zbioru etykietowanych krawędzi (skierowanych) pomiędzy dwoma stanami, funkcji mapujących pary (stan, symbol) w stan oraz lokalne w stanach tablice routingu.}
 
 \subsection{Drzewo trie}
-Mając zbiór słów $\K$ nad alfabetem $\Sigma$ możemy w prosty sposób zbudować tzw. \textit{drzewo trie}, ozn. $\trie_{\K}$. Jest to skierowane, ukorzenione drzewo, którego krawędzie etykietowane są symbolami z $\Sigma$. Każde słowo $k\in\K$ ma odpowiadającą mu ścieżkę z korzenia, etykietowaną kolejnymi literami $k$. Jeśli $k\in\K$ nie jest prefiksem żadnego innego słowa z $\K$, to jego ścieżka kończy się w liściu. Inaczej ujmując, istnieje bijekcja pomiędzy ścieżkami w $\trie_{\K}$ a wszystkimi (różnymi) prefiksami słów z $\K$. Krawędź etykietowaną symbolem $a$ pomiędzy $s_1$ a $s_2$ możemy kodować jako trójkę $(s_1, a, s_2)$.
+Mając zbiór słów $\W$ nad alfabetem $\Sigma$ możemy w prosty sposób zbudować tzw. \textit{drzewo trie}, ozn. $\trie_{\W}$. Jest to skierowane, ukorzenione drzewo, którego krawędzie etykietowane są symbolami z $\Sigma$. Każde słowo $w\in\W$ ma odpowiadającą mu ścieżkę z korzenia, etykietowaną kolejnymi literami $w$. Jeśli $w\in\W$ nie jest prefiksem żadnego innego słowa z $\W$, to jego ścieżka kończy się w liściu. Inaczej ujmując, istnieje bijekcja pomiędzy ścieżkami w $\trie_{\W}$ a wszystkimi (różnymi) prefiksami słów z $\W$. Krawędź etykietowaną symbolem $a$ pomiędzy $s_1$ a $s_2$ możemy kodować jako trójkę $(s_1, a, s_2)$.
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.4\textwidth]{trie.png}
+    \includegraphics[width=0.4\textwidth]{images/trie.png}
     \caption{$\trie_{\{aaab, aab, bab, ba\}}$}
     \label{fig:trie}
 \end{figure}
 
 \subsection{Plan}
-Zacznijmy temat konstrukcji od zdefiniowania funkcji, które będą nam potrzebne. Niech $\K$ oznacza zbiór wzorców, $\trie$ oznacza drzewo trie dla $\K$ (skrót dla $\trie_{\K}$), $\rot$ oznacza korzeń $\trie$, $\states$ oznacza zbiór wierzchołków $\trie$ (czyli docelowo zbiór stanów $\A$).
+Zacznijmy temat konstrukcji od zdefiniowania funkcji, które będą nam potrzebne. Niech $\W$ oznacza zbiór wzorców, $\trie$ oznacza drzewo trie dla $\W$ (skrót dla $\trie_{\W}$), $\rot$ oznacza korzeń $\trie$, $\states$ oznacza zbiór wierzchołków $\trie$ (czyli docelowo zbiór stanów $\A$).
 
 \begin{itemize}
     \item $\goto::\states\times\Sigma\mapsto\states$ -- ta funkcja w zasadzie reprezentuje zbiór krawędzi $\trie$; dodatkowo jednak, dla każdego symbolu w $\Sigma$, który nie etykietuje żadnej krawędzi wychodzącej z $\rot$, dodajemy pętlę w $\rot$; czyli:
@@ -92,18 +92,18 @@ Zacznijmy temat konstrukcji od zdefiniowania funkcji, które będą nam potrzebn
         \none
         \end{cases}
     \end{gather*}
-    
-    \item $\out::\states\mapsto\wp(\K)$ -- jak zostało już wspomniane, chcemy w każdym stanie $s$ przechowywać listę wzorców, których wystąpienie w $T$ będzie poświadczone odwiedzeniem stanu $s$; w sporym zakresie możemy to obliczyć już przy konstrukcji $\trie$ (np. wracając do rysunku \ref{fig:trie}, $\out(1)=\emptyset$, $\out(5)=\{aab\}$, $\out(7)=\{ba\}$); będziemy musieli jeszcze jednak obsłużyć przypadki, gdy jeden wzorzec będzie sufiksem drugiego (np. $\out(4)=\{aaab, aab\}$)
-    
-    \item $\fail::\states\mapsto\states$ --     ostatecznie $\A$ będzie skonstruowane na wierzchołkach $\trie$ więc już teraz możemy spróbować zinterpretować obecność w stanie $s$ po przeczytaniu $j$-tego symbolu $T$ -- otóż etykiety na ścieżce pomiędzy $\rot$ a $s$ tworzą najdłuższy możliwy prefiks któregoś ze wzorców z $\K$, który da się dopasować w $T$ kończąc na pozycji $j$; funkcja $\goto$ jest częściowa, a więc dla niektórych stanów i niektórych symboli nie mamy zdefiniowanego przejścia (na razie otrzymamy $\none$); aby nie utknąć i zachować poprawność interpretacji, to $\fail(s)$ musi wskazywać na taki stan $s'$, żeby słowo powstałe ze ścieżki $\rot\rightsquigarrow s'$ było najdłuższym możliwym sufiksem słowa odpowiadającemu $\rot\rightsquigarrow s$; w dalszej części utożsamiać będziemy ścieżki ze słowami;
-    
+
+    \item $\out::\states\mapsto\wp(\W)$ -- jak zostało już wspomniane, chcemy w każdym stanie $s$ przechowywać listę wzorców, których wystąpienie w $T$ będzie poświadczone odwiedzeniem stanu $s$; w sporym zakresie możemy to obliczyć już przy konstrukcji $\trie$ (np. wracając do rysunku \ref{fig:trie}, $\out(1)=\emptyset$, $\out(5)=\{aab\}$, $\out(7)=\{ba\}$); będziemy musieli jeszcze jednak obsłużyć przypadki, gdy jeden wzorzec będzie sufiksem drugiego (np. $\out(4)=\{aaab, aab\}$)
+
+    \item $\fail::\states\mapsto\states$ -- ostatecznie $\A$ będzie skonstruowane na wierzchołkach $\trie$ więc już teraz możemy spróbować zinterpretować obecność w stanie $s$ po przeczytaniu $j$-tego symbolu $T$ -- otóż etykiety na ścieżce pomiędzy $\rot$ a $s$ tworzą najdłuższy możliwy prefiks któregoś ze wzorców z $\W$, który da się dopasować w $T$ kończąc na pozycji $j$; funkcja $\goto$ jest częściowa, a więc dla niektórych stanów i niektórych symboli nie mamy zdefiniowanego przejścia (na razie otrzymamy $\none$); aby nie utknąć i zachować poprawność interpretacji, to $\fail(s)$ musi wskazywać na taki stan $s'$, żeby słowo powstałe ze ścieżki $\rot\rightsquigarrow s'$ było najdłuższym możliwym sufiksem słowa odpowiadającemu $\rot\rightsquigarrow s$; w dalszej części utożsamiać będziemy ścieżki ze słowami;
+
     Chodzenie krawędziami $\fail$ opiera się na identycznym pomyśle co rekurencyjne używanie tablic $Border$ w algorytmie Morrisa-Pratta. Warto również zauważyć, że $\fail$ nie ma sensu definiować dla $\rot$.
-    
+
     \item $\next::\states\times\Sigma\mapsto\states$ -- trzy zdefiniowane funkcje powyżej zupełnie wystarczają, aby nasz docelowy automat robił to, czego pragniemy; jak jednak łatwo zauważyć, próba przeczytania jednego znaku z $T$ może wymagać więcej niż jednego przejścia krawędzią korzystając z $\goto$ oraz $\fail$ -- możemy musieć schodzić wzdłuż $\fail$ wielokrotnie; aby uniknąć tego, pod sam koniec utworzymy funkcję $\next$, która skompresuje nam tego typu ścieżki i zastąpi $\goto$ oraz $\fail$
 \end{itemize}
 
 \subsection{Obliczanie $\goto$, $\out$, $\fail$}
-Jak już wiemy \textit{co} chcemy policzyć, to możemy przejść do tego \textit{jak} to zrobić. Funkcję $\goto$ oraz część $\out$, jak już zauważyliśmy, możemy obliczyć konstruując $\trie_{\K}$:
+Jak już wiemy \textit{co} chcemy policzyć, to możemy przejść do tego \textit{jak} to zrobić. Funkcję $\goto$ oraz część $\out$, jak już zauważyliśmy, możemy obliczyć konstruując $\trie_{\W}$:
 \begin{minted}[xleftmargin=20pt,linenos]{python}
 def _construct_goto(self, keywords, alphabet):
   for k, k_len in keywords:
@@ -138,14 +138,14 @@ Funkcję $\fail$ powinniśmy obliczać dla coraz bardziej odległych od $\rot$ w
 \begin{minted}[xleftmargin=20pt,linenos]{python}
 def _construct_fail(self, alphabet):
   q = Queue()
-  for s in [self._root.goto(a) for a in alphabet]:
+  for s in (self._root.goto(a) for a in alphabet):
     if s != self._root:
       q.put(s)
       s.update_fail(self._root)
 
   while not q.empty():
     current = q.get()
-    for a, child in [(a, current.goto(a)) for a in alphabet]:
+    for a, child in ((a, current.goto(a)) for a in alphabet):
       if child is not None:
         q.put(child)
 
@@ -177,7 +177,7 @@ def _construct_next(self, alphabet):
 
   while not q.empty():
     current = q.get()
-    for a, child in [(a, current.goto(a)) for a in alphabet]:
+    for a, child in ((a, current.goto(a)) for a in alphabet):
       if child is not None:
         q.put(child)
         current.update_next(a, child)
@@ -194,15 +194,15 @@ Instrukcje w wierszach 8. oraz 19. pozwalają zwolnić pamięć zapominając o w
 Z tego, co już zostało przedstawione, powinna wynikać poprawność zastosowanej metody. Aby jednak formalnie jej dowieść, wystarczy postawić trzy proste lematy:
 
 \begin{lemma}
-Niech $s,t\in\states$ i niech $u, v$ będą słowami generowanymi przez ścieżki $\rot\rightsquigarrow s$ i $\rot\rightsquigarrow t$. Wówczas $\fail(s) = t \iff v$ jest najdłuższym właściwym sufiksem $u$, który jest prefiksem pewnego $k_i\in\K$. 
+Niech $s,t\in\states$ i niech $u, v$ będą słowami generowanymi przez ścieżki $\rot\rightsquigarrow s$ i $\rot\rightsquigarrow t$. Wówczas $\fail(s) = t \iff v$ jest najdłuższym właściwym sufiksem $u$, który jest prefiksem pewnego $w_i\in\W$.
 \end{lemma}
 
 \begin{lemma}
-Słowo $k$ należy do $\out(s)\iff$ $k\in\K$ oraz $k$ jest sufiksem słowa generowanego przez $\rot\rightsquigarrow s$.
+Słowo $k$ należy do $\out(s)\iff$ $w\in\W$ oraz $k$ jest sufiksem słowa generowanego przez $\rot\rightsquigarrow s$.
 \end{lemma}
 
 \begin{lemma}
-Po przeczytaniu $j$ znaków z $T$ znajdujemy się w stanie $s\iff$ słowo generowane przez $\rot\rightsquigarrow s$ jest najdłuższym sufiksem $T[1..j]$, który jest prefiksem pewnego $k\in\K$.
+Po przeczytaniu $j$ znaków z $T$ znajdujemy się w stanie $s\iff$ słowo generowane przez $\rot\rightsquigarrow s$ jest najdłuższym sufiksem $T[1..j]$, który jest prefiksem pewnego $w\in\W$.
 \end{lemma}
 
 \noindent Ich uzasadnienia są prostymi dowodami rekurencyjnymi zapisanymi we fragmentach kodu powyżej.
@@ -219,20 +219,20 @@ class AhoCorasickAutomaton:
     self._construct_next(alphabet)
 \end{minted}
 
-Bardzo łatwo zauważyć, że każdą z nich wykonać można w czasie $\Theta(\sum_{i\in[n]}|k_i|)$ -- za każdym razem przechodzimy po całym drzewie $\trie$ odwiedzając każdy wierzchołek dokładnie raz oraz wykonując $\Theta(1)$ operacji w każdym z nich. Zakładamy również, że łączenie zbiorów $\out$ wykonuje się w czasie stałym (jak np. listy wiązane).
+Bardzo łatwo zauważyć, że każdą z nich wykonać można w czasie $\Theta(\sum_{i\in[k]}|w_i|)$ -- za każdym razem przechodzimy po całym drzewie $\trie$ odwiedzając każdy wierzchołek dokładnie raz oraz wykonując $\Theta(1)$ operacji w każdym z nich. Zakładamy również, że łączenie zbiorów $\out$ wykonuje się w czasie stałym (jak np. listy wiązane). Warto dodać, że moc $\Sigma$ wlicza się w zapotrzebowanie (zarówno pamięciowe jak i czasowe) liniowo -- rozmiar grafu jest z góry ograniczony przez $|\Sigma|\cdot \sum_{i\in[k]}|w_i|$ (z każdego wierzchołka może wychodzi $|\Sigma|$ krawędzi). Konstrukcja $\A$ oraz wyszukiwanie w $T$ odbywają się w czasie liniowo proporcjonalnym do wielkości $\trie$.
 
 Pozostaje zastanowić się, ile czasu zajmie przeczytanie tekstu $T$ ($|T|=m$) i wypisanie wszystkich wystąpień wzorców. Moc $\Sigma$ traktujemy jak stałą.
 
 Najpierw rozważmy sytuację, w której nie zgłaszamy żadnego wystąpienia wzorca (możemy np. tylko zaznaczyć pozycje $T$ o których wiemy, że na nich coś się kończy):
 \begin{itemize}
     \item używając funkcji $\goto$ oraz $\fail$ wykonamy co najwyżej $2m$ przejść w $\A$ -- po przeczytaniu dowolnego symbolu przejdziemy dokładnie raz według funkcji $\goto$ i być może wielokrotnie krawędziami $\fail$; łatwo jednak zaobserwować, że każde przejście $\fail$ skraca odległość z obecnego wierzchołka do $\rot$, a z $\rot$ zawsze można wyjść używając $\goto$; zatem nie możemy przejść krawędziami $\fail$ więcej razy niż przeszliśmy $\goto$;
-    
+
     można również spojrzeć na to w ten sposób, że przechodząc automatem $\A$ wzdłuż $T$, pamiętamy dwa wskaźniki w $T$ -- słowo pomiędzy nimi to właśnie to, które jest generowane przez ścieżkę z korzenia do obecnego wierzchołka; przejście $\goto$ przesuwa 'prawy' wskaźnik o 1 w prawo, przejście $\fail$ przesuwa 'lewy' wskaźnik o dodatnią liczbę pozycji w prawą, ale na tyle małą by nie przeskoczyć prawego;
-    
+
     \item używając funkcji $\next$, przy każdym przeczytanym symbolu z $T$ wykonujemy zawsze jedno przejście -- $m$ ruchów
 \end{itemize}
 
-Problem może się pojawić, gdy będziemy chcieli wypisywać wszystkie wystąpienia wzorców. Pesymistycznym przykładem jest $\K=\{a,a^2,a^3,...,a^n\}$ oraz $T=a^m$. Liczba wystąpień będzie $\Theta(nm)$. Jednakże, nie jest to wada zastosowanego algorytmu -- każdy inny algorytm zgłaszający wszystkie wystąpienia wzorców musiałby wykonać co najmniej tyle samo pracy. 
+Problem może się pojawić, gdy będziemy chcieli wypisywać wszystkie wystąpienia wzorców. Pesymistycznym przykładem jest $\W=\{a,a^2,a^3,...,a^k\}$ oraz $T=a^m$. Liczba wystąpień będzie $\Theta(km)$. Jednakże, nie jest to wada zastosowanego algorytmu -- każdy inny algorytm zgłaszający wszystkie wystąpienia wzorców musiałby wykonać co najmniej tyle samo pracy.
 
 Zatem możemy określić złożoność czasową wyszukiwania wielu wzorców w tekście za pomocą automatu Aho-Corasick jako liniową w stosunku do sumy długości wszystkich wzorców oraz ilości ich wystąpień.
 
@@ -240,8 +240,8 @@ Zatem możemy określić złożoność czasową wyszukiwania wielu wzorców w te
 Okazuje się, że bardzo prosto można użyć automatu Aho-Corasick do wyszukiwania wzorców dwuwymiarowych. W skrócie:
 \begin{enumerate}
     \item niech $T$ będzie kwadratową tablicą rozmiaru $m^2$, $P$ - kwadratową tablicą rozmiaru $n^2$ o różnych kolumnach, $n < m$
-    \item niech $\K$ będzie zbiorem kolumn $P$
-    \item automatem Aho-Corasick szukamy $\K$ w każdej z kolumn $T$; jeśli fragment $j$-tej kolumny od indeksu $i$ pokrywa się z $k$-tą kolumną $P$, to niech $T_P[i][j]=k$
+    \item niech $\W$ będzie zbiorem kolumn $P$
+    \item automatem Aho-Corasick szukamy $\W$ w każdej z kolumn $T$; jeśli fragment $j$-tej kolumny od indeksu $i$ pokrywa się z $k$-tą kolumną $P$, to niech $T_P[i][j]=k$
     \item algorytmem KMP szukamy w każdym wierszu $T_P$ ciągu $(1,2,...,n)$
 \end{enumerate}
 Całość działa w czasie liniowym od wielkości wejścia i rozmiaru zbioru z którego pochodzą elementy w $T$ oraz $P$.
