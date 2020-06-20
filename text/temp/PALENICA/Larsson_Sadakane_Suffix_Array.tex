@@ -65,6 +65,9 @@ Grupy będziemy numerować żeby móc przeprowadzać obliczenia na poszczególny
 \label{obs2}
 Gdy I jest w \textit{h-order}, każdy sufiks w \textbf{wspólnej grupie posortowanej} jest unikalnie rozróżnialny od wszystkich innych sufiksów przy pomocy pierwszych $h$ symboli.
 \end{observation}
+
+\section*{Algorytm}
+
 Algorytm po każdej iteracji konstruuje z tablicy sufiksów w porządku \textit{h-order} tablicę w porządku \textit{2h-order} korzystając z obserwacji \ref{obs1}. Zgodnie z obserwacją \ref{obs2}, sufiksy znajdujące się we wspólnych grupach posortowanych są już na swoich miejscach. Mając to na uwadze możemy wykorzystać to w algorytmie i przy procesowaniu nieposortowanych grup sufiksów `przeskakiwać` nad wspólnymi grupami posortowanymi. Po każdej iteracji jest szansa, że pojawią się nowe grupy posortowane więc dodatkowo będziemy pilnować aby spójne sekwencje grup posortowanych były przez nas łączone we wspólne grupy posortowane.
 
 Podstawowy algorytm będzie się prezentował następująco:
@@ -89,6 +92,8 @@ Każdy węzeł `środkowy` na ścieżce odpowiada podwojeniu \textit{h-order} w 
 \end{proof}
 \end{lemma}
 Na danym poziomie drzewa ilość wykonanej pracy będzie $O(n)$ bo to obliczenie odpowiada wykonaniu podziału na rozłączne podtablice. Stąd dostajemy złożoność $O(n\ \log{n})$ bo aktualizacja podtablic odpowiedzialnych za grupy również jest wykonywana w czasie liniowym od rozmiaru podtablicy.
+
+\section*{Usprawnienia}
 
 W algorytmie autorzy wprowadzają usprawnienia które nie wpływają negatywnie na czas wykonania. Opiszemy tutaj większość z nich (te które zostały wykorzystane w implementacji).
 
