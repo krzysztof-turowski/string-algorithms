@@ -1,6 +1,7 @@
 from common.prefix import get_longest_common_prefix
 
 def lcplr_from_lcp(lcp, n):
+  """Builds LCP-LR dictionary from LCP array"""
   lcplr = {}
   def fill_lcplr(left, right):
     if right == left + 1:
@@ -16,14 +17,17 @@ def lcplr_from_lcp(lcp, n):
 
 
 def get_word_to_edge_lcp(l, r):
+  """Finds longest common prefix between w and one of the search bounds"""
   return l if l >= r else r
 
 
 def get_edge_to_mid_lcp(l, r, lcplr, left, mid, right):
+  """Finds longest common prefix between mid and one of the search bounds"""
   return lcplr[(left, mid)] if l >= r else lcplr[(mid, right)]
 
 
 def get_word_to_mid_lcp(SA, text, word, mid, word_to_edge_lcp, edge_to_mid_lcp):
+  """Finds longest common prefix between mid and w"""
   if edge_to_mid_lcp >= word_to_edge_lcp:
     word_to_mid_lcp = word_to_edge_lcp + \
       get_longest_common_prefix(text[SA[mid] + word_to_edge_lcp:],
@@ -39,11 +43,20 @@ def initialize_lr(SA, text, word, n):
   return l, r
 
 
-def right_bound_with_lcplr(SA, lcplr, text, word, n, m):
+def find_bound_with_lcplr(SA, lcplr, text, word, n, m, lower_bound = True):
+  """Finds lower or upper bound of occurences of word in SA"""
   l, r = initialize_lr(SA, text, word, n)
 
-  if r == m or word[r + 1:] > text[SA[n] + r:]:
-    return n + 1
+  if lower_bound:
+    if l == m or word[l + 1:] <= text[SA[0] + l:]:
+      return 1
+    if r < m and word[r + 1:] > text[SA[n] + r:]:
+      return n + 1
+
+  else:
+    if r == m or word[r + 1:] > text[SA[n] + r:]:
+      return n + 1
+
 
   left, right = 1, n
   while left + 1 < right:
@@ -53,32 +66,14 @@ def right_bound_with_lcplr(SA, lcplr, text, word, n, m):
     word_to_mid_lcp = get_word_to_mid_lcp(SA, text, word, mid,
                                           word_to_edge_lcp, edge_to_mid_lcp)
 
-    if word_to_mid_lcp == m or \
-       word[1 + word_to_mid_lcp] > text[SA[mid] + word_to_mid_lcp]:
-      left, l = mid, word_to_mid_lcp
-    else:
-      right, r = mid, word_to_mid_lcp
-  return right
+    if word_to_mid_lcp == m:
+      if lower_bound:
+        right, r = mid, word_to_mid_lcp
+      else:
+        left, l = mid, word_to_mid_lcp
+      continue
 
-
-def left_bound_with_lcplr(SA, lcplr, text, word, n, m):
-  l, r = initialize_lr(SA, text, word, n)
-
-  if l == m or word[l + 1:] <= text[SA[0] + l:]:
-    return 1
-  if r < m and word[r + 1:] > text[SA[n] + r:]:
-    return n + 1
-
-  left, right = 1, n
-  while left + 1 < right:
-    mid = (left + right) // 2
-    word_to_edge_lcp = get_word_to_edge_lcp(l, r)
-    edge_to_mid_lcp = get_edge_to_mid_lcp(l, r, lcplr, left, mid, right)
-    word_to_mid_lcp = get_word_to_mid_lcp(SA, text, word, mid,
-                                          word_to_edge_lcp, edge_to_mid_lcp)
-
-    if word_to_mid_lcp == m or \
-       word[1 + word_to_mid_lcp] <= text[SA[mid] + word_to_mid_lcp]:
+    if word[1 + word_to_mid_lcp] <= text[SA[mid] + word_to_mid_lcp]:
       right, r = mid, word_to_mid_lcp
     else:
       left, l = mid, word_to_mid_lcp
@@ -87,7 +82,8 @@ def left_bound_with_lcplr(SA, lcplr, text, word, n, m):
 
 
 def contains_with_lcplr(SA, lcplr, text, word, n, m):
+  """Finds occurences of word in text in O(m + log n) (Manber & Myers, 1993)"""
   text += "$"
-  low = left_bound_with_lcplr(SA, lcplr, text, word, n, m)
-  high = right_bound_with_lcplr(SA, lcplr, text, word, n, m)
+  low = find_bound_with_lcplr(SA, lcplr, text, word, n, m, lower_bound = True)
+  high = find_bound_with_lcplr(SA, lcplr, text, word, n, m, lower_bound = False)
   yield from sorted([SA[i] for i in range(low, high)])
