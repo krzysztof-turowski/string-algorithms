@@ -101,7 +101,7 @@ Analiza złożoności algorytmu \TBM jest dużo prostsza niż analiza algorytmu 
 		\item[(3)] (1) nie zachodzi i wykonujemy krótkie przesunięcie. 
 	\end{itemize}
 
-	Zastosujemy analizę kosztu zamortyzowanego. Zdefiniujmy $cost_k$: dla etapu typu (1) $cost_k = 1$ -- będzie to tylko koszt porównania litery, która się nie zgadza. Resztę kosztu przenosimy na pozostałe typy etapów. Dla etapów (2) i (3) $cost_k = |Suf_k| + 1$. Wystarczy nam pokazać, że $\sum cost < 2* \sum shift$. To nam wystarczy, bo $\sum shift \leq |t|$.
+	Zastosujemy analizę kosztu zamortyzowanego. Zdefiniujmy $cost_k$: dla etapu typu (1) $cost_k = 1$ -- będzie to tylko koszt porównania litery, która się nie zgadza. Resztę kosztu przenosimy na pozostałe typy etapów. Dla etapów (2) i (3) $cost_k = |Suf_k| + 1$. Wystarczy nam pokazać, że $\sum_k cost_k < 2* \sum_k shift_k$. To nam wystarczy, bo $\sum_k shift_k \leq |t|$.
 
 	Dla etapu $k$ typu (1) $cost_k = 1$ jest trywialnie mniejszy od $2 * shift_k$. Dla etapu $k$ typu (2) $cost_k = |Suf_k| + 1 \leq 2 * shift_k$ z definicji długiego przesunięcia.
 

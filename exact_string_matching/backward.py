@@ -101,7 +101,6 @@ def boyer_moore_turbo(t, w, n, m):
   while i <= n - m + 1:
     j = m
     while j > 0 and t[i + j - 1] == w[j]:
-      # print(memory)
       if memory != 0 and j == m - shift:
         j = j - memory
       else:
