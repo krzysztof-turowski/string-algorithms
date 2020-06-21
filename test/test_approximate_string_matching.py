@@ -4,11 +4,12 @@ import unittest
 
 import regex
 
-from approximate_string_matching import dont_care
+from approximate_string_matching import dont_care, matching_with_dont_cares
 from generator import rand
 
 STRING_MATCHING_WITH_DONT_CARE_ALGORITHMS = [
     dont_care.basic_fft,
+    matching_with_dont_cares.exact_matching_with_dont_cares
 ]
 
 class TestStringMatchingWithDontCare(unittest.TestCase):
