@@ -36,7 +36,7 @@ Bez straty ogólności załóżmy, że w danym cyklu wyszukiwania $H = L \geq R$
           W takim przypadku musimy porównać $L+1, L+2\ldots$-ty symbol $w$ i $t_c$ póki nie znajdziemy $i$ takie, że $w[L+i] \neq t_c[L+i]$. Wtedy $C = L + i - 1$. \\
           Podobnie jak w przypadku 1, skoro $w$ i $t_l$ są identyczne w pierwszych $L$ znakach oraz $t_l$ i $t_c$ są też identyczne w pierwszych $L$ znakach, to pierwszych $L$ znaków $w$ i $t_c$ będzie również identycznych. Jednak $lcp(w, t_c)$ może być dłuższy od $L$, więc musimy zrobić skan po znakach dalej.  
     \item $lcp(t_l, t_c) < L$ \\
-          Wtedy $C = lcp(t_l, t_m)$. \\
+          Wtedy $C = lcp(t_l, t_c)$. \\
           Analogicznie do przypadku 1, tylko na odwrót.
           
 \end{enumerate}
