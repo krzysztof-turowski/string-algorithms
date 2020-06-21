@@ -16,18 +16,8 @@ def lcplr_from_lcp(lcp, n):
   return lcplr
 
 
-def get_word_to_edge_lcp(l, r):
-  """Finds longest common prefix between w and one of the search bounds"""
-  return l if l >= r else r
-
-
-def get_edge_to_mid_lcp(l, r, lcplr, left, mid, right):
-  """Finds longest common prefix between mid and one of the search bounds"""
-  return lcplr[(left, mid)] if l >= r else lcplr[(mid, right)]
-
-
 def get_word_to_mid_lcp(SA, text, word, mid, word_to_edge_lcp, edge_to_mid_lcp):
-  """Finds longest common prefix between mid and w"""
+  """Finds longest common prefix between mid and word"""
   if edge_to_mid_lcp >= word_to_edge_lcp:
     word_to_mid_lcp = word_to_edge_lcp + \
       get_longest_common_prefix(text[SA[mid] + word_to_edge_lcp:],
@@ -48,12 +38,13 @@ def find_bound_with_lcplr(SA, lcplr, text, word, n, m, lower_bound = True):
   l, r = initialize_lr(SA, text, word, n)
 
   if lower_bound:
-    if l == m or word[l + 1:] <= text[SA[0] + l:]:
-      return 1
+    if l == m or word[l + 1:] <= text[SA[1] + l:]:
+      return 1 
     if r < m and word[r + 1:] > text[SA[n] + r:]:
       return n + 1
-
   else:
+    if l < m and word[l + 1:] <= text[SA[1] + l:]:
+      return 1 
     if r == m or word[r + 1:] > text[SA[n] + r:]:
       return n + 1
 
@@ -61,8 +52,8 @@ def find_bound_with_lcplr(SA, lcplr, text, word, n, m, lower_bound = True):
   left, right = 1, n
   while left + 1 < right:
     mid = (left + right) // 2
-    word_to_edge_lcp = get_word_to_edge_lcp(l, r)
-    edge_to_mid_lcp = get_edge_to_mid_lcp(l, r, lcplr, left, mid, right)
+    word_to_edge_lcp = max(l, r)
+    edge_to_mid_lcp = lcplr[(left, mid)] if l >= r else lcplr[(mid, right)]
     word_to_mid_lcp = get_word_to_mid_lcp(SA, text, word, mid,
                                           word_to_edge_lcp, edge_to_mid_lcp)
 
@@ -71,9 +62,8 @@ def find_bound_with_lcplr(SA, lcplr, text, word, n, m, lower_bound = True):
         right, r = mid, word_to_mid_lcp
       else:
         left, l = mid, word_to_mid_lcp
-      continue
-
-    if word[1 + word_to_mid_lcp] <= text[SA[mid] + word_to_mid_lcp]:
+    
+    elif word[1 + word_to_mid_lcp] <= text[SA[mid] + word_to_mid_lcp]:
       right, r = mid, word_to_mid_lcp
     else:
       left, l = mid, word_to_mid_lcp

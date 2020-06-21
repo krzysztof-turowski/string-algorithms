@@ -177,7 +177,7 @@ class TestLcpArrays(unittest.TestCase):
             suffix_array.prefix_doubling(t, n), t, n)
         self.check_lcp_array(t, n, reference)
 
-class TestLCPLR(unittest.TestCase):
+class TestLcpLr(unittest.TestCase):
   run_large = unittest.skipUnless(
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
