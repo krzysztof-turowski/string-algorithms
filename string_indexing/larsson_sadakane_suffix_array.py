@@ -1,10 +1,10 @@
 def ternary_sort(I, beginG, endG, V, getKeyForIdx):
   def get_pivot():
-    return getKeyForIdx[I[beginG]]
+    return getKeyForIdx(I[beginG])
 
   if beginG == endG - 1:
     V[I[beginG] - 1], I[beginG] = beginG, -1
-  if beginG > endG:
+  if endG - beginG < 2:
     return
   pivot = get_pivot()
 
