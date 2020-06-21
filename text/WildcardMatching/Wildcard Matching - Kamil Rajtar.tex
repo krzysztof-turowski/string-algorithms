@@ -1,0 +1,64 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Wyszukiwanie z wildcardami w tekście i wzorcu}
+\author{Kamil Rajtar}
+\date{Czerwiec 2020}
+
+\begin{document}
+
+\newcommand\defeq{\stackrel{\mathclap{\normalfont\mbox{def}}}{=}}
+
+\maketitle
+
+\section*{Opis problemu}
+
+Na wejściu do algorytmu dostajemy tekst i wzorzec w których oprócz liter mogą występować wildcardy (?) pasujące do dowolnego znaku. Na wyjściu ma się znaleźć lista pozycji w których wzorzec pasuje do tekstu.
+
+\section*{Wersja bez wildcardów}
+
+W rozwiązaniu problemu użyty jest splot obliczany za pomocą szybkiej transformaty Furiera (FFT) zdefiniowany następująco:
+
+$$
+    p \otimes t \defeq (\sum^{m-1}_{j=0}p_{j}t_{i+j}, 0 \leq i \leq n-m)
+$$
+
+Normalne (bez wildcardów) dopasowanie za pomocą splotu tekstu (t) i odwróconego wzorca (p) możemy obliczyć za pomocą wzoru:
+
+$$
+    \sum_{j-0}^{m-1} (p_j - t_{i+j})^2 = \sum_{j-0}^{m-1} (p^2_{j} - 2 p_{j}t_{i+j}+t^2_{i+j})
+$$
+
+Zobaczmy że lewa część równania równa 0 to znaleźliśmy dopasowanie. (Tekst nie różni się od wzorca na żadnej z m kolejnych pozycji). Prawą stronę potrafimy szybko obliczyć ponieważ podniesienie każdej pozycji do kwadratu wykonywane jest w czasie stałym a środkowy składnik liczmy za pomocą FFT w O(n log m).
+
+\section*{Wersja z wildcardami}
+
+
+Zdefiniujmy ciągi:
+
+$$p'_j = \cases{
+    0  &  p_j = '?'\cr
+    1  &  wpp
+}
+$$
+$$
+t'_j = \cases{
+    0  &  t_j = '?'\cr
+    1  &  wpp
+} $$
+
+Wtedy łatwo jest widać że następujące równanie jest naturalnym rozszerzeniem rozwiązania poprzedniego problemu.
+
+    $$ \sum_{j-0}^{m-1} p'_{j}t'_{i+j}(p_j - t_{i+j})^2 = 0 $$
+
+Po rozwinięciu dostajemy formę:
+
+$$ \sum_{j-0}^{m-1} (p'_{j}p^2_{j}t'_{i+j} - 2 p'_{j}p_{j}t_{i+j}t'_{i+j}+p'_{j}t^2_{i+j}t'_{i+j}) $$
+
+Takie rozwinięcie łatwo jest obliczyć wykorzystując 3xFFT oraz podstawowe operacje na ciągach.
+
+\section*{Złożoność}
+
+Analiza złożoności jest trywialna ponieważ algorytm działa w czasie FFT.
+
+\end{document}
