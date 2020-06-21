@@ -6,7 +6,7 @@
 
 \newtheorem*{theorem}{Twierdzenie}
 
-\title{Manber, Myers: zapytania do tablicy sufiksowej w czasie $O(m + \log{} n)$}
+\title{Manber, Myers: zapytania do tablicy sufiksowej w czasie $O(m + \log{n})$}
 \author{Jan Havránek}
 \date{20.06.2020}
 
@@ -16,9 +16,9 @@
 \maketitle
 
 \section*{Wprowadzenie}
-Tablica sufiksowa $SA$ zawiera początkowe indeksy leksykograficznie uporządkowanych sufiksów słowa $t$. Oznaczmy taki sufiks wskazany przez indeks $a$ w $SA$ jako $t_a = t[SA[a]\ldots n]$. Mając tablicę sufiksową, można ją wykorzystać do indeksowania tekstu -- poprzez zwykłe wyszukiwanie binarne można odnaleźć pierwszą ($l_w$) i ostatnią ($r_w$) pozycję w $SA$ taką, że $w$ jest prefiksem $t_i, i \in l_w \leq i \leq r_w$. Wtedy $SA[i]$ wskazują wszystkie wystąpienia $w$ w $t$. Jednak to podejście wymaga $O(m \log{} n)$ czasu.
+Tablica sufiksowa $SA$ zawiera początkowe indeksy leksykograficznie uporządkowanych sufiksów słowa $t$. Oznaczmy taki sufiks wskazany przez indeks $a$ w $SA$ jako $t_a = t[SA[a]\ldots n]$. Mając tablicę sufiksową, można ją wykorzystać do indeksowania tekstu -- poprzez zwykłe wyszukiwanie binarne można odnaleźć pierwszą ($l_w$) i ostatnią ($r_w$) pozycję w $SA$ taką, że $w$ jest prefiksem $t_i, i \in l_w \leq i \leq r_w$. Wtedy $SA[i]$ wskazują wszystkie wystąpienia $w$ w $t$. Jednak to podejście wymaga $O(m \log{n})$ czasu.
 
-Manber i Myers w 1993 r. zaproponowali prosty algorytm przyśpieszający takie zapytania do $O(m + \log{} n)$. Wykorzystywana jest do tego struktura $LCP\textrm{-}LR$ zawierająca najdłuższe wspólne prefiksy (\textit{lcp}) sufiksów $w$. 
+Manber i Myers w 1993 r. zaproponowali prosty algorytm przyśpieszający takie zapytania do $O(m + \log{n})$. Wykorzystywana jest do tego struktura $LCP\textrm{-}LR$ zawierająca najdłuższe wspólne prefiksy (\textit{lcp}) sufiksów $w$. 
 
 \section*{Zapytania do $SA$ z wykorzystaniem $LCP\textrm{-}LR$}
 
@@ -29,12 +29,16 @@ Oznaczmy jako $l$ i $r$ lewą i prawą granicę rozpatrywanego przedziału $SA$ 
 Bez straty ogólności załóżmy, że w danym cyklu wyszukiwania $H = L \geq R$. Mogą zajść trzy przypadki (w praktyce można pierwsze dwa implementować razem):
 
 \begin{enumerate}
-    \item $lcp(t_l, t_m) > L$ \\
-          Wtedy $C = L$, skoro zgodność prefiksów jest relacją tranzytywną.
-    \item $lcp(t_l, t_m) = L$ \\
-          W takim przypadku musimy porównać $L+1, L+2\ldots$-ty symbol $w$ i $t_c$ póki nie znajdziemy $i$ takie, że $w[L+i] \neq t_c[L+i]$. Wtedy $C = L + i - 1$. 
-    \item $lcp(t_l, t_m) < L$ \\
-          Wtedy $C = lcp(t_l, t_m)$.
+    \item $lcp(t_l, t_c) > L$ \\
+          Wtedy $C = L$. \\
+          $w$ ma pierwszych $L$ znaków zgodnych z $t_l$ i różni się $L+1$-szym. Skoro $t_l$ i $t_c$ zgadzają się przynajmniej w pierwszych $L+1$ znakach, $w$ i $t_c$ będą również mieli pierwszych $L$ znaków identycznych i $L+1$-szy inny, więc $C = L$.
+    \item $lcp(t_l, t_c) = L$ \\
+          W takim przypadku musimy porównać $L+1, L+2\ldots$-ty symbol $w$ i $t_c$ póki nie znajdziemy $i$ takie, że $w[L+i] \neq t_c[L+i]$. Wtedy $C = L + i - 1$. \\
+          Podobnie jak w przypadku 1, skoro $w$ i $t_l$ są identyczne w pierwszych $L$ znakach oraz $t_l$ i $t_c$ są też identyczne w pierwszych $L$ znakach, to pierwszych $L$ znaków $w$ i $t_c$ będzie również identycznych. Jednak $lcp(w, t_c)$ może być dłuższy od $L$, więc musimy zrobić skan po znakach dalej.  
+    \item $lcp(t_l, t_c) < L$ \\
+          Wtedy $C = lcp(t_l, t_m)$. \\
+          Analogicznie do przypadku 1, tylko na odwrót.
+          
 \end{enumerate}
 
 Kiedy znamy $C$, wystarczy porównać $C+1$-szy symbol $w$ i $t_c$, żeby zdecydować, czy przesunąć lewą lub prawą granicę przeszukiwania oraz czy zaktualizować wartość $L$ lub $R = C$. W przypadku, kiedy $C = m$, decydujemy według tego, czy szukamy $l_w$ (przesuwamy $r$) albo $r_w$ (przesuwamy $l$).
@@ -48,11 +52,11 @@ Algorytm działa na takiej samej zasadzie, co podstawowe wyszukiwanie binarne, t
 \end{proof}
 
 \begin{theorem}
-Algorytm działa w czasie $O(m + \log{} n)$.
+Algorytm działa w czasie $O(m + \log{n})$.
 \end{theorem}
 
 \begin{proof}[Dowód]
-Tak samo, jak w wyszukiwaniu binarnym, będziemy musieli wykonać w najgorszym przypadku $O(\log n)$ cykli. Zauważmy, że poza jednym obowiązkowym porównaniem znaku w każdym cyklu, dodatkowe porównywania są wykonywane tylko w opcji 2 z wyżej wymienionych. Biorąc pod uwagę, że jest to jedyna opcja, przy której się zmienia $H$ (jeżeli zachodzi opcja 3, wtedy szukane $l_w$/$r_w$ znajduje się w lewej połowie i w związku z tym aktualizujemy $R$, czyli mniejszą z wartości $L$, $R$), że $H$ może tylko rosnąć (przybliżamy się do szukanej pozycji) oraz że $H$ jest z definicji ograniczone przez $m$, takich porównań będzie maksymalnie $m$. Łącznie więc otrzymujemy $O(m + \log{} n)$ porównań.
+Tak samo, jak w wyszukiwaniu binarnym, będziemy musieli wykonać w najgorszym przypadku $O(\log{n})$ cykli. Zauważmy, że poza jednym obowiązkowym porównaniem znaku w każdym cyklu, dodatkowe porównywania są wykonywane tylko w opcji 2 z wyżej wymienionych. Biorąc pod uwagę, że jest to jedyna opcja, przy której się zmienia $H$ (jeżeli zachodzi opcja 3, wtedy szukane $l_w$/$r_w$ znajduje się w lewej połowie i w związku z tym aktualizujemy $R$, czyli mniejszą z wartości $L$, $R$), że $H$ może tylko rosnąć (przybliżamy się do szukanej pozycji) oraz że $H$ jest z definicji ograniczone przez $m$, takich porównań będzie maksymalnie $m$. Łącznie więc otrzymujemy $O(m + \log{n})$ porównań.
 \end{proof}
 
 \section*{$LCP\textrm{-}LR$ i jej konstrukcja}
@@ -85,7 +89,7 @@ $LCP\textrm{-}LR$ uzyskujemy w czasie $O(n)$.
 \end{theorem}
 
 \begin{proof}[Dowód]
-Ilość porównań jest z góry ograniczona przez $$\lim_{n \to \infty} \sum_{i=0}^{\log_2{n}} \frac{n}{2^i} = 2n \in O(n)$$
+Ilość porównań jest z góry ograniczona przez $$\sum_{i=0}^{\log_2{n}} \frac{n}{2^i} = 2n \in O(n)$$
 \end{proof}
 
 \end{document}
