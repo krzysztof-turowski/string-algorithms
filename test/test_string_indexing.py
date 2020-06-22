@@ -3,7 +3,8 @@ import os
 import unittest
 
 from generator import rand
-from string_indexing import suffix_tree, suffix_array, farach_suffix_tree, sl_suffix_array, lcp_lr
+from string_indexing import suffix_tree, suffix_array, farach_suffix_tree, \
+                            sl_suffix_array, lcp_lr
 
 SUFFIX_TREE_ALGORITHMS = [
     suffix_tree.weiner,
@@ -188,15 +189,15 @@ class TestLcpLr(unittest.TestCase):
     lcp = suffix_array.lcp_kasai(sa, text, n)
     lcplr = lcp_lr.lcplr_from_lcp(lcp, n)
     reference = {
-      (1, 2): 1,
-      (2, 3): 3,
-      (1, 3): 1,
-      (3, 4): 0,
-      (4, 5): 0,
-      (5, 6): 2,
-      (4, 6): 0,
-      (3, 6): 0,
-      (1, 6): 0,
+        (1, 2): 1,
+        (2, 3): 3,
+        (1, 3): 1,
+        (3, 4): 0,
+        (4, 5): 0,
+        (5, 6): 2,
+        (4, 6): 0,
+        (3, 6): 0,
+        (1, 6): 0,
     }
 
     self.assertEqual(lcplr, reference, "LCP-LR construction")
@@ -208,14 +209,22 @@ class TestLcpLr(unittest.TestCase):
     lcp = suffix_array.lcp_kasai(sa, text, n)
     lcplr = lcp_lr.lcplr_from_lcp(lcp, n)
 
-    self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, "#a", n, 1)), [1,4,6,8,11], "LCP-LR matching")
-    self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, "#bra", n, 3)), [2,9], "LCP-LR matching")
-    self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, "#brak", n, 4)), [2], "LCP-LR matching")
-    self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, "#ra", n, 2)), [3,10], "LCP-LR matching")
-    self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, "#rak", n, 3)), [3], "LCP-LR matching")
-    self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, "#l", n, 1)), [], "LCP-LR matching")
-    self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, "#x", n, 1)), [], "LCP-LR matching")
-    self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, "#xyz", n, 3)), [], "LCP-LR matching")
+    self.assertEqual(list(lcp_lr.contains_with_lcplr(
+        sa, lcplr, text, "#a", n, 1)), [1,4,6,8,11], "LCP-LR matching")
+    self.assertEqual(list(lcp_lr.contains_with_lcplr(
+        sa, lcplr, text, "#bra", n, 3)), [2,9], "LCP-LR matching")
+    self.assertEqual(list(lcp_lr.contains_with_lcplr(
+        sa, lcplr, text, "#brak", n, 4)), [2], "LCP-LR matching")
+    self.assertEqual(list(lcp_lr.contains_with_lcplr(
+        sa, lcplr, text, "#ra", n, 2)), [3,10], "LCP-LR matching")
+    self.assertEqual(list(lcp_lr.contains_with_lcplr(
+        sa, lcplr, text, "#rak", n, 3)), [3], "LCP-LR matching")
+    self.assertEqual(list(lcp_lr.contains_with_lcplr(
+        sa, lcplr, text, "#l", n, 1)), [], "LCP-LR matching")
+    self.assertEqual(list(lcp_lr.contains_with_lcplr(
+        sa, lcplr, text, "#x", n, 1)), [], "LCP-LR matching")
+    self.assertEqual(list(lcp_lr.contains_with_lcplr(
+        sa, lcplr, text, "#xyz", n, 3)), [], "LCP-LR matching")
 
   @run_large
   def test_random_lcp_lr_matching(self):
@@ -230,4 +239,5 @@ class TestLcpLr(unittest.TestCase):
       for _ in range(TT):
         word = rand.random_word(m, A)
         reference = suffix_array.contains(sa, text, word, n, m)
-        self.assertEqual(list(lcp_lr.contains_with_lcplr(sa, lcplr, text, word, n, m)), list(reference))
+        self.assertEqual(list(lcp_lr.contains_with_lcplr(
+            sa, lcplr, text, word, n, m)), list(reference))

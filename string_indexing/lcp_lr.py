@@ -39,12 +39,12 @@ def find_bound_with_lcplr(SA, lcplr, text, word, n, m, lower_bound = True):
 
   if lower_bound:
     if l == m or word[l + 1:] <= text[SA[1] + l:]:
-      return 1 
+      return 1
     if r < m and word[r + 1:] > text[SA[n] + r:]:
       return n + 1
   else:
     if l < m and word[l + 1:] <= text[SA[1] + l:]:
-      return 1 
+      return 1
     if r == m or word[r + 1:] > text[SA[n] + r:]:
       return n + 1
 
@@ -62,7 +62,7 @@ def find_bound_with_lcplr(SA, lcplr, text, word, n, m, lower_bound = True):
         right, r = mid, word_to_mid_lcp
       else:
         left, l = mid, word_to_mid_lcp
-    
+
     elif word[1 + word_to_mid_lcp] <= text[SA[mid] + word_to_mid_lcp]:
       right, r = mid, word_to_mid_lcp
     else:
