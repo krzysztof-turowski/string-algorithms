@@ -6,7 +6,9 @@ ScoreMatrix = namedtuple(
 
 def hamming_distance(text_1, text_2, n_1, n_2):
   if n_1 != n_2:
-    raise ValueError('Hamming distance is defined only for equal strings')
+    raise ValueError(
+        'Hamming distance is defined only for strings of equal length'
+    )
   return sum(ci != cj for ci, cj in zip(text_1[1:], text_2[1:]))
 
 def distance_row(text_1, text_2, _, n_2, S):
