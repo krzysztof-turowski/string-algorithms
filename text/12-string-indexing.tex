@@ -114,7 +114,7 @@ W dowodzie optymalności algorytmu McCreighta wykorzystywane będą następując
 Warto zauważyć, że jeśli $S[head(i - 1)]$ jednak jest dobrze określone w $i$-tym kroku algorytmu, to możemy od razu przejść do tego wierzchołka, zamiast wykonywać przejście przez rodzica $head(i - 1)$ (tzw. \emph{up-link-down}). Taka optymalizacja nie zmienia jednak asymptotycznego czasu wykonania algorytmu.
 
 \begin{problem}{crochemore1994text}{s. 93-94}
-  Pokaż, że jeśli w Algorytmie \ref{alg:mccreight-suffix-tree} zamiast \texttt{fast\_find} użyjemy funkcji \texttt{slow\_find}, to dla dowolnego $n$ istnieje tekst $t$ długości $n$ taki, że konstrukcja $ST(t)$ wymaga czasu $\Omega(n^2)$.
+  Pokaż, że jeśli w Algorytmie \ref{alg:mccreight-suffix-tree} zamiast \texttt{fast\_find} użylibyśmy funkcji \texttt{slow\_find}, to dla dowolnego $n$ istnieje tekst $t$ długości $n$ taki, że konstrukcja $ST(t)$ wymaga czasu $\Omega(n^2)$.
 \end{problem}
 
 % Przykład: a^n
@@ -206,7 +206,7 @@ Niniejsza implementacja jest oparta na uproszczonej wersji algorytmu, zamieszczo
 \end{code}
 
 \begin{problem}{}{}
-  Pokaż, że Algorytm \ref{alg:suffix-tree-weiner} wylicza w każdej iteracji poprawne przejścia $link[v, c] = u$.
+  Pokaż, że Algorytm \ref{alg:suffix-tree-weiner} wyznacza w każdej iteracji poprawne przejścia $link[v, c] = u$.
 \end{problem}
 
 \begin{problem}{}{}
@@ -236,6 +236,159 @@ Można również obliczyć tablicę $SA$ na podstawie zadanego drzewa sufiksoweg
 \label{alg:suffix-array-from-suffix-tree}
 \end{code}
 
+
+    \subsection{Cel algorytmu i format wejścia}
+    Wejściem do algorytmu jest słowo $w$ o długości $n$ nad alfabetem $\Sigma = [n]$ - liczb naturalnych od $1$ do $n$. Zakładać będziemy, że $n = 2^k$ - jeśli nie, to można słowo $w$ wydłużyć o czynnik liniowy, tak żeby ta równość zachodziła, dodając na koniec odpowiednią ilość $'\$'$, a po wykonaniu algorytmu ``uciąć'' z drzewa sufiksowego poddrzewa odpowiadające tym symbolom. \\ \\
+    Algorytm tworzy drzewo sufiksowe dla tego słowa w czasie $O(n)$. Od drzewa wymagane jest, aby dla każdego wierzchołka, krawędzie prowadzące do jego dzieci posortowane były leksykograficznie względem ich etykiet (w przypadku liczb naturalnych porządek leksykograficzny rozumiemy jako zdefiniowany przez zwykłą relację $<$).
+    
+    \subsection{Idea algorytmu}
+    Algorytm Faracha działa rekurencyjnie i każdy jego etap można zapisać w trzech krokach:
+    \begin{enumerate}
+     \item Zbuduj drzewo sufiksowe $T_o$ dla \textit{nieparzystych} sufiksów, czyli takich, które zaczynają się od nieparzystego indeksu (numerujemy od $1$).
+     \item Korzystając z drzewa $T_o$, zbuduj drzewo $T_e$ - drzewo sufiksowe dla \textit{parzystych} sufiksów (bez wywołania rekurencyjnego!).
+     \item Połącz drzewa $T_o$ i $T_e$ w jedno drzewo $T$.
+    \end{enumerate}
+    Jeśli kroki $2.$ i $3$ będziemy w stanie wykonać w liniowej złożoności, to wówczas cały algorytm będzie miał złożoność:
+    $$
+        T(n) = T\left(\frac{n}{2}\right) + O(n),
+    $$
+    a więc liniową. \\
+    Aby  uniknąć dodatkowego wywołania rekurencyjnego w równaniu (co zwiększyłoby złożoność do $O(nlgn)$), drzewo $T_e$ konstruowane będzie bezpośrednio z drzewa $T_o$.
+    
+    \subsection{Tworzenie drzewa $T_o$}
+    Tworzenie drzewa nieparzystych sufiksów przebiega w kilku krokach:
+    \begin{enumerate}
+     \item $\forall i \in [\frac{n}{2}]$ stwórz parę $\langle w[2i-1], w[2i] \rangle$ i wszystkie takie pary umieść w liście $S'$ i każdą z nich zamień na jej \textit{rangę} (indeks w posortowanej leksykograficznie liście). Na przykład, dla słowa \verb|121112212221|, lista $S'$ wygląda tak: \\
+     \verb|[(1,2), (1,1), (1,2), (2,1), (2,2), (2,1), #]|, a po zamianie elementów na ich rangi, tak: \\
+     \verb|[2,1,2,3,4,3,#]|.
+     \item Rekurencyjnie oblicz $T_{S'}$ - drzewo sufiksowe dla słowa $S'$ oraz jego tablicę sufiksową składającą się z $A_{T_{S'}}$ - posortowanej tablicy sufiksów i z $LCP_{T_{S'}}$ - tablicy najdłuższych wspólnych prefiksów dla $A_{T_{S'}}$.
+     \item Korzystając z $A_{T_{S'}}$, oblicz $A_{T_o}$ w następujący sposób:
+     $$
+        A_{T_o}[i] = 2A_{T_{S'}}[i] - 1,
+     $$
+     co bazuje na obserwacji, że każdy nieparzysty sufiks $w[2i-1]...w[n]$ jest równoważny sufiksowi $S'[i]...S'[\frac{n}{2}]$ (co wynika z konstrukcji $S'$), a zatem leksykograficzny porządek $A_{T_{S'}}$ jest taki sam jak porządek $A_{T_o}$. Jedyne co trzeba zmienić, to indeksy, odwracając przekształcenie z punktu $1.$: $\langle w[2i-1],w[2i] \rangle \rightarrow S'[i]$.
+     \item Oblicz $LCP_{A_{T_o}}$, korzystając z $LCP_{A_{T_{S'}}}$, według wzoru:
+      \begin{align*}
+      \left.
+       LCP_{T_o}[i] = 2LCP_{T_{S'}}[i] + \bigg\{
+       \begin{array}{@{}l}
+        1 \text{ if } w[A_{T_o}[i] + 2LCP_{T_{S'}}] = w[A_{T_o}[i+1] + 2LCP_{T_{S'}}[i]]   \\
+        0 \text{ otherwise}
+       \end{array},
+        \right.              
+      \end{align*}
+      co również wynika z konstrukcji słowa $S'$.
+    \item Na podstawie $A_{T_O}$ i $LCP_{T_o}$ skonstruuj drzewo $T_o$.
+    \end{enumerate}
+    \subsection{Tworzenie drzewa $T_e$}
+    \begin{enumerate}
+     \item Wstępnie przetwórz drzewo $T_o$ (w czasie liniowym od jego rozmiaru) tak aby dało się odpowiadać na zapytania o \verb|lca| na tym drzewie w czasie stałym.
+     \item Korzystając z obserwacji, że każdy parzysty sufiks to nieparzysty sufiks poprzedzony jednym znakiem, stwórz $A_{T_e}$. W tym kroku możemy wykorzystać obliczoną już listę $A_{T_o}$, ``dokleić'' odpowiedni znak przed każdym elementem $A_{T_o}$ i użyć sortowania pozycyjnego tylko dla tego pierwszego znaku.
+     \item Oblicz tablicę $LCP_{T_e}$ korzystając z zapytań o \verb|lcp(word(a),word(b))|, czyli zapytań o \verb|lca(a,b)| w drzewie sufiksowym:
+      \begin{align*}
+      \left.
+       lcp(w[2i,n],w[2j,n]) = \bigg\{
+       \begin{array}{@{}l}
+        lcp(w[2i+1,n],w[2j+1,n]) + 1 \text{ if } w[2i] = w[2j]   \\
+        0 \text{ otherwise}
+       \end{array},
+        \right.              
+      \end{align*}
+      
+      \item Stwórz $T_e$ w oparciu o $A_{T_e}$ i $LCP_{T_e}$.
+    \end{enumerate}
+    
+\subsection{Łączenie drzew $T_o$ i $T_e$}
+Zauważmy, że aby stworzyć drzewo $T$ z drzew $T_o$ i $T_e$, wystarczy zbudować tablice $A_T$ i $LCP_T$. Do uzyskania tych tablic potrzebujemy móc szybko (w czasie stałym) odpowiadać na pytania o najdłuższy wspólny prefiks dwóch sąsiadujących sufiksów w tablicy $A_T$. Umożliwiającą nam to wyrocznię uzyskamy poprzez \textit{zachłanne} połączenie drzew $T_o$ i $T_e$. \\ \\
+\textit{Zachłanne} połączenie $T'$ rozumiemy jako takie połączenie dwóch drzew ($T_e$ i $T_o$), w którym:
+\begin{itemize}
+ \item Każdy wierzchołek z tych drzew ma odpowiadający sobie wierzchołek w drzewie $T'$, a ponadto, jeśli $e \in T_e$, $o \in T_o$ i \verb|word(e) = word(o)|, to wierzchołkom $e$ i $o$ odpowiada ten sam wierzchołek $t \in T$. \\
+ Wierzchołek $u$ \textit{odpowiada} wierzchołkowi $v \in T_o \vee v \in T_e$ wtedy i tylko wtedy gdy $|word(u)| = |word(v)|$, a ponadto dla każdego wierzchołka $a$ z $T_o$ (lub $T_e$), który jest na drodze z korzenia do wierzchołka $v$ zachodzi:
+ \begin{align*}
+     word(v)[|word(a)| + 1] = word(u)[|word(a)| + 1],
+ \end{align*}
+ czyli $word(v)$ i $word(u)$ są tej samej długości i zgadzają się przynajmniej na indeksach, które odpowiadają pierwszym znakom na każdej krawędzi na drodze z korzenia do $v$.
+ \item Z każdego wierzchołka $t \in T$, dla dowolnych dwóch etykiet $w$, $v$ krawędzi z niego wychodzących zachodzi: $w[0] \ne v[0]$ ($w[1] \ne v[1]$ przy numeracji od $1$).
+ \item Drzewo $T'$ nie zawiera żadnych innych wierzchołków.
+\end{itemize}
+W skrócie można powiedzieć, że $T'$ to drzewo, które powstaje dokładnie w ten sposób co naiwnie wykonane poprawne połączenie $T_o$ i $T_e$ do $T$, z tą tylko różnicą, że zamiast porónywać wszystkie znaki na odpowiednich krawędziach (powiedzmy $u$ i $v$) (i ewentualnie dzielić je jeśli różnią się na jakiejś pozycji), porównujemy tylko pierwsze znaki, a podział robimy tylko w miejscu, w którym skończy się krótsza z nich. Procedurę tworzenia $T'$ (czyli ``nałożenia na siebie'' drzew $T_o$ i $T_e$ patrząc tylko na pierwszy znak krawędzi) przedstawia poniższy rysunek:
+\begin{center}
+ \includegraphics[scale=0.1,keepaspectratio=true]{graphics/farach-suffix-tree-overmerging.jpg}
+ % overmergingSuffixTrees.jpg: 3674x2666 px, 72dpi, 129.61x94.05 cm, bb=0 0 3674 2666
+\end{center}
+
+
+Wiedząc jak jest konstruowane drzewo $T'$, zapiszmy kroki do stworzenia poprawnego drzewa $T$:
+\begin{enumerate}
+ \item Stwórz $T'$ tak jak zostało to wyżej opisane.
+ \item Wierzchołek drzewa $T'$, który ma odpowiadający wierzchołek w $T_o$ nazwijmy \textit{nieparzystym}, a jeśli ma odpowiadający wierzchołek w $T_e$, to nazwijmy go \textit{parzystym}. Pewne wierzchołki (np. korzeń) mogą być zarówno parzyste jak i nieparzyste.\\
+ Teraz, dla każdego wierzchołka $u \in T'$ znajdź parę wierzchołków (jeśli istnieje) $(a,b)$, które są jego potomkami i liśćmi drzewa, a ponadto $a$ jest parzysty, $b$ jest nieparzysty oraz \verb|lca(a,b) = u|. Załóżmy, że \verb|word(a) = w[2i,n], word(b) = w[2j-1,n]|. Dodatkowo, każdemu liściowi $c$ takiemu, że \verb|word(c) = w[k,n]| nadajmy etykietę $l_k$. Zgodnie z tą konwencją $a = l_{2i}, \, b = l_{2j - 1}$.
+ \\
+ Zdefiniujmy funkcję $d$ taką, że $d(u) = lca(l_{2i+1}, l_{2j})$ i policzmy ją dla każdego $u$. Zauważmy, że jeśli $T'$ byłoby poprawnym drzewem, to $d(u) = suffix
+\_link(u)$.
+ \item Zakładając, że funkcja $d$ definiuje drzewo, dla każdego wierzchołka $u$ policz głębokość $L(u)$ w tym drzewie. Skorzystaj z faktu, że $lcp(w[2i,n], w[2j-1]) = L(lca(l_{2i}, l_{2j-1}))$ i stwórz tablicę $LCP_T$. 
+\end{enumerate}
+\subsection{Dowód poprawności}
+Wystarczy udowodnić poprawność punktów $2.$ i $3.$
+\begin{theorem}{}{}
+Najdłuższy wspólny prefiks dowolnej pary liści $(a,b)$, takich, że $a$ - parzysty, $b$ - nieparzysty, i takich, że \verb|lca|$(a,b) = u$, jest taki sam.
+\end{theorem}
+\begin{proof}[Dowód]
+Weźmy wierzchołek parzysty $u$ mający zarówno parzystego jak i nieparzystego potomka. Weźmy teraz dwóch parzystych potomków (być może takich samych) $u$: $l_{2i},\,l_{2j}$. Wówczas, \verb|lcp|$(w[2i,n],w[2j,n]) \geq |word(u)|$, ponieważ $u$, $l_{2i}$, $l_{2j}$ były w drzewie $T_e$.
+
+
+Teraz, weźmy parę $l_{2i'-1}$, $l_{2j'-1}$ potomków $u$. Zachodzi wtedy \verb|lcp|$(w[2i'-1,n],w[2j'-1,n]) \geq |word(u)|$. Jest tak, ponieważ, jeśli $u$ był również w $T_o$, to działa ten sam argument co poprzednio. Jeśli nie był w $T_o$, to ponieważ $l_{2i'-1}$, $l_{2j'-1}$ są liśćmi, to musi istnieć wierzchołek $u' = $\verb| lca|$(l_{2i'-1}, l_{2j'-1}) \in T_o$, który jest potomkiem $u$ w $T'$. 
+
+
+Rozważmy teraz parę liści $l_{2i''}$ i $l_{2j''-1}$ w $T'$, takich że $u = $\verb| lca|$(l_{2i''}, l_{2j''-1})$. Zachodzi wtedy \verb|lcp|$(w[2i'',n], w[2j''-1, n]) \leq |word(u)|$. Wynika to z faktu, że jeśli byłoby inaczej, to wtedy więcej niż jedna krawędź wychodząca z $u$ zaczynała by się tym samym znakiem, co jednak w $T'$ nie ma miejsca. Analogiczne rozumowanie możemy przeprowaddzić dla $u$ będącego wierzchołkiem nieparzystym i wówczas każda z powyższych nierówności również będzie zachodziła.
+
+Weźmy w końcu liście $l_{2i'},$, $l_{2i''}$, $l_{2j'-1}$, $l_{2j''-1}$ takie, że \verb|lca|$(l_{2i'}, l_{2j'-1}) = $ \verb| lca|$(l_{2i''}, l_{2j''-1}) = u$. Wtedy, \verb|lcp|$(w[2i',n], w[2j'-1,n]) = k \leq |word(u)|$, co udowodniliśmy przed chwilą. Wiemy jednak, że \verb|lcp|$(w[2i',n], w[2i'',n]) \geq |word(u)| \geq k$, a zatem musi zachodzić także \verb|lcp|$(w[2i'' \ldots n], w[2j'-1 \ldots n]) = k$. Podobnie, \verb|lcp|$(w[2i'' \ldots n], w[2j''-1 \ldots n]) = k$. Wobec tego:
+\begin{align*}
+    lcp(w[2i',n],w[2j'-1,n]) = lcp(w[2i'',n], w[2j''-1,n]) = k.
+\end{align*}
+\end{proof}
+
+\begin{theorem}{}{}
+Funkcja $d$ definiuje drzewo na wierzchołkach $T'$, a ponadto dla dowolnych $l_{2i}$ i $l_{2j-1}$ zachodzi $L($\verb|lca|$(l_{2i}, l_{2j-1})) = $\verb| lcp|$(w[2i,n], w[2j-1,n])$.
+\end{theorem}
+\begin{proof}[Dowód]
+Dowód jest indukcyjny ze względu na długość \verb|lcp|. Jeśli \verb|lcp|$word[2i, n], word[2j-1,n]) = 0$, to wówczas $word[2i, n]$ i $word[2j-1,n]$ różnią się na pierwszym znaku, więc \verb|lca|$(l_{2i}, l_{2j-1}) = $\verb| root|, co wynika ze sposobu konstruowania drzewa $T'$.
+
+Załóżmy teraz, że twierdzenie zachodzi dla pary sufiksów parzystych i nieparzystych, takich, że ich \verb|lcp| $< k$. Niech $l_{2i},\,l_{2j-1}$ będą liśćmi takimi, że \verb|lca|$(w[2i,n], w[2j-1,n]) = k > 0$. Ponadto, niech $u = $\verb| lca|$(l_{2i}, l_{2j-1})$. Wtedy $u$ nie jest korzeniem, bo $k > 0$.
+
+Niech teraz $l_{2i'}$, $l_{2j'-1}$ będą liśćmi użytymi do zdefiniowania $d(u)$. Zatem, z definicji, $d(u) = $\verb| lca|$(l_{2i'+1},l_{2j'})$.
+
+Z założeń indukcyjnych wiemy, że funkcja $d$ definiuje drzewo na dotychczas rozważonych wierzchołkach, a ponadto, że funkcja $L$ jest zdefiniowana na tych wierzchołkach i że zwraca poprawne wartości \verb|lcp|. Zatem, z faktu, że funkcja $d$ definiuje drzewo, wiemy że $L(u) = 1 + L(d(u))$. Ponadto, z faktu, że funkcja $L$ zwraca poprawne wartości dla dotychczas rozważonych wierzchołków wiemy, że $1 + L(d(u)) = 1 + $\verb| lcp|$(w[2i'+1,n],w[2j',n])$. Teraz, ponieważ $k > 0$ (w szczególności oznacza to, że $w[2i'] = w[2j'-1]$), zachodzi $1 + $\verb| lcp|$(w[2i'+1,n],w[2j',n]) = $\verb| lcp|$(w[2i',n],w[2j'-1,n])$. A z poprzedniego twierdzenia wiemy, że \verb|lcp|$(w[2i',n],w[2j'-1,n]) = $\verb| lcp|$(w[2i,n],w[2j-1,n])$.
+
+Wobec tego, $L(u) = $\verb| lcp|$(w[2i,n],w[2j-1,n])$, a ponadto struktura zdefiniowana przez funkcję $d$ jest drzewem.
+\end{proof}
+
+\subsection{Złożoność}
+\subsubsection{Tworzenie $T_o$}
+\begin{enumerate}
+\item Sortowanie pozycyjne dla par, w których maksymalna liczba jest mniejsza lub równa $n$ (tak jest, bo początkowe słowo spełnia to założenie, a każde następne powstaje przez zastąpienie elementu przez jego rangę) zajmuje $O(n)$ czasu.
+\item Jeśli wszystkie inne kroki będą liniowe, to ten krok zajmie $T(n) = T(\frac{n}{2}) + O(n) = O(n)$ czasu.
+\item Każdy element tablicy $A_{T_o}$ liczymy w czasie stałym, więc ten krok zajmuje $O(n)$ czasu.
+\item Podobnie jak w poprzednim punkcie, mamy stały czas na przetworzenie jednego elementu tablicy, więc całość robimy w $O(n)$.
+\item Jest możliwe skonstruowanie drzewa sufiksowego w czasie liniowym z tablic $A$ i $LCP$.\\ Idea: wstawiamy kolejne sufiksy w kolejności leksykograficznej. \\
+Po wstawieniu każdego sufiksu, zatrzymujemy się w liściu, który go reprezentuje i dopóki \verb|lcp|$(word(v), next\_suffix) < |word(v)|$ wykonujemy, $v = v.parent$, a następnie dodajemy nową krawędź z wierzchołka $v$ albo dzielimy już wychodzącą.
+\end{enumerate}
+\subsubsection{Tworzenie $T_e$}
+\begin{enumerate}
+\item Da się w czasie liniowym zrobić preprocessing drzewa tak aby w czasie stałym odpowiadać na zapytania \verb|lca|. Jest to nietrywialny algorytm, który jest opisany w \url{https://www.ics.uci.edu/~eppstein/261/BenFar-LCA-00.pdf}.
+\item Sortowanie pozycyjne na liczbach nieprzekraczających $n$ działą w $O(n)$.
+\item Ponieważ zapytania o \verb|lcp| przetwarzane są w czasie stałym, czas działania tego kroku to $O(n)$.
+\item Analogicznie jak dla $T_o$ - $O(n)$.
+\end{enumerate}
+\subsubsection{Łączenie drzew $T_o$ i $T_e$}
+\begin{enumerate}
+\item Ten krok to zwykły DFS działający liniowo względem sumarycznej ilości wierzchołków w drzewach $T_o$ i $T_e$, a ponieważ są to poprawne drzewa sufiksowe, to mają liniowe rozmiary względem $O(\frac{n}{2})$.
+\item Odpowiednią parę liści dla każdego wierzchołka z $T'$ możemy znaleźć przy pomocy jednego DFS-a, korzystając z obliczonych wcześniej wartości dla potomków tego wierzchołka.
+
+Funkcję $d$ liczymy dla każdego wierzchołka w czasie stałym, po wcześniejszym liniowym przetworzeniu drzewa $T'$ do zapytań o \verb|lca|.
+\item Głębokość w drzewie liczymy ponownie używając algorytmu DFS i korzystając z obliczonych wartości, każdy element $LCP_T$ liczymy w czasie stałym. Odtworzenie drzewa z tablic $A_T$ i $LCP_T$ wykonujemy w czasie $O(n)$, jak wyżej.
+\end{enumerate}
+
 \subsubsection{Algorytm Karpa-Millera-Rosenberga}
 
 Algorytm \emph{prefix-doubling}, zaproponowany w \citep{karp1972rapid}, opiera się na pomyśle prostej rekurencji. Załóżmy, że dla podsłów $t[i:i + k]$\footnote{Ściślej chodzi nam o $t[i:\min \{i + k, n\}]$ -- albo można równoważnie założyć, że na końcu dodajemy nieskończony ciąg symboli $\$$.} dla pewnego $k \ge 1$ oraz $1 \le i \le n$ mamy dostęp do funkcji $rank(i, k)$, zwracającej numer $t[i:i + k]$ w porządku leksykograficznym.
@@ -259,7 +412,7 @@ Wówczas wystarczy umieć wyznaczać na jej podstawie efektywnie wartości $rank
 
   Składając te wszystkie obserwacje razem, otrzymujemy wprost, że $t[i: i + 2 k]$ < $t[j: j + 2 k]$ wtedy i tylko wtedy, gdy $rank(i, 2 k) < rank(j, 2 k)$ dla dowolnych $i$, $j$, $k$.
 
-  Aby zakończyć dowód wystarczy zaobserwować, że dla dwóch sąsiednich elementów w porządku $rank(i, 2 k)$ nie może istnieć żaden element rozdzielający je w porządku $(rank(i, k), rank(i + k, k))$.
+  Aby zakończyć dowód wystarczy zaobserwować, że dla dwóch sąsiednich elementów w porządku $rank(i, 2 k)$ nie może również istnieć żaden element rozdzielający je w porządku par $(rank(i, k), rank(i + k, k))$.
 \end{proof}
 
 \begin{corollary}{}{}
@@ -346,6 +499,166 @@ Co więcej, tablica sufiksowa umożliwia nie tylko zliczenie wszystkich wystąpi
 
 \citet{li2018optimal} pokazali algorytm obliczania tablicy sufiksowej w czasie $O(n)$ wymagający zaledwie $O(1)$ dodatkowej pamięci.
 
+
+\section{Algorytm small-large}
+
+
+\subsection{Tablica sufiksów}
+Dla słowa s niech $T_i$ oznacza sufiks rozpoczynający się na indeksie $i$, a $t_i$ to znak na $i$-tej pozycji. Tablica sufiksów słowa $s$ to tablica zawierająca indeksy sufiksów $s$ posortowanych według porządku leksykograficznego tych sufiksów. Tablica ta przydaje się np. przy budowaniu drzew sufiksowych. Poniżej przedstawiony jest algorytm budujący tablicę sufiksów w czasie i pamięci liniowej.
+
+W poniższych rozważaniach bez straty ogólności zakładamy, że każde słowo $s$ kończy się znakiem unikalnym i najmniejszym w słowie. Zakładamy również że alfabet to $\{1,2,...,n\}$.
+
+\subsection{SL - kategoryzacja sufiksów}
+
+Na początek przedstawimy kategoryzacje prefiksów na typy S (small) i L (large). Główna idea algorytmu jest oparta właśnie na tej kategoryzacji i jej własnościach.
+
+\begin{definition}{}{}
+Sufiks $i$ jest typu S/L, gdy jest mniejszy/większy od sufiksu $i+1$. Sufiks $n$ jest S i L (zależnie od potrzeby).
+\end{definition}
+
+Można, używając poniższego faktu, w czasie i pamięci liniowej dokonać kategoryzacji sufiksów na typy S/L.
+
+\begin{remark-thm}
+Dla sufiksu $T_i \ (i<n)$:
+
+\begin{itemize}
+\item jeśli $t_i \neq t_{i+1}$, to wystarczy porównać jeden znak aby dowiedzieć się jakiego typu jest $T_i$
+\item
+jeśli $t_{i} = t_{i+1}$, to znajdź pierwszy $j > i$, taki że $t_j \neq t_i$, wtedy \\
+$ t_j > t_i \Rightarrow T_i,T_{i+1},...,T_{j-1}$ są typu S \\
+$ t_j < t_i \Rightarrow T_i,T_{i+1},...,T_{j-1}$ są typu L
+\end{itemize}
+
+\end{remark-thm}
+
+Przedstawmy również ważną własność kategoryzacji SL.
+
+\begin{lemma}{}{}
+\label{SL_order}
+Sufiks typu S jest leksykograficznie większy od każdego sufiksu typu L, który rozpoczyna się tym samym znakiem.
+\end{lemma}
+\begin{proof}
+Dowód nie wprost - załóżmy że istnieją sufiksy: $T_i = c \alpha c_1 \beta$ typ S i $T_j = c\alpha c_2 \gamma$ typ L, $c, c_1, c_2 \in \Sigma$, $\alpha, \beta, \gamma \in \Sigma^*$, $c_1 \neq c_2$, takie że $T_i < T_j$.
+
+\item[Case 1:] $\alpha$ zawiera znak inny niż $c$\\
+Niech $c_3$ - znak $\neq c$ najbardziej na lewo w $\alpha$. $T_i$ jest typu S, więc $c_3>c$. Podobnie z $T_j$ typu L otrzymujemy $c_3<c$, sprzeczność.
+
+\item[Case 2:] $\alpha$ zawiera tylko $c$ lub jest puste\\
+Z typów $T_i$ i $T_j$ mamy $c_1 \geq c$ i $c \geq c_2$ (dowód podobnie jak case 1). Stąd $c_1 \geq c_2$, co daje sprzeczność z $T_i < T_j$.
+
+\end{proof}
+
+\subsection{Algorytm small-large}
+
+Na algorytm można patrzeć w dwóch fazach - sortowanie sufiksów S/L, w zależności których z nich jest mniej. Następnie wykorzystujemy otrzymane informacje utworzenie porządku na wszystkich sufiksach. Wybieranie gałęzi z mniejszą ilością prefiksów danego typu jest konieczne aby zachować złożoność, ale nie wpływa na poprawność algorytmu.
+
+\begin{algorithmic}
+\Procedure{small-large}{s}%\Comment{compute suffix array}
+\State $SL \gets$ \Call{SL-categorization}{$s$}
+\State if $SL.count("S") < len(n)/2$
+	\State $sortedS \gets$ \Call{sortS}{$s$, $SL$}
+	\State \Return \Call{finishS}{$s$, $SL$, $sortedS$}
+\State Else
+	\State $sortedL \gets$ \Call{sortL}{$s$, $SL$}
+	\State \Return \Call{finishL}{$s$, $SL$, $sortedS$}
+\EndProcedure
+\end{algorithmic}
+
+W kolejnych sekcjach opisane zostaną bardziej szczegółowo funkcje $sortS$ i $finishS$. Procedury dla typu L są bardzo podobne - należy przeglądać niektóre listy w odwrotnej kolejności, operacje przeniesienia na początek/koniec grupy zamienić na przeniesienie na koniec/początek i zastąpić odniesienia do typu S odniesieniami do typu L.
+
+\subsection{Sortowanie S sufiksów - faza 1}
+
+\begin{definition}{}{}
+S odległość - dystans od $i$ do najbliższego na lewo S sufiksu (nie wliczając $i$).
+\end{definition}
+
+\begin{definition}{}{}
+S podsłowo - podsłowo $t[i,i+1,...,j]$, gdzie $i$ oraz $j$ to S sufiksy, a pomiędzy są same L sufiksy.
+\end{definition}
+
+\begin{definition}{}{}
+Jeśli słowo $t[i,i+1,...,j]$ jest S podsłowem, to każdy jego prefiks nazywamy prefiksem S podsłowa.
+\end{definition}
+
+S podsłowa są ściśle powiązane z S sufiksami - gdy weźmiemy ciąg kolejnych S podsłów i skleimy je ze sobą, otrzymamy S sufiks modulo duplikaty znaków na zetknięciu podsłów.
+
+
+\begin{algorithmic}
+\Procedure{sortS}{s, SL}
+\State $SsubstrPrefixes \gets$ S substring prefixes, divided by Sdist, bucketed and sorted by first character
+\State $Ssubstr \gets$ S substrings, bucketed and sorted by first character
+\State For $d \gets 1,...,max\_Sdist$
+\State For $j$ in $SsubstrPrefixes[d]$
+\State move $j-d$ to the front of its group in $Ssubstr$
+\State EndFor
+\State update groups in $Ssubstr$ using old $Ssubstr$ and $SsubstrPrefixes[d]$ 
+\State EndFor
+\State $s' \gets$ map $Ssubstr$ to its buckets number, ordered as in $s$
+\State \Return unmap \Call{small-large}{$s'$}
+\EndProcedure
+\end{algorithmic}
+
+Po pętli for S podsłowa są uporządkowane w kolejności prawie leksyko-graficznej. Jedyny wyjątek to gdy $\alpha$ jest podsłowem $\beta$, wtedy $\alpha > \beta$ w tym porządku.
+
+Oznaczmy jako $T'_i$ sufiks w $s'$ odpowiadający S sufiksowi $T_i$. Poprawność sortowania wynika z poniższego faktu.
+
+\begin{lemma}{}{}
+$T_i < T_j \iff T'_i < T'_j$
+\end{lemma}
+\begin{proof}
+\item[$T_i < T_j \Rightarrow T'_i < T'_j$] - trywialnie z mapowania
+\item[$T_i < T_j \Leftarrow T'_i < T'_j$] - opis idei\\
+Rozważa się pierwszy znak różniący $T'_i < T'_j$. Jest to numer jakiejś grupy, która indukuje S podsłowo. Odzyskujemy te podsłowa $\alpha,\beta$ i rozważamy dwa przypadki - $\beta$ to prefiks $\alpha$ lub nie. Z tego można wywnioskować $T_i < T_j$.
+\end{proof}
+
+
+\subsection{Sortowanie całości - faza 2}
+
+
+\begin{algorithmic}
+\Procedure{finishS}{s, SL, sortedS}
+\State $A \gets$ bucket and sort $s$ suffixes by first character
+\State For $x$ in $reversed(sortedS)$ \Comment{\Cref{SL_order}}
+\State move $x$ to the end of its bucket in $A$
+\State move that buckets end to the left by one
+\State EndFor
+\State For $i \gets 1,...,n$ \Comment{\cref{phase2-invariant}}
+\State If $SL[A[i]-1] == "L"$
+\State move $A[i]-1$ to the front of its bucket
+\State move that buckets front to the right by one
+\State EndIf
+\State EndFor
+\State \Return A
+\EndProcedure
+\end{algorithmic}
+
+
+Po pierwszej pętli sufiksy typu S są już na poprawnych pozycjach. Pętla druga porządkuje resztę.
+
+\begin{lemma}{}{}\label{phase2-invariant}
+W kroku i drugiej pętli algorytmu, sufiks $T_{A[i]}$ jest już na poprawnej pozycji w tablicy sufiksów.
+\end{lemma}
+\begin{proof}
+Indukcja.
+\item[Baza indukcji:] wynika z tego, że najmniejszy sufiks jest typu S wiec jest już na poprawnej pozycji
+\item[Krok indukcyjny $i \rightarrow i+1$:] nie wprost - istnieje sufiks $k > i+1$, który w tablicy sufiksów powinien zająć miejsce $A[i+1]$.\\
+Wprost z założenia $T_{A[k]} < T_{A[i+1]}$ i obydwa te sufiksy są typu L - sufiksy S są na poprawnych miejscach.\\
+$T_{A[k]}$ i $T_{A[i+1]}$ muszą rozpoczynać się tą samą literą $c$ - przez wcześniejsze dzielenie na grupy przez pierwszą literę $T_{A[i+1]}$ ma jako pierwszą najmniejszą literę z sufiksów $A[i+1],A[i+2],...,A[n]$. Niech $T_{A[i+1]}=c \alpha$ i $T_{A[k]}=c \beta$.\\
+\begin{gather*}
+T_{A[k]}\ is\ type\ L \Rightarrow \beta < T_{A[k]}\\
+T_{A[k]} < T_{A[i+1]} \Rightarrow \beta < \alpha\\
+(T_{A[k]}\ is\ A[i+1]th\ in\ suffix\ array) \land \beta < T_{A[k]} \Rightarrow \beta \in \{A[1],A[2],...,A[i]\}
+\end{gather*}
+$\beta < \alpha$, więc $T_{A[k]}$ był przesunięty na początek grupy (w gałęzi if) przed $T_{A[i+1]}$. Sufiksy te należą do tej samej grupy, zatem $T_{A[k]}$ leży na lewo od $T_{A[i+1]}$, sprzeczność.
+\end{proof}
+
+Z \Cref{SL_order} i \Cref{phase2-invariant} wynika poprawność algorytmu.
+
+
+\subsection{Złożoność}
+Ze względu na rekurencję $T(n) = T(n/2) + \mathcal{O}(n)$ otrzymujemy złożoność czasową i pamięciową liniową w stosunku do długości słowa.
+
+
 \subsection{Tablica największych wspólnych prefiksów}
 
 \todo[inline]{Konstrukcja tablicy LCP.}
@@ -354,7 +667,7 @@ Co więcej, tablica sufiksowa umożliwia nie tylko zliczenie wszystkich wystąpi
   Algorytm Kasai zwraca poprawną tablicę sufiksową.
 \end{theorem}
 
-\begin{proof}
+\begin{proof}{}{}
   Weźmy dwa dowolne sufiksy słowa $t$ sąsiednie w porządku leksykograficznym tj. zaczynające się na pozycjach $SA[i]$ oraz $SA[i + 1]$ dla pewnego $1 \le i \le n - 1$. Niech długość najdłuższego wspólnego prefiksu $LCP(t[SA[i]:n], t[SA[i + 1]:n]) = k$ dla pewnego $k \ge 0$.
 
   Weźmy teraz $j$ takie, że $SA[j] = SA[i] + 1$, tj. $t[SA[j]:n] = t[SA[i] + 1:n]$. Wówczas wiemy, że
