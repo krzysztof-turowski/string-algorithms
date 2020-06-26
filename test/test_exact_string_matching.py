@@ -9,6 +9,7 @@ from string_indexing import suffix_tree, suffix_array
 EXACT_STRING_MATCHING_ALGORITHMS = [
     forward.morris_pratt,
     forward.knuth_morris_pratt,
+    forward.galil_seiferas,
     backward.boyer_moore,
     backward.boyer_moore_bad_shift,
     backward.bad_shift_heuristic,

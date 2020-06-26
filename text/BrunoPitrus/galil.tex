@@ -1,0 +1,117 @@
+% !TeX spellcheck = pl
+% !TeX program = xelatex
+\documentclass[a4paper]{article}
+\usepackage[margin=12.7mm]{geometry}
+\usepackage{enumitem,polyglossia,amsthm,mathtools,alltt}
+\usepackage[math-style=ISO,colon=literal,mathrm=sym,mathit=sym,mathsf=sym,mathbf=sym,mathtt=sym]{unicode-math}
+\setdefaultlanguage{polish}
+\defaultfontfeatures[\rmfamily,\sffamily,\ttfamily]{}%turn off TeX ligatures
+\setmainfont{Cambria}
+\setmathfont{Cambria Math}
+\setmonofont{Consolas}
+\newtheorem*{theorem}{Twierdzenie}
+\newtheorem*{lemma}{Lemat}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em} %Akapity czasem są za krótkie, poniżej 1 linii więc tak będzie lepiej
+
+\begin{document}
+\title{Algorytm Galila–Seiferasa}
+\author{Bruno Pitrus}
+\date{}
+\maketitle
+Algorytm G–S jest algorytmem wyszukiwania wzorca który wymaga jedynie stałej pamięci dodatkowej (eliminując tablicę „mismatch” używaną przez algorytmy typu Morrisa–Pratta) a jednocześnie wciąż działa w asymptotycznym czasie liniowym — osiągając tym samym teoretyczne optimum pod względem zarówno czasu jaki i pamięci.
+
+W tym opisie, tak samo jak w załączonej implementacji algorytmu, stringi indeksowane są od 1. Wszelki kod należy interpretować zgodnie z semantyką języka Python.
+
+Niech \texttt{m = len(word)}, \texttt{n = len(text)}. Rozważmy schemat algorytmu dopasowania wzorca
+\begin{alltt}
+p,q= 0,0
+\textbf{while} True:
+  \textbf{while} text[p+q+1] == word[q+1]: q+= 1
+  \textbf{if} q == m: \textbf{yield} p+1
+  p,q= \textit{p'},\textit{q'}
+\end{alltt}
+W powyższym pseudokodzie \texttt{p} to jest obecny kandydat na pozycję wzorca, a \texttt{q} to prefiks o którym wiemy że się zgadza.
+
+Naiwny algorytm \textit{brute-force} używa \texttt{p'= p+1}, \texttt{q'= 0}. Ponieważ wiemy jednak że \texttt{text[p+1:p+q+1] == word[1:q+1]} to rozważanie \texttt{p'= p+x} ma sens tylko jeśli \texttt{word[1:q-x+1] == word[x+1:q+1]}; na tej obserwacji jest oparty algorytm Knutha–Morrisa–Pratta, obliczający \texttt{p'= p+shift[q], q'= q-shift[q] if q>0 else 0}, gdzie \texttt{shift[q]} jest długością najkrótszego okresu \texttt{word[1:q+1]}.
+
+Algorytm Galila–Seiferasa jest oparty na tym schemacie oraz następującym twierdzeniu:
+\begin{theorem}[O dekompozycji]
+Dla ustalonego (odpowiednio dużego) \(k\), każde słowo \texttt{x} można przedstawić jako \texttt{u+v}, gdzie \texttt{v} ma co najwyżej jeden \textit{\(k\)-okres prefiksu} a \texttt{u} jest długości \(\symrm O{\left(\text{długość najkrótszego okresu \texttt{v}}\right)}\). 
+\end{theorem}
+Słowo \texttt{z} nazywamy \(k\)-okresem prefiksu słowa \texttt{w} jeśli \texttt{z} jest słowem pierwotnym a \texttt{z\textsuperscript{k}} jest prefiksem \texttt{w}.
+
+Do skonstruowania tej dekompozycji przyda nam się następujący lemat:
+\begin{lemma}
+Dla słowa \textit{pierwotnego} \texttt{w} istnieje dekompozycja \texttt{w == w1 + w2} taka że dla dowolnego słowa \texttt{w'}, słowo \texttt{w2 + w\textsuperscript{k-1} + w'} nie ma \(k\)-okresu prefiksu krótszego niż \texttt{len(w)}.
+\end{lemma}
+
+Pierwsza część algorytmu jest poświęcona znalezieniu dekompozycji wzorca takiej jak w twierdzeniu o dekompozycji.
+\begin{alltt}
+s= 0
+\textbf{while} word[s+1:] \textit{ma więcej niż jeden k-okres prefiksu}:
+  p2= \textit{długość drugiego najkrótszego k-okresu prefiksu}
+  \textit{Korzystając z lematu, znajdź}
+   s' < s + p2 \textit{takie że} word[s'+1:] \textit{nie ma k-okresu prefiksu krótszego niż} p2
+  s= s'
+\end{alltt}
+Niech \texttt{l(s)} będzie długością najkrótszego okresu \texttt{word[s+1:]} a \texttt{p1(s)} długością najkrótszego \(k\)-okresu prefiksu. Indukcyjnie można dowieść, że w każdej iteracji pętli \texttt{s < c * min(l(s), p1(s))} dla \texttt{c = (k-1)/(k-2)} — więc w szczególności na końcu \texttt{len(u) < c * l(s)}.
+
+W szczególności istnieje następujący prosty algorytm znajdowania \texttt{s'}:
+\begin{alltt}
+s'= s
+\textbf{while} word[s'+1:] \textit{ma k-okres prefiksu krótszy niż p2}:
+  usuń najkrótszy okres prefiksu
+\end{alltt}
+Przeanalizujmy złożoność ostatecznego kodu programu:
+\begin{alltt}
+K= 4
+s,p1,q1= 0,1,0
+p2,q2= 0,0
+mode=0
+\textbf{while} True:
+  \textbf{if} mode==1:
+    \textit{#Znajdź najkrótszy k-okres prefiksu word[s+1:]}
+    \textbf{while} s+p1+q1 < m \textbf{and} word[s+p1+q1+1] == word[s+q1+1]: q1+= 1
+    \textbf{if} p1+q1 >= p1*K: p2, q2= q1,0; mode=2; \textbf{continue}
+    \textbf{if} s+p1+q1 == m: \textbf{break}
+    p1+= (1 \textbf{if} q1==0 \textbf{else} (q1+K-1)//K); q1= 0
+  \textbf{elif} mode==2:
+    \textit{#Znajdź drugi najkrótszy k-okres prefiksu word[s+1:]. Jeśli nie istnieje to przejdź do drugiej fazy algorytmu.}
+    \textbf{while} s+p2+q2 < m \textbf{and} word[s+p2+q2+1] == word[s+q2+1] \textbf{and} p2+q2 < p2*K: q2+= 1
+    \textbf{if} p2+q2 == p2*K: mode= 0; \textbf{continue};
+    \textbf{if} s+p2+q2 == m: \textbf{break}
+    \textbf{if} q2 == p1+q1:
+      p2+= p1; q2-= p1;
+    \textbf{else}:
+      p2+= (1 \textbf{if} q2==0 \textbf{else} (q2+K-1)//K); q2= 0
+  \textbf{else}:
+    \textit{#Zinkrementuj s}
+    \textbf{while} s+p1+q1 < m \textbf{and} word[s+p1+q1+1] == word[s+q1+1]: q1+= 1
+    \textbf{while} p1+q1 >= p1*K: s+= p1; q1-= p1;
+    p1+= (1 \textbf{if} q1==0 \textbf{else} (q1+K-1)//K); q1= 0
+    \textbf{if} p1 >= p2: mode= 1
+\end{alltt}
+W celu przeanalizowania złożoności tej części algorytmu rozważmy wyrażenie
+\[
+2s+{\left(k+1\right)}p_1+q_1+{\left(k+1\right)}p_2+q_2
+\]
+Jego wartość jest zawsze \(\symrm O{\left(\texttt{len(word)}\right)}\) a każde przypisanie ją zwiększa.
+\begin{alltt}
+p2,q2= 0,0
+\textbf{while} True:
+  \textbf{while} p2+s+q2 < n \textbf{and} s+q2 < m \textbf{and} text[p2+s+q2+1] == word[s+q2+1]: q2+= 1
+  \textbf{if} q2 == m-s \textbf{and} text[p2+1 : p2+s+1] == word[1 : s+1]:
+    yield p2+1
+  \textbf{if} q2 == p1+q1:
+    p2+= p1; q2-= p1
+  \textbf{else}:
+    p2+= (1 \textbf{if} q2==0 \textbf{else} (q2+K-1)//K); q2= 0
+  \textbf{if} p2+s > n: \textbf{return}
+\end{alltt}
+Przed wykonaniem drugiej części algorytmu jeśli \texttt{word[s+1:]} ma \(k\)-okres prefiksu, to jego długość wynosi \(p_1\).
+Ponadto twierdzimy, że \(s<{\left(k-1\right)}p_1/{\left(k-2\right)}\) co nam zagwarantuje że bezpośrednie sprawdzanie równości podciągów zajmie łącznie \(\symrm O{\left(\texttt{len(text)}\right)}\) czasu.
+\begin{thebibliography}
+{}Zvi Galil, Joel Seiferas, \textit{Time-Space-Optimal String Matching}, \textsc{Journal of Computer and System Sciences} \textbf{26}, 280–294 (1983)
+\end{thebibliography}
+\end{document}
