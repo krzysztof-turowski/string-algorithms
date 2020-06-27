@@ -13,9 +13,8 @@ def plus(x, y):
 def convolve(x, y):
   return scipy.signal.convolve(x, y, mode = 'valid', method = 'fft')
 
-def exact_matching_with_dont_cares(text, pattern, text_size,
-                                   pattern_size):
-  if text_size < pattern_size:
+def exact_matching_with_dont_cares(text, pattern, n, m):
+  if n < m:
     return
 
   pattern = pattern[1:]
