@@ -1,8 +1,7 @@
-
 from common import prefix
 
 # computes ov(w_1, w_2)
-def _overlap(w_1, w_2):
+def overlap(w_1, w_2):
   if w_1 != w_2:
     w = w_2 + w_1
   else:
@@ -19,7 +18,7 @@ def greedy(words):
       for w_2 in S:
         if w_1 == w_2:
           continue
-        ov = _overlap(w_1, w_2)
+        ov = overlap(w_1, w_2)
         if ov > best_ov:
           best_ov = ov
           chosen_pair = (w_1, w_2)
@@ -38,7 +37,7 @@ def _mgreedy_first_phase(words):
     chosen_pair = ('','')
     for w_1 in S:
       for w_2 in S:
-        ov = _overlap(w_1, w_2)
+        ov = overlap(w_1, w_2)
         if ov > best_ov:
           best_ov = ov
           chosen_pair = (w_1, w_2)
