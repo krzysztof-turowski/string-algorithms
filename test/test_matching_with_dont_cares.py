@@ -1,7 +1,7 @@
 import unittest
 
-from approximate_string_matching.matching_with_dont_cares import\
-  exact_matching_with_dont_cares
+from approximate_string_matching.matching_with_dont_cares \
+  import exact_matching_with_dont_cares
 
 class ExactMatchingWithDontCaresCase(unittest.TestCase):
   def make_test(self, text, pattern, result):
