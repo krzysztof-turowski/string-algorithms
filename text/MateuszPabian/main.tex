@@ -1,0 +1,186 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{graphicx}
+\usepackage[left=1in,right=1in]{geometry}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{amsthm}
+
+\newgeometry{tmargin=2cm, bmargin=2cm, lmargin=2cm, rmargin=2cm}
+\renewcommand*{\proofname}{\textbf{Rozwiązanie}}
+
+\newtheorem{DEF}{\textsc{Definicja}}[section]
+\newtheorem{OBS}[DEF]{\textsc{Obserwacja}}
+\newtheorem{LEM}[DEF]{\textsc{Lemat}}
+\newtheorem{PROP}[DEF]{\textsc{Propozycja}}
+\newtheorem{TW}[DEF]{\textsc{Twierdzenie}}
+\newtheorem{HIP}[DEF]{\textsc{Hipoteza}}
+\newtheorem*{N}{\textsc{Notacja}}
+\newtheorem{U}{\textsc{Uwaga}}
+\newtheorem{W}{\textsc{Wniosek}}
+\newtheorem*{PROF}{\textsc{Dowód}}
+
+\title{\textbf{Fast practical multi-pattern matching}}
+\author{\textbf{Mateusz Pabian}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Wprowadzenie}
+\textit{Fast practical multi-pattern matching} to algorytm tekstowy służący do wyszukiwania w zadanym tekście wystąpień słów z podanego zbioru wzorców.
+
+Algorytm jest ulepszeniem algorytmu Commentz-Waltera, czerpiąc z niego kilka istotnych obserwacji takich jak przeskakiwanie nieinteresujących obszarów tekstu oraz wykorzystanie automatu Aho-Corasick. Dodatkowym elementem zwiększającym efektywność jest wykorzystanie automatu sufiksowego zwanego dalej \textit{DAWG}.   
+
+Algorytm, który jest tematem pracy, dla tekstu o długości $n$ ma pesymistyczny czas działania $O(n)$.
+W przypadku średnim, gdzie najkrótszy spośród wzorców ma długość $m$ a suma ich długości jest wielomianowa w zależności od $m$ oraz prawdopodobieństwo wystąpienia litery z alfabetu (conajmniej dwu-elementowego) jest jednostajne i niezależne, złożoność wynosi $O(\frac{n}{m}* \log{m})$, co jest równocześnie dolnym ograniczeniem dla tego problemu.
+Dodatkowo dla odpowienio dużego $m$ algorytm osiąga dobre rezultaty w praktyce.
+
+\section{Idea}
+
+Idea algorytmu oparta jest o dwie fazy zwane \textit{PROCESS1} oraz \textit{PROCESS2}. Pierwsza z nich skanuje test od lewej do prawej przesuwając potencjną pozycję zakończenia wzorca co najmniej o $\frac{m}{2}$. W tej fazie bazuje on na zmiennej $\gamma$, która spełnia niezmiennik $\gamma = $ najdłuży suffix od początku tekstu do pozycji $i$, który jest jednocześnie prefiksem jakiegoś wzorca. Jeśli długość $\gamma \leq \frac{m}{2}$ kończymy pierwszą fazę algorytmu i przechodzimy do fazy drugiej. W implementacji będziemy utorzsamiać $\gamma$ ze stanem w AC.
+
+Faza druga wykonuje skanowanie tekstu od tyłu od pozycji $i + SHIFT$ na odległość równą $m$, gdzie $SHIFT = m - |\gamma|$.
+
+Dodatkowo podczas fazy pierwszej, gdy wyznaczaczamy kolejne wartości $\gamma$, będziemy używali zbudowanego wcześniej automatu $Aho-Corasick$, aby robić to bardziej efektywnie. Natomiast faza druga w skanowaniu do tyłu używa $DAWGa$, który został zbudowany przy użyciu zbioru odwróconych wzorców.  
+
+\section{Struktura dla wzorców}
+W celu przechowywania w pamięci zadanego zestawu wzorców należy przed przystąpieniem do wyszukiwania zbudować automat $Aho-Corasick$ oraz $DAWG$. Pozwoli to szybko odpowiadać na wymagane zapytania.
+
+\begin{algorithm}
+\caption{Fast practical multi-pattern matching, preprocessing}
+\begin{algorithmic}[1]
+\Procedure{MULTI-PATTERN-MATCHING-BUILD}{$PATTERNS$} \Comment{lista wzorców}
+\State $acm = build\_aho\_corasick\_machine(patterns)$ \Comment{budujemy standardowy automat AC}
+\State $reversed\_patterns = reverse(patterns)$ \Comment{odwracamy wzorce}
+\State $dawg = build\_dawg(reversed\_patterns)$ \Comment{budujemy standardowy DAWG}
+\State \textbf{return} $(acm, dawg)$ \Comment{budujemy standardowy DAWG}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\begin{DEF}
+Automat $Aho-Corasick$  powinien udostępniać:
+\begin{itemize}
+    \item $step(node, a) = $ stan $AC$ po przetworzeniu znaku $a$ zaczynając w $node$.
+    \item $traverse(node, s) = $ stan $AC$ po przetworzeniu słowa $s$ zaczynając w $node$.
+    \item wartość $depth$ oznaczającą głębokość w drzewie dla każdego wierzchołka.
+    \item listę $final$ oznaczającą jakie wzorce powinny zostać zaakceptowane dla danego wierzchołka.
+
+\end{itemize}
+\end{DEF}
+
+\begin{DEF}
+DAWG powinien udostępniać:
+\begin{itemize}
+    \item $traverse(node, s) = $ stan $DAWG$ po przetworzeniu słowa $s$ zaczynając w $node$.
+\end{itemize}
+\end{DEF}
+
+\begin{DEF}
+Potrzebne zapytania:
+\begin{itemize}
+    \item $NEXT1(\gamma, a) = $ najdłuższy sufiks słowa ${\gamma}{a}$ będący jednocześnie prefiksem jakiegoś wzorca.
+    \item $NEXT2(j, i) = $ najdłuższy sufiks podsłowa ${text[j...i]}$ będący jednocześnie prefiksem jakiegoś wzorca.
+\end{itemize}
+\end{DEF}
+
+\begin{algorithm}
+\caption{Fast practical multi-pattern matching, NEXT1}
+\begin{algorithmic}[1]
+\Procedure{NEXT1}{$\gamma, character$}
+\State \textbf{return} $ acm.step(gamma, char)$ \Comment{wykonujemy jeden krok w AC}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Fast practical multi-pattern matching, NEXT2}
+\begin{algorithmic}[1]
+\Procedure{NEXT2}{$j, i$} \Comment{indeksy zakresu tekstu}
+\State $\gamma_{new} = dawg.traverse(dawg.root, j, i)$ \Comment{przechodzimy DAWG skanując znaki od i do j}
+\State \textbf{return} $ acm.traverse(acm.root, \gamma_{new})$ \Comment{przechodzimy AC aby móc utorzsamić $\gamma$ ze stanem}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\section{Wyszukiwanie wzorca}
+
+Wyszukiwanie wzorca działa na zasadzie przesuwania zakresu tekstu bazując na $AC$ oraz $DAWG$. Wykonujemy naprzemiennie fazę pierwszą i drugą wspomniane na początku. Pierwsza z nich skanuje test od lewej do prawej, aby przesunąć potencjalną pozycję zakończenia wzorca co najmniej o $\frac{m}{2}$. Przesunięcie opieramy na zmiennej $\gamma$, która spełnia niezmiennik $\Gamma: \gamma = $ najdłuży suffix od początku tekstu do pozycji $i$, który jest jednocześnie prefiksem jakiegoś wzorca. Jeśli długość $\gamma \leq \frac{m}{2}$, kończymy pierwszą fazę algorytmu i przechodzimy do fazy drugiej. W implementacji będziemy utorzsamiać $\gamma$ ze stanem w $AC$, a głębokość tego stanu z długością dopasowanego prefiksu wzorca. Tak długo jak nie osiągneliśmy wymaganej długości prefiksu, skanujemy kolejne znaki tekstu przechodząc jednocześnie po $AC$. Jeśli w tej fazie uda nam się dopasować jakiś wzorzec ($\gamma$ jest stanem akceptującym automatu AC), to zwracamy go poprzez \textit{yield}.
+
+Faza druga wykonuje skanowanie tekstu od tyłu od pozycji $i + SHIFT$ na odległość równą $m$, gdzie $SHIFT = m - |\gamma|$. Skanowanie odbywa się na zasadzie skanowania tekstu od tyłu jednocześnie symulując przejścia w $DAWG$. Tym sposobem dopasujemy najdłuższy sufiks spośród sufiksów wszystkich wzorców. Dla znalezionego sufiksu musimy jeszcze zaktualizować naszą pozycję w $AC$ i możemy powrócić do fazy pierwszej. 
+
+\begin{algorithm}
+\caption{Fast practical multi-pattern matching, faza wyszukiwania}
+\begin{algorithmic}[1]
+\Procedure{MULTI-PATTERN-MATCHING}{$text, n, S$} \Comment{tekst, długość, struktura}
+\State $i := 0$ \Comment{pozycja w tekście}
+\State $\gamma := S.acm.root$ \Comment{równoważnie $\gamma := S.acm.root$}
+
+\While{ $True$ } \Comment{faza skanowania, zachowany niezmiennik $\Gamma$}
+    \While {$\gamma{.depth} \geq \frac{m}{2}$} \Comment{szukamy odpowiednio długiego prefiksu wzorca}
+        \If{$\gamma$ is final state}
+            \State \textbf{yield} $(w, i)$ dla każdego $w \in \gamma{.out}$
+        \EndIf
+        \State $i = i + 1$
+        \If{$i \geq n$}
+            \State \textbf{return}
+        \EndIf
+        \State $\gamma = NEXT1(\gamma, text[i])$  \Comment{wykonujemy krok w AC}
+    \EndWhile
+    \State $crit\_pos := i - \gamma{.depth} + 1$ \Comment{pierwsza pozycja, której nie wykluczyliśmy}
+    \State $SHIFT := m - \gamma{.depth}$ 
+    \State $i = i + SHIFT$ \Comment{przeskakujemy fragment tekstu}
+    \If{$i \geq n$}
+        \State \textbf{return}
+    \EndIf
+    \State $\gamma = NEXT2(crit\_pos, i)$ \Comment{szukamy najdłuższego sufiksu w DAWG}
+\EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Wynikiem tej częsci jest lista par postaci $(w, i)$, gdzie $w$ to któryś z szukanych wzorców, natomiast $i$ to pozycja w tekście, na której został znaleziony wzorzec $w$.
+
+\section{Złożoność obliczeniowa algorytmu}
+
+\begin{LEM}
+Zakładjąc zbudowaną strukturę $AC$ oraz $DAWG$:
+\begin{itemize}
+    \item $NEXT1(\gamma, a)$ działa w czasie $O(1)$. \\
+        Wykonanie funkcji $NEXT1$ sprowadza się do wykonania jednego kroku w automacie AC.\qed
+    \item $NEXT2(j, i)$ działa w czasie $O(min(i-j, i - crit\_pos))$. \\
+        Wykonanie funkcji $NEXT2$ wymaga przeskanowania tekstu od pozycji i do j idąc od prawej. Równoczesne symulowanie DAWG wykona taką samą liczbę kroków.\qed
+\end{itemize}
+\end{LEM}
+
+\begin{TW}
+Algorytm w sumie porównuje co najwyżej $2n$ znaków.
+\end{TW}
+
+\begin{PROF}
+Zauważmy, że znak na danej pozycji może być przetworzony przez $PROCESS1$ co najwyżej raz. Jeśli tak się stało, to następnie zostanie tylko raz przetworzony przez $PROCESS2$ i już nigdy ponownie do niego nie wrócimy. Jeśli natomiast $PROCESS2$ odwiedzi dany znak dwa razy, mamy wtedy pewność, że dany znak nie został przeczytany przez $PROCESS1$ w ogóle. \qed
+\end{PROF}
+
+Niech $\sigma$ to prawdopodobieństwo jednostajengo wystapienia symbolu w tekście. Wtedy:
+
+\begin{LEM}
+$P(\Delta(i) > (3k + 1)*log_{\sigma}m) \leq \frac{1}{m^{k+1}}$, gdzie $P$ to prawdopodobieństwo.
+\end{LEM}
+
+\begin{TW}
+Zakładając $M \leq m^k$ algorytm wykonuje $O(\frac{n}{m} * log_{\sigma} m)$ porównań.
+\end{TW}
+
+\begin{PROF}
+Podczas działania algorytmu wykonywanych jest co najwyżej $O(\frac{n}{m})$ przesunięć.
+Wystarczy jeszcze udowodnić, że średnio pierwsza i druga faza algorytmu odwiedza zaledwie logarytmiczną liczbę znaków. Niech $K = (2k + 1) * log _{\sigma} m$. $PROCESS1$ zakończy się z dużym prawdopodobieństwem po K krokach. Jeśli nie, zrobi on $m^k$ kroków z prawdopodobieństwem $1/m^{k+1}$. Dostajemy więc średnią złożoność $O(K)$ co jest logarytmiczne.
+Sytuacja z $PROCESS2$ jest analogiczna. \qed
+\end{PROF}
+
+
+
+\end{document}
