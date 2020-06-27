@@ -22,8 +22,8 @@ def exact_matching_with_dont_cares(text, pattern, n, m):
   alphabet.discard('?')
 
   letter_mapping = {'?': 0}
-  for index, letter in enumerate(alphabet):
-    letter_mapping[letter] = index + 1
+  letter_mapping.update(
+    {letter: index for index, letter in enumerate(alphabet, start = 1)})
 
   text = list(map(letter_mapping.get, text))
   pattern = list(map(letter_mapping.get, pattern))
