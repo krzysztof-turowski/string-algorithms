@@ -17,9 +17,7 @@ def exact_matching_with_dont_cares(text, pattern, n, m):
   if n < m:
     return
 
-  pattern = pattern[1:]
-  text = text[1:]
-  pattern = pattern[::-1]
+  text,pattern = text[1:],pattern[:0:-1]
   alphabet = set(list(text + pattern))
   alphabet.discard('?')
 
