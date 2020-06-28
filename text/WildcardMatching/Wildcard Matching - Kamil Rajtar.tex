@@ -17,22 +17,21 @@ Na wejściu do algorytmu dostajemy tekst i wzorzec w których oprócz liter mog�
 
 \section*{Wersja bez wildcardów}
 
-W rozwiązaniu problemu użyty jest splot obliczany za pomocą szybkiej transformaty Furiera (FFT) zdefiniowany następująco:
+W rozwiązaniu problemu użyty jest splot obliczany za pomocą szybkiej transformaty Fouriera (FFT) zdefiniowany następująco:
 
 $$
     p \otimes t \defeq (\sum^{m-1}_{j=0}p_{j}t_{i+j}, 0 \leq i \leq n-m)
 $$
 
-Normalne (bez wildcardów) dopasowanie za pomocą splotu tekstu (t) i odwróconego wzorca (p) możemy obliczyć za pomocą wzoru:
+Normalne (bez wildcardów) dopasowanie wzorca p do tekstu t na pozycjach od i do i+m możemy obliczyć za pomocą splotu. Korzystamy z własności wzoru:
 
 $$
-    \sum_{j-0}^{m-1} (p_j - t_{i+j})^2 = \sum_{j-0}^{m-1} (p^2_{j} - 2 p_{j}t_{i+j}+t^2_{i+j})
+    \sum_{j=0}^{m-1} (p_j - t_{i+j})^2 = \sum_{j=0}^{m-1} (p^2_{j} - 2 p_{j}t_{i+j}+t^2_{i+j})
 $$
 
-Zobaczmy że lewa część równania równa 0 to znaleźliśmy dopasowanie. (Tekst nie różni się od wzorca na żadnej z m kolejnych pozycji). Prawą stronę potrafimy szybko obliczyć ponieważ podniesienie każdej pozycji do kwadratu wykonywane jest w czasie stałym a środkowy składnik liczmy za pomocą FFT w O(n log m).
+Zobaczmy że lewa część równania równa 0 to znaleźliśmy dopasowanie. Tekst nie różni się od wzorca na żadnej z m kolejnych pozycji. Prawą stronę potrafimy szybko obliczyć ponieważ podniesienie każdej pozycji do kwadratu wykonywane jest w czasie stałym a środkowy składnik liczmy za pomocą FFT.
 
 \section*{Wersja z wildcardami}
-
 
 Zdefiniujmy ciągi:
 
@@ -49,16 +48,18 @@ t'_j = \cases{
 
 Wtedy łatwo jest widać że następujące równanie jest naturalnym rozszerzeniem rozwiązania poprzedniego problemu.
 
-    $$ \sum_{j-0}^{m-1} p'_{j}t'_{i+j}(p_j - t_{i+j})^2 = 0 $$
+    $$ \sum_{j=0}^{m-1} p'_{j}t'_{i+j}(p_j - t_{i+j})^2 = 0 $$
 
-Po rozwinięciu dostajemy formę:
+Zobaczmy że tekst część pod sumą jest zawsze nieujemna $p'_{j}$ oraz $t'_{i+j}$ przyjmują wartości \{0,1\} oraz kwadrat różnicy jest zawsze nieujemny. Więc zastanówmy się kiedy suma jest równa zero. Wtedy kiedy wszystkie składniki są równe zero. Kiedy składnik jest równy zero? W jednym z 3 przypadków. $p'_{j} = 0$ wtedy mamy wildcard we wzorcu, $t'_{i+j}=0$ wtedy mamy wildcard w tekście, $(p_j - t_{i+j})^2$ wtedy litery wzorca i tekstu są równe. Zobaczmy że to zachodzi wtedy i tylko wtedy gdy mamy do czynienia z dopasowaniem.
 
-$$ \sum_{j-0}^{m-1} (p'_{j}p^2_{j}t'_{i+j} - 2 p'_{j}p_{j}t_{i+j}t'_{i+j}+p'_{j}t^2_{i+j}t'_{i+j}) $$
+Po rozpisaniu nawiasu dostajemy formę:
+
+$$ \sum_{j=0}^{m-1} (p'_{j}p^2_{j}t'_{i+j} - 2 p'_{j}p_{j}t_{i+j}t'_{i+j}+p'_{j}t^2_{i+j}t'_{i+j}) $$
 
 Takie rozwinięcie łatwo jest obliczyć wykorzystując 3xFFT oraz podstawowe operacje na ciągach.
 
 \section*{Złożoność}
 
-Analiza złożoności jest trywialna ponieważ algorytm działa w czasie FFT.
+Trywialnie jest pokazać że algorytm działa $O(n \log n)$ gdy użyjemy FFT dla tekstu i patternu rozszerzonego do długości tekstu. Można jednak osiągnąć $O(n \log m)$ gdy podzielimy tekst na $n/m$ zachodzących na siebie kawałków wielkości $2m$ i dla każdego policzymy matching ze wzorcem a następnie wyniki złączymy. Zobaczmy że jest to poprawne ponieważ dla każdego miejsca początkowego istnieje kawałek, który zawiera część od długości co najmniej $m$ od tego miejsca. Złożoność: $n/m * O(m\log m)=O(n\log m)$.
 
 \end{document}
