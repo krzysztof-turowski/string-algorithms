@@ -9,7 +9,8 @@ from generator import rand
 
 STRING_MATCHING_WITH_DONT_CARE_ALGORITHMS = [
     dont_care.basic_fft,
-    matching_with_dont_cares.exact_matching_with_dont_cares
+    matching_with_dont_cares.exact_matching_with_dont_cares,
+    matching_with_dont_cares.exact_matching_with_dont_cares_n_log_m
 ]
 
 class TestStringMatchingWithDontCare(unittest.TestCase):
