@@ -1,30 +1,32 @@
+from ast import literal_eval as make_tuple
 from compression.core import compressor, parser
 from compression.core.dictionary import TrieReverseTrie
-from ast import literal_eval as make_tuple
 
+# pylint: disable=too-few-public-methods
 class LZ78DictParser(parser.DictParser):
   def __init__(self, dictionary):
-    super().__init__(
-      dictionary, 
-      lambda dict_parser, c: (dict_parser.phrase.index, c),
-      lambda dict_parser, c: dict_parser.dict.T
-    ) 
+    super(LZ78DictParser, self).__init__(
+        dictionary,
+        lambda dict_parser, c: (dict_parser.phrase.index, c),
+        lambda dict_parser, c: dict_parser.dict.trie
+    )
 
 class LZ78Compressor(compressor.Compressor):
-  def __init__(self):
+  def __init__(self, parser_output):
     dictionary = TrieReverseTrie()
-    super().__init__(
-      dictionary, 
-      LZ78DictParser,
-      parser.OptimalOutputParser
-    )  
+    super(LZ78Compressor, self).__init__(
+        dictionary,
+        LZ78DictParser,
+        parser_output
+    )
 
+# pylint: disable=too-few-public-methods
 class LZ78Decompressor(compressor.Decompressor):
   def __init__(self):
     dictionary = TrieReverseTrie()
-    super().__init__(dictionary, LZ78DictParser)
-    
-    self.reference[0] = dictionary.T
+    super(LZ78Decompressor, self).__init__(dictionary, LZ78DictParser)
+
+    self.reference[0] = dictionary.trie
 
   def parse(self, c):
     node = self.reference[c[0]]
@@ -35,10 +37,10 @@ class LZ78Decompressor(compressor.Decompressor):
         self.reference[added.index] = added
     return phrase
 
-def lz78_compress(w):
-  instance = LZ78Compressor()
+def lz78_compress(w, parser_output=parser.OptimalOutputParser):
+  instance = LZ78Compressor(parser_output)
   compressed = []
-  for c in w:
+  for c in w[1:]:
     code = instance.parse(c)
     if code:
       compressed.append(code)
@@ -47,7 +49,8 @@ def lz78_compress(w):
     compressed += code
   return compressed
 
-def lz78_decompress(code, alphabet):
+# pylint: disable=unused-argument
+def lz78_decompress(code, alphabet=None):
   instance = LZ78Decompressor()
   decompressed = ""
   for c in code:

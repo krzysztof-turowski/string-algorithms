@@ -1,11 +1,14 @@
-class TrieDict:
+# pylint: disable=too-many-instance-attributes
+class TrieDict(object):
   def __init__(self, label, edge=None, depth=0, index=None, parent=None):
+    self.children = {}
+    self.link, self.terminal = None, None
+
     self.label = label
     self.edge = edge
-    self.children = {}
-    self.parent, self.link, self.terminal = self if parent is None else parent, None, None
     self.depth = depth
     self.index = index
+    self.parent = self if parent is None else parent
 
   def insert(self, w, code, index=None):
     if not w:
@@ -43,26 +46,26 @@ class TrieDict:
   def connect(self, node):
     self.link = node
 
-
-class TrieReverseTrie:
+# pylint: disable=no-self-use
+class TrieReverseTrie(object):
   def __init__(self):
-    self.T = TrieDict(None, index=0)
-    self.TR = TrieDict(None, index=0)
+    self.trie = TrieDict(None, index=0)
+    self.trie_rev = TrieDict(None, index=0)
     self.size = 0
 
-    self.T.connect(self.TR)
-    self.TR.connect(self.T)
+    self.trie.connect(self.trie_rev)
+    self.trie_rev.connect(self.trie)
 
   def insert(self, node, w, wr, code):
     self.size += 1
     new_node = node.insert(w, code, self.size)
-    new_node_rev = self.TR.insert(wr, code, self.size)
+    new_node_rev = self.trie_rev.insert(wr, code, self.size)
     new_node.connect(new_node_rev)
     new_node_rev.connect(new_node)
     return new_node
 
   def search(self, w):
-    return self.T.search(w)
+    return self.trie.search(w)
 
   def get_prefix(self, node):
     prefix = ""

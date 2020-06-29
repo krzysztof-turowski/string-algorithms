@@ -1,4 +1,4 @@
-class Compressor:
+class Compressor(object):
   def __init__(self, dictionary, parser_dictionary, parser_output):
     self.parser_dictionary = parser_dictionary(dictionary)
     self.parser_output = parser_output(dictionary)
@@ -10,7 +10,8 @@ class Compressor:
   def finish(self):
     return self.parser_output.parse_end()
 
-class Decompressor:
+# pylint: disable=too-few-public-methods
+class Decompressor(object):
   def __init__(self, dictionary, parser_dictionary):
     self.reference = {}
     self.parser_dictionary = parser_dictionary(dictionary)
