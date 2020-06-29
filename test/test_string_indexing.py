@@ -4,7 +4,7 @@ import unittest
 
 from generator import rand
 from string_indexing import suffix_tree, suffix_array, farach_suffix_tree, \
-                            sl_suffix_array, lcp_lr
+                            sl_suffix_array, lcp_lr, larsson_sadakane_suffix_array
 
 SUFFIX_TREE_ALGORITHMS = [
     suffix_tree.weiner,
@@ -18,6 +18,7 @@ SUFFIX_ARRAY_ALGORITHMS = [
     suffix_array.skew,
     farach_suffix_tree.farach_suffix_array,
     sl_suffix_array.small_large,
+    larsson_sadakane_suffix_array.larsson_sadakane_suffix_array
 ]
 
 class TestSuffixTrees(unittest.TestCase):
