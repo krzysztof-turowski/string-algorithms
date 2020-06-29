@@ -17,93 +17,81 @@ class DictParser:
     self.phrase = extended
     return None 
 
-class GreedyOutputParser:
+class OutputParser:
   def __init__(self, dictionary):
     self.dict = dictionary
-    self.temp_phrase = self.dict.T
-    self.output = ""
+    self.phrase = self.dict.T
 
   def parse(self, c):
-    extended = self.temp_phrase.extend(c)
+    raise NotImplementedError
+
+  def parse_end(self, c):
+    raise NotImplementedError  
+
+class GreedyOutputParser(OutputParser):
+  def __init__(self, dictionary):
+    super().__init__(dictionary)
+
+  def parse(self, c):
+    extended = self.phrase.extend(c)
     if extended is None:
-      self.output += str(self.temp_phrase.label) + ','
-      self.temp_phrase = self.dict.search(c)
-      return self.output
-    self.temp_phrase = extended
-    return ''
+      code = str(self.phrase.label) if self.phrase.label is not None else None
+      self.phrase = self.dict.search(c)
+      return code
+    self.phrase = extended
+    return None
 
   def parse_end(self):
-    self.parse('')
+    code = self.parse('')
+    return [code] if code is not None else []
 
-class OptimalOutputParser:
+class OptimalOutputParser(OutputParser):
   def __init__(self, dictionary):
-    self.dict = dictionary
+    super().__init__(dictionary)
     self.b = 1
     self.fb = 1
     self.offset = 0
-    self.temp_phrase = self.dict.T
-    self.output = ""
     self.tmp_out = ""
     
   def parse(self, c):
     self.tmp_out += c
-    extended = self.temp_phrase.extend(c)
+    extended = self.phrase.extend(c)
     if extended is None:
-      # we know new value of some suffix of T[b:]
-      # w obu case'ach i tak robie cos takiego, ze biore nadluzszy sufiks tego co mam < fb
-      # robie while dopoki nie mam tak, ze znajde suf ktory c rozszerzy i bedzie < fb
       tmp_offset = 0
-      tmp_depth = self.temp_phrase.depth
+      tmp_depth = self.phrase.depth
       while True:
-        longest_suffix = self.temp_phrase.contract()
-        print('long suf', longest_suffix.label)
-        tmp_offset += self.temp_phrase.depth - longest_suffix.depth
-       
-        # jak znajde to sprawdzam czy rozszerze go o c
+        longest_suffix = self.phrase.contract()
+        tmp_offset += self.phrase.depth - longest_suffix.depth
         extended = longest_suffix.extend(c)
-        # jak nie to szukam innego sufiksu (to ma stop bo jednoliterowce sa ok)
         if extended is None:
-          self.temp_phrase = longest_suffix
-          # if self.temp_phrase.label == '$'
+          self.phrase = longest_suffix
           continue
-        # jak tak to next iteracja
         else:
-          print('uff rozszerzylem', extended.label)
-          self.temp_phrase = extended
+          self.phrase = extended
           break
-      
-      print('el', extended.label, tmp_offset)
-      print('jestem w', self.b, self.fb, 'z offsetem', self.offset, 'i zjadlem kolejne', tmp_offset)
-      # jak nie znajde to output... tylko co?
+
       if self.b + self.offset + tmp_offset > self.fb + 1:
-        # ???
-        # todo proper prefix   
-        # 
         tmp_node = self.dict.search(self.tmp_out[0:self.offset])       
-        self.output += str(tmp_node.label) + ','
+        code = str(tmp_node.label)
         self.tmp_out = self.tmp_out[self.offset:]
 
         self.b += self.offset
         self.fb = self.b + tmp_depth - 1
         self.offset = tmp_offset
-        # self.temp_phrase = self.dict.search(c)
-        return self.output
+        return code
       else:
         self.offset += tmp_offset
-        return ''
-
-    print('el2', extended.label)
-    self.temp_phrase = extended
-    return ''
+        return None
+    self.phrase = extended
+    return None
 
   def parse_end(self):
-    print('pe', self.tmp_out, self.offset, self.tmp_out[0:self.offset])
+    code = []
     if self.offset > 0:
       tmp_node = self.dict.search(self.tmp_out[0:self.offset])       
-      self.output += str(tmp_node.label) + ','
+      code.append(str(tmp_node.label))
       self.tmp_out = self.tmp_out[self.offset:]
     if self.tmp_out:
-      tmp_node = self.dict.search(self.tmp_out)   
-      self.output += str(tmp_node.label) + ','
-    # print(self.b, self.fb, self.offset, self.tmp_out)
-    return self.output
+      tmp_node = self.dict.search(self.tmp_out)
+      code.append(str(tmp_node.label))
+    return code

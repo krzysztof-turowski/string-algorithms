@@ -5,11 +5,10 @@ class Compressor:
 
   def parse(self, c):
     self.parser_dictionary.parse(c)
-    self.parser_output.parse(c)
+    return self.parser_output.parse(c)
 
   def finish(self):
-    self.parser_output.parse_end()
-    return self.parser_output.output
+    return self.parser_output.parse_end()
 
 class Decompressor:
   def __init__(self, dictionary, parser_dictionary):

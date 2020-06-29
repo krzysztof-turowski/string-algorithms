@@ -1,5 +1,4 @@
 class TrieDict:
-  """ Powerful dict """
   def __init__(self, label, edge=None, depth=0, index=None, parent=None):
     self.label = label
     self.edge = edge

@@ -22,8 +22,9 @@ class LZWCompressor(compressor.Compressor):
       dictionary.insert(dictionary.T, alphabet[i], alphabet[i], i)
 
   def parse(self, c):
-    self.parser_output.parse(c)
+    code = self.parser_output.parse(c)
     self.parser_dictionary.parse(c)
+    return code
 
 class LZWDecompressor(compressor.Decompressor):
   def __init__(self, alphabet):
@@ -34,45 +35,46 @@ class LZWDecompressor(compressor.Decompressor):
       self.reference[i] = dictionary.insert(dictionary.T, alphabet[i], alphabet[i], i)
       
   def parse(self, c):
-    c = int(c)
+    node = None
     if c in self.reference:
-      print('mam kod', c)
       node = self.reference[c]
-      tmp = ""
-      while node.parent != node:
-        tmp += node.edge
-        node = node.parent
-      tmp = tmp[::-1]
-      for x in tmp:
-        print('parse', x)
-        added = self.parser_dictionary.parse(x)
-        if added is not None:
-          self.reference[added.label] = added
-      return tmp
-    # else self.reference[c] is None
-    print('nie mam jeszcze kodu', c)
-    node = self.parser_dictionary.phrase
-    tmp = ""
-    while node.parent != node:
-      tmp += node.edge
-      node = node.parent
-    tmp = tmp[::-1]
-    tmp2 = tmp
-    ans = ""
-    for x in tmp:
-      print('parse', x)
-      tmp2 += x
+    else:
+      node = self.parser_dictionary.phrase
+
+    prefix = self.parser_dictionary.dict.get_prefix(node)
+    for x in prefix:
       added = self.parser_dictionary.parse(x)
       if added is not None:
         self.reference[added.label] = added
-        if added.label == c:
-          ans = tmp2
-        # break
-        # break or not to break?
-    for x in ans[len(tmp):]:
-      print('parse', x)
+    node = self.reference[c]
+
+    phrase = self.parser_dictionary.dict.get_prefix(node)
+    for x in phrase[len(prefix):]:
       added = self.parser_dictionary.parse(x)
       if added is not None:
         self.reference[added.label] = added
-    print('a teraz juz mam?', c in self.reference)
-    return ans
+    return phrase
+
+def get_alphabet(w):
+  return sorted({c for c in w})
+
+def lzw_compress(w):
+  alphabet = get_alphabet(w)
+  instance = LZWCompressor(alphabet)
+  compressed = []
+  for c in w:
+    code = instance.parse(c)
+    if code:
+      compressed.append(code)
+  code = instance.finish()
+  if code is not None:
+    compressed += code
+  return compressed
+
+def lzw_decompress(code, alphabet):
+  instance = LZWDecompressor(alphabet)
+  decompressed = ""
+  for c in code:
+    c = int(c)
+    decompressed += instance.parse(c)
+  return decompressed

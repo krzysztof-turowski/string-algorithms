@@ -1,71 +1,40 @@
+import unittest
 from compression import lzw, lz78
-from ast import literal_eval as make_tuple
 
-test_0 = "abababaabaabaaab"
-test_1 = "abccdeabccdeacdeacdeacde"
-test_2 = "a"
-test_3 = ""
-test_4 = "abbbcaabbcbbcaaac"
-test_5 = "ababcbababaa"
-test_6 = "aaabbabaabaaabab"
-test_7 = "abababcccacadcadaabcada"
+COMPRESSION_ALGORITHMS = [
+  (lzw.lzw_compress, lzw.lzw_decompress),
+  (lz78.lz78_compress, lz78.lz78_decompress)
+]
 
-def get_test_word():
-  w = test_7
+class TestCompressionWithOptimalParsing(unittest.TestCase):
+  TEST_WORDS = [
+    "abbbcaabbcbbcaaac",
+    "abababaabaabaaab",
+    "abccdeabccdeacdeacdeacde",
+    "a",
+    "",
+    "ababcbababaa",
+    "aaabbabaabaaabab",
+    "abababcccacadcadaabcada"
+  ]
 
-  alphabet = set()
-  for c in w:
-    alphabet.add(c)
-  alphabet = sorted(alphabet)
+  def get_alphabet(self, w):
+    return sorted({c for c in w})
 
-  return (w, alphabet)
+  def check_word(self, w):
+    for (compressor, decompressor) in COMPRESSION_ALGORITHMS:
+      compressed = compressor(w)
+      decompressed = decompressor(compressed, self.get_alphabet(w))
+      self.assertEqual(decompressed, w)
 
-def lzw_compress():
-  (w, alphabet) = get_test_word()
-  instance = lzw.LZWCompressor(alphabet)
-  for c in w:
-    instance.parse(c)
-  return instance.finish()
+  def test_empty(self):
+    self.check_word("")
 
-def lzw_decompress():
-  (w, alphabet) = get_test_word()
-  compressed = lzw_compress()
-  instance = lzw.LZWDecompressor(alphabet)
-  codes = compressed.split(",")[:-1]
-  print('codes:', codes)
-  dec_w = ""
-  for c in codes:
-    tmp_pr = instance.parse(c)
-    print(tmp_pr)
-    dec_w += tmp_pr
-  print(w)
-  print(codes)
-  print(dec_w)
-  print(w == dec_w)
+  def test_one(self):
+    self.check_word("a")
 
-def lz78_compress():
-  (w, alphabet) = get_test_word()
-  instance = lz78.LZ78Compressor(alphabet)
-  for c in w:
-    instance.parse(c)
-  return instance.finish()
+  def test_hand(self):
+    for w in self.TEST_WORDS:
+      self.check_word(w)
 
-def lz78_decompress():
-  (w, alphabet) = get_test_word()
-  compressed = lz78_compress()
-  print('compressed', compressed)
-  instance = lz78.LZ78Decompressor(alphabet)
-  codes = compressed.split("),")[:-1]
-  print('codes:', codes)
-  dec_w = ""
-  for c in codes:
-    c += ')'
-    ct = make_tuple(c)
-    print('aaa', c, ct, type(ct))
-    tmp_pr = instance.parse(ct)
-    print(tmp_pr)
-    dec_w += tmp_pr
-  print(w)
-  print(dec_w)
-  print(w == dec_w)
-
+  

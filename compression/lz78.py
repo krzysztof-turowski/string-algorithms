@@ -1,16 +1,17 @@
 from compression.core import compressor, parser
 from compression.core.dictionary import TrieReverseTrie
+from ast import literal_eval as make_tuple
 
 class LZ78DictParser(parser.DictParser):
   def __init__(self, dictionary):
     super().__init__(
       dictionary, 
-      lambda dict_parser, c: (dict_parser.phrase.index, c, dict_parser.dict.size + 1),
+      lambda dict_parser, c: (dict_parser.phrase.index, c),
       lambda dict_parser, c: dict_parser.dict.T
     ) 
 
 class LZ78Compressor(compressor.Compressor):
-  def __init__(self, alphabet):
+  def __init__(self):
     dictionary = TrieReverseTrie()
     super().__init__(
       dictionary, 
@@ -19,53 +20,37 @@ class LZ78Compressor(compressor.Compressor):
     )  
 
 class LZ78Decompressor(compressor.Decompressor):
-  def __init__(self, alphabet):
+  def __init__(self):
     dictionary = TrieReverseTrie()
     super().__init__(dictionary, LZ78DictParser)
     
     self.reference[0] = dictionary.T
 
-  def parse(self, d):
-    c = d[0]
-    if c in self.reference:
-      print('mam kod', c)
-      node = self.reference[c]
-      tmp = d[1]
-      while node.parent != node:
-        tmp += node.edge
-        node = node.parent
-      tmp = tmp[::-1]
-      for x in tmp:
-        print('parse', x)
-        added = self.parser_dictionary.parse(x)
-        if added is not None:
-          print('added', added.index)
-          self.reference[added.index] = added
-      return tmp
-    # else self.reference[c] is None
-    print('nie mam jeszcze kodu', c)
-    node = self.parser_dictionary.phrase
-    tmp = ""
-    while node.parent != node:
-      tmp += node.edge
-      node = node.parent
-    tmp = tmp[::-1]
-    tmp2 = tmp
-    ans = ""
-    for x in tmp:
-      print('parse', x)
-      tmp2 += x
+  def parse(self, c):
+    node = self.reference[c[0]]
+    phrase = self.parser_dictionary.dict.get_prefix(node) + c[1]
+    for x in phrase:
       added = self.parser_dictionary.parse(x)
       if added is not None:
-        self.reference[added.label] = added
-        if added.label == c:
-          ans = tmp2
-        # break
-        # break or not to break?
-    for x in ans[len(tmp):]:
-      print('parse', x)
-      added = self.parser_dictionary.parse(x)
-      if added is not None:
-        self.reference[added.label] = added
-    print('a teraz juz mam?', c in self.reference)
-    return ans
+        self.reference[added.index] = added
+    return phrase
+
+def lz78_compress(w):
+  instance = LZ78Compressor()
+  compressed = []
+  for c in w:
+    code = instance.parse(c)
+    if code:
+      compressed.append(code)
+  code = instance.finish()
+  if code:
+    compressed += code
+  return compressed
+
+def lz78_decompress(code, alphabet):
+  instance = LZ78Decompressor()
+  decompressed = ""
+  for c in code:
+    c = make_tuple(c)
+    decompressed += instance.parse(c)
+  return decompressed
