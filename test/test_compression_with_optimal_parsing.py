@@ -1,4 +1,4 @@
-from compression import lzw
+from compression import lzw, lz78
 from ast import literal_eval as make_tuple
 
 test_0 = "abababaabaabaaab"
@@ -22,7 +22,7 @@ def get_test_word():
 
 def lzw_compress():
   (w, alphabet) = get_test_word()
-  instance = lzw.LZW(alphabet)
+  instance = lzw.LZWCompressor(alphabet)
   for c in w:
     instance.parse(c)
   return instance.finish()
@@ -30,7 +30,7 @@ def lzw_compress():
 def lzw_decompress():
   (w, alphabet) = get_test_word()
   compressed = lzw_compress()
-  instance = lzw.LZWDec(alphabet)
+  instance = lzw.LZWDecompressor(alphabet)
   codes = compressed.split(",")[:-1]
   print('codes:', codes)
   dec_w = ""
@@ -45,7 +45,7 @@ def lzw_decompress():
 
 def lz78_compress():
   (w, alphabet) = get_test_word()
-  instance = lzw.LZ78(alphabet)
+  instance = lz78.LZ78Compressor(alphabet)
   for c in w:
     instance.parse(c)
   return instance.finish()
@@ -54,7 +54,7 @@ def lz78_decompress():
   (w, alphabet) = get_test_word()
   compressed = lz78_compress()
   print('compressed', compressed)
-  instance = lzw.LZ78Dec(alphabet)
+  instance = lz78.LZ78Decompressor(alphabet)
   codes = compressed.split("),")[:-1]
   print('codes:', codes)
   dec_w = ""

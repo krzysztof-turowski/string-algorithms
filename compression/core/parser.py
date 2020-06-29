@@ -1,75 +1,26 @@
-from compression.core.dictionary import SimpleDict, TrieDict
+from compression.core.dictionary import TrieDict
 
-class LZWSimpleDictParser:
-  def __init__(self):
-    self.dict = SimpleDict()
-    self.counter = 0
-    self.temp_phrase = ""
-    
-  def parse(self, c):
-    self.temp_phrase += c
-    if self.dict.search(self.temp_phrase) is None:
-      self.dict.insert(self.temp_phrase, self.counter)
-      self.temp_phrase = c
-      self.counter += 1
-      return True
-    return False
-
-class LZWTrieDictParser:
-  def __init__(self, dictionary, reverse_dictionary, dictionary_size):
+class DictParser:
+  def __init__(self, dictionary, label_extractor, extension_callback):
     self.dict = dictionary
-    self.rev_dict = reverse_dictionary
-    self.counter = dictionary_size
-    self.temp_phrase = self.dict
-    self.temp_phrase_str = ""
+    self.phrase = self.dict.T
+    self.label_extractor = label_extractor
+    self.extension_callback = extension_callback
 
   def parse(self, c):
-    extended = self.temp_phrase.extend(c)
+    extended = self.phrase.extend(c)
     if extended is None:
-      node = self.temp_phrase.insert(c, self.counter)
-      #add to reverse trie
-      rev_node = self.rev_dict.insert(str(self.temp_phrase_str + c)[::-1], self.counter)
-      node.connect(rev_node)
-      rev_node.connect(node)
-      self.temp_phrase = self.dict.search(c)
-      self.temp_phrase_str = c
-      self.counter += 1
+      reversed_phrase = str(self.dict.get_prefix(self.phrase) + c)[::-1]
+      node = self.dict.insert(self.phrase, c, reversed_phrase, self.label_extractor(self, c))
+      self.phrase = self.extension_callback(self, c)
       return node
-    print('przeszedlem z {0} do {1}'.format(self.temp_phrase.label, extended.label))
-    self.temp_phrase = extended
-    self.temp_phrase_str += c
-    return None
-
-class LZ78TrieDictParser:
-  def __init__(self, dictionary, reverse_dictionary, dictionary_size):
-    self.dict = dictionary
-    self.rev_dict = reverse_dictionary
-    self.counter = dictionary_size + 1
-    self.temp_phrase = self.dict
-    self.temp_phrase_str = ""
-
-  def parse(self, c):
-    extended = self.temp_phrase.extend(c)
-    if extended is None:
-      print('dodaje', self.temp_phrase.index, c)
-      node = self.temp_phrase.insert(c, (self.temp_phrase.index, c, self.counter), self.counter)
-      #add to reverse trie
-      rev_node = self.rev_dict.insert(str(self.temp_phrase_str + c)[::-1], (self.temp_phrase.index, c, self.counter), self.counter)
-      node.connect(rev_node)
-      rev_node.connect(node)
-      self.counter += 1
-      self.temp_phrase = self.dict#.search(c)
-      self.temp_phrase_str = ""
-      return node
-    print('przeszedlem z {0} do {1}'.format(self.temp_phrase.label, extended.label))
-    self.temp_phrase = extended
-    self.temp_phrase_str += c
-    return None
+    self.phrase = extended
+    return None 
 
 class GreedyOutputParser:
-  def __init__(self, dictionary, reverse_dictionary):
+  def __init__(self, dictionary):
     self.dict = dictionary
-    self.temp_phrase = self.dict
+    self.temp_phrase = self.dict.T
     self.output = ""
 
   def parse(self, c):
@@ -84,15 +35,13 @@ class GreedyOutputParser:
   def parse_end(self):
     self.parse('')
 
-
 class OptimalOutputParser:
-  def __init__(self, dictionary, reverse_dictionary):
+  def __init__(self, dictionary):
     self.dict = dictionary
-    self.rev_dict = reverse_dictionary
     self.b = 1
     self.fb = 1
     self.offset = 0
-    self.temp_phrase = self.dict
+    self.temp_phrase = self.dict.T
     self.output = ""
     self.tmp_out = ""
     

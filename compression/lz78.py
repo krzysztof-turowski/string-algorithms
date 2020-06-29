@@ -1,44 +1,36 @@
 from compression.core import compressor, parser
 from compression.core.dictionary import TrieReverseTrie
 
-class LZWDictParser(parser.DictParser):
+class LZ78DictParser(parser.DictParser):
   def __init__(self, dictionary):
     super().__init__(
       dictionary, 
-      lambda dict_parser, c: dict_parser.dict.size,
-      lambda dict_parser, c: dict_parser.dict.T.search(c)
-    )
+      lambda dict_parser, c: (dict_parser.phrase.index, c, dict_parser.dict.size + 1),
+      lambda dict_parser, c: dict_parser.dict.T
+    ) 
 
-class LZWCompressor(compressor.Compressor):
+class LZ78Compressor(compressor.Compressor):
   def __init__(self, alphabet):
     dictionary = TrieReverseTrie()
     super().__init__(
       dictionary, 
-      LZWDictParser,
+      LZ78DictParser,
       parser.OptimalOutputParser
-    )
+    )  
 
-    for i in range(len(alphabet)):
-      dictionary.insert(dictionary.T, alphabet[i], alphabet[i], i)
-
-  def parse(self, c):
-    self.parser_output.parse(c)
-    self.parser_dictionary.parse(c)
-
-class LZWDecompressor(compressor.Decompressor):
+class LZ78Decompressor(compressor.Decompressor):
   def __init__(self, alphabet):
     dictionary = TrieReverseTrie()
-    super().__init__(dictionary, LZWDictParser)
+    super().__init__(dictionary, LZ78DictParser)
+    
+    self.reference[0] = dictionary.T
 
-    for i in range(len(alphabet)):
-      self.reference[i] = dictionary.insert(dictionary.T, alphabet[i], alphabet[i], i)
-      
-  def parse(self, c):
-    c = int(c)
+  def parse(self, d):
+    c = d[0]
     if c in self.reference:
       print('mam kod', c)
       node = self.reference[c]
-      tmp = ""
+      tmp = d[1]
       while node.parent != node:
         tmp += node.edge
         node = node.parent
@@ -47,7 +39,8 @@ class LZWDecompressor(compressor.Decompressor):
         print('parse', x)
         added = self.parser_dictionary.parse(x)
         if added is not None:
-          self.reference[added.label] = added
+          print('added', added.index)
+          self.reference[added.index] = added
       return tmp
     # else self.reference[c] is None
     print('nie mam jeszcze kodu', c)

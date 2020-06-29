@@ -1,15 +1,3 @@
-class SimpleDict:
-  """ Simple dict """
-  def __init(self):
-      self.dict = {}
-
-  def insert(self, w, code):
-    self.dict[w] = code
-
-  def search(self, w):
-    return self.dict[w]
-
-
 class TrieDict:
   """ Powerful dict """
   def __init__(self, label, edge=None, depth=0, index=None, parent=None):
@@ -24,6 +12,7 @@ class TrieDict:
     if not w:
       self.terminal = True
       self.label = code
+      self.index = index
       return self
     if w[0] not in self.children:
       child = TrieDict(-1, w[0], self.depth + 1, index, self)
@@ -54,3 +43,31 @@ class TrieDict:
 
   def connect(self, node):
     self.link = node
+
+
+class TrieReverseTrie:
+  def __init__(self):
+    self.T = TrieDict(None, index=0)
+    self.TR = TrieDict(None, index=0)
+    self.size = 0
+
+    self.T.connect(self.TR)
+    self.TR.connect(self.T)
+
+  def insert(self, node, w, wr, code):
+    self.size += 1
+    new_node = node.insert(w, code, self.size)
+    new_node_rev = self.TR.insert(wr, code, self.size)
+    new_node.connect(new_node_rev)
+    new_node_rev.connect(new_node)
+    return new_node
+
+  def search(self, w):
+    return self.T.search(w)
+
+  def get_prefix(self, node):
+    prefix = ""
+    while node.parent != node:
+      prefix += node.edge
+      node = node.parent
+    return prefix[::-1]
