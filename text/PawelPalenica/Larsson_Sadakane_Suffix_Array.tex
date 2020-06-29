@@ -83,7 +83,7 @@ Podstawowy algorytm będzie się prezentował następująco:
 
 W podstawowej wersji algorytmu tablice $V$ oraz $L$ aktualizujemy po wykonaniu sortowania. Możemy to wykonać np. zaznaczając pozycje podziałów w procedurze quicksort np. używając bitów znaku w tablicy $I$. Na tej podstawie aktualizujemy $V$ - ujemny wpis oznacza nową grupę - a następnie tablicę $L$.
 
-Na pierwszy rzut oka można by wyciągnąć wniosek, że algorytm działa w czasie $O(n\ \log{n}^2)$. Dokładniejsza analiza pozwala na ograniczenie przez $O(n\ \log{n})$. Na potrzeby analizy zakładamy, że \textit{ternary quicksort} dzieli zawsze w medianie (możliwe do uzyskania przy wydajnym algorytmie znajdowania mediany, nieefektywne w praktyce). Proces sortowania całej tablicy sufiksowej (nie tylko jednego quicksorta) przedstawimy jako ternarne drzewo obliczeń.
+Na pierwszy rzut oka można by wyciągnąć wniosek, że algorytm działa w czasie $O(n \log^2{n})$. Dokładniejsza analiza pozwala na ograniczenie przez $O(n \log{n})$. Na potrzeby analizy zakładamy, że \textit{ternary quicksort} dzieli zawsze w medianie (możliwe do uzyskania przy wydajnym algorytmie znajdowania mediany, nieefektywne w praktyce). Proces sortowania całej tablicy sufiksowej (nie tylko jednego quicksorta) przedstawimy jako ternarne drzewo obliczeń. Jest to możliwe, ponieważ ternary sort grupy nieposortowanej dla ustalonego $h$ kończy się, gdy elementy zostaną podzielone według numeru grupy dla sufiksu o $h$ pozycji dalszego -- a zatem, gdy otrzymamy grupy dla $2 h$. Słowem, liście ternarnego drzewa obliczeń dla $h$ stają się nowymi korzeniami dla $2 h$.
 
 \begin{lemma}
 Długość ścieżki od korzenia do liścia jest ograniczona z góry przez $2 \log{n} + 3$
