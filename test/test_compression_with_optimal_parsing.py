@@ -1,4 +1,5 @@
 from compression import lzw
+from ast import literal_eval as make_tuple
 
 test_0 = "abababaabaabaaab"
 test_1 = "abccdeabccdeacdeacdeacde"
@@ -10,7 +11,7 @@ test_6 = "aaabbabaabaaabab"
 test_7 = "abababcccacadcadaabcada"
 
 def get_test_word():
-  w = test_0
+  w = test_7
 
   alphabet = set()
   for c in w:
@@ -54,13 +55,14 @@ def lz78_decompress():
   compressed = lz78_compress()
   print('compressed', compressed)
   instance = lzw.LZ78Dec(alphabet)
-  codes = compressed.split(",")[:-1]
+  codes = compressed.split("),")[:-1]
   print('codes:', codes)
   dec_w = ""
-  for i in range(1, len(codes), 2):
-    print('aaa', codes[i][2])
-    c = codes[i][2]
-    tmp_pr = instance.parse(c)
+  for c in codes:
+    c += ')'
+    ct = make_tuple(c)
+    print('aaa', c, ct, type(ct))
+    tmp_pr = instance.parse(ct)
     print(tmp_pr)
     dec_w += tmp_pr
   print(w)
