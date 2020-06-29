@@ -75,7 +75,7 @@ Podstawowy algorytm będzie się prezentował następująco:
     \item Umieść sufiksy $1 \ldots n+1$ w tablicy $I$. Posortuj $I$ używając $x_i$ jako klucza dla sufiksu $i$ (pierwsza litera). Ustaw $h=1$
     \item Dla każdego sufiksu $S_{i+1}$ ustaw numer grupy do której należy w $V[i]$
     \item Dla każdej nieposortowanej grupy lub wspólnej grupy posortowanej zapisz jej długość (lub zanegowaną długość) do tablicy $L$
-    \item Przesortuj każdą nieposortowaną grupę z osobna za pomocą \textit{ternary quick sorta} (czyli takiego co dzieli na podtablice $[< \textit{pivot}, = \textit{pivot}, > \textit{pivot}]$), używając $V[S_k + h - 1]$ jako klucza dla każdego sufiksu $S_k$ w grupie
+    \item Przesortuj każdą nieposortowaną grupę z osobna za pomocą \textit{ternary quick sorta} (czyli takiego co dzieli na podtablice $[< \textit{pivot}, = \textit{pivot}, > \textit{pivot}]$), używając $V[k + h - 1]$ jako klucza dla każdego sufiksu $S_k$ w grupie
     \item Zaznacz pozycje podziału pomiędzy nierównymi kluczami w dla każdej przetworzonej nieposortowanej grupy na potrzeby aktualizacji tablic $V$ oraz $L$
     \item Podwój $h$. Stwórz nowe grupy poprzez podział na zaznaczonych pozycjach (aktualizując odpowiednio $V$ i $L$)
     \item Zakończ jeśli $I$ składa się tylko z jednej posortowanej grupy. W przeciwnym przypadku idź do kroku 4.
@@ -107,6 +107,13 @@ W algorytmie autorzy wprowadzają usprawnienia które nie wpływają negatywnie 
     \item Wywołaj się rekurencyjnie na sekcji `$> \textit{pivot}$`
 \end{enumerate}
 \medskip
+
+Na początek zauważmy, że numery nowych grup mogą jedynie maleć. Mając grupę nieposortowaną $[i_1, i_2, ..., i_n]$ w $h$-order, w porządku $2h$-order może się rozbić np. na grupy: $[i_1, ... i_k]$ $[i_{k+1}, ... i_m]$, $[i_{m+1}, ..., i_n]$, a numery grup to kolejno $i_k < i_m < i_n$.
+
+Kluczowe w czasie aktualizowania będzie to żeby nie zaburzyć tego porządku. Obrazując to na powyższym przykładzie - żeby w żadnym momencie algorytmu dla grup $[i_1, ... i_k]$ $[i_{k+1}, ... i_m]$, $[i_{m+1}, ..., i_n]$ nie mieć numerowania $i_n$, $i_m$, $i_n$. Tak mogłoby się zdarzyć gdybyśmy zaktualizowali grupę środkową przed aktualizacją grupy pierwszej. Tak więc żeby żadna grupa nieposortowana na przedziale $[i ... j]$ w $I$ nie dostała numeru niższego niż grupa nieposortowana na wcześniejszym przedziale $[k ... l]$ w $I$.
+
+Analogicznie mielibyśmy problem gdybyśmy wykonali aktualizację numerów grupy partycji środkowej po sortowaniu trzeciej partycji.
+
 
 \printbibliography[title={Bibliografia}]
 
