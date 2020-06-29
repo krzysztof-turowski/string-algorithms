@@ -1,0 +1,299 @@
+\section{Dokładne dopasowanie 
+wielu wzorców}
+
+
+\subsection{Algorytm Aho-Corasick}
+
+Niech $\W=\{w_1,...,w_k\}$ będzie zbiorem wzorców (niepustych słów nad alfabetem $\Sigma$). Otrzymawszy słowo $T\in\Sigma^n$ chcemy wyznaczyć wszystkie indeksy z $[n]$, na których w $T$ zaczyna się pewien wzorzec z $\W$. Naturalnym rozwiązaniem jest $k$-krotne użycie jednego z wydajnych (liniowych) algorytmów do szukania pojedynczego wzorca. Podejście takie oczywiście jest poprawne, niestety skutkuje złożonością czasową $\Theta(kn)$. Okazuje się, że na podstawie $\W$ jesteśmy w stanie skonstruować w czasie $\Theta(\sum_{i\in[k]}|w_i|)$ odpowiednią strukturę, która będzie potrafiła znaleźć naraz wszystkie wystąpienia wzorców oglądając $T$ wyłącznie raz. Przed nami: automat Aho-Corasick.
+
+Pomysł polega na zbudowaniu odpowiedniego deterministycznego automatu skończonego $\A$. Czytając $T$ będziemy podróżować zgodnie z krawędziami $\A$. W każdym stanie $s$ będziemy mieć zapisaną listę tych wzorców z $\W$, które \textit{kończą się} w $s$ -- tzn. aby znaleźć się w stanie $s$ musieliśmy przejść skądś krawędziami etykietowanymi kolejnymi literami pewnego wzorca. Spacerowanie po $\A$ wzdłuż $T$ możemy interpretować jako poruszanie się \textit{jednocześnie} po wszystkich słowach z $\W$.
+
+Zaczniemy konstrukcję od utworzenia \textit{drzewa trie} na podstawie $\W$. Następnie dodamy do każdego stanu informacje o wzorcach które się w nim kończą i podniesiemy funkcję przejścia z częściowej do totalnej. Na koniec uprościmy automat. Po tych zabiegach otrzymamy strukturę, dzięki której wyszukiwanie wielu wzorców okaże się bardzo proste:
+
+\begin{minted}[xleftmargin=20pt,linenos]{python}
+def find_occurrences(self, text, n):
+  state = self._root
+  for i in range(1, n + 1):
+    state = state.nxt(text[i])
+  for keyword_len in state.output():
+    start_pos = i - keyword_len + 1
+    yield text[start_pos:i + 1], start_pos
+\end{minted}
+
+Warto zwrócić uwagę na fakt, że jeśli dany zbiór wzorców chcemy wyszukać w wielu różnych tekstach $T_1,...,T_t$, to wystarczy tylko raz skonstruować automat Aho-Corasick i użyć go niezależnie na każdym z $T_j$.
+
+\textit{Uwaga: sednem naszych rozważań jest opis sposobu, w jaki można przechodzić pomiędzy stanami automatu. Wygodnie nam będzie utożsamić ze sobą różne podejścia realizacji -- równoważne dla nas będą pojęcia zbioru etykietowanych krawędzi (skierowanych) pomiędzy dwoma stanami, funkcji mapujących pary (stan, symbol) w stan oraz lokalne w stanach tablice routingu.}
+
+\subsection{Drzewo trie}
+Mając zbiór słów $\W$ nad alfabetem $\Sigma$ możemy w prosty sposób zbudować tzw. \textit{drzewo trie}, ozn. $\trie_{\W}$. Jest to skierowane, ukorzenione drzewo, którego krawędzie etykietowane są symbolami z $\Sigma$. Każde słowo $w\in\W$ ma odpowiadającą mu ścieżkę z korzenia, etykietowaną kolejnymi literami $w$. Jeśli $w\in\W$ nie jest prefiksem żadnego innego słowa z $\W$, to jego ścieżka kończy się w liściu. Inaczej ujmując, istnieje bijekcja pomiędzy ścieżkami w $\trie_{\W}$ a wszystkimi (różnymi) prefiksami słów z $\W$. Krawędź etykietowaną symbolem $a$ pomiędzy $s_1$ a $s_2$ możemy kodować jako trójkę $(s_1, a, s_2)$.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.4\textwidth]{graphics/trie-example.png}
+    \caption{$\trie_{\{aaab, aab, bab, ba\}}$}
+    \label{fig:trie}
+\end{figure}
+
+Zacznijmy temat konstrukcji od zdefiniowania funkcji, które będą nam potrzebne. Niech $\W$ oznacza zbiór wzorców, $\trie$ oznacza drzewo trie dla $\W$ (skrót dla $\trie_{\W}$), $\rot$ oznacza korzeń $\trie$, $\states$ oznacza zbiór wierzchołków $\trie$ (czyli docelowo zbiór stanów $\A$).
+
+\begin{itemize}
+    \item $\goto::\states\times\Sigma\mapsto\states$ -- ta funkcja w zasadzie reprezentuje zbiór krawędzi $\trie$; dodatkowo jednak, dla każdego symbolu w $\Sigma$, który nie etykietuje żadnej krawędzi wychodzącej z $\rot$, dodajemy pętlę w $\rot$; czyli:
+    \begin{gather*}
+        \goto(s_1, a)=\begin{cases}
+        s_2 &\qquad \text{jeśli } (s_1,a,s_2)\in E[\trie] \\
+        \rot &\qquad \text{jeśli } s_1=\rot\ \wedge\ \forall_{s}\ (\rot,a,s)\notin E[\trie] \\
+        \none
+        \end{cases}
+    \end{gather*}
+
+    \item $\out::\states\mapsto\wp(\W)$ -- jak zostało już wspomniane, chcemy w każdym stanie $s$ przechowywać listę wzorców, których wystąpienie w $T$ będzie poświadczone odwiedzeniem stanu $s$; w sporym zakresie możemy to obliczyć już przy konstrukcji $\trie$ (np. wracając do rysunku \ref{fig:trie}, $\out(1)=\emptyset$, $\out(5)=\{aab\}$, $\out(7)=\{ba\}$); będziemy musieli jeszcze jednak obsłużyć przypadki, gdy jeden wzorzec będzie sufiksem drugiego (np. $\out(4)=\{aaab, aab\}$)
+
+    \item $\fail::\states\mapsto\states$ -- ostatecznie $\A$ będzie skonstruowane na wierzchołkach $\trie$ więc już teraz możemy spróbować zinterpretować obecność w stanie $s$ po przeczytaniu $j$-tego symbolu $T$ -- otóż etykiety na ścieżce pomiędzy $\rot$ a $s$ tworzą najdłuższy możliwy prefiks któregoś ze wzorców z $\W$, który da się dopasować w $T$ kończąc na pozycji $j$; funkcja $\goto$ jest częściowa, a więc dla niektórych stanów i niektórych symboli nie mamy zdefiniowanego przejścia (na razie otrzymamy $\none$); aby nie utknąć i zachować poprawność interpretacji, to $\fail(s)$ musi wskazywać na taki stan $s'$, żeby słowo powstałe ze ścieżki $\rot\rightsquigarrow s'$ było najdłuższym możliwym sufiksem słowa odpowiadającemu $\rot\rightsquigarrow s$; w dalszej części utożsamiać będziemy ścieżki ze słowami;
+
+    Chodzenie krawędziami $\fail$ opiera się na identycznym pomyśle co rekurencyjne używanie tablic $Border$ w algorytmie Morrisa-Pratta. Warto również zauważyć, że $\fail$ nie ma sensu definiować dla $\rot$.
+
+    \item $\cnext::\states\times\Sigma\mapsto\states$ -- trzy zdefiniowane funkcje powyżej zupełnie wystarczają, aby nasz docelowy automat robił to, czego pragniemy; jak jednak łatwo zauważyć, próba przeczytania jednego znaku z $T$ może wymagać więcej niż jednego przejścia krawędzią korzystając z $\goto$ oraz $\fail$ -- możemy musieć schodzić wzdłuż $\fail$ wielokrotnie; aby uniknąć tego, pod sam koniec utworzymy funkcję $\cnext$, która skompresuje nam tego typu ścieżki i zastąpi $\goto$ oraz $\fail$
+\end{itemize}
+
+\subsection{Obliczanie $\goto$, $\out$, $\fail$}
+Jak już wiemy \textit{co} chcemy policzyć, to możemy przejść do tego \textit{jak} to zrobić. Funkcję $\goto$ oraz część $\out$, jak już zauważyliśmy, możemy obliczyć konstruując $\trie_{\W}$:
+\begin{verbatim}
+def _construct_goto(self, keywords, alphabet):
+  for k, k_len in keywords:
+    self._enter(k, k_len)
+
+  for a in alphabet:
+    if self._root.goto(a) is None:
+      self._root.update_goto(a, self._root)
+
+def _enter(self, keyword, keyword_len):
+  current_state = self._root
+  j = 1
+
+  while j < keyword_len and current_state.goto(keyword[j]) is not None:
+    current_state = current_state.goto(keyword[j])
+    j += 1
+
+  for a in keyword[j:keyword_len + 1]:
+    next_state = AhoCorasickAutomaton.Node()
+    current_state.update_goto(a, next_state)
+    current_state = next_state
+
+  current_state.append_outputs([(keyword, keyword_len)])
+\end{verbatim}
+
+Funkcja def \_enter(...) uzupełnia częściowo skonstruowane drzewo trie o ścieżkę dla podanego wzorca, w razie potrzeby tworząc nowe węzły. W pętli w wierszu 5. uzupełniamy definicję $\goto$ dla korzenia.
+
+\vspace{10pt}
+
+Funkcję $\fail$ powinniśmy obliczać dla coraz bardziej odległych od $\rot$ węzłów -- podobnie jak w algorytmie Morrisa-Pratta długości najdłuższych borderów obliczaliśmy na podstawie wartości dla krótszych słów:
+
+\begin{verbatim}
+def _construct_fail(self, alphabet):
+  q = Queue()
+  for s in (self._root.goto(a) for a in alphabet):
+    if s != self._root:
+      q.put(s)
+      s.update_fail(self._root)
+
+  while not q.empty():
+    current = q.get()
+    for a, child in ((a, current.goto(a)) for a in alphabet):
+      if child is not None:
+        q.put(child)
+
+        fallback = current.fail()
+        while fallback.goto(a) is None:
+          fallback = fallback.fail()
+
+        child_fallback = fallback.goto(a)
+        child.update_fail(child_fallback)
+        child.append_outputs(child_fallback.output())
+\end{verbatim}
+
+Przechodzimy zatem po $\trie$ za pomocą algorytmu BFS. Będąc w wierzchołku $\texttt{current}$, widząc krawędź etykietowaną przez $\texttt{a}$ do wierzchołka $\texttt{child}$, chcemy obliczyć $\fail(\texttt{child})$. Szukamy więc najdłuższego sufiksu słowa generowanego przez $\rot\rightsquigarrow\texttt{child}$ obecnego w $\trie$. Będzie to najdłuższy sufiks ścieżki $\rot\rightsquigarrow\texttt{current}$, który można przedłużyć o symbol $\texttt{a}$.
+
+Znalazłszy odpowiedni wierzchołek $\texttt{child\textunderscore fallback}$ powiększamy zbiór $\out(\texttt{child})$ o wartości z  $\out(\texttt{child\textunderscore fallback})$ -- z indukcji wynika, że $\out(\texttt{child\textunderscore fallback})$ zawiera już wszystkie wzorce, które są sufiksami $\rot\rightsquigarrow\texttt{child\textunderscore fallback}$.
+
+\subsection{Obliczanie $\cnext$}
+
+Jeśli $\goto$ była określona dla $s\in\states$ oraz $a\in\Sigma$, to $\cnext(s, a) = \goto(s, a)$. W przeciwnym wypadku będąc w $s$ i chcąc przejść symbolem $a$, powinniśmy schodzić krawędziami $\fail$ tak długo, aż znajdziemy się w $s'$, dla którego $\goto(s', a)\neq\none$. Jest to podobny zabieg co poprawka Knutha do algorytmu Morrisa-Pratta.
+\begin{verbatim}
+def _construct_next(self, alphabet):
+  q = Queue()
+  for a in alphabet:
+    a_child = self._root.goto(a)
+    self._root.update_next(a, a_child)
+    if a_child != self._root:
+      q.put(a_child)
+  self._root.use_only_next()
+
+  while not q.empty():
+    current = q.get()
+    for a, child in ((a, current.goto(a)) for a in alphabet):
+      if child is not None:
+        q.put(child)
+        current.update_next(a, child)
+      else:
+        fallback = current.fail()
+        current.update_next(a, fallback.next(a))
+    current.use_only_next()
+\end{verbatim}
+
+Instrukcje w wierszach 8. oraz 19. pozwalają zwolnić pamięć zapominając o wartościach funkcji $\goto$ i $\fail$. Formalnie dopiero teraz, struktura $\A$ ze zbiorem stanów $\states$ oraz funkcją przejścia $\cnext$ jest deterministycznym automatem skończonym.
+
+\subsubsection{Analiza poprawności}
+Z tego, co już zostało przedstawione, powinna wynikać poprawność zastosowanej metody. Aby jednak formalnie jej dowieść, wystarczy postawić trzy proste lematy:
+
+\begin{lemma}{}{}
+Niech $s,t\in\states$ i niech $u, v$ będą słowami generowanymi przez ścieżki $\rot\rightsquigarrow s$ i $\rot\rightsquigarrow t$. Wówczas $\fail(s) = t \iff v$ jest najdłuższym właściwym sufiksem $u$, który jest prefiksem pewnego $w_i\in\W$.
+\end{lemma}
+
+\begin{lemma}{}{}
+Słowo $k$ należy do $\out(s)\iff$ $w\in\W$ oraz $k$ jest sufiksem słowa generowanego przez $\rot\rightsquigarrow s$.
+\end{lemma}
+
+\begin{lemma}{}{}
+Po przeczytaniu $j$ znaków z $T$ znajdujemy się w stanie $s\iff$ słowo generowane przez $\rot\rightsquigarrow s$ jest najdłuższym sufiksem $T[1..j]$, który jest prefiksem pewnego $w\in\W$.
+\end{lemma}
+
+\noindent Ich uzasadnienia są prostymi dowodami rekurencyjnymi zapisanymi we fragmentach kodu powyżej.
+
+\subsection{Analiza złożoności}
+Konstrukcja całego automatu polega na sekwencyjnym wywołaniu procedur obliczających funkcje przejścia:
+
+\begin{minted}[xleftmargin=20pt,linenos]{python}
+class AhoCorasickAutomaton:
+  def __init__(self, keywords, alphabet):
+    self._root = AhoCorasickAutomaton.Node()
+    self._construct_goto(keywords, alphabet)
+    self._construct_fail(alphabet)
+    self._construct_next(alphabet)
+\end{minted}
+
+Niech $m=\max_i |w_i|$. Bardzo łatwo zauważyć, że każdą z powyższych operacji wykonać można w czasie $\Otime(km)$ (dokładnie $\Theta(\sum_{i\in[k]}|w_i|)$) -- za każdym razem przechodzimy po całym drzewie $\trie$ odwiedzając każdy wierzchołek dokładnie raz oraz wykonując $\Theta(1)$ operacji w każdym z nich. Zakładamy również, że łączenie zbiorów $\out$ wykonuje się w czasie stałym (jak np. listy wiązane). Warto dodać, że moc $\Sigma$ wlicza się w zapotrzebowanie (zarówno pamięciowe jak i czasowe) liniowo -- rozmiar grafu jest z góry ograniczony przez $|\Sigma|\cdot km$ (z każdego wierzchołka może wychodzi $|\Sigma|$ krawędzi). Konstrukcja $\A$ oraz wyszukiwanie w $T$ odbywają się w czasie liniowo proporcjonalnym do wielkości $\trie$.
+
+Pozostaje zastanowić się, ile czasu zajmie przeczytanie tekstu $T$ ($|T|=n$) i wypisanie wszystkich wystąpień wzorców. Moc $\Sigma$ traktujemy jak stałą.
+
+Najpierw rozważmy sytuację, w której nie zgłaszamy żadnego wystąpienia wzorca (możemy np. tylko zaznaczyć pozycje $T$ o których wiemy, że na nich coś się kończy):
+\begin{itemize}
+    \item używając funkcji $\goto$ oraz $\fail$ wykonamy co najwyżej $2n$ przejść w $\A$ -- po przeczytaniu dowolnego symbolu przejdziemy dokładnie raz według funkcji $\goto$ i być może wielokrotnie krawędziami $\fail$; łatwo jednak zaobserwować, że każde przejście $\fail$ skraca odległość z obecnego wierzchołka do $\rot$, a z $\rot$ zawsze można wyjść używając $\goto$; zatem nie możemy przejść krawędziami $\fail$ więcej razy niż przeszliśmy $\goto$;
+
+    można również spojrzeć na to w ten sposób, że przechodząc automatem $\A$ wzdłuż $T$, pamiętamy dwa wskaźniki w $T$ -- słowo pomiędzy nimi to właśnie to, które jest generowane przez ścieżkę z korzenia do obecnego wierzchołka; przejście $\goto$ przesuwa 'prawy' wskaźnik o 1 w prawo, przejście $\fail$ przesuwa 'lewy' wskaźnik o dodatnią liczbę pozycji w prawą, ale na tyle małą by nie przeskoczyć prawego;
+
+    \item używając funkcji $\cnext$, przy każdym przeczytanym symbolu z $T$ wykonujemy zawsze jedno przejście -- $n$ ruchów
+\end{itemize}
+
+Problem może się pojawić, gdy będziemy chcieli wypisywać wszystkie wystąpienia wzorców. Pesymistycznym przykładem jest $\W=\{a,a^2,a^3,...,a^k\}$ oraz $T=a^n$. Liczba wystąpień będzie $\Theta(kn)$. Jednakże, nie jest to wada zastosowanego algorytmu -- każdy inny algorytm zgłaszający wszystkie wystąpienia wzorców musiałby wykonać co najmniej tyle samo pracy.
+
+Zatem możemy określić złożoność czasową wyszukiwania wielu wzorców w tekście za pomocą automatu Aho-Corasick jako liniową w stosunku do sumy długości wszystkich wzorców oraz ilości ich wystąpień.
+
+\subsubsection{Zastosowanie do wzorców 2D}
+Okazuje się, że bardzo prosto można użyć automatu Aho-Corasick do wyszukiwania wzorców dwuwymiarowych. W skrócie:
+\begin{enumerate}
+    \item niech $T$ będzie kwadratową tablicą rozmiaru $n^2$, $P$ - kwadratową tablicą rozmiaru $m^2$ o różnych kolumnach, $m < n$
+    \item niech $\W$ będzie zbiorem kolumn $P$
+    \item automatem Aho-Corasick szukamy $\W$ w każdej z kolumn $T$; jeśli fragment $j$-tej kolumny od indeksu $i$ pokrywa się z $k$-tą kolumną $P$, to niech $T_P[i][j]=k$
+    \item algorytmem KMP szukamy w każdym wierszu $T_P$ ciągu $(1,2,...,m)$
+\end{enumerate}
+Całość działa w czasie liniowym od wielkości wejścia i rozmiaru zbioru z którego pochodzą elementy w $T$ oraz $P$.
+
+
+\subsection{Algorytm Commentz-Walter}
+Algorytm Commentz-Walter to algorytm tekstowy służący do wyszukiwania wystąpień wzorca w tekście opracowany przez Beate Commentz-Walter (Uniwersytet Kraju Saary w Saarbrücken) w 1979 roku. Podobnie jak algorytm Aho-Corasick znajduje on w tekście wystąpienia słów ze słownika (pewnego zadanego zbioru wzorców), czyli jest w stanie jednocześnie w zadanym tekście wyszukiwać wiele wzorców. 
+
+Algorytm Commentz-Walter jest merytorycznie ciekawy z tego powodu, że stanowi bardzo sprytną fuzję dwóch innych algorytmów, łącząc idee leżące u podstaw wspomnianego już algorytmu Aho-Corasick oraz algorytmu Boyera-Moore'a. Algorytm, o którym sobie dziś opowiemy, dla tekstu o długości $n$ i takiego zestawu wzorców, że najdłuższy spośród nich ma długość $m$, ma pesymistyczny czas działania $O(mn)$. W praktyce okazuje się jednak bardzo często, że czas działania tego algorytmu jest dużo lepszy. Stąd też nazwa pracy autorstwa Beate Commentz-Walter - ,,A String Matching Algorithm - Fast on the Average''. 
+
+Najprawdopodobniej z powodu bardzo optymalnego średniego czasu działania, w GNU grep jest zaimplementowany algorytm wyszukujący wiele wzorców, bardzo podobny do oryginalnego algorytmu Commentz-Walter.
+
+Najpierw przyjrzymy się nieco dokładniej dwóm głównym algorytmom, z których idei korzysta algorytm Commentz-Walter. Pierwszy z nich, algorytm Aho-Corasick jest jednym z algorytmów wyszukiwania wzorca w tekście. Znajduje on w tekście wystąpienia słów ze słownika (pewnego zadanego zbioru wzorców). Wszystkie wzorce są szukane jednocześnie, co powoduje, że złożoność obliczeniowa algorytmu jest liniowa od sumy długości wzorców, długości tekstu i liczby wystąpień wzorców w tekście. W tekście może jednak występować nawet kwadratowa od długości tekstu liczba wystąpień wzorców. 
+
+Ideą algorytmu jest stworzenie drzewa trie o sufiksowych połączeniach pomiędzy wierzchołkami reprezentującymi różne słowa. Inaczej mówiąc tworzone jest drzewo (automat) o etykietowanych krawędziach, w którym każdy wierzchołek reprezentuje pewne słowo, składające się ze złączonych etykiet krawędzi znajdujących się na ścieżce od korzenia do tego węzła. Dodatkowo dołączane są krawędzie od wierzchołka do innego wierzchołka reprezentującego jego najdłuższy sufiks (fail). 
+
+W czasie fazy wyszukiwania algorytm porusza się po tym drzewie zaczynając od korzenia i przechodząc do wierzchołka po krawędzi etykietowanej znakiem odczytanym z tekstu. W przypadku gdy takiej nie ma w drzewie, algorytm korzysta z krawędzi fail i tam próbuje przejść do wierzchołka po krawędzi etykietowanej odczytanym znakiem. W przypadku natrafienia na węzeł oznaczony jako koniec słowa, algorytm wypisuje je jako znalezione w tekście oraz sprawdza, czy czasem w tym miejscu nie kończy się więcej wzorców przechodząc krawędziami fail aż do korzenia sprawdzając, czy nie przechodzi po wierzchołku będącym końcem wzorca. 
+
+Reasumując algorytm Aho-Corasick składa się z dwóch głównych faz, jedna to skonstruowanie odpowiedniego automatu dla zestawu podanych wzorców, a druga to użycie tego automatu do wyszukiwania tych wzorców w już podanym tekście. Oczywiście raz skonstruowany automat można wykorzystywać dowolnie wiele razy dla wielu różnych tekstów.
+
+Drugi algorytm, z którego idei będziemy czerpać, to algorytm Boyera i Moore'a. Jest to algorytm wyszukiwania jednego wzorca w tekście. Polega na porównywaniu, zaczynając od ostatniego elementu wzorca. Jego główną zaletą jest to, że jeżeli okaże się, że znak, który aktualnie sprawdzamy, nie należy do wzorca, to możemy przeskoczyć w analizie tekstu o całą długość wzorca. Z reguły skoki wzorca są większe od $1$. Między innymi to sprawia, że algorytm ten jest często znacznie lepszy niż algorytm KMP, a także w przypadku, gdy algorytm Aho-Corasick jest uruchamiany z jednym wzorcem, to prawie na pewno algorytm Boyera-Moore'a poradzi sobie z nim szybciej niż algorytm Aho-Corasick. Asymptotycznie czas potrzebny na wyszukanie wszystkich wystąpień wzorca długości $m$, w tekście długości $n$ wynosi bardzo często średnio $O(n/m)$. Istnieją również ulepszenia oryginalnego algorytmu Booyera-Moore'a, które sprawiają, że faza wyszukiwania ma czas liniowy względem długości tekstu, nawet w przypadku pesymistycznym.
+
+Uzbrojeni w to drobne przypomnienie dotyczące tych dwóch bazowych algorytmów jesteśmy gotowi przyjrzeć się algorytmowi Commentz-Walter. Algorytm ten podobnie jako Aho-Corasick składa się z dwóch faz. Pierwsza faza to zbudowanie struktury pozwalającej wyszukiwać wiele wzorców jednocześnie, a druga faza to już samo wyszukiwanie tych wzorców w konkretnym tekście. Wyszukiwanie zachowuje się dość podobnie jak wyszukiwanie w algorytmie Boyera-Moore'a, również osiągając średnio czas podliniowy względem rozmiaru tekstu. W kolejnych sekcjach tego omówienia przyjrzymy się z detalami kolejnym fazom tego algorytmu, a na koniec skomentujemy szerzej czas jego działania.
+
+Do przechowywania w pamięci pewnego zestawu wzorców w użyteczny sposób pomocna będzie nam następująca struktura:
+
+\begin{definition}{}{}
+\textbf{Drzewem trie} nazywamy takie ukorzenione drzewo $T$, że:
+\begin{enumerate}
+    \item Każdy wierzchołek $v \in T$, poza korzeniem $r$ ma pewną etykietę $a = l(v)$. Jest to element ustalonego alfabetu $\Sigma$.
+    \item Korzeń $r$ ma przypisaną etykietę $\epsilon$, za pomocą której oznaczamy puste słowo.
+    \item Jeżeli wierzchołki $v_1$, $v_2$ są różnymi dziećmi tego samego wierzchołka $v$, to $l(v_1) \neq l(v_2)$.
+\end{enumerate}
+\end{definition}
+
+\noindent Mówimy, że ścieżka $v_1, \cdots, v_k$ (gdzie $v_{i+1}$ jest synem $v_i$) w drzewie trie $T$ \textbf{reprezentuje} słowo $l(v_1)\cdots l(v_k)$. Słowo to oznaczamy za pomocą $w(v_k)$, jeżeli $v_1 = r$. Dodatkowo 
+
+\begin{definition}{}{}
+dla każdego węzła $v\in T$ definiujemy jego \textbf{głębokość} $d(v) := 0$, jeżeli $v=r$ oraz $d(v) := d(v') + 1$, jeżeli wierzchołek $v$ jest synem $v'$.
+Dodatkowo wprowadzamy oznaczenie na \textbf{głębokość całego drzewa trie} $d(T) := \max \{ d(v) : v \in T\}$.
+\end{definition}
+
+Niech $\mathcal{W} = \{ w_1, \cdots, w_r\}$ będzie zbiorem wzorców nad pewnym alfabetem $\Sigma$, które będziemy chcieli wyszukiwać w pewnym tekście $t$. Podobnie jak w algorytmie Aho-Corasick reprezentujemy zbiór $\mathcal{W}$ za pomocą drzewa trie $T$. \textbf{Główna różnica polega na tym, że nie trzymamy w drzewie trie wzorców, ale odwrócone wzorce.} Dokładniej dla każdego $h = 1,\cdots, r$ istnieje wierzchołek $v_h \in T$ reprezentujący odwrócony wzorzec $w_h^R$. Dodatkowo każdy wierzchołek drzewa trie jest wyposażony w tak zwaną \textbf{funkcję wyjścia} zdefiniowaną jako $out(v) := \{ w : w^R = w(v)\}$. 
+
+Główna idea tego algorytmu zawiera się w dodaniu do drzewa trie dwóch funkcji \textbf{shift1} i \textbf{shift2}. Są to funkcje, które przypisują wierzchołkom drzewa trie liczby naturalne, które to liczby będą nam bardzo pomocne w fazie wyszukiwania, aby symulować przesunięcia znane z algorytmu Boyera-Moore'a. Formalna definicja tych funkcji jest następująca i wykorzystuje definicje dwóch typów zbiorów. Mianowicie 
+
+\begin{definition}{}{}
+dla każdego $v \not = r, v \in T$, definiujemy
+zbiór $set1(v)$ jako zbiór tych wszystkich wierzchołków $v'$, że $w(v)$ jest poprawnym sufiksem słowa $w(v')$, tzn. $w(v') = uw(v)$, dla pewnego niepustego słowa $u$. Definiujemy również zbiór $set2(v)$ jako zbiór tych wszystkich wierzchołków $v'$ takich, że $v' \in set1(v)$ oraz $out(v') \not = \emptyset$. 
+\end{definition}
+
+\noindent Przydadzą nam się jeszcze oznaczenia $wmax := \max_{1 \leq h \leq r}|w_h|$ oraz $wmin := \min_{1 \leq h \leq r}|w_h|$. Teraz jesteśmy już gotowi zdefiniować funkcje przesunięcia i definicje te są następujące.
+
+\begin{definition}{}{}
+dla każdego $v \in T$ definiujemy funkcję \textbf{shift1} jako $shift1(v) := 1$ jeżeli $v=r$. W przeciwnym przypadku $$shift1(v) :=  min \left( \{d(v')-d(v) : v' \in set1(v) \} \cup \{wmin\}\right)$$
+\end{definition}
+
+\begin{definition}{}{}
+dla każdego $v \in T$ definiujemy funkcję \textbf{shift2} jako $shift2(v) := wmin$ jeżeli $v=r$. W przeciwnym przypadku $$shift2(v) :=  min \left( \{d(v')-d(v) : v' \in set2(v) \} \cup shift2(parent(v))\right)$$
+\end{definition}
+
+\noindent Ostatnia funkcja, którą będziemy potrzebować to funkcja $char: \Sigma \longrightarrow \mathrm{N}$ zdefiniowana jako $$char(a) := \min (\{ d(v) : l(v) = a \} \cup \{ wmin+1 \})$$
+
+\noindent Poniżej mamy przykład (pochodzący z oryginalnej pracy) tak zbudowanej struktury dla zbioru wzorców $\{cacbaa, acb, aba, acbab, ccbab\}$, gdzie $wmin = 3$. Na poniższej ilustracji dla każdego wierzchołka $v \not = r$, ostrzałkowane linie ciągłe wskazują na elementy zbioru $set2(v)$, natomiast ostrzałkowane, jak i przerywane linie wskazują na elementy zbioru $set1(v)$.
+
+\begin{center}
+\includegraphics[scale=0.4]{graphics/trie-example-2.png}
+\end{center}
+
+\subsubsection{Faza wyszukiwania w tekście}
+Wynikiem tej fazy jest lista par postaci $(w, i)$, gdzie $w$ to któryś z szukanym wzorców, natomiast $i$ to pozycja w tekście, na której został znaleziony wzorzec $w$. Faza ta działa następująco. Załóżmy, że mamy już zbudowane drzewo trie składające się z wszystkich wzorców, ale wstawionych do drzewa trie w odwróconej kolejności. Cała sztuczka polega teraz na tym, że dopasowywanie robimy jak w algorytmie Aho-Corasick chodząc po drzewie trie, ale korzystając z pomysłu zapożyczonego z algorytmu Boyera-Moore'a, w przypadku niezgodności znaków używamy funkcji shift1 oraz shift2, aby wykonać odpowiedni skok w tekście, w którym dopasowujemy wzorce z drzewa trie. Zamieszczony poniżej pseudokod dość dokładnie tłumaczy jak wygląda ta kluczowa faza algorytmu.
+
+\begin{algorithm}
+\caption{Commentz-Walter, faza wyszukiwania}\label{euclid}
+\begin{algorithmic}
+\Procedure{Commentz-Walter-search}{$text, n, trie$} \Comment{tekst, długość, drzewo trie wzorców}
+\State $v := root(r)$ \Comment{obecnie przetwarzany wierzchołek trie}
+\State $i := wmin$ \Comment{obecnie przetwarzana pozycja w tekście}
+\State $j := 0$ \Comment{głębokość $v$ w drzewie trie}
+
+\State While{ $j \leq n$ }
+    \State While {$\exists$ dziecko $v'$ wierzchołka $v$ takie, że $l(v')=t[i-j]$} \Comment{faza skanowania}
+        \State $v = v'$
+        \State $j = j + 1$
+        \State \textbf{yield} $(w, i)$ dla każdego $w \in out(v)$
+    \State EndWhile
+\State $shift(v, t[i-j]) := \min(\max(shift1(v), char(t[i-j])-j-1), shift2(v))$
+\State $i = i + shift(v, t[i-j])$ \Comment{faza przesuwania tekstu}
+\State $j = 0$
+\State EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Pozostaje uzasadnić, że ten algorytm na pewno zwraca wszystkie wystąpienia wzorców w tekście. Nie ma wątpliwości co do tego, że każda zwrócona para $(w, i)$ jest na pewno dobrym wystąpieniem. Pozostaje więc się upewnić, że na pewno żadne wystąpienie któregoś z wzorców nie jest pomijane. Z budowy algorytmu wynika, że jedynym podejrzanym miejscem jest moment robienia przesunięcia w tekście. Potrzebujemy, więc podać argument, że $t[i-j+1]\cdots t[i] = w_t^R(v)$ dla pewnego $v \in T$ implikuje, że nie istnieje takie $i'$, że $i < i' < s(v, t[i-j])$ oraz $t[i'-|w|+1]\cdots t[i']$ dla pewnego wzorca $w$. Jednak z definicji $s(v, t[i-j])$ mamy tę własność po prostu za darmo.
+
+\subsubsection{Faza przygotowania wzorców}
+W tej fazie algorytmu na wejściu mamy zbiór wzorców, a na wyjściu chcemy mieć drzewo trie dla tego zestawu wzorców oraz obliczone dla niego funkcje out, shift1, shift2 oraz char. Chcielibyśmy to wszystko zrobić w czasie liniowym względem sumy długości wzorców. Oczywiście konstrukcja trie w takim czasie jest natychmiastowo. Po prostu dodajemy kolejne słowa budując jednocześnie drzewo. Z definicji funkcji char i out również wynika prostota ich obliczania wprost z definicji. Kłopotliwe mogą się wydawać na pierwszy rzut oka kluczowe funkcje shift1 oraz shift2.
+
+Jednak cały problem mamy już rozwiązany za pomocą algorytmu Aho-Corasick. Mianowicie rozważmy pewną funkcje $f$ zdefiniowaną na wierzchołkach drzewa trie $T$ za pomocą formuły $f(v') = v$, jeżeli $w(v)$ jest maksymalnym sufiksem właściwym $w(v')$ w drzewie $T$. Funkcja ta idealnie współgra z funkcją fail z automatu Aho-Corasick, więc to co musimy zrobić, aby ją obliczyć, to odpalić fazę konstrukcji z algorytmu Aho-Corasick i w czasie jednego przejścia algorytmem bfs po drzewie trie obliczyć funkcję fail. Okazuje się bowiem, że funkcja $set1'$ odwrotna do funkcji $f$, czyli $set1'(v) = \{v' : f(v')=v \}$, to dokładnie podzbiór szukanego przez nas zbioru $set1$, który potrzebujemy do obliczenia funkcji przesunięć. Ponadto zawiera on wierzchołki $v' \in set1(v)$ takie, że $d(v')-d(v)$ jest minimalne. Wynika stąd, że funkcję shift1 można istotnie obliczyć w czasie liniowym. Analogicznie obliczamy funkcję shift2 rozważając zbiór $set2'(v) = \{ v' : v' \in set1'(v), out(v') \not = \emptyset\}$. 
+
+\subsection{Złożoność obliczeniowa algorytmu}
+Faza konstrukcji drzewa trie opisana powyżej jest wykonywana w czasie liniowym względem sumy długości wszystkich wzorców. Przeszukiwanie tekstu pesymistycznie może mieć czas liniowy względem iloczynu długości tekstu, w którym wyszukujemy, z długością najdłuższego wzorca, ale dzięki temu, że mamy funkcje przesunięć, bardzo często nie skanujemy całego tekstu znak po znaku, tylko jego części. Poprzez silną analogię do algorytmu Boyera-Moore'a stwierdzamy, że algorytm Commentz-Walter, działa średnio podobnie jak algorytm Boyera-Moore'a, czyli bardzo szybko. Pesymistycznie jednak pamiętać należy, że może mieć złożoność $O(nm)$, gdzie $n$, to długość tekstu, a $m$ to długość najdłuższego wzorca.

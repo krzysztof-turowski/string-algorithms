@@ -15,6 +15,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     backward.boyer_moore_galil,
     backward.quick_search,
     backward.horspool,
+    backward.boyer_moore_turbo,
     other.karp_rabin,
     other.fast_on_average,
     other.two_way,

@@ -7,17 +7,25 @@
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
 \usepackage{thmtools}
 \usepackage[polish]{babel}
-\usepackage{ebgaramond,ebgaramond-maths}
-\usepackage[cmintegrals,cmbraces]{newtxmath}
+%\usepackage{ebgaramond,ebgaramond-maths}
+%\usepackage[cmintegrals,cmbraces]{newtxmath}
 \usepackage{braket}
 \usepackage{enumitem}
 \usepackage{color}
 \usepackage{ifthen}
+\usepackage{cleveref}
 
 \setlength{\marginparwidth}{2cm}
 \usepackage[backgroundcolor=lightgray]{todonotes}
 
-\usepackage[newfloat]{minted}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usetikzlibrary{chains,fit,shapes,decorations.pathreplacing}
+\edef\sizetape{0.6cm} 
+\tikzstyle{tmtape}=[draw,minimum size=\sizetape]
+\definecolor{lightgrey}{RGB}{192,192,192}
+
+\usepackage[cache=false,newfloat]{minted}
 \usepackage{caption}
 \usepackage{csquotes}
 \usepackage[titlenumbered,ruled]{algorithm2e}
@@ -75,10 +83,23 @@ natbib=true
 
 \setlist{nosep}
 
-\newcommand{\A}{\mathcal{A}}
 \newcommand{\B}{\mathcal{B}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Q}{\mathbb{Q}}
+
+\newcommand{\TBM}{Turbo\_BM}
+
+\DeclareMathOperator{\rot}{\mathfrak{r}}
+\DeclareMathOperator{\W}{\mathcal{W}}
+\DeclareMathOperator{\A}{\mathcal{A}}
+\DeclareMathOperator{\Otime}{\mathcal{O}}
+\DeclareMathOperator{\states}{\mathcal{S}}
+\DeclareMathOperator{\trie}{\mathcal{T}}
+\DeclareMathOperator{\goto}{\texttt{goto}}
+\DeclareMathOperator{\cnext}{\texttt{next}}
+\DeclareMathOperator{\fail}{\texttt{fail}}
+\DeclareMathOperator{\out}{\texttt{output}}
+\DeclareMathOperator{\none}{\texttt{None}}
 
 \setlength\parskip{2mm}
 
@@ -97,6 +118,7 @@ natbib=true
 \input{16-approximate-pattern-matching}
 \input{17-compression}
 \input{18-shortest-common-superstring}
+\input{19-multiple-string-matching}
 
 \nocite{*}
 \printbibliography

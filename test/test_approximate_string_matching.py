@@ -18,16 +18,16 @@ class TestStringMatchingWithDontCare(unittest.TestCase):
   def check_get_first_match_with_dont_care(self, t, w, n, m, reference):
     for algorithm in STRING_MATCHING_WITH_DONT_CARE_ALGORITHMS:
       self.assertEqual(
-          next(algorithm(t, w, n, m)),
           reference,
+          next(algorithm(t, w, n, m)),
           'Algorithm {}, text {}, pattern {}'.format(
               algorithm.__name__, t, w))
 
   def check_get_all_matches_with_dont_care(self, t, w, n, m, reference):
     for algorithm in STRING_MATCHING_WITH_DONT_CARE_ALGORITHMS:
       self.assertEqual(
-          list(algorithm(t, w, n, m)),
           reference,
+          list(algorithm(t, w, n, m)),
           'Algorithm {}, text {}, pattern {}'.format(
               algorithm.__name__, t, w))
 
