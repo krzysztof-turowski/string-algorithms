@@ -4,7 +4,7 @@ import unittest
 
 from generator import rand
 from string_indexing import suffix_tree, suffix_array, farach_suffix_tree, \
-                            sl_suffix_array, lcp_lr
+                            sl_suffix_array, lcp_lr, is_suffix_array
 
 SUFFIX_TREE_ALGORITHMS = [
     suffix_tree.weiner,
@@ -18,6 +18,7 @@ SUFFIX_ARRAY_ALGORITHMS = [
     suffix_array.skew,
     farach_suffix_tree.farach_suffix_array,
     sl_suffix_array.small_large,
+    is_suffix_array.sa_is,
 ]
 
 class TestSuffixTrees(unittest.TestCase):
@@ -114,6 +115,11 @@ class TestSuffixArrays(unittest.TestCase):
         '#yabbadabbado', 12, [13, 2, 7, 5, 10, 4, 9, 3, 8, 6, 11, 12, 1])
     self.check_suffix_array(
         '#aabaabaabba', 11, [12, 11, 1, 4, 7, 2, 5, 8, 10, 3, 6, 9])
+    self.check_suffix_array(
+        '#hcrgpfeargibbpq', 15,
+        [16, 8, 12, 13, 2, 7, 6, 10, 4, 1, 11, 5, 14, 15, 9, 3])
+    self.check_suffix_array(
+        '#obdkbgaobg', 10, [11, 7, 2, 9, 5, 3, 10, 6, 4, 1, 8])
 
   @run_large
   def test_random_suffix_array(self):
