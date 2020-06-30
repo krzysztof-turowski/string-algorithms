@@ -5,13 +5,15 @@ import unittest
 from random import randrange
 import regex
 
-from approximate_string_matching import dont_care, \
+from approximate_string_matching import dont_care, matching_with_dont_cares \
   approximate_boyer_moore, \
   distance
 from generator import rand
 
 STRING_MATCHING_WITH_DONT_CARE_ALGORITHMS = [
     dont_care.basic_fft,
+    matching_with_dont_cares.exact_matching_with_dont_cares,
+    matching_with_dont_cares.exact_matching_with_dont_cares_n_log_m
 ]
 
 STRING_MATCHING_WITH_EDIT_DISTANCE_ALGORITHMS = [
@@ -26,16 +28,16 @@ class TestStringMatchingWithDontCare(unittest.TestCase):
   def check_get_first_match_with_dont_care(self, t, w, n, m, reference):
     for algorithm in STRING_MATCHING_WITH_DONT_CARE_ALGORITHMS:
       self.assertEqual(
-          next(algorithm(t, w, n, m)),
           reference,
+          next(algorithm(t, w, n, m)),
           'Algorithm {}, text {}, pattern {}'.format(
               algorithm.__name__, t, w))
 
   def check_get_all_matches_with_dont_care(self, t, w, n, m, reference):
     for algorithm in STRING_MATCHING_WITH_DONT_CARE_ALGORITHMS:
       self.assertEqual(
-          list(algorithm(t, w, n, m)),
           reference,
+          list(algorithm(t, w, n, m)),
           'Algorithm {}, text {}, pattern {}'.format(
               algorithm.__name__, t, w))
 

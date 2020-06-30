@@ -66,3 +66,8 @@ def prefix_prefix(w, m):
       s = i
   PREF[1] = m
   return PREF
+
+
+def get_longest_common_prefix(x, y):
+  return next((i for i, (x_i, y_i) in enumerate(zip(x, y)) if x_i != y_i),
+              min(len(x), len(y)))
