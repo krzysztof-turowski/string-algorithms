@@ -18,7 +18,7 @@ def exact_matching_with_dont_cares_n_log_m(text, pattern, n, m):
 
   def compute_part(part_number, part):
     subresults = list(
-      exact_matching_with_dont_cares("#" + part, "#" + pattern, len(part), m))
+        exact_matching_with_dont_cares("#" + part, "#" + pattern, len(part), m))
     return map(lambda x: part_number * m + x, subresults)
 
   results = (compute_part(part_number, part) for part_number, part in
@@ -37,7 +37,7 @@ def exact_matching_with_dont_cares(text, pattern, n, m):
 
   letter_mapping = {'?': 0}
   letter_mapping.update(
-    {letter: index for index, letter in enumerate(alphabet, start = 1)})
+      {letter: index for index, letter in enumerate(alphabet, start = 1)})
 
   text = list(map(letter_mapping.get, text))
   pattern = list(map(letter_mapping.get, pattern))
