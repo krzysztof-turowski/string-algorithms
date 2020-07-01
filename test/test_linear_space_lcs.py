@@ -8,18 +8,19 @@ LCS_ALGORITHMS = [
     linear_space_lcs.linear_space_lcs,
 ]
 
+"""Test if substr is subsequence of the word"""
+def is_subsequence(word, substr):
+  j = 0
+  for _, c in enumerate(word):
+    if c == substr[j]:
+      j = j + 1
+    if j == len(substr):
+      return True
+  return False
+
 class TestLinearSpaceLongestCommonSubsequence(unittest.TestCase):
   run_large = unittest.skipUnless(
       os.environ.get('LARGE', False), 'Skip test in small runs')
-
-  """Test if substr is subsequence of the word"""
-  def is_subsequence(self, word, substr):
-    j = 0
-    for i, c in enumerate(word):
-      if c == substr[j]:
-        j = j + 1
-      if j == len(substr):
-        return True
 
   """Check if lcs length equal to returned by needleman_wunsch algorithm
       and if lcs is substring of both word given as arguments"""
@@ -36,10 +37,10 @@ class TestLinearSpaceLongestCommonSubsequence(unittest.TestCase):
                                                            lcs_length)
                        )
 
-      self.assertTrue(self.is_subsequence(t_1, lcs_word),
+      self.assertTrue(is_subsequence(t_1, lcs_word),
                       'Word {} does not contain {}'.format(t_1, lcs_word)
                       )
-      self.assertTrue(self.is_subsequence(t_2, lcs_word),
+      self.assertTrue(is_subsequence(t_2, lcs_word),
                       'Word {} does not contain {}'.format(t_2, lcs_word)
                       )
 

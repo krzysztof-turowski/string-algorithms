@@ -12,9 +12,9 @@ def fill_one(word_1, word_2, n_2, R1, R2, r, s):
     temp = max(pos_b, lower_b)
     if temp == 0:
       break
-    else:
-      R2[j] = temp
-      i, j = i - 1, j + 1
+
+    R2[j] = temp
+    i, j = i - 1, j + 1
 
   return j - 1
 
