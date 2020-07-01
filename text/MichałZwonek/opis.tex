@@ -33,11 +33,11 @@ Najprostszym przykładem może być słowo $s=s_1s_2...s_m$. Jednakże, tak uzys
 Jako, że problem ten ma duże znaczenie praktyczne (w sekwencjonowaniu DNA) naturalnym jest próba znalezienia najkrótszego wspólnego nadsłowa.
 
 Oczywistym podejściem jest następujący algorytm zachłanny. Po kolei łącz słowa mające największą część wspólną nachodzącą na siebie określaną jako \textit{overlap}. Rób tak, aż do uzyskania 
-jednego słowa. Postawiona jest hipoteza, że takie podejście ma współczynnik aproksymacji równy 2, ale przed opublikowaniem pracy przez Blum et al. nie było wiadome, czy taki algorytm jest w ogóle liniową aproksymacją. Okazuje się, że ten algorytm (określać będziemy go poprzez \textbf{GREEDY}) ma współczynnik aproksymacji co najwyżej 4.
+jednego słowa. Postawiona jest hipoteza, że takie podejście ma współczynnik aproksymacji równy 2, ale przed opublikowaniem pracy przez Blum et al. nie było wiadome, czy taki algorytm jest w ogóle liniową aproksymacją. Okazuje się, że ten algorytm (określać będziemy go poprzez \textbf{GREEDY}) ma współczynnik aproksymacji co najwyżej 4, dowodu tego faktu nie będziemy przybliżać. Sam algorytm jest kluczowy, bo jest punktem startowym dla kolejnych dwóch algorytmów na których w tej pracy się skupimy.
 
 Ponadto Blum et al. zaprezentowali alternatywny algorytm, nazywany \textbf{TGREEDY}, dla którego udowodnili, że jest on 3-aproksymacyjny. Sam problem znalezienia najkrótszego wspólnego nadsłowa jest NP trudny.
 
-W pierwszej sekcji przedstawimy podstawowe definicje i notacje, a w kolejnych algorytm \textbf{MGREEDY}, a w następynej sekcji algorytm 
+W pierwszej sekcji przedstawimy podstawowe definicje i notacje, a w kolejnych algorytm \textbf{MGREEDY} będący pewną modyfikacją algorytmu \textbf{GREEDY}, taką dla którego analiza aproksymacji jest prostsza. W następynej sekcji przedstawimy algorytm 
 \textbf{TGREEDY} wykorzystujący algorytm \textbf{MGREEDY} by uzyskać pożądany współczynnik aproksymacji. W ostatniej sekcji postaramy się udzielić odpowiedzi na pytanie, który z tych dwóch algorytmów jest lepszy? \pagebreak
 \section*{Podstawowe definicje}
 
@@ -54,7 +54,6 @@ $pref(s_i,s_j), d(s_i,s_j), ov(s_i, s_j)$.
 
 Mając słowa $s_{i_1}, s_{i_2},...,s_{i_r}$ zdefiniujemy $s = \langle s_{i_1},...,s_{i_r}\rangle$ jako \\ $s = pref(i_1,i_2)...pref(i_{r-1}, i_r)s_{i_r}$, czyli najkrótsze słowo, w którym słowa
 $s_{i_1},...,s_{i_r}$ pojawiają się dokładnie w tej kolejności.
-
 Określmy $s_{i_1}$ poprzez $first(s)$ oraz $s_{i_r}$ poprzez $last(s)$.
 
 W trakcie algorytmu \textbf{GREEDY}, a także \textbf{MGREEDY} następujący niezmiennik jest zachowany.
@@ -62,7 +61,7 @@ W trakcie algorytmu \textbf{GREEDY}, a także \textbf{MGREEDY} następujący nie
 \begin{lemma}
   
 W dowolnym momencie algorytmu \textbf{GREEDY} w aktualnie przetwarzanym zbiorze słów dla każdych dwóch różnych słów $s,t$ z tego zbioru jest, że 
-$first(s)$ ani $last(s)$ nie jest podsłowom słowa $t$.
+$first(s)$ ani $last(s)$ nie jest podsłowem słowa $t$.
 
 \end{lemma}
 
@@ -70,10 +69,9 @@ $first(s)$ ani $last(s)$ nie jest podsłowom słowa $t$.
 Udowodnimy lemat dla $first(s)$, dowód dla $last(s)$ jest zupełnie analogiczny.
 
 Początkowo $first(s)=last(s)=s$ dla każdego słowa $s$ w aktualnym zbiorze. Załóżmy, że niezmiennik jest w pewnym momencie naruszony poprzez złączenie dwóch słów 
-$t_1,t_2$ w słowo $t = \langle t_1,t_2\rangle$, czyli, że $t$ ma $first(s)$ jako podsłowo. Wtedy wiemy, że 
-$t = ufirst(s)v$ dla jakichś $u,v$. Skoro $first(s)$ nie może być podsłowem 
-$t_1$ ani $t_2$ (założenie o zbiorze $S$), to $|first(s)| > ov(t_1,t_2)$ oraz 
-$|u| < d(t_1,t_2)$. Czyli, $ov(t_1, s) > ov(t_1, t_2)$, co daje nam sprzeczność z faktem, że $ov(t_1,t_2)$ jest największym.
+$t_1,t_2$ w słowo $t = \langle t_1,t_2\rangle$, czyli, że $t$ ma $first(s)$ jako podsłowo. Wtedy wiemy, że dla $t_1 = ab, t_2 = bc$ ($b$ jest maksymalne), 
+$t = ufirst(s)v$ oraz $t = abc$. Skoro $first(s)$ nie może być podsłowem $t_1$ ani $t_2$ (założenie o zbiorze $S$), to wiemy, że $first(s)$ musi zawierać $b$ jako podsłowo 
+i nachodzić przynajmniej jedną literą na $a$ i $c$. Z tego wynika, że $|u| < |a| = d(t_1,t_2), |v| < |c|$ oraz $|first(s)| > ov(t_1, t_2) = |b|$. Teraz możemy zauważyć, że $ov(t_1, s) \geq ov(t_1, first(s)) \geq |b| + 1 > ov(t_1, t_2) = |b|$, co stoi w sprzeczności z faktem, że $ov(t_1, t_2)$ miał być największą wartość.
 \end{proof}
 
 Lemat ten mówi nam, że algorytm wybierająć dwa słowa $s,t$ o największym $ov(s,t)$ wybiera de facto słowa o największym $ov(first(s), last(t))$.
@@ -90,7 +88,7 @@ $CYC(G_S) \leq TSP(G_S) \leq OPT(S) - ov(last(s), first(s)) \leq OPT(S)$.
 
 Dzięki temu można pokazać, że znajdując minmialne pokrycie cyklowe ($CYC(G_S)$) możemy skonstruować wspólne nadsłowo o długości co najwyżej $4 \cdot OPT(S)$ poprzez konkatenacje 
 słów wynikających z poszczególnych cyklów w pokryciu cyklowym. Tak opisany algorytm nazywamy \textbf{CONCATCYCLES}.
-\pagebreak
+
 \section*{Algorytm \textit{\textbf{MGREEDY}}}
 Możemy teraz opisać algorytm \textbf{MGREEDY}.
 \begin{enumerate}
