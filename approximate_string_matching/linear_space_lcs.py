@@ -1,13 +1,9 @@
 def fill_one(word_1, word_2, n_2, R1, R2, r, s):
   j, i = 1, s
-  over = False
   R2[0] = n_2 + 1
 
-  while i > 0 and not over:
-    if j > r:
-      lower_b = 0
-    else:
-      lower_b = R1[j]
+  while i > 0:
+    lower_b = 0 if j > r else R1[j]
 
     pos_b = R2[j - 1] - 1
     while pos_b > lower_b and word_1[i - 1] != word_2[pos_b - 1]:
@@ -15,13 +11,12 @@ def fill_one(word_1, word_2, n_2, R1, R2, r, s):
 
     temp = max(pos_b, lower_b)
     if temp == 0:
-      over = True
+      break
     else:
       R2[j] = temp
       i, j = i - 1, j + 1
 
-  r = j - 1
-  return r
+  return j - 1
 
 
 def cal_mid(word_1, word_2, n_1, n_2, x):
@@ -30,11 +25,9 @@ def cal_mid(word_1, word_2, n_1, n_2, x):
 
   for s in range(n_1, n_1 - x - 1, -1):
     r = fill_one(word_1, word_2, n_2, R1, R2, r, s)
-    for j in range(0, r + 1):
-      R1[j] = R2[j]
+    R1[:r + 1] = R2[:r + 1]
 
-  for j in range(0, r + 1):
-    LL[j] = R1[j]
+  LL[:r + 1] = R1[:r + 1]
 
   return LL, r
 
@@ -95,13 +88,12 @@ def find_lcs_length(word_1, word_2, n_1, n_2):
     s = s - 1
     r = fill_one(word_1, word_2, n_2, R1, R2, r, s)
 
-    for j in range(0, r + 1, 1):
-      R1[j] = R2[j]
+    R1[:r + 1] = R2[:r + 1]
 
   return s
 
 
 def linear_space_lcs(word_1, word_2, n_1, n_2):
-  p = find_lcs_length(word_1, word_2, n_1, n_2)
-  result = longest_common_subsequence(word_1, word_2, n_1, n_2, p)
+  p = find_lcs_length(word_1[1:], word_2[1:], n_1, n_2)
+  result = longest_common_subsequence(word_1[1:], word_2[1:], n_1, n_2, p)
   return result, len(result)
