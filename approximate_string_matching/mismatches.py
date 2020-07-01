@@ -1,7 +1,4 @@
-import random
 from math import ceil, log
-
-random.seed(100)
 
 def make_len_2_pow(s):
   x = ceil(log(len(s), 2))

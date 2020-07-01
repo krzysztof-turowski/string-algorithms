@@ -6,6 +6,7 @@ import unittest
 import regex
 
 from approximate_string_matching import dont_care
+from approximate_string_matching.mismatches import string_matching_with_mismatches, brute_search
 from generator import rand
 
 STRING_MATCHING_WITH_DONT_CARE_ALGORITHMS = [
@@ -71,9 +72,7 @@ class TestStringMatchingWithDontCare(unittest.TestCase):
                 w[1:].replace('?', '.'), t[1:], overlapped = True)]
             self.check_get_all_matches_with_dont_care(t, w, n, m, reference)
 
-from k_mismatch import string_matching_with_mismatches, brute_search
-
-class TestStringMatchingWithMismatches(unittest.TestCase):
+class TestStringMatchingKMismatches(unittest.TestCase):
   run_large = unittest.skipUnless(
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
@@ -96,7 +95,7 @@ class TestStringMatchingWithMismatches(unittest.TestCase):
   def test_random_string_matching_with_mismatches(self):
     T, n, m, k, A = 100, 50, 10, 4, ['a', 'b']
     for _ in range(T):
-      t, w = self.gen_text(n, m, k, A)
+      t, w = gen_text(n, m, k, A)
       reference = brute_search(t, w, n, m, k)
       self.assertEqual(reference,
                        list(string_matching_with_mismatches(t, w, n, m, k)))
@@ -116,16 +115,16 @@ class TestStringMatchingWithMismatches(unittest.TestCase):
                   reference,
                   list(string_matching_with_mismatches(t, w, n, m, k)))
 
-  def gen_text(self, n:int, m:int, k: int, letters='abc'):
-    text_res = ""
-    if n <= m:
-      n=m+1
-    for _ in range(n):
-      text_res += random.choice(letters)
-    pos = random.randint(0, n-m)
-    pat_res = text_res[pos:pos+m]
-    for _ in range(k-1):
-      x = random.randint(0, m)
-      pat_res = pat_res[:x] + random.choice(letters) + pat_res[x+1:]
-    return text_res[:n], pat_res[:m]
-  
+
+def gen_text(n:int, m:int, k: int, letters='abc'):
+  text_res = ""
+  if n <= m:
+    n=m+1
+  for _ in range(n):
+    text_res += random.choice(letters)
+  pos = random.randint(0, n-m)
+  pat_res = text_res[pos:pos+m]
+  for _ in range(k-1):
+    x = random.randint(0, m)
+    pat_res = pat_res[:x] + random.choice(letters) + pat_res[x+1:]
+  return text_res[:n], pat_res[:m]
