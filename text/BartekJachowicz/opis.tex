@@ -35,7 +35,7 @@ autorstwa S. Kiran Kumar oraz C. Pandu Rangan
 \maketitle
 
 \section{Główna idea algorytmu}
-Algorytm zaprezentowany w pracy opiera się na zastosowaniu techniki \textit{dziel i zwyciężaj}. Pozwala ona znaleźć szukany najdłuższy wspólny podciąg w złożoności $O(n(m - p))$ oraz przy wykorzystaniu liniowego rozmiaru pamięci. W poniższym opisie $A$ oraz $B$ oznaczają słowa o długości odpowiednio $m$ oraz $n$, które są argumentami algorytmu, natomiast $C$ to szukany najdłuższy wspólny podciąg (LCS) o długości $p$. Zapis $T(i:j)$ oznacza podsłowo słowa T z początkiem o indeksie $i$ oraz końcem o indeksie $j$. W opisie pracy zakładam że słowa indeksowane są od cyfry $1$, implementacja algorytmu ze względu praktycznych wykorzystuje indeksowanie słowa od $0$ - przy wywołaniach rekurencyjnych na podsłowach trzeba byłoby przekazywać za każdym razem słowa o jeden znak dłuższe.\\
+Algorytm zaprezentowany w pracy opiera się na zastosowaniu techniki \textit{dziel i zwyciężaj}. Pozwala ona znaleźć szukany najdłuższy wspólny podciąg w złożoności $O(n(m - p))$ oraz przy wykorzystaniu liniowego rozmiaru pamięci. W poniższym opisie $A$ oraz $B$ oznaczają słowa o długości odpowiednio $m$ oraz $n$, które są argumentami algorytmu, natomiast $C$ to szukany najdłuższy wspólny podciąg (LCS) o długości $p$. Zapis $T(i:j)$ oznacza podsłowo słowa T z początkiem o indeksie $i$ oraz końcem o indeksie $j$. Przez $\bar{A}$ oznaczane będzie odwrócone słowo $A$. W opisie pracy zakładam że słowa indeksowane są od cyfry $1$.\\
 
 Pierwszą rzeczą, którą wykonuje algorytm jest obliczenie długości najdłuższego wspólnego podciągu. Znając jego długość możemy obliczyć \textit{perfekcyjne cięcie}, które definiowany jest w następujący sposób:
 
@@ -59,11 +59,19 @@ $L_i(k)$ oznacza największe $h$ dla którego słowa \textit{A(i:m), B(h:n)} maj
 $L_i^*(k)$ oznacza najmniejsze $h$ dla którego słowa \textit{A(i:m), B(h:n)} mają najdłuższy wspólny podciąg długości $k$.
 \end{definition}
 
-\noindent W pracy przedstawiona została zależność pomiędzy \textit{perfekcyjnym cięciem (u, v)} a wartościami $L_i(k)$ oraz $L_i^*(k)$. Pozwala ona znaleźć perfekcyjne cięcie słów $A$, $B$ jeśli zna się wartości jeśli zna się wartości $L_i(k)$ oraz $L_i^*(k)$ dla odpowiednich $i$, $k$:
+\noindent W pracy przedstawiona została zależność pomiędzy \textit{perfekcyjnym cięciem (u, v)} a wartościami $L_i(k)$ oraz $L_i^*(k)$. Pozwala ona znaleźć perfekcyjne cięcie słów $A$, $B$ jeśli zna się wartości $L_i(k)$ oraz $L_i^*(k)$ dla odpowiednich $i$, $k$:
 
 \begin{theorem}{}{perf-cut}
 Para (u, v) jest \textit{perfekcyjnym cięciem} wtedy i tylko wtedy gdy $L_{u+1}(m - u - w') \geq v \geq L^*_u(u - w)$, gdzie $w = \lfloor\frac{m-p}{2}\rfloor$ oraz $w' = \lceil\frac{m-p}{2}\rceil$.
 \end{theorem}
+
+Warto wspomnieć też o zależności pomiędzy $L_i(j)$ oraz $L_i^*(j)$:
+\begin{lemma}
+Załóżmy że znane są wartości $L_i(j)$ dla pary odwróconych słów $(A, B)$. Wartości $L_i^*(j)$ dla nieodwróconych słów $A, B$ są wtedy zadane w następujący sposób:
+\[
+    L_i^*(j)_{(A, B)} = n + 1 - L_{m-i+1}(j)_{(\bar{A}, \bar{B})}
+\]
+\end{lemma}
 
 Procedura \textit{calmid(A, B, m, n, x, LL, r)} oblicza wartości $L_{m-x+1-j}(j)$ za pomocą procedury \textit{fillone(A, B, m, n, R1, R2, r, s)} i zapisuje je w tablicy $LL$. Zmienna $r$ po wykonaniu funkcji oznacza natomiast największe j dla którego dana wartość jest poprawnie zdefiniowana. Procedura \textit{fillone(A, B, m, n, R1, R2, r, s)} używa dwóch tablic by obliczyć wartości $L_{s+1}(0), L_s(1), L_{s-1}(2), ...$. Obliczenia te wykonywane są iteracyjne, z wykorzystaniem poprzednich wartości. Poprawność tych funkcji oraz dokładne ich działanie opiszę przy dowodzie ich poprawności.
 
@@ -73,14 +81,14 @@ Prezentowany w pracy dowód poprawności algorytmu podzielony został na dowód 
 
 \subsection{Procedura \textit{fillone}}
 
-Tak jak zostało już wspomniane procedura \textit{fillone(A, B, m, n, $R_1, R_2$, r, s)} używa dwóch tablic by obliczyć wartości $L_{s+1}(0), L_s(1), L_{s-1}(2), ...$. Sposób w jaki uzyskiwane są kolejne wartości wynika z następującego lematu:
+Tak jak zostało już wspomniane procedura \textit{fillone(A, B, m, n, $R_1, R_2$, r, s)} używa dwóch tablic by obliczyć wartości $L_{s+1}(0), L_s(1), L_{s-1}(2), ...$ . Mając zdefiniowaną pierwszą wartość $L_{s+1}(0) = n + 1$, która wynika wprost z definicji $1.2$, sposób w jaki uzyskiwane są kolejne wartości wynika z następującego lematu:
 \begin{lemma}
-Niech $h$ będzie największą liczbą taką że $A[i] = B[h]$ oraz $h < l_{i+1}(j - 1)$, wtedy liczba $L_i(j)$ jest definiowana przez $h$ oraz $L_{i+1}(j)$:
+Niech $h$ będzie największą liczbą taką że $A[i] = B[h]$ oraz $h < L_{i+1}(j - 1)$, wtedy liczba $L_i(j)$ jest definiowana przez $h$ oraz $L_{i+1}(j)$:
 $$
 y = \left\{ \begin{array}{ll}
-h & \textrm{gdy $ L_{i+1} $ jest zdefiniowane}\\
+h & \textrm{gdy $ L_{i+1} $ nie jest zdefiniowane}\\
 L_{i+1}(j) & \textrm{gdy $ h $ nie istnieje}\\
-max(h, L_{i+1}(j) & \textrm{gdy obie wartości są zdefiniowane}
+max(h, L_{i+1}(j)) & \textrm{gdy obie wartości są zdefiniowane}
 \end{array} \right.
 $$
 \end{lemma}
@@ -103,7 +111,7 @@ Złożoność czasowa to natomiast $(x + 1)$ wywołanie procedury \textit{fillon
 
 \subsection{Znajdowanie perfekcyjnego cięcia}
 
-Procedura znajdowania \textit{perfekcyjnego cięcia} polega na dwukrotnym wywołaniu procedury calmid odpowiednio dla odwróconych słów $A, B$ oraz dla nieodwróconych. Po zakończeniu tych wywołań otrzymujemy w tablicach $LL_1, LL_2$ wyliczone wartości odpowiednio: $n + 1 - L_{m-w+1-k}(k)$ dla $k \leq r_1$ oraz $L_{w+k+1}(m-(w+k)-w')$\ $(= L_{m-w'+1-(p-k)}(p-k))$ dla $p-k \leq r_2$. Z twierdzenia 1.1 wynika zatem, że wystarczy zatem dobrać $u = k + w$ oraz $v = LL_1(k)$ by dostać poprawne perfekcyjne cięcie.\\
+Procedura znajdowania \textit{perfekcyjnego cięcia} polega na dwukrotnym wywołaniu procedury calmid odpowiednio dla odwróconych słów $A, B$ oraz dla nieodwróconych. Po zakończeniu tych wywołań otrzymujemy w tablicach $LL_1, LL_2$ wyliczone wartości odpowiednio: $n + 1 - L_{m-w+1-k}(k)$ dla $k \leq r_1$ oraz $L_{w+k+1}(m-(w+k)-w')$\ $(= L_{m-w'+1-(p-k)}(p-k))$ dla $p-k \leq r_2$. Korzystając z lematu $1.1$ możemy otrzymać z wartości $n + 1 - L_{m-w+1-k}(k)$ odpowiednie wartości by móc przy pomocy twierdzenia 1.1 stwierdzić, że wystarczy dobrać $u = k + w$ oraz $v = LL_1(k)$ by dostać poprawne perfekcyjne cięcie.\\
 Złożoność czasowa i pamięciowa to ta sama, która miała procedura calmid, gdyż dodatkowo wykonywana jest jedynie pętla \textit{for} by dobrać odpowiednie $(u, v)$, która ma złożoność $O(r_1) \leq O(n)$.
 
 \subsection{Złożoność czasowa i pamięciowa algorytmu}
@@ -115,7 +123,7 @@ Mamy do rozpatrzenia dwa przypadki:
     \[
         T(m, n, p) = O(n(m - p)) + T(u, v, u - w) + T(m - u, n - v, m - u - w')
     \]
-    która po przeliczeniach okazuje się wynosić $O(n(m - p))$.
+    która po przeliczeniach okazuje się wynosić $O(n(m - p))$, ponieważ musi tak być w przypadku gdy $m-p \leq 2$, ponieważ $p \leq n$.
 \end{itemize}
 
 Jedyną operacją wykonywaną poza procedurą \textit{Longest common subsequence} jest znalezienie na początku algorytmu długości najdłuższego wspólnego podciągu, która również wykonywana jest w czasie $O(n(m - p))$.
