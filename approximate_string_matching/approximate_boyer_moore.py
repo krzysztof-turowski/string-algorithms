@@ -16,19 +16,16 @@ def boyer_moore_multi_dim_shift(A, p, m, k):
   return BM_k
 
 
-def approximate_boyer_moore(text, p, n, m, k=None, A=None):
+def approximate_boyer_moore(text, p, n, m, k, A=None):
   if A is None:
     A = set(list(text[1:] + p[1:]))
-
-  if k is None:
-    k = p.count('?')
 
   BM_k = boyer_moore_multi_dim_shift(A, p, m, k)
   BAD = boyer_moore_bad_environment(A, p, m, k)
 
   j, top = m, min(k + 1, m)
   D_0 = list(range(m + 1))
-  D_curr = D_0.copy()
+  D_curr = D_0[:]
   curr_col, j = next_possible_occurence(text, n, m, k, BM_k, BAD, j)
 
   if curr_col <= 0:
@@ -41,12 +38,9 @@ def approximate_boyer_moore(text, p, n, m, k=None, A=None):
       c = 0
       # evaluate another column of D
       for i in range(1, top + 1):
-        if r <= n and p[i] == text[r]:
-          d = c
-        else:
-          d = min(D_curr[i - 1], D_curr[i], c) + 1
-        c = D_curr[i]
-        D_curr[i] = d
+        d = c if r <= n and p[i] == text[r] \
+          else min(D_curr[i - 1], D_curr[i], c) + 1
+        c, D_curr[i] = D_curr[i], d
 
       while D_curr[top] > k:
         top -= 1
@@ -60,7 +54,7 @@ def approximate_boyer_moore(text, p, n, m, k=None, A=None):
 
     next_possible, j = next_possible_occurence(text, n, m, k, BM_k, BAD, j)
     if next_possible > last_col + 1:
-      D_curr, top, curr_col = D_0.copy(), min(k + 1, m), next_possible
+      D_curr, top, curr_col = D_0[:], min(k + 1, m), next_possible
     else:
       curr_col = last_col + 1
 
@@ -81,22 +75,17 @@ def next_possible_occurence(text, n, m, k, BM_k, BAD, j):
       i, r = i - 1, r - 1
 
     if bad <= k:
-      break
+      if j <= (n + k):
+        npo = j - m - k
+        j = j + max(k + 1, d)
+        return npo, j
 
     j = j + max(k + 1, d)
-
-  if j <= (n + k):
-    npo = j - m - k
-    j = j + max(k + 1, d)
-    return npo, j
 
   return n + 1, j
 
 
-def simple_dynamic_edit_distance(text, p, n, m, k=None):
-  if k is None:
-    k = p.count('?')
-
+def simple_dynamic_edit_distance(text, p, n, m, k):
   D = {(0, j): 0 for j in range(n + 1)}
 
   for i in range(m + 1):

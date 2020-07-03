@@ -5,7 +5,7 @@ import unittest
 from random import randrange
 import regex
 
-from approximate_string_matching import dont_care, matching_with_dont_cares \
+from approximate_string_matching import dont_care, matching_with_dont_cares, \
   approximate_boyer_moore, \
   distance
 from generator import rand

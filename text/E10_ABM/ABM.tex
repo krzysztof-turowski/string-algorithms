@@ -20,9 +20,9 @@ Rozwiązaniem są wszystkie $j$ takie, że $D(m,j) \leq k$. Algorytm ten działa
 
 \subsection{Idea algorytmu ABM (Approximate Boyer-Moore)}
 
-Algorytm oparty na pomyśle analogicznym do algorytmu Boyer'a-Moore'a będzie będzie działać w dwóch głównych fazach: \textit{skanowania} i \textit{sprawdzania}. 
-W fazie skanowania przechodzimy przez dane słowo $t$ i zaznaczamy pewne komórki pierwszego rzędu tablicy $D$ (tj komórki postaci $D(0,j)$). 
-Po zakończeniu fazy skanowania rozpoczynamy fazę sprawdzania, czyli dla każdej zaznaczonej komórki $D$ będziemy obliczali przekątną tablicy $D$ poprzez zwykłe programowanie dynamiczne. 
+Algorytm oparty na pomyśle analogicznym do algorytmu Boyer'a-Moore'a będzie będzie działać w dwóch głównych fazach: \textit{skanowania} i \textit{sprawdzania}.
+W fazie skanowania przechodzimy przez dane słowo $t$ i zaznaczamy pewne komórki pierwszego rzędu tablicy $D$ (tj komórki postaci $D(0,j)$).
+Po zakończeniu fazy skanowania rozpoczynamy fazę sprawdzania, czyli dla każdej zaznaczonej komórki $D$ będziemy obliczali przekątną tablicy $D$ poprzez zwykłe programowanie dynamiczne.
 Kiedykolwiek nasza procedura dynamiczna będzie odnosić się do niewyliczonej komórki możemy przyjąć, że jej wartość wynosi $\infty.$\\
 Faza sprawdzania wydaje się dość intuicyjna dlatego skupmy się na fazie skanowania.\\
 
@@ -30,11 +30,11 @@ Faza skanowania powtarza w pętli dwie czynności. \textit{Zaznacza} (mark) i \t
 
 \subsection{Faza skanowania algorytmu ABM}
 \begin{definition}{}{}
-    Mówimy, że dla każdego $D(i,j)$ istnieje {\bf \textit{łuk minimalizujący}} z $D(i-1, j)$ do $D(i, j)$ jeśli $D(i,j) = D(i - 1, j)+1$, z $D(i, j-1)$ do $D(i, j)$ jeśli $D(i,j) = D(i, j-1)+1$, oraz z $D(i-1,j-1)$ do $D(i, j)$ jeśli $D(i,j) = D(i-1, j-1)$ gdy $p_i = t_j$ albo 
+    Mówimy, że dla każdego $D(i,j)$ istnieje {\bf \textit{łuk minimalizujący}} z $D(i-1, j)$ do $D(i, j)$ jeśli $D(i,j) = D(i - 1, j)+1$, z $D(i, j-1)$ do $D(i, j)$ jeśli $D(i,j) = D(i, j-1)+1$, oraz z $D(i-1,j-1)$ do $D(i, j)$ jeśli $D(i,j) = D(i-1, j-1)$ gdy $p_i = t_j$ albo
     $D(i,j) = D(i-1, j-1) + 1$ gdy $p_i \neq t_j.$
 \end{definition}
 \begin{definition}{}{}
-    {\bf \textit{Minimalizującą ścieżką}} nazywamy dowolną ścieżkę złożoną z minimalizujących łuków zaczynającą w $D(0,j)$ w pierwszym rzędzie tablicy $D$ do komórki $D(m, h)$ znajdującej się w ostatnim rzędzie. Minimalizującą ścieżkę nazywamy {\bf \textit{dobrą}} gdy prowadzi do $D(m, h) \leq k.$
+    Dla każdego $1 \le h \le n$, {\bf \textit{minimalizującą ścieżką}} nazywamy dowolną ścieżkę złożoną z minimalizujących łuków zaczynającą w $D(0,j)$ w pierwszym rzędzie tablicy $D$ do komórki $D(m, h)$ znajdującej się w ostatnim rzędzie. Minimalizującą ścieżkę nazywamy {\bf \textit{dobrą}} gdy prowadzi do $D(m, h) \leq k.$
 \end{definition}
 \begin{lemma}{}{}
     Komórki dowolnej dobrej ścieżki minimalizującej zawarte są wśród $\leq k+1$ kolejnych przekątnych tablicy $D.$
@@ -43,6 +43,7 @@ Faza skanowania powtarza w pętli dwie czynności. \textit{Zaznacza} (mark) i \t
     Dla $i = 1,...m$ przez {\bf \textit{$k$-otoczenie}} znaku $p_i$ ze wzorca $p$ oznaczmy słowo $C = p_{i-k}...p_{i+k}$, gdzie $p_j = \epsilon$ dla $j < 1$ oraz $j > m.$
 \end{definition}
 \begin{lemma}{}{}
+    \label{min-diag}
    Jeśli dobra ścieżka minimalizująca przechodzi przez pewne komórki przekątnej $h$ tablicy $D$, wtedy dla co najwyżej $k$ indeksów $i$, $1 \leq i \leq m$, znak $t_{h+i}$ nie występuje w $k$-otoczeniu $C_i.$
 \end{lemma}
 
@@ -51,10 +52,10 @@ Faza skanowania powtarza w pętli dwie czynności. \textit{Zaznacza} (mark) i \t
 \end{definition}
 
 \begin{remark-thm}
-    Z lematu $1.5$ wynika, że dla danego $t_j$ złych kolumn jest co najwyżej $k$ o ile 
+    Z lematu $\ref{min-diag}$ wynika, że dla danego $t_j$ złych kolumn jest co najwyżej $k$ o ile
 \end{remark-thm}
 
-Na podstawie powyższej obserwacji i lematu możemy skonstruować następującą procedurę zaznaczania. Dla przekątnej $h$, dla $i=m, m-1, ..., k+1$ lub dopóki nie znaleźliśmy $k+1$ złych kolumn sprawdź czy $t_{h+1}$ należy do $C_i$. 
+Na podstawie powyższej obserwacji i lematu możemy skonstruować następującą procedurę zaznaczania. Dla przekątnej $h$, dla $i=m, m-1, ..., k+1$ lub dopóki nie znaleźliśmy $k+1$ złych kolumn sprawdź czy $t_{h+1}$ należy do $C_i$.
 Jeśli znaleźliśmy $\leq k$ złych kolumn wtedy zaznaczmy komórki $D(0, h-k),...,D(0,h+k)$.\\
 Aby szybko odpowiadać na to czy kolumna jest zła możemy obliczyć tablicę $BAD(i,a)$ dla $1 \leq i \leq m$, $a \in \A$ taką, że
 \[
