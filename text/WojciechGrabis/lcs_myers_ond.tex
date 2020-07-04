@@ -92,7 +92,7 @@ Najdalej sięgająca D-ścieżka w diagonali k może być rozbita na najdalej si
 \end{lemma}
 
 \begin{proof}
-Wybranie odpowiedniej najdalszej (D-1)-ścieżki w diagonali k+1/k-1 związane jest ze wcześniej wspomnianą obserwacją na temat ogonu krawędzi poziomej/pionowej. Natomiast w celu udowodnienie faktu że to najdalej sięgająca (D-1)-ścieżka załóżmy że (D-1)-ścieżka składająca się na kompozycję najdalej sięgającej D-ścieżki nie jest najdalej sięgająca w diagonali k, ale możemy zaobserwować że skoro D-ścieżka musi sięgać dalej niż (D-1)-ścieżka, to oznacza że do ogona tej D-ścieżki będziemy mogli się też dostać z końca ogona najdalszej (D-1)-ścieżki przy pomocy odpowiedniej krawędzi niediagonalnej, więc zawsze możemy najdalszą D-ścieżkę rozłożyć na najdalszą (D-1)-ścieżkę.
+Wybranie odpowiedniej najdalszej (D-1)-ścieżki w diagonali k+1/k-1 związane jest ze wcześniej wspomnianą obserwacją na temat ogona krawędzi poziomej/pionowej. Natomiast w celu udowodnienie faktu że to najdalej sięgająca (D-1)-ścieżka załóżmy że (D-1)-ścieżka składająca się na kompozycję najdalej sięgającej D-ścieżki nie jest najdalej sięgająca w diagonali k, ale możemy zaobserwować że skoro D-ścieżka musi sięgać dalej niż (D-1)-ścieżka, to oznacza że do ogona tej D-ścieżki będziemy mogli się też dostać z końca ogona najdalszej (D-1)-ścieżki przy pomocy odpowiedniej krawędzi niediagonalnej, więc zawsze możemy najdalszą D-ścieżkę rozłożyć na najdalszą (D-1)-ścieżkę.
 \end{proof}
 
 Na bazie obu lematów wprowadzamy algorytm obliczania punktu końca najdalej sięgającej D-ścieżki w diagonali k. Zauważmy że odległość edycyjna $D \in [0, M+N]$, więc będziemy kolejno badali możliwe odległości edycyjne, aż dojdziemy do punktu $(N,M)$.
@@ -189,5 +189,5 @@ T(P,D) \leq
 gdzie $P_{1} + P_{2} \leq P$. Korzystając z zależności $\ceil*{D/2} \leq \frac{2D}{3}$ dla $D \geq 2$, możemy udowodnić że $T(P,D) \leq 3\alpha PD + \beta P$, co dowodzi że algorytm wykonuje się w $O((M+N)D)$ czasie.
 \vspace{4mm}    
 
-Natomiast nasza złożoność pamięciowa, zauważmy, że procedura poszukiwania środkowego ogonu zajmuje $O(D)$ miejsca, ze względu na wykorzystanie dwóch wektorów V, dodatkowo procedura poszukiwania środkowego ogona działa niezależnie od rekurencji, więc na całą rekurencje potrzebujemy miejsca tylko na 2 wektory, natomiast rekurencja składa się z $O(logD)$ poziomów więc zajmuje $O(logD)$ pamięci, stąd mamy złożoność $O(m+n)$ pamięciową.
+Natomiast nasza złożoność pamięciowa, zauważmy, że procedura poszukiwania środkowego ogona zajmuje $O(D)$ miejsca, ze względu na wykorzystanie dwóch wektorów V, dodatkowo procedura poszukiwania środkowego ogona działa niezależnie od rekurencji, więc na całą rekurencje potrzebujemy miejsca tylko na 2 wektory, natomiast rekurencja składa się z $O(logD)$ poziomów więc zajmuje $O(logD)$ pamięci, stąd mamy złożoność $O(m+n)$ pamięciową.
 \end{document}

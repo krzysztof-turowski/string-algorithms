@@ -6,18 +6,13 @@ from longest_common_subsequence.myers import (
     longest_common_substring, brute_force_lcs)
 from generator.rand import random_word
 
-def validate_text_lcs(text, text_len, lcs):
-  i = 0
-  lcs_len = len(lcs)
-  for j in range(1, text_len + 1):
-    if i != lcs_len and text[j] == lcs[i]:
-      i += 1
+def validate_text_lcs(text, lcs):
+  it = iter(text)
+  return all(any(c == ch for c in it) for ch in lcs)
 
-  return lcs_len == i
-
-def validate_lcs(text_a, text_b, n, m, lcs):
-  return (validate_text_lcs(text_a, n, lcs) and
-          validate_text_lcs(text_b, m, lcs))
+def validate_lcs(text_a, text_b, lcs):
+  return (validate_text_lcs(text_a, lcs) and
+          validate_text_lcs(text_b, lcs))
 
 
 class TestMyers(unittest.TestCase):
@@ -30,7 +25,7 @@ class TestMyers(unittest.TestCase):
         text_a, text_b,
         len(text_a) - 1, len(text_b) - 1
     )
-    self.assertTrue(validate_lcs(text_a, text_b, 7, 6, text_lcs))
+    self.assertTrue(validate_lcs(text_a, text_b, text_lcs))
     self.assertEqual(len(text_lcs), 4)
 
   def test_myers_full_lcs(self):
@@ -41,8 +36,7 @@ class TestMyers(unittest.TestCase):
     )
     self.assertTrue(
         validate_lcs(
-            text_a, text_b, len(text_a) - 1,
-            len(text_b) - 1, text_lcs) and
+            text_a, text_b, text_lcs) and
         len(text_lcs) == 5
     )
 
@@ -66,9 +60,7 @@ class TestMyers(unittest.TestCase):
     )
     self.assertTrue(
         validate_lcs(
-            text_a, text_b,
-            len(text_a) - 1, len(text_b) - 1,
-            text_lcs
+            text_a, text_b, text_lcs
         ) and
         len(text_lcs) == a_len
     )
@@ -89,8 +81,7 @@ class TestMyers(unittest.TestCase):
     )
     self.assertTrue(
         validate_lcs(
-            text_a, text_b,
-            len(text_a) - 1, len(text_b) - 1, text_lcs
+            text_a, text_b, text_lcs
         ) and
         len(text_lcs) == a_len
     )
@@ -114,8 +105,7 @@ class TestMyers(unittest.TestCase):
 
       valid = (
           validate_lcs(
-              text_a, text_b,
-              len(text_a) - 1, len(text_b) - 1, text_lcs
+              text_a, text_b, text_lcs
           ) and
           len(text_lcs) == len(brute_lcs)
       )
@@ -143,8 +133,7 @@ class TestMyers(unittest.TestCase):
 
       valid = (
           validate_lcs(
-              text_a, text_b,
-              len(text_a) - 1, len(text_b) - 1, text_lcs
+              text_a, text_b, text_lcs
           ) and
           len(text_lcs) == len(brute_lcs)
       )

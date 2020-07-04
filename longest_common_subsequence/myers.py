@@ -2,12 +2,8 @@ from math import ceil
 
 class EditBox:
   def __init__(self, text_a, text_b, a_start, a_end, b_start, b_end):
-    self.text_a = text_a
-    self.text_b = text_b
-    self.a_start = a_start
-    self.a_end = a_end
-    self.b_start = b_start
-    self.b_end = b_end
+    self.text_a, self.a_start, self.a_end = text_a, a_start, a_end
+    self.text_b, self.b_start, self.b_end = text_b, b_start, b_end
 
   def len(self):
     return (self.a_end - self.a_start, self.b_end - self.b_start)
@@ -91,7 +87,7 @@ def _walk_backward(edit_box, d, v_forward, v_backward):
 
 def _find_middle_snake(edit_box):
   (a_len, b_len) = edit_box.len()
-  max_edit = ceil( a_len + b_len / 2)
+  max_edit = ceil((a_len + b_len) / 2)
   v_forward = [0] + [0] * (2 * max_edit)
   v_backward = [0] + [b_len] * (2 * max_edit)
   for d in range(0, max_edit + 1):
