@@ -8,9 +8,13 @@ import shortest_common_super_approx
 
 from approx_shortest_superstring.exact_bruteforce \
 import shortest_common_super
+
 from generator import rand
 
-class TestCommentzWalter(unittest.TestCase):
+def get_si(i, k):
+  return ["#"+"a"*j + "b"*((4**k)-j) for j in range(4**(k-i)//2, 4**(k-i)+1)]
+
+class TestShortestSuperstring(unittest.TestCase):
   run_large = unittest.skipUnless(
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
@@ -72,3 +76,14 @@ class TestCommentzWalter(unittest.TestCase):
       _ in range(amount)]
       result = shortest_common_super_approx(input_words)
       self.check_superstring(result, input_words)
+
+  @run_large
+  def test_strict_bound_family(self):
+    for k in range(2,5):
+      S = [word for S_i in (get_si(i, k) for\
+      i in range(k)) for word in S_i]
+      V = ["#"+"c"+("b"*(i-1))+"c"+("a"*(4**i-i-1)) for i in range(1, k+1)]
+      input_words = S + V
+      result = shortest_common_super_approx(input_words)
+      self.check_superstring(result, input_words)
+      self.assertTrue(len(result) < 6 * k * 4**k)
