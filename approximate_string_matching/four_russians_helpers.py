@@ -25,8 +25,8 @@ class FourRussiansHelpers:
     def get_step_size_bound():
       if len(A) == 0:
         return (0, 0)
-      I = max([self.insert_cost_function(letter_idx) for letter_idx in A])
-      D = max([self.delete_cost_function(letter_idx) for letter_idx in A])
+      I = max(self.insert_cost_function(letter_idx) for letter_idx in A)
+      D = max(self.delete_cost_function(letter_idx) for letter_idx in A)
       return max(I, D)
 
     m = get_parameter(text_1)
@@ -47,22 +47,17 @@ class FourRussiansHelpers:
     """ Returns all possible strings of a given length """
 
     sub_length_results = [[] for _ in range(m + 1)]
-    sub_length_results[0] = []
     sub_length_results[1] = A
-
     for size in range(2, m + 1):
-      sub_length_results[size] = []
-      for left_substring in sub_length_results[1]:
-        for right_substring in sub_length_results[size - 1]:
-          sub_length_results[size].append(left_substring + right_substring)
-
-    result = [dumb_letter + word for word in sub_length_results[m]]
-    return result
+      sub_length_results[size] = [
+          left_substring + right_substring
+          for left_substring in sub_length_results[1]
+          for right_substring in sub_length_results[size - 1]]
+    return [dumb_letter + word for word in sub_length_results[m]]
 
   @staticmethod
   def store(R_new, S_new, C, D, R, S, storage):
-    R = tuple(R)
-    S = tuple(S)
+    R, S = tuple(R), tuple(S)
 
     if C not in storage:
       storage[C] = {}
@@ -92,14 +87,8 @@ class FourRussiansHelpers:
               U[0][i] = S[i]
 
             self.compute_next_step_vectors(C, D, T, U, m)
-
-            R_new = []
-            S_new = []
-
-            for i in range(1, (m + 1)):
-              R_new.append(T[i][m])
-              S_new.append(U[m][i])
-
+            R_new = [T[i][m] for i in range(1, (m + 1))]
+            S_new = [U[m][i] for i in range(1, (m + 1))]
             self.store(R_new, S_new, C[1:], D[1:], R[1:], S[1:], storage)
 
     return storage
@@ -114,8 +103,7 @@ class FourRussiansHelpers:
         U[i][j] = min(
             self.substitute_cost_function(C[i], D[j]) - T[i][j - 1],
             self.delete_cost_function(C[i]) + U[i - 1][j] - T[i][j - 1],
-            self.insert_cost_function(D[j])
-        )
+            self.insert_cost_function(D[j]))
 
   def algorithm_y(self, m, A, step_size_bound):
     """ Preprocesses data by creating helper submatrices """
@@ -134,7 +122,7 @@ class FourRussiansHelpers:
 
   @staticmethod
   def get_text_parts(m, text_1):
-    return int((len(text_1) - 1) / m)
+    return (len(text_1) - 1) // m
 
   def algorithm_z(self, m, storage, text_1, text_2):
     """ Returns step vectors needed to calculate the edit distance
@@ -184,17 +172,12 @@ class FourRussiansHelpers:
   def restore_lcs_part(self, C, D, R, S, m, i1, j1):
     M = self.restore_matrix(C, D, R, S, m)
 
-    i = i1
-    j = j1
-
-    lcs = ""
-
+    i, j, lcs = i1, j1, ""
     while i != 0 and j != 0:
       if C[i] == D[j]:
         if C[i] != '#':
           lcs += C[i]
-        i = i - 1
-        j = j - 1
+        i, j = i - 1, j - 1
       elif M[i][j] == self.delete_cost_function(C[i]) + M[i - 1][j]:
         i = i - 1
       elif M[i][j] == self.insert_cost_function(D[j]) + M[i][j - 1]:
@@ -206,15 +189,11 @@ class FourRussiansHelpers:
     return text_1[((k - 1) * m + 1):(k * m + 1)]
 
   def restore_lcs(self, text_1, text_2, P, Q, m):
-    lcs = ""
-
     # indices on the matrix of submatrices
-    I = int((len(text_1) - 1) / m)
-    J = int((len(text_2) - 1) / m)
+    I, J = (len(text_1) - 1) // m, (len(text_2) - 1) // m
 
     # indices inside of the submatrices
-    i = m
-    j = m
+    i, j, lcs = m, m, ""
 
     while I != 0 and J != 0:
       C = '#' + self.get_kth_substring(I, m, text_1)
@@ -227,12 +206,9 @@ class FourRussiansHelpers:
           m, i, j)
 
       if i == 0:
-        I = I - 1
-        i = m
+        I, i = I - 1, m
       if j == 0:
-        J = J - 1
-        j = m
-
+        J, j = J - 1, m
       lcs += lcs_part
 
     # reverse result:
