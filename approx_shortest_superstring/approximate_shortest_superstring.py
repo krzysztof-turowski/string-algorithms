@@ -12,9 +12,8 @@ def get_all_merges(word1, word2):
   return result
 
 def get_word_to_merges(words):
-  return {(min(word1, word2), max(word1, word2)):\
-  get_all_merges(word1, word2) for word1, word2 in\
-  itertools.combinations(words, 2)}
+  return {(word1, word2): get_all_merges(word1, word2)
+          for word1, word2 in itertools.combinations(sorted(words), 2)}
 
 def get_merged_to_weight(all_merged_words, word_to_super):
   result = {merged_word : 0 for merged_word in all_merged_words}
@@ -40,8 +39,8 @@ def update(merged_to_weight, word_to_super,
 
 def shortest_common_super_approx(input_words):
   input_words = list(set(input_words))
-  words = [word for word in input_words if all(word == x \
-  or word[1:] not in x for x in input_words)]
+  words = [word for word in input_words
+           if all(word == x or word[1:] not in x for x in input_words)]
 
   while 1:
     word_to_merges = get_word_to_merges(words)

@@ -4,10 +4,10 @@ import math
 import random
 
 from approx_shortest_superstring.approximate_shortest_superstring \
-import shortest_common_super_approx
+    import shortest_common_super_approx
 
 from approx_shortest_superstring.exact_bruteforce \
-import shortest_common_super
+    import shortest_common_super
 
 from generator import rand
 
@@ -80,8 +80,7 @@ class TestShortestSuperstring(unittest.TestCase):
   @run_large
   def test_strict_bound_family(self):
     for k in range(2,5):
-      S = [word for S_i in (get_si(i, k) for\
-      i in range(k)) for word in S_i]
+      S = [word for S_i in (get_si(i, k) for i in range(k)) for word in S_i]
       V = ["#"+"c"+("b"*(i-1))+"c"+("a"*(4**i-i-1)) for i in range(1, k+1)]
       input_words = S + V
       result = shortest_common_super_approx(input_words)
