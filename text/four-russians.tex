@@ -1,0 +1,64 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage[margin=1.2in]{geometry}
+
+\title{Masek, Paterson ,,A Faster Algorithm Computing String Edit Distances'' - omówienie algorytmu}
+\author{Katarzyna Rajtar}
+\date{28 czerwca 2020}
+
+\begin{document}
+
+\maketitle
+
+\section{Opis problemu}
+
+Odległość edycyjna pomiędzy dwoma słowami o długościach $n$ i $m$ jest definiowana jako minimalny koszt sekwencji operacji edytujących (dodania znaku, usunięcia znaku, zamiany jednego znaku w inny), które prowadzą do transformacji jednego słowa w drugie. Szczególnym przypadkiem problemu znajdywania odległości edycyjnej jest szukanie najdłuższego wspólnego podciągu dwóch słów. Rozwiązanie tego podproblemu w czasie szybszym niż $O(n^{2-\epsilon})$ (gdy słowa mają tę samą długość $n$), prowadziłoby do obalenia SETH. Autorzy pracy pokazują algorytm na szukanie odległości edycyjnej dwóch słów działający w czasie $O(n \cdot max(1,m/log n))$ pod warunkiem, że koszty operacji edycyjnych są całkowitymi wielokrotnościami tej samej liczby rzeczywistej, a alfabet jest skończony.
+
+\section{Przyjęte oznaczenia}
+
+$A_n$ - n-ty znak słowa $A$\\
+$A^{i,j}$ - słowo $A_i...A_j$\\
+$D_a$ - koszt usunięcia znaku a\\
+$I_a$ - koszt wstawienia znaku a\\
+$R_{a,b}$ - koszt zamiany znaku a na znak b\\
+$\delta$ - odległość edycyjna, minimum po sumie kosztów wszystkich możliwych sekwencji edycyjnych,
+$\delta_{i,j}$ - odległość edycyjna między słowami $A^{1,i}$ oraz $B^{1,j}$\\
+
+\section{Algorytm Wagnera i Fischera}
+
+Algorytm opisany w pracy opiera się na pomyśle z innego algorytmu, autorstwa Wagnera i Fischera. Algorytm ten wyznacza odległość edycyjną dynamicznie, w czasie proporcjonalnym do iloczynu długości słów. Tworzy w tym celu pomocniczą macierz o rozmiarze $(|A|+1) \times (|B|+1)$, w której komórka (i,j) odpowiada kosztowi $\delta_{i,j}$. Poniższe twierdzenia prezentują sposób obliczania bazy i kolejnych komórek:\\
+
+\noindent \textbf{Twierdzenie 1}\\\\
+$\delta_{0,0} = 0$ $\forall i,j : 1 \leq i \leq |A|, 1 \leq j \leq |B|$\\
+$\delta_{i,0} = \sum_{1 \leq r \leq i}D_A_r$ oraz
+$\delta_{0,j} = \sum_{1 \leq r \leq j}I_B_r$\\
+
+\noindent \textbf{Twierdzenie 2}\\\\
+$\delta_{i, j} = min(\delta_{i-1,j-1}+R_{A_i,B_j}, \delta_{i-1,j}+D_A_i, \delta_{i,j-1}+I_B_j)$
+
+\section{Przyspieszenie metodą czterach Rosjan}
+
+Technika "czterech Rosjan" pochodzi z algorytmu obliczania przechodniego domknięcia grafu skierowanego poprzez podział macierzy sąsiedztwa na podmacierze o niewielkiej ilości wierszy. Okazuje się, że podobny pomysł można wykorzystać do asymptotycznego przyspieszenia powyższego algorytmu, właśnie dzięki podziałowi obliczenia na dużo mniejszych obliczeń.\\
+
+\noindent Zauważmy, że podmacierz $(i,j,m$) macierzy edycyjnej z algorytmu Wagnera-Fischera - zaczynająca się w komórce $(i+1, j+1)$ i mająca rozmiar $m \times m$ - jest zdeterminowana tylko i wyłącznie poprzez koszt $\delta(i,j)$ oraz wektory inicjalne $\delta(i,j+1)...\delta(i,j+m)$ oraz $\delta(i+1,j)...\delta(i+m,j)$. Obliczając wartość w komórce $(i,j)$ odwołujemy się bowiem tylko do trzech sąsiednich komórek $(i-1,j-1), (i-1,j), (i, j-1)$. Możemy więc wcześniej dla każdej możliwej podmacierzy $(i,j,m)$ obliczyć i zapamiętać jej wektory finalne: $\delta(i+m,j+1)...\delta(i+m,j+m)$ oraz $\delta(i+1,j+m)...\delta(i+m,j+m)$.\\
+
+\noindent Aby tego dokonać, musimy być w stanie wyenumerować wszystkie możliwe macierze rozmiaru $m$. Zakładamy, że alfabet jest skończony, więc słów długości $m$ jest skończona ilość. Jednak generowanie wszystkich możliwych wektorów inicjalnych może zająć zbyt dużo czasu - wartości komórek mają tendencję do wzrostu wraz z rozszerzaniem się macierzy głównej. Kiedy jednak ograniczymy funkcję kosztu do przypisywania operacjom edycyjnym wyłącznie wielokrotności jakiejś liczby rzeczywistej, okaże się, że mamy tylko skończoną ilość różnic pomiędzy sąsiednimi komórkami w macierzy edycyjnej.\\\\
+Będziemy więc operować na wektorach różnic (kroków) pomiędzy komórkami sąsiadującymi ze sobą w poziomie lub pionie. Prowadzi to do następującej modyfikacji twierdzenia 2:\\
+
+\noindent \textbf{Twierdzenie 2b}\\\\
+$\delta_{i, j} - \delta_{i-1, j} =$\\
+$min(R_{A_i,B_j} - (\delta_{i-1,j} - \delta_{i-1,j-1}), D_A_i, I_B_j + (\delta_{i,j-1} - \delta_{i-1,j-1}) - (\delta_{i-1,j} - \delta_{i-1,j-1}))$\\\\
+$\delta_{i, j} - \delta_{i, j-1} =$\\
+$min(R_{A_i,B_j} - (\delta_{i,j-1} - \delta_{i-1,j-1}), D_A_i + (\delta_{i-1,j} - \delta_{i-1,j-1}) - (\delta_{i,j-1} - \delta_{i-1,j-1}), I_B_j)$\\\\
+
+\noindent Proponowany w pracy \textbf{Algorytm Y} wykonuje pierwszy krok - generuje wszystkie możliwe pary $C, D$ słów długości $m$ oraz wszystkie możliwe wektory inicjalne różnic:  $R$ - pomiędzy sąsiednimi wierszami (wertykalny) i $S$ - pomiędzy sąsiednimi kolumnami (horyzontalny). Następnie oblicza odpowiadające danej podmacierzy wektory finalne różnic - $R'$ oraz $S'$, wyliczając kolejne wektory $T$ (wertykalne) i $U$ (horyzontalne), zgodnie ze wzorem z twierdzenia 2b. Obliczenie i zaindeksowanie każej możliwej podmacierzy zajmuje $O(m^2log m)$ czasu.\\
+
+\noindent Następnie \textbf{Algorytm Z} łączy ze sobą podwyniki wygenerowane przez Algorytm Y i oblicza rzeczywistą odległość edycyjną. W tym celu dynamicznie oblicza kolejne finalne wektory dla podmacierzy $(i,j,m)$ dla $i \in \{0,m,...|A|*(m-1)\}$ oraz $j \in \{0,m,...|B|*(m-1)\}$, wykorzystując fakt, że wektor finalny danej podmacierzy jest wektorem inicjalnym dla sąsiadującej (odpowiednio pionowym lub poziomym). Rzeczywista odległość edycyjna może być następnie uzyskana jako suma wartości komórek na dowolnej ścieżce od komórki początkowej do końcowej (dodając kolejne różnice, docierając do ostatniej komórki otrzymamy jej wartość). Czas działania tej części to $O(|A| \cdot |B| \cdot (m+log|A|)/m^2)$. Jeśli wybierzemy $m = \lfloor log_k|A| \rfloor$, całość (Algorytm Y i Z) działa w czasie $O(|A| \cdot |B|/m)$.
+
+\section{Najdłuższy wspólny podciąg}
+
+Powyższego algorytmu można różnież użyć do obliczenia najdłuższego wspólnego podciągu (LCS). W tym celu jako funkcje kosztu wybieramy:
+$D_a = I_a = 1$ oraz $R_{a,b} = 0$ jeśli a=b oraz $R_{a,b} = 2$ w przeciwnym wypadku. Najtańszą ścieżką edycyjną jest w takim przypadku usunięcie z jednego słowa znaków z nie-LCS i dodanie do drugiego słowa znaków z LCS. Do odtworzenia LCS można wykorzystać pomysł analogiczny do odtwarzania ze standardowego algorytmu (Wagnera-Fischera). Zaczynając od ostatniej komórki w macierzy, patrzymy skąd otrzymaliśmy daną wartość i cofamy się. Za każdym razem kiedy operacją, którą wykonywaliśmy jest zamiana, a znaki się zgadzają - mamy do czynienia z literą z LCS. W przypadku algorytmu prezentowanego w pracy nie mamy obliczonej całej macierzy, ale możemy odtworzyć z wektorów inicjalnych podmacierze różnic przecinane przez ścieżkę. Wybór znaków należących do LCS będzie taki sam jak w przypadku rzeczywistej macierzy kosztów.
+
+\end{document}
