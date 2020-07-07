@@ -80,8 +80,4 @@ def lzw_compress(w, parser_output=parser.OptimalOutputParser):
 
 def lzw_decompress(code, alphabet):
   instance = LZWDecompressor(alphabet)
-  decompressed = ""
-  for c in code:
-    c = int(c)
-    decompressed += instance.parse(c)
-  return decompressed
+  return ''.join(instance.parse(int(c)) for c in code)

@@ -1,4 +1,3 @@
-from ast import literal_eval as make_tuple
 from compression.core import compressor, parser
 from compression.core.dictionary import TrieReverseTrie
 
@@ -39,11 +38,7 @@ class LZ78Decompressor(compressor.Decompressor):
 
 def lz78_compress(w, parser_output=parser.OptimalOutputParser):
   instance = LZ78Compressor(parser_output)
-  compressed = []
-  for c in w[1:]:
-    code = instance.parse(c)
-    if code:
-      compressed.append(code)
+  compressed = [code for code in (instance.parse(c) for c in w[1:]) if code]
   code = instance.finish()
   if code:
     compressed += code
@@ -52,8 +47,4 @@ def lz78_compress(w, parser_output=parser.OptimalOutputParser):
 # pylint: disable=unused-argument
 def lz78_decompress(code, alphabet=None):
   instance = LZ78Decompressor()
-  decompressed = ""
-  for c in code:
-    c = make_tuple(c)
-    decompressed += instance.parse(c)
-  return decompressed
+  return ''.join(instance.parse(c) for c in code)

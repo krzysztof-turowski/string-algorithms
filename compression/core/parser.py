@@ -33,7 +33,7 @@ class GreedyOutputParser(OutputParser):
   def parse(self, c):
     extended = self.phrase.extend(c)
     if extended is None:
-      code = str(self.phrase.label) if self.phrase.label is not None else None
+      code = self.phrase.label if self.phrase.label is not None else None
       self.phrase = self.dict.search(c)
       return code
     self.phrase = extended
@@ -46,31 +46,27 @@ class GreedyOutputParser(OutputParser):
 class OptimalOutputParser(OutputParser):
   def __init__(self, dictionary):
     super(OptimalOutputParser, self).__init__(dictionary)
-    self.beginning = 1
-    self.f_beginning = 1
-    self.offset = 0
+    self.beginning, self.f_beginning, self.offset = 1, 1, 0
     self.tmp_out = ""
 
   def parse(self, c):
     self.tmp_out += c
     extended = self.phrase.extend(c)
     if extended is None:
-      tmp_offset = 0
-      tmp_depth = self.phrase.depth
+      tmp_offset, tmp_depth = 0, self.phrase.depth
       while True:
         longest_suffix = self.phrase.contract()
         tmp_offset += self.phrase.depth - longest_suffix.depth
         extended = longest_suffix.extend(c)
         if extended is None:
           self.phrase = longest_suffix
-          continue
         else:
           self.phrase = extended
           break
 
       if self.beginning + self.offset + tmp_offset > self.f_beginning + 1:
         tmp_node = self.dict.search(self.tmp_out[0:self.offset])
-        code = str(tmp_node.label)
+        code = tmp_node.label
         self.tmp_out = self.tmp_out[self.offset:]
 
         self.beginning += self.offset
@@ -88,9 +84,9 @@ class OptimalOutputParser(OutputParser):
     code = []
     if self.offset > 0:
       tmp_node = self.dict.search(self.tmp_out[0:self.offset])
-      code.append(str(tmp_node.label))
+      code.append(tmp_node.label)
       self.tmp_out = self.tmp_out[self.offset:]
     if self.tmp_out:
       tmp_node = self.dict.search(self.tmp_out)
-      code.append(str(tmp_node.label))
+      code.append(tmp_node.label)
     return code

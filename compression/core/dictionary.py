@@ -33,9 +33,7 @@ class TrieDict(object):
     return child.search(w[1:])
 
   def extend(self, c):
-    if c not in self.children:
-      return None
-    return self.children[c]
+    return self.children.get(c, None)
 
   def contract(self):
     current = self.link.parent
