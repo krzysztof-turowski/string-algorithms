@@ -34,16 +34,16 @@
 Algorytm jest ulepszeniem algorytmu Commentz-Waltera, czerpiąc z niego kilka istotnych obserwacji takich jak przeskakiwanie nieinteresujących obszarów tekstu oraz wykorzystanie automatu Aho-Corasick. Dodatkowym elementem zwiększającym efektywność jest wykorzystanie automatu sufiksowego zwanego dalej \textit{DAWG}.   
 
 Algorytm, który jest tematem pracy, dla tekstu o długości $n$ ma pesymistyczny czas działania $O(n)$.
-W przypadku średnim, gdzie najkrótszy spośród wzorców ma długość $m$ a suma ich długości jest wielomianowa w zależności od $m$ oraz prawdopodobieństwo wystąpienia litery z alfabetu (conajmniej dwu-elementowego) jest jednostajne i niezależne, złożoność wynosi $O(\frac{n}{m}* \log{m})$, co jest równocześnie dolnym ograniczeniem dla tego problemu.
-Dodatkowo dla odpowienio dużego $m$ algorytm osiąga dobre rezultaty w praktyce.
+W przypadku średnim, gdzie najkrótszy spośród wzorców ma długość $m$ a suma ich długości jest wielomianowa w zależności od $m$ oraz prawdopodobieństwo wystąpienia litery z alfabetu (co najmniej dwuelementowego) jest jednostajne i niezależne, złożoność wynosi $O(\frac{n}{m}* \log{m})$, co jest równocześnie dolnym ograniczeniem dla tego problemu.
+Dodatkowo dla odpowiednio dużego $m$ algorytm osiąga dobre rezultaty w praktyce.
 
 \section{Idea}
 
-Idea algorytmu oparta jest o dwie fazy zwane \textit{PROCESS1} oraz \textit{PROCESS2}. Pierwsza z nich skanuje test od lewej do prawej przesuwając potencjną pozycję zakończenia wzorca co najmniej o $\frac{m}{2}$. W tej fazie bazuje on na zmiennej $\gamma$, która spełnia niezmiennik $\gamma = $ najdłuży suffix od początku tekstu do pozycji $i$, który jest jednocześnie prefiksem jakiegoś wzorca. Jeśli długość $\gamma \leq \frac{m}{2}$ kończymy pierwszą fazę algorytmu i przechodzimy do fazy drugiej. W implementacji będziemy utorzsamiać $\gamma$ ze stanem w AC.
+Idea algorytmu oparta jest o dwie fazy zwane \textit{PROCESS1} oraz \textit{PROCESS2}. Pierwsza z nich skanuje test od lewej do prawej przesuwając potencjalną pozycję zakończenia wzorca co najmniej o $\frac{m}{2}$. W tej fazie bazuje on na zmiennej $\gamma$, która spełnia niezmiennik $\gamma = $ najdłuższy suffix od początku tekstu do pozycji $i$, który jest jednocześnie prefiksem jakiegoś wzorca. Jeśli długość $\gamma \leq \frac{m}{2}$ kończymy pierwszą fazę algorytmu i przechodzimy do fazy drugiej. W implementacji będziemy utożsamiać $\gamma$ ze stanem w AC.
 
 Faza druga wykonuje skanowanie tekstu od tyłu od pozycji $i + SHIFT$ na odległość równą $m$, gdzie $SHIFT = m - |\gamma|$.
 
-Dodatkowo podczas fazy pierwszej, gdy wyznaczaczamy kolejne wartości $\gamma$, będziemy używali zbudowanego wcześniej automatu $Aho-Corasick$, aby robić to bardziej efektywnie. Natomiast faza druga w skanowaniu do tyłu używa $DAWGa$, który został zbudowany przy użyciu zbioru odwróconych wzorców.  
+Dodatkowo podczas fazy pierwszej, gdy wyznaczamy kolejne wartości $\gamma$, będziemy używali zbudowanego wcześniej automatu $Aho-Corasick$, aby robić to bardziej efektywnie. Natomiast faza druga w skanowaniu do tyłu używa $DAWGa$, który został zbudowany przy użyciu zbioru odwróconych wzorców.  
 
 \section{Struktura dla wzorców}
 W celu przechowywania w pamięci zadanego zestawu wzorców należy przed przystąpieniem do wyszukiwania zbudować automat $Aho-Corasick$ oraz $DAWG$. Pozwoli to szybko odpowiadać na wymagane zapytania.
@@ -102,14 +102,14 @@ Potrzebne zapytania:
 \begin{algorithmic}[1]
 \Procedure{NEXT2}{$j, i$} \Comment{indeksy zakresu tekstu}
 \State $\gamma_{new} = dawg.traverse(dawg.root, j, i)$ \Comment{przechodzimy DAWG skanując znaki od i do j}
-\State \textbf{return} $ acm.traverse(acm.root, \gamma_{new})$ \Comment{przechodzimy AC aby móc utorzsamić $\gamma$ ze stanem}
+\State \textbf{return} $ acm.traverse(acm.root, \gamma_{new})$ \Comment{przechodzimy AC aby móc utożsamić $\gamma$ ze stanem}
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 
 \section{Wyszukiwanie wzorca}
 
-Wyszukiwanie wzorca działa na zasadzie przesuwania zakresu tekstu bazując na $AC$ oraz $DAWG$. Wykonujemy naprzemiennie fazę pierwszą i drugą wspomniane na początku. Pierwsza z nich skanuje test od lewej do prawej, aby przesunąć potencjalną pozycję zakończenia wzorca co najmniej o $\frac{m}{2}$. Przesunięcie opieramy na zmiennej $\gamma$, która spełnia niezmiennik $\Gamma: \gamma = $ najdłuży suffix od początku tekstu do pozycji $i$, który jest jednocześnie prefiksem jakiegoś wzorca. Jeśli długość $\gamma \leq \frac{m}{2}$, kończymy pierwszą fazę algorytmu i przechodzimy do fazy drugiej. W implementacji będziemy utorzsamiać $\gamma$ ze stanem w $AC$, a głębokość tego stanu z długością dopasowanego prefiksu wzorca. Tak długo jak nie osiągneliśmy wymaganej długości prefiksu, skanujemy kolejne znaki tekstu przechodząc jednocześnie po $AC$. Jeśli w tej fazie uda nam się dopasować jakiś wzorzec ($\gamma$ jest stanem akceptującym automatu AC), to zwracamy go poprzez \textit{yield}.
+Wyszukiwanie wzorca działa na zasadzie przesuwania zakresu tekstu bazując na $AC$ oraz $DAWG$. Wykonujemy naprzemiennie fazę pierwszą i drugą wspomniane na początku. Pierwsza z nich skanuje test od lewej do prawej, aby przesunąć potencjalną pozycję zakończenia wzorca co najmniej o $\frac{m}{2}$. Przesunięcie opieramy na zmiennej $\gamma$, która spełnia niezmiennik $\Gamma: \gamma = $ najdłuższy suffix od początku tekstu do pozycji $i$, który jest jednocześnie prefiksem jakiegoś wzorca. Jeśli długość $\gamma \leq \frac{m}{2}$, kończymy pierwszą fazę algorytmu i przechodzimy do fazy drugiej. W implementacji będziemy utożsamiać $\gamma$ ze stanem w $AC$, a głębokość tego stanu z długością dopasowanego prefiksu wzorca. Tak długo jak nie osiągnęliśmy wymaganej długości prefiksu, skanujemy kolejne znaki tekstu przechodząc jednocześnie po $AC$. Jeśli w tej fazie uda nam się dopasować jakiś wzorzec ($\gamma$ jest stanem akceptującym automatu AC), to zwracamy go poprzez \textit{yield}.
 
 Faza druga wykonuje skanowanie tekstu od tyłu od pozycji $i + SHIFT$ na odległość równą $m$, gdzie $SHIFT = m - |\gamma|$. Skanowanie odbywa się na zasadzie skanowania tekstu od tyłu jednocześnie symulując przejścia w $DAWG$. Tym sposobem dopasujemy najdłuższy sufiks spośród sufiksów wszystkich wzorców. Dla znalezionego sufiksu musimy jeszcze zaktualizować naszą pozycję w $AC$ i możemy powrócić do fazy pierwszej. 
 
@@ -143,12 +143,12 @@ Faza druga wykonuje skanowanie tekstu od tyłu od pozycji $i + SHIFT$ na odległ
 \end{algorithmic}
 \end{algorithm}
 
-Wynikiem tej częsci jest lista par postaci $(w, i)$, gdzie $w$ to któryś z szukanych wzorców, natomiast $i$ to pozycja w tekście, na której został znaleziony wzorzec $w$.
+Wynikiem tej części jest lista par postaci $(w, i)$, gdzie $w$ to któryś z szukanych wzorców, natomiast $i$ to pozycja w tekście, na której został znaleziony wzorzec $w$.
 
 \section{Złożoność obliczeniowa algorytmu}
 
 \begin{LEM}
-Zakładjąc zbudowaną strukturę $AC$ oraz $DAWG$:
+Zakładając zbudowaną strukturę $AC$ oraz $DAWG$:
 \begin{itemize}
     \item $NEXT1(\gamma, a)$ działa w czasie $O(1)$. \\
         Wykonanie funkcji $NEXT1$ sprowadza się do wykonania jednego kroku w automacie AC.\qed
@@ -162,13 +162,13 @@ Algorytm w sumie porównuje co najwyżej $2n$ znaków.
 \end{TW}
 
 \begin{PROF}
-Zauważmy, że znak na danej pozycji może być przetworzony przez $PROCESS1$ co najwyżej raz. Jeśli tak się stało, to następnie zostanie tylko raz przetworzony przez $PROCESS2$ i już nigdy ponownie do niego nie wrócimy. Jeśli natomiast $PROCESS2$ odwiedzi dany znak dwa razy, mamy wtedy pewność, że dany znak nie został przeczytany przez $PROCESS1$ w ogóle. \qed
+Zauważmy, że znak na danej pozycji może być przetworzony przez $PROCESS1$ co najwyżej raz, ponieważ indeks $i$ jest sukcesywnie przesuwany do przodu oraz $PROCESS2$ nigdy nie cofa go do tyłu. Oczywistym jest, że w jednym przejściu $PROCESS2$, również wykona tylko jedno porównanie. Zauważmy również, że $SHIFT > \frac{m}{2}$. Aby dwa kolejne wykonania $PROCESS2$ odwiedziły ten sam znak, długość $\gamma$ przed rozpoczęciem fazy musiała by być większa niż $\frac{m}{2}$ co jest sprzeczne z warunkiem pętli fazy pierwszej. \qed
 \end{PROF}
 
-Niech $\sigma$ to prawdopodobieństwo jednostajengo wystapienia symbolu w tekście. Wtedy:
+Niech $\sigma$ to prawdopodobieństwo jednostajnego wystąpienia symbolu w tekście. Wtedy:
 
 \begin{LEM}
-$P(\Delta(i) > (3k + 1)*log_{\sigma}m) \leq \frac{1}{m^{k+1}}$, gdzie $P$ to prawdopodobieństwo.
+$Pr[\Delta(i) > (3k + 1)*log_{\sigma}m] \leq \frac{1}{m^{k+1}}$.
 \end{LEM}
 
 \begin{TW}
@@ -177,8 +177,8 @@ Zakładając $M \leq m^k$ algorytm wykonuje $O(\frac{n}{m} * log_{\sigma} m)$ po
 
 \begin{PROF}
 Podczas działania algorytmu wykonywanych jest co najwyżej $O(\frac{n}{m})$ przesunięć.
-Wystarczy jeszcze udowodnić, że średnio pierwsza i druga faza algorytmu odwiedza zaledwie logarytmiczną liczbę znaków. Niech $K = (2k + 1) * log _{\sigma} m$. $PROCESS1$ zakończy się z dużym prawdopodobieństwem po K krokach. Jeśli nie, zrobi on $m^k$ kroków z prawdopodobieństwem $1/m^{k+1}$. Dostajemy więc średnią złożoność $O(K)$ co jest logarytmiczne.
-Sytuacja z $PROCESS2$ jest analogiczna. \qed
+Wystarczy jeszcze udowodnić, że średnio pierwsza i druga faza algorytmu odwiedza zaledwie logarytmiczną liczbę znaków. Niech $K = (3k + 1) * log _{\sigma} m$. Zgodnie z powyższym lematem $PROCESS2$ zakończy się z dużym prawdopodobieństwem po K krokach (prawdopodobieństwo, że dopasujemy mniej niż K symboli jest wynosi co najmniej $\frac{m^{k + 1} - 1}{m^{k + 1}}$). Jeśli nie, zrobi on $m^k$ kroków z prawdopodobieństwem $\frac{1}{m^{k+1}}$. Dostajemy więc średnią złożoność $O(K)$ co jest logarytmiczne. \\
+Skorzystajmy z podobnego argumentu dla $PROCESS1$. Jeśli $\Delta(i + K) < K$ wtedy algorytm przegląda co najwyżej $K$ znaków (od pozycji $i$ do $i+K$). Prawdopodobieństwo przeciwnego zdarzenia ponownie jest bardzo małe ($\leq \frac{1}{m^{k+1}}$). \qed
 \end{PROF}
 
 

@@ -1,3 +1,5 @@
+from queue import Queue
+
 class AhoCorasickNode:
     def __init__(self, depth=0):
         self.edges = {}
@@ -21,14 +23,14 @@ class AhoCorasickMachine:
 
     def _create_aho_corasick_machine(self, patterns):
         self._create_trie(patterns)
-        queue = []
+        queue = Queue()
         for node in self.root.edges.values():
-            queue.append(node)
+            queue.put(node)
             node.fail = self.root
-        while len(queue) > 0:
-            cur_node = queue.pop(0)
+        while not queue.empty():
+            cur_node = queue.get()
             for label, next_node in cur_node.edges.items():
-                queue.append(next_node)
+                queue.put(next_node)
                 fail_node = cur_node.fail
                 while fail_node is not None and not label in fail_node.edges:
                     fail_node = fail_node.fail
@@ -69,8 +71,7 @@ class DAWG:
         else:
             next_node = DawgNode()
             node.primary[label] = next_node
-            current_node = node
-            suffix_node = None
+            current_node, suffix_node = node, None
             while current_node is not self.root and suffix_node is None:
                 current_node = current_node.suffix
                 if label in current_node.primary:
@@ -100,7 +101,7 @@ class DAWG:
                     current_node.secondary[char] = new_child
                     break
             else:
-                break
+                return new_child
         return new_child
 
     def traverse(self, node, text, p, q):
@@ -132,8 +133,7 @@ def fast_practical_multi_string_matching_build(W):
 def fast_practical_multi_string_matching(text, n, S):
     i = 0
     gamma = S.acm.root
-    flag = True
-    while flag:
+    while True:
         while gamma.depth >= S.m/2:
             if gamma.final:
                 for match in gamma.final:
@@ -143,8 +143,7 @@ def fast_practical_multi_string_matching(text, n, S):
             if i > n:
                 return
             gamma = _next1(S, gamma, text[i - 1])
-        crit_pos = i - gamma.depth + 1
-        shift = S.m - gamma.depth
+        crit_pos, shift = i - gamma.depth + 1, S.m - gamma.depth
         i += shift
         if i > n:
             return
