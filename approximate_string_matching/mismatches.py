@@ -7,7 +7,7 @@ def make_len_2_pow(s):
 
 def compute_pattern(w:str, t:str, k:int, cur_pat_len:int,
                     b_frst_mm_p:int, end_loop:int, PAT_M, TEXT_M,
-                    pattern_m=True): 
+                    pattern_m=True):
 
   def extend_pattern(cur_p:int, frst_p:int, found_mm:int):
     frst_p = max(frst_p, cur_p)
