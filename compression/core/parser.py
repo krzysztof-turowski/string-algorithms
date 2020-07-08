@@ -1,5 +1,5 @@
 # pylint: disable=too-few-public-methods
-class DictParser(object):
+class DictParser:
   def __init__(self, dictionary, label_extractor, extension_callback):
     self.dict = dictionary
     self.phrase = self.dict.trie
@@ -18,7 +18,7 @@ class DictParser(object):
     self.phrase = extended
     return None
 
-class OutputParser(object):
+class OutputParser:
   def __init__(self, dictionary):
     self.dict = dictionary
     self.phrase = self.dict.trie

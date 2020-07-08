@@ -1,5 +1,5 @@
 # pylint: disable=too-many-instance-attributes
-class TrieDict(object):
+class TrieDict:
   def __init__(self, label, edge=None, depth=0, index=None, parent=None):
     self.children = {}
     self.link, self.terminal = None, None
@@ -45,7 +45,7 @@ class TrieDict(object):
     self.link = node
 
 # pylint: disable=no-self-use
-class TrieReverseTrie(object):
+class TrieReverseTrie:
   def __init__(self):
     self.trie = TrieDict(None, index=0)
     self.trie_rev = TrieDict(None, index=0)

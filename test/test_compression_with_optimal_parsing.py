@@ -10,7 +10,7 @@ COMPRESSION_ALGORITHMS = [
 ]
 
 def get_alphabet(w):
-  return sorted({c for c in w})
+  return sorted(set(w))
 
 class TestCompressionWithOptimalParsing(unittest.TestCase):
   run_large = unittest.skipUnless(

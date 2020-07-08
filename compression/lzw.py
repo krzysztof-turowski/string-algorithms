@@ -63,7 +63,7 @@ class LZWDecompressor(compressor.Decompressor):
     return phrase
 
 def get_alphabet(w):
-  return sorted({c for c in w})
+  return sorted(set(w))
 
 def lzw_compress(w, parser_output=parser.OptimalOutputParser):
   alphabet = get_alphabet(w)
