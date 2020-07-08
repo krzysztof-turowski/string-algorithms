@@ -1,7 +1,5 @@
-from dataclasses import dataclass
 from collections import deque
 
-@dataclass(init=True)
 class Node():
   def __init__(self, char, depth, parent):
     self.char = char
@@ -12,7 +10,6 @@ class Node():
     self.ac_output = None
     self.children = {}
 
-@dataclass(init=True)
 class CommentzWalterNode(Node):
   def __init__(self, char, depth, parent):
     Node.__init__(self, char, depth, parent)
