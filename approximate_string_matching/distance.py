@@ -1,6 +1,10 @@
 from collections import namedtuple
 import math
 
+from approximate_string_matching.four_russians_helpers import \
+  FourRussiansHelpers, lcs_delete_cost_function, \
+  lcs_insert_cost_function, lcs_substitute_cost_function
+
 ScoreMatrix = namedtuple(
     'ScoreMatrix', ['insert', 'delete', 'substitute', 'match'])
 
@@ -41,3 +45,19 @@ def indel_distance_row(text_1, text_2, n_1, n_2):
 
 def indel_distance(text_1, text_2, n_1, n_2):
   return indel_distance_row(text_1, text_2, n_1, n_2)[-1]
+
+def edit_distance_four_russians(
+    text_1, text_2,
+    delete_cost_function=lcs_delete_cost_function,
+    insert_cost_function=lcs_insert_cost_function,
+    substitute_cost_function=lcs_substitute_cost_function):
+  """ Algorithm proposed by William J. Masek and Michael S. Paterson,
+  using the method of "Four Russians """
+
+  fr = FourRussiansHelpers(delete_cost_function,
+                           insert_cost_function,
+                           substitute_cost_function)
+  m, A, step_size_bound, text_1, text_2 = fr.prepare_parameters(text_1, text_2)
+  storage = fr.algorithm_y(m, A, step_size_bound)
+  cost = fr.get_edit_distance(m, text_1, text_2, storage)
+  return cost
