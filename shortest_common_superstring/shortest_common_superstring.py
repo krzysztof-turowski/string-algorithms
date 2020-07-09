@@ -49,12 +49,12 @@ def group_merge(T):
       for word_1, word_2 in itertools.product(words_to_remove, words):
         if word_1 == word_2:
           continue
-        for merged_word in word_merges[tuple(sorted((word_1, word_2)))]:
-          weights.pop(merged_word, None)
+        for word in word_merges[tuple(sorted((word_1, word_2)))]:
+          weights.pop(word, None)
       for word in words_to_remove:
-        for superstring_merge in word_to_superstrings[word]:
-          if superstring_merge in weights:
-            weights[superstring_merge] -= len(word) - 1
+        for superstring in word_to_superstrings[word]:
+          if superstring in weights:
+            weights[superstring] -= len(word) - 1
 
       words -= words_to_remove
     words |= next_words
