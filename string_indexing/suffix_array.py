@@ -34,10 +34,10 @@ def prefix_doubling(text, n):
 
 def skew(text, n):
   '''Computes suffix array using Kärkkäinen-Sanders algorithm'''
-  def convert(data):
+  def _convert(data):
     # zamiana tablicy liczb na string UTF-32 w tym samym porzadku znakow
     return '#' + ''.join(chr(ord('0') + v) for v in data)
-  def compare(i, j):
+  def _compare(i, j):
     if i % 3 == 1:
       return (text[i], S.get(i + 1, 0)) >= (text[j], S.get(j + 1, 0))
     return (text[i:i + 2], S.get(i + 2, 0)) >= (text[j:j + 2], S.get(j + 2, 0))
@@ -45,10 +45,9 @@ def skew(text, n):
   if n <= 4:
     return naive(text, n)
   text += '$'
-  P12 = [i for i in range(1, n + 2) if i % 3 == 1] \
-      + [i for i in range(1, n + 2) if i % 3 == 2]
+  P12 = list(range(1, n + 2, 3)) + list(range(2, n + 2, 3))
   triples = _rank([text[i:i + 3] for i in P12])
-  recursion = skew(convert(triples), (2 * n + 1) // 3 + 1)[1:]
+  recursion = skew(_convert(triples), (2 * n + 1) // 3 + 1)[1:]
   L12 = [P12[v - 1] for v in recursion]
 
   mapping = {v: i + 1 for i, v in enumerate(L12)}
@@ -57,7 +56,70 @@ def skew(text, n):
   P0 = [i for i in range(1, n + 2) if i % 3 == 0]
   tuples = [(text[i], S.get(i + 1, 0)) for i in P0]
   L0 = [P0[i - 1] for i in _reverse(_rank(tuples))]
-  return _merge(L12, L0, compare = compare)
+  return _merge(L12, L0, compare = _compare)
+
+def _ternary_sort(I, begin, end, V, get_key_for_index):
+  def get_pivot_first():
+    return get_key_for_index(I[begin])
+
+  if begin == end - 1:
+    V[I[begin] - 1], I[begin] = begin, -1
+  if end - begin < 2:
+    return
+
+  pivot, first_equal, last_equal = get_pivot_first(), begin, begin + 1
+  for i in range(begin + 1, end):
+    key = get_key_for_index(I[i])
+    if key < pivot:
+      I[first_equal], I[i] = I[i], I[first_equal]
+      I[i], I[last_equal] = I[last_equal], I[i]
+      first_equal, last_equal = first_equal + 1, last_equal + 1
+    elif key == pivot:
+      I[last_equal], I[i] = I[i], I[last_equal]
+      last_equal += 1
+  _ternary_sort(I, begin, first_equal, V, get_key_for_index)
+  if last_equal - first_equal == 1:
+    V[I[first_equal] - 1], I[first_equal] = first_equal, -1
+  else:
+    for i in range(first_equal, last_equal):
+      V[I[i] - 1] = last_equal - 1
+  _ternary_sort(I, last_equal, end, V, get_key_for_index)
+
+def larsson_sadakane(text, n):
+  text += '$'
+  I = sorted(list(range(1, n + 2)), key = lambda index: text[index])
+
+  V = [0] * (n + 1)
+  current_index, current_symbol = n, text[I[n]]
+  for i, v in enumerate(reversed(I)):
+    if current_symbol != text[v]:
+      current_index, current_symbol = n - i, text[v]
+    V[v - 1] = current_index
+
+  current_length, current_symbol = 0, '$'
+  for i, current_suffix in enumerate(I):
+    if current_symbol != text[current_suffix]:
+      if current_length == 1:
+        I[i - 1] = -1
+      current_length, current_symbol = 0, text[current_suffix]
+    current_length += 1
+
+  k = 1
+  while k <= n and I[0] != -(n + 1):
+    i = 0
+    while i <= n:
+      if I[i] < 0:
+        next_i = i - I[i]
+        while next_i <= n and I[next_i] < 0:
+          I[i], next_i = I[i] + I[next_i], next_i - I[next_i]
+      else:
+        next_i = V[I[i] - 1] + 1
+        _ternary_sort(I, i, V[I[i] - 1] + 1, V, lambda index: V[index + k - 1])
+      i = next_i
+    k *= 2
+  for i in range(n + 1):
+    I[V[i]] = i + 1
+  return I
 
 def induced_sorting(text, n):
   '''Computes suffix array using Nong-Zhang-Chan algorithm'''
@@ -68,7 +130,7 @@ def from_suffix_tree(ST, n):
   return ST.get_all_leaves(lambda x: n + 2 - x.depth)
 
 def contains(SA, text, word, n, m):
-  def binary_search(f):
+  def _binary_search(f):
     left, right = -1, n + 1
     while left + 1 < right:
       mid = (left + right) // 2
@@ -78,38 +140,7 @@ def contains(SA, text, word, n, m):
         left = mid
     return right
   # Najmniejszy sufiksu nie większy niż szukane słowo
-  low = binary_search(lambda x: word[1:] <= text[SA[x]:])
+  low = _binary_search(lambda x: word[1:] <= text[SA[x]:])
   # Najmniejszy sufiks większego niż m-literowy prefiks szukanego słowa
-  high = binary_search(lambda x: word[1:] < text[SA[x]:SA[x] + m])
+  high = _binary_search(lambda x: word[1:] < text[SA[x]:SA[x] + m])
   yield from sorted([SA[i] for i in range(low, high)])
-
-def lcp_from_suffix_array(SA, text, n):
-  text += '$'
-  return [-1] + [
-      next(i for i, x, y in zip(range(n), text[i:], text[j:]) if x != y)
-      for i, j in zip(SA, SA[1:])]
-
-def lcp_from_suffix_tree(ST):
-  def _get_lcp(v):
-    if len(v.children) == 0:
-      return []
-    L = [lcp for _, child in sorted(v.children.items())
-         for lcp in _get_lcp(child) + [v.depth]]
-    return L[:-1]
-  ST.set_depth()
-  return [-1] + _get_lcp(ST)
-
-def lcp_kasai(SA, text, n):
-  text += '$'
-  L = [-1] * (n + 1)
-  R, k = _reverse(SA), 0
-  for i in range(1, n + 2):
-    if R[i - 1] != n + 1:
-      j = SA[R[i - 1]]
-      while i + k <= n and j + k <= n and text[i + k] == text[j + k]:
-        k += 1
-      L[R[i - 1]] = k
-      k = max(k - 1, 0)
-    else:
-      k = 0
-  return L
