@@ -3,96 +3,18 @@ import os
 import unittest
 
 from generator import rand
-from string_indexing import suffix_tree, suffix_array, farach_suffix_tree, \
+from string_indexing import suffix_array, suffix_tree, farach, \
                             sl_suffix_array, lcp_lr, is_suffix_array, \
                             larsson_sadakane_suffix_array
-
-SUFFIX_TREE_ALGORITHMS = [
-    suffix_tree.weiner,
-    suffix_tree.mccreight,
-    suffix_tree.ukkonen,
-    farach_suffix_tree.farach_suffix_tree,
-]
 
 SUFFIX_ARRAY_ALGORITHMS = [
     suffix_array.prefix_doubling,
     suffix_array.skew,
-    farach_suffix_tree.farach_suffix_array,
+    farach.suffix_array,
     sl_suffix_array.small_large,
     is_suffix_array.sa_is,
     larsson_sadakane_suffix_array.larsson_sadakane_suffix_array
 ]
-
-class TestSuffixTrees(unittest.TestCase):
-  run_large = unittest.skipUnless(
-      os.environ.get('LARGE', False), 'Skip test in small runs')
-
-  @staticmethod
-  def get_suffix_links(tree, links):
-    tree.set_index()
-    return tree, sorted([(u.index, v.index) for u, v in links.items()])
-
-  @staticmethod
-  def get_backward_suffix_links(tree, links):
-    tree.set_index()
-    return tree, sorted([(v.index, u.index) for (u, _), v in links.items()])
-
-  def check_suffix_trees(self, t, n, reference):
-    for algorithm in SUFFIX_TREE_ALGORITHMS:
-      self.assertEqual(
-          algorithm(t, n)[0],
-          reference,
-          'Algorithm: {0}'.format(algorithm.__name__))
-
-  def check_suffix_links(self, t, n, reference):
-    self.assertEqual(
-        TestSuffixTrees.get_suffix_links(*suffix_tree.mccreight(t, n)),
-        reference,
-        'Algorithm: mccreight')
-    self.assertEqual(
-        TestSuffixTrees.get_suffix_links(*suffix_tree.ukkonen(t, n)),
-        reference,
-        'Algorithm: ukkonen')
-    self.assertEqual(
-        TestSuffixTrees.get_backward_suffix_links(*suffix_tree.weiner(t, n)),
-        reference,
-        'Algorithm: weiner')
-
-  @run_large
-  def test_random_suffix_tree(self):
-    T, n, A = 100, 200, ['a', 'b']
-    for _ in range(T):
-      t = rand.random_word(n, A)
-      reference = suffix_tree.naive(t, n)
-      self.check_suffix_trees(t, n, reference)
-
-  @run_large
-  def test_all_suffix_tree(self):
-    N, A = 10, ['a', 'b']
-    for n in range(2, N + 1):
-      for t in itertools.product(A, repeat = n):
-        t = '#' + ''.join(t)
-        reference = suffix_tree.naive(t, n)
-        self.check_suffix_trees(t, n, reference)
-
-  @run_large
-  def test_random_suffix_links(self):
-    T, n, A = 100, 200, ['a', 'b']
-    for _ in range(T):
-      t = rand.random_word(n, A)
-      reference = TestSuffixTrees.get_suffix_links(
-          *suffix_tree.mccreight(t, n))
-      self.check_suffix_links(t, n, reference)
-
-  @run_large
-  def test_all_suffix_links(self):
-    N, A = 10, ['a', 'b']
-    for n in range(2, N + 1):
-      for t in itertools.product(A, repeat = n):
-        t = '#' + ''.join(t)
-        reference = TestSuffixTrees.get_suffix_links(
-            *suffix_tree.mccreight(t, n))
-        self.check_suffix_links(t, n, reference)
 
 class TestSuffixArrays(unittest.TestCase):
   run_large = unittest.skipUnless(
@@ -159,7 +81,7 @@ class TestLcpArrays(unittest.TestCase):
         reference,
         'Algorithm: kasai')
     self.assertEqual(
-        farach_suffix_tree.farach_lcp_array(t, n),
+        farach.lcp_array(t, n),
         reference,
         'Algorithm: farach'
     )

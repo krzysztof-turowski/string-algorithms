@@ -7,7 +7,7 @@ def break_node(parent, child, index):
   parent.add_child(u)
   return u
 
-def fast_find(v, w, split):
+def _fast_find(v, w, split):
   index = 0
   while index < len(w) and w[index] in v.children:
     child = v.children[w[index]]
@@ -17,7 +17,7 @@ def fast_find(v, w, split):
     v, index = child, index + len(child.label)
   return v, len(w) - index
 
-def slow_find(v, w):
+def _slow_find(v, w):
   index = 0
   while index < len(w) and w[index] in v.children:
     child = v.children[w[index]]
@@ -32,7 +32,7 @@ def naive(text, n):
   root, leaf = trie.TrieNode(''), trie.TrieNode(text[1:])
   root.add_child(leaf)
   for i in range(2, n + 2):
-    head, remaining = slow_find(root, text[i:])
+    head, remaining = _slow_find(root, text[i:])
     leaf = trie.TrieNode(text[-remaining:])
     head.add_child(leaf)
   return root
@@ -49,10 +49,10 @@ def weiner(text, n):
     u = link.get((v, text[i]))
     if u is None or text[depth] in u.children:
       if u is None:
-        u, remaining = slow_find(root, text[depth - 1:])
+        u, remaining = _slow_find(root, text[depth - 1:])
       else:
-        u, remaining = slow_find(u, text[depth:])
-      v, _ = fast_find(v, text[depth:-remaining], False)
+        u, remaining = _slow_find(u, text[depth:])
+      v, _ = _fast_find(v, text[depth:-remaining], False)
       depth = len(text) - remaining
       if u != root:
         link[(v, text[i])] = u
@@ -78,9 +78,9 @@ def mccreight(text, n):
       else:
         beta = head.parent.children[head.label[0]].label
       gamma = head.children[leaf.label[0]].label
-      v, _ = fast_find(S[head.parent], beta, split = True)
+      v, _ = _fast_find(S[head.parent], beta, split = True)
     S[head] = v
-    head, remaining = slow_find(v, gamma)
+    head, remaining = _slow_find(v, gamma)
     leaf = trie.TrieNode(text[-remaining:])
     head.add_child(leaf)
   return root, S
@@ -106,7 +106,7 @@ def ukkonen(text, n):
           S[previous_head] = v
         previous_head, head = v, S[head]
         if shift > 0:
-          head, shift = fast_find(head, text[i - shift:i], split = False)
+          head, shift = _fast_find(head, text[i - shift:i], split = False)
       if previous_head is not None:
         S[previous_head] = head
       child = head.children.get(text[i - shift]) if shift >= 0 else None
@@ -115,6 +115,42 @@ def ukkonen(text, n):
     else:
       shift += 1
   return root, S
+
+def from_suffix_array_and_lcp(SA, LCP, text, n):
+  root, leaf = trie.TrieNode(''), trie.TrieNode(text[SA[0] - 1:])
+  root.set_depth(0)
+  root.add_child(leaf)
+  leaf.set_depth(len(leaf.label))
+  root.index, leaf.index = n + 2, n + 2 - leaf.depth
+
+  next_index, last_node = root.index + 1, leaf
+  for a, lcp in zip(SA[1:], LCP):
+    suffix = text[a - 1:]
+    current_node = last_node
+    while current_node.depth > lcp:
+      current_node = current_node.parent
+    if current_node.depth == lcp:
+      if current_node.depth == len(suffix):
+        new_node = current_node
+      else:
+        new_node = trie.TrieNode(suffix[current_node.depth:])
+        current_node.add_child(new_node)
+    else:
+      rightmost_child = max(current_node.children.items())[1]
+      split_node = break_node(
+          current_node, rightmost_child, lcp - current_node.depth)
+      split_node.set_depth(lcp)
+      if suffix[lcp:]:
+        new_node = trie.TrieNode(suffix[lcp:])
+        split_node.add_child(new_node)
+        split_node.index = next_index
+        next_index += 1
+      else:
+        new_node = split_node
+    new_node.index = n + 2 - len(suffix)
+    new_node.set_depth(len(suffix))
+    last_node = new_node
+  return root
 
 def contains(ST, _, word, n, m):
   ST.set_depth()
