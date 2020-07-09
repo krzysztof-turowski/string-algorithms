@@ -21,6 +21,11 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 1. Longest common subsequence: Needleman-Wunsch and Hirschberg algorithms
 2. String matching with don't care symbols: algorithm based on FFT
 
+### Shortest common superstring
+1. $\log{n}$-approximation (Li and Jiang) algorithm
+2. 4- and 3-approximation (Blum et al.) algorithms based on overlaps
+3. Greedy overlap algorithm
+
 ## Testing
 
 Run all tests:
