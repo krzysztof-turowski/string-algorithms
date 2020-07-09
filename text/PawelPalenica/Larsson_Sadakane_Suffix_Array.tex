@@ -1,0 +1,120 @@
+%! Author = pawel
+%! Date = 6/17/20
+
+% Preamble
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsthm}
+\usepackage{amsmath} 
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{sectsty}
+\usepackage{algorithmicx,algpseudocode}
+\usepackage{titling}
+\usepackage[
+backend=biber,
+style=alphabetic,
+sorting=ynt
+]{biblatex}
+\addbibresource{larsson_sadakane.bib}
+
+\newtheorem{observation}{Obserwacja}
+\newtheorem*{definition}{Definicja}
+\newtheorem*{lemma}{Lemat}
+
+% Commands
+\newcommand{\subtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\large#1\end{center}
+    \vskip0.5em}%
+}
+
+% Document
+\begin{document}
+\title{Faster suffix sorting}
+\subtitle{Algorytm obliczania tablicy sufiksowej autorstwa N. Larssona i K. Sadakane \cite{fastsufsort}}
+\author{Paweł Palenica}
+\date{}
+\maketitle
+
+\section*{Wstęp}
+
+Problem który będzie rozwiązywany definiujemy następująco. Niech $X = x_1 x_2 \ldots x_n \$ $ będzie ciągiem znaków złożonym z ciągu wejściowego długości $n$ z dopisanym symbolem $\$$, który jest leksykograficznie przed wszystkimi symbolami ciągu wejściowego. Jako $S_i,\ 1 \leq i \leq n+1$ będziemy oznaczać sufiks $X$ zaczynający się w pozycji $i$. Wyjściem algorytmu ma być tablica indeksów $I$ (\textit{tablica sufiksowa}) taka że $S_{I[k-1]}$ jest leksykograficznie mniejsze od $S_{I[k]}$ dla $0 < k \leq n$.
+
+Algorytm tworzenia tablicy sufiksowej zaprezentowany przez N. Larssona i K. Sadakane działa w czasie $O(n\ \log{n})$ gdzie $n$ jest długością wejściowego tekstu. Autorzy rozbudowują podejście \cite{basicAlgo} i korzystają z techniki `podwajania` znanej z algorytmu Karpa, Millera, Rosenberga która polega na użyciu pozycji sufiksów po fazie sortowania jako kluczy do sortowania dwukrotnie dłuższych sufiksów w kolejnej fazie. Autorzy formalizują to podejście definiując pojęcie \textit{h-order}, czyli porządek leksykograficzny sufiksów rozważając jedynie $h$ początkowych znaków każdego sufiksu. Zauważmy, że \textit{h-order} niekoniecznie jest jednoznaczny jeśli $h < n$.
+\begin{observation}
+\label{obs1}
+Sortowanie sufiksów przy użyciu klucza w postaci pary złożonej z pozycji sufiksu $S_i$ w \textit{h-order} oraz pozycji sufiksu $S_{i+h}$ w \textit{h-order} daje sortowanie sufiksów w \textit{2h-order}.
+\end{observation}
+
+\begin{definition}
+Dla tablicy sufiksów $I$ która jest w \textit{h-order} definiujemy
+\begin{itemize}
+    \item Maksymalna (względem długości) spójna sekwencja sufiksów w $I$ które mają te same początkowe $h$ znaków to \textbf{grupa}
+    \item Grupa składająca się z co najmniej 2 sufiksów jest \textbf{grupą nieposortowaną}
+    \item Grupa składająca się z jednego sufiksu jest \textbf{grupą posortowaną}
+    \item Maksymalna spójna sekwencja posortowanych grup jest \textbf{wspólną grupą posortowaną}
+\end{itemize}
+\end{definition}
+Grupy będziemy numerować żeby móc przeprowadzać obliczenia na poszczególnych grupach z osobna. Dla grupy $I[f \ldots g]$ numer tej grupy to $g$. Ponadto tablica $V[i] = g$ zawiera informację, że sufiks $S_{i+1}$ znajduje się w grupie o numerze $g$. Dodatkowo będziemy korzystać z tablicy $L$ która trzyma długości nieposortowanych grup oraz długości wspólnych grup posortowanych. Dla rozróżnienia, długości tych późniejszych będą trzymane jako liczba ujemna. Tablicę $L$ użyjemy w podstawowej wersji algorytmu. Udoskonalenia omówione pod koniec tego omówienia pozwolą nam obyć się bez osobnej tablicy na długości grup.
+\begin{observation}
+\label{obs2}
+Gdy I jest w \textit{h-order}, każdy sufiks w \textbf{wspólnej grupie posortowanej} jest unikalnie rozróżnialny od wszystkich innych sufiksów przy pomocy pierwszych $h$ symboli.
+\end{observation}
+
+\section*{Algorytm}
+
+Algorytm po każdej iteracji konstruuje z tablicy sufiksów w porządku \textit{h-order} tablicę w porządku \textit{2h-order} korzystając z obserwacji \ref{obs1}. Zgodnie z obserwacją \ref{obs2}, sufiksy znajdujące się we wspólnych grupach posortowanych są już na swoich miejscach. Mając to na uwadze możemy wykorzystać to w algorytmie i przy procesowaniu nieposortowanych grup sufiksów `przeskakiwać` nad wspólnymi grupami posortowanymi. Po każdej iteracji jest szansa, że pojawią się nowe grupy posortowane więc dodatkowo będziemy pilnować aby spójne sekwencje grup posortowanych były przez nas łączone we wspólne grupy posortowane.
+
+Podstawowy algorytm będzie się prezentował następująco:
+\begin{enumerate}
+    \item Umieść sufiksy $1 \ldots n+1$ w tablicy $I$. Posortuj $I$ używając $x_i$ jako klucza dla sufiksu $i$ (pierwsza litera). Ustaw $h=1$
+    \item Dla każdego sufiksu $S_{i+1}$ ustaw numer grupy do której należy w $V[i]$
+    \item Dla każdej nieposortowanej grupy lub wspólnej grupy posortowanej zapisz jej długość (lub zanegowaną długość) do tablicy $L$
+    \item Przesortuj każdą nieposortowaną grupę z osobna za pomocą \textit{ternary quick sorta} (czyli takiego co dzieli na podtablice $[< \textit{pivot}, = \textit{pivot}, > \textit{pivot}]$), używając $V[k + h - 1]$ jako klucza dla każdego sufiksu $S_k$ w grupie
+    \item Zaznacz pozycje podziału pomiędzy nierównymi kluczami w dla każdej przetworzonej nieposortowanej grupy na potrzeby aktualizacji tablic $V$ oraz $L$
+    \item Podwój $h$. Stwórz nowe grupy poprzez podział na zaznaczonych pozycjach (aktualizując odpowiednio $V$ i $L$)
+    \item Zakończ jeśli $I$ składa się tylko z jednej posortowanej grupy. W przeciwnym przypadku idź do kroku 4.
+\end{enumerate}
+
+W podstawowej wersji algorytmu tablice $V$ oraz $L$ aktualizujemy po wykonaniu sortowania. Możemy to wykonać np. zaznaczając pozycje podziałów w procedurze quicksort np. używając bitów znaku w tablicy $I$. Na tej podstawie aktualizujemy $V$ - ujemny wpis oznacza nową grupę - a następnie tablicę $L$.
+
+Na pierwszy rzut oka można by wyciągnąć wniosek, że algorytm działa w czasie $O(n \log^2{n})$. Dokładniejsza analiza pozwala na ograniczenie przez $O(n \log{n})$. Na potrzeby analizy zakładamy, że \textit{ternary quicksort} dzieli zawsze w medianie (możliwe do uzyskania przy wydajnym algorytmie znajdowania mediany, nieefektywne w praktyce). Proces sortowania całej tablicy sufiksowej (nie tylko jednego quicksorta) przedstawimy jako ternarne drzewo obliczeń. Jest to możliwe, ponieważ ternary sort grupy nieposortowanej dla ustalonego $h$ kończy się, gdy elementy zostaną podzielone według numeru grupy dla sufiksu o $h$ pozycji dalszego -- a zatem, gdy otrzymamy grupy dla $2 h$. Słowem, liście ternarnego drzewa obliczeń dla $h$ stają się nowymi korzeniami dla $2 h$.
+
+\begin{lemma}
+Długość ścieżki od korzenia do liścia jest ograniczona z góry przez $2 \log{n} + 3$
+\begin{proof}
+Każdy węzeł `środkowy` na ścieżce odpowiada podwojeniu \textit{h-order} w którym znajduje się rozważana tablica. Takich węzłów może być więc $\log{n} + 1$ Z faktu, że używamy mediany po zejściu lewym lub prawym dzieckiem długość rozważanej tablicy zmniejsza się o połowę. Znów takich węzłów będzie maksymalnie $\log{n} + 1$
+\end{proof}
+\end{lemma}
+Na danym poziomie drzewa ilość wykonanej pracy będzie $O(n)$ bo to obliczenie odpowiada wykonaniu podziału na rozłączne podtablice. Stąd dostajemy złożoność $O(n\ \log{n})$ bo aktualizacja podtablic odpowiedzialnych za grupy również jest wykonywana w czasie liniowym od rozmiaru podtablicy.
+
+\section*{Usprawnienia}
+
+W algorytmie autorzy wprowadzają usprawnienia które nie wpływają negatywnie na czas wykonania. Opiszemy tutaj większość z nich (te które zostały wykorzystane w implementacji).
+
+\textbf{Eliminacja tablicy długości $L$}. Tablica długości dla grup nieposortowanych jest nam zbędna ze względu na to jak numerujemy grupy. Przypomnijmy, numer grupy $I[f \ldots g]$ to $g$, czyli $V[f-1] = g$ a w konsekwencji rozmiar grupy to $V[f-1] - g + 1$. Do spamiętania rozmiarów wspólnych grup posortowanych możemy użyć tablicy $I$. Wpólne grupy posortowane nie pojawią się w wywołaniu quicksorta a tylko tam korzystamy z $I$ w trakcie działania algorytmu. Jedynym problemem pozostaje odzyskanie porządku w $I$ na samym końcu algorytmu, ale tutaj wystarczy, że skorzystamy z tablicy $V$ trzymającej numery grup (indywidualne grupy posortowane mają różne numery), więc $I[V[i]] = i$ dla $0 \leq i < n+1$ odzyska tablicę sufiksową na końcu. Ostatecznie otrzymujemy następującą procedurę odzyskania długości grupy: jeśli $I[i] < 0$ to $I[i \ldots i - I[i] - 1]$ jest wspólną grupą posortowaną. W przeciwnym wypadku $I[i \ldots i + V[I[i]-1]]$ jest nieposortowaną grupą. 
+
+\textbf{Połączenie sortowania i aktualizowania tablic}. Zauważmy, że wykonanie połączenia dwóch następujących wspólnych grup posortowanych możemy wykonywać dopiero przy kroku 4 algorytmu gdy iterujemy się po kolejnych nieposortowanych grupach w $I$ przeskakując nad wspólnymi grupami posortowanymi. Aktualizacja tablic dla grup nieposortowanych w czasie wykonania sortowania musi być wykonana z uwagą na to żeby nie zmienić wartości w $V$ które będą wykorzystane jako klucze sortowania. Fakt wykorzystania quicksorta zapewnia nam, że ustalenie kolejności aktualizacji tablic jest proste. Niektóre elementy w pierwszej partycji będą wykorzystywać jako klucz numery grup elementów z środkowej partycji (bo bierzemy $V[I[currentElement] + h - 1]$ jako klucz). Tym samym aktualizację numerów grup z partycji środkowej wykonujemy po rekurencyjnym posortowaniu pierwszej partycji.
+\begin{enumerate}
+    \item Podziel tablice względem $pivot$ na trzy partycje
+    \item Wywołaj się rekurencyjnie na sekcji `$< \textit{pivot}$`
+    \item Zaktualizuj numery grup w sekcji `$= \textit{pivot}$` która się staje w całości nową grupą
+    \item Wywołaj się rekurencyjnie na sekcji `$> \textit{pivot}$`
+\end{enumerate}
+\medskip
+
+Na początek zauważmy, że numery nowych grup mogą jedynie maleć. Mając grupę nieposortowaną $[i_1, i_2, ..., i_n]$ w $h$-order, w porządku $2h$-order może się rozbić np. na grupy: $[i_1, ... i_k]$ $[i_{k+1}, ... i_m]$, $[i_{m+1}, ..., i_n]$, a numery grup to kolejno $i_k < i_m < i_n$.
+
+Kluczowe w czasie aktualizowania będzie to żeby nie zaburzyć tego porządku. Obrazując to na powyższym przykładzie - żeby w żadnym momencie algorytmu dla grup $[i_1, ... i_k]$ $[i_{k+1}, ... i_m]$, $[i_{m+1}, ..., i_n]$ nie mieć numerowania $i_n$, $i_m$, $i_n$. Tak mogłoby się zdarzyć gdybyśmy zaktualizowali grupę środkową przed aktualizacją grupy pierwszej. Tak więc żeby żadna grupa nieposortowana na przedziale $[i ... j]$ w $I$ nie dostała numeru niższego niż grupa nieposortowana na wcześniejszym przedziale $[k ... l]$ w $I$.
+
+Analogicznie mielibyśmy problem gdybyśmy wykonali aktualizację numerów grupy partycji środkowej po sortowaniu trzeciej partycji.
+
+
+\printbibliography[title={Bibliografia}]
+
+\end{document}
