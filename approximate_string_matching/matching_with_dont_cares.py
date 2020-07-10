@@ -1,63 +1,61 @@
-from itertools import starmap
+import itertools
+import math
 import scipy.signal
 
-def times(x, y):
-  return list(starmap(lambda a, b: a * b, zip(x, y)))
-
-def convolve(x, y):
-  return scipy.signal.convolve(x, y, mode = 'valid', method = 'fft')
-
-def exact_matching_with_dont_cares_n_log_m(text, pattern, n, m):
+def basic_fft(text, word, n, m):
   if n < m:
     return
+  alphabet = set(list(text[1:] + word[1:])) - set('?')
+  mismatches = [0] * (n - m + 1)
+  for first_letter in alphabet:
+    masked_text = [int(current_char == first_letter) for current_char in
+                   text[1:]]
+    for second_letter in alphabet:
+      if first_letter != second_letter:
+        masked_word = [int(current_char == second_letter)
+                       for current_char in reversed(word[1:])]
+        mismatches_ab = scipy.signal.convolve(
+            masked_text, masked_word, mode = 'valid', method = 'fft')
+        mismatches = [x + y for x, y in zip(mismatches, mismatches_ab)]
+  yield from (index + 1 for index, is_mismatch in enumerate(mismatches)
+              if is_mismatch == 0)
 
-  text, pattern = text[1:], pattern[1:]
-  number_of_parts = (n + (m - 1)) // m
-  parts = map(lambda part_number: text[part_number * m:part_number * m + 2 * m],
-              range(number_of_parts))
+def clifford_clifford_parts(text, word, n, m):
+  def _compute_part(index, part):
+    return [index * m + i
+            for i in clifford_clifford(part, word, len(part) - 1, m)]
 
-  def compute_part(part_number, part):
-    subresults = list(
-        exact_matching_with_dont_cares("#" + part, "#" + pattern, len(part), m))
-    return map(lambda x: part_number * m + x, subresults)
-
-  results = (compute_part(part_number, part) for part_number, part in
-             enumerate(parts))
-  flatten = lambda l: [item for sublist in l for item in sublist]
-  flat_results = flatten(results)
-  yield from sorted(set(flat_results))
-
-def exact_matching_with_dont_cares(text, pattern, n, m):
   if n < m:
     return
+  parts = ['#' + text[i * m + 1:(i + 2) * m + 1]
+           for i in range(math.ceil(n / m))]
+  results = (_compute_part(index, part) for index, part in enumerate(parts))
+  yield from sorted(set(index for result in results for index in result))
 
-  text, pattern = text[1:], pattern[:0:-1]
-  alphabet = set(list(text + pattern))
-  alphabet.discard('?')
+def clifford_clifford(text, word, n, m):
+  def _times(x, y):
+    return list(itertools.starmap(lambda a, b: a * b, zip(x, y)))
 
+  if n < m:
+    return
+  alphabet = set(list(text[1:] + word[1:])) - set('?')
   letter_mapping = {'?': 0}
   letter_mapping.update(
       {letter: index for index, letter in enumerate(alphabet, start = 1)})
+  text = [letter_mapping.get(c) for c in text[1:]]
+  word = [letter_mapping.get(c) for c in word[:0:-1]]
+  masked_text = [int(v != 0) for v in text]
+  masked_word = [int(v != 0) for v in word]
 
-  text = list(map(letter_mapping.get, text))
-  pattern = list(map(letter_mapping.get, pattern))
-  mapped_text = list(map(lambda x: int(x != 0), text))
-  mapped_pattern = list(map(lambda x: int(x != 0), pattern))
-
-  first_component = convolve(
-      times(mapped_pattern, times(pattern, pattern)),
-      mapped_text
-  )
-  second_component = convolve(
-      times(mapped_pattern, pattern),
-      times(mapped_text, text)
-  )
-  third_component = convolve(
-      mapped_pattern,
-      times(mapped_text,times(text,text))
-  )
-
+  first_component = scipy.signal.convolve(
+      _times(masked_word, _times(word, word)), masked_text,
+      mode = 'valid', method = 'fft')
+  second_component = scipy.signal.convolve(
+      _times(masked_word, word), _times(masked_text, text),
+      mode = 'valid', method = 'fft')
+  third_component = scipy.signal.convolve(
+      masked_word, _times(masked_text, _times(text, text)),
+      mode = 'valid', method = 'fft')
   result = [first - 2 * second + third for first, second, third in
             zip(first_component, second_component, third_component)]
-
   yield from (index + 1 for index, value in enumerate(result) if value == 0)
