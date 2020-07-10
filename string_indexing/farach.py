@@ -1,28 +1,18 @@
 import enum
+import itertools
 import math
 
-from common import trie
-from common.lca import LCA
+from common import lca, trie
 from string_indexing import suffix_tree as sufftree
 
-class _NodeType(enum.IntFlag):
-  NONE = 0
-  ODD = 1
-  EVEN = 2
-  BOTH = 3
-
-class _TrieNodeWithType(trie.TrieNode):
-  def __init__(self, label, node_type = _NodeType.NONE):
-    self.node_type = node_type
-    super().__init__(label)
+NODETYPE = enum.IntEnum('NodeType', 'NONE ODD EVEN BOTH', start = 0)
 
 def counting_sort(A, ind):
   n = max(max(*a) for a in A) + 1
   result, count = [0] * len(A), [0] * n
   for tp in A:
     count[tp[ind]] += 1
-  for i in range(1, n):
-    count[i] += count[i - 1]
+  count = list(itertools.accumulate(count))
   for tp in reversed(A):
     count[tp[ind]] -= 1
     result[count[tp[ind]]] = tp
@@ -35,8 +25,8 @@ def radix_sort(A, upper_index = 2):
 
 def _initialise_odd_even_pairs_recurse(node, n, odd_even_pairs):
   if not node.children:
-    odd = node.index if node.node_type & _NodeType.ODD else None
-    even = node.index if node.node_type & _NodeType.EVEN else None
+    odd = node.index if node.node_type & NODETYPE.ODD else None
+    even = node.index if node.node_type & NODETYPE.EVEN else None
     odd_even_pairs[node.index] = (odd, even)
     return
 
@@ -58,9 +48,9 @@ def _initialise_odd_even_pairs_recurse(node, n, odd_even_pairs):
       odd = odd_second
     elif even_second:
       even = even_second
-  if odd is None and node.node_type & _NodeType.ODD:
+  if odd is None and node.node_type & NODETYPE.ODD:
     odd = node.index
-  if even is None and node.node_type & _NodeType.EVEN:
+  if even is None and node.node_type & NODETYPE.EVEN:
     even = node.index
   odd_even_pairs[node.index] = (odd, even)
 
@@ -73,12 +63,12 @@ def _compute_depth_in_d_tree(k, depth_in_d_tree, d_links):
       depth_in_d_tree[k] = 0
 
 def _merge_suffix_arrays(
-    A_To, A_Te, LCP_To, LCP_Te, lca, text, depth_in_d_tree):
+    A_To, A_Te, LCP_To, LCP_Te, LCA, text, depth_in_d_tree):
   A_T, LCP_T = [], []
   i, j, o, e = 0, 0, 0, 0
   while i < len(A_To) or j < len(A_Te):
     if i < len(A_To) and j < len(A_Te):
-      lcp = depth_in_d_tree[lca.query(A_To[i], A_Te[j])]
+      lcp = depth_in_d_tree[LCA.query(A_To[i], A_Te[j])]
       if text[lcp + A_To[i] - 1] <= text[lcp + A_Te[j] - 1]:
         A_T.append(A_To[i])
         i += 1
@@ -99,7 +89,7 @@ def _merge_suffix_arrays(
       e += A_Te[e:].index(A_T[i])
       LCP_T.append(LCP_Te[e])
     else:
-      LCP_T.append(depth_in_d_tree[lca.query(A_T[i], A_T[i + 1])])
+      LCP_T.append(depth_in_d_tree[LCA.query(A_T[i], A_T[i + 1])])
   return A_T, LCP_T
 
 def _extend_text(text, symbol):
@@ -116,7 +106,7 @@ def _get_suffix_tree(text):
   if len(text) == 1:
     return [1], [0]
   root, leaf = trie.TrieNode(''), trie.TrieNode(text[0:])
-  root.node_type, leaf.node_type = _NodeType.NONE, _NodeType.NONE
+  root.node_type, leaf.node_type = NODETYPE.NONE, NODETYPE.NONE
   root.add_child(leaf)
   To, A_To, LCP_To = _get_odd_suffix_tree(text)
   Te, A_Te, LCP_Te = _get_even_suffix_tree(text, To, A_To)
@@ -125,9 +115,9 @@ def _get_suffix_tree(text):
   Tovermerged.odd_even_pairs = {}
   _initialise_odd_even_pairs_recurse(
       Tovermerged, len(text), Tovermerged.odd_even_pairs)
-  lca = LCA(Tovermerged)
+  LCA = lca.LCA(Tovermerged)
   Tovermerged.d_links = {
-      k: lca.query(o + 1, e + 1)
+      k: LCA.query(o + 1, e + 1)
       for k, (o, e) in Tovermerged.odd_even_pairs.items()
       if o and e and k != len(text) + 1 and o < len(text) and e < len(text)}
   Tovermerged.depth_in_d_tree = {root: 0}
@@ -136,7 +126,7 @@ def _get_suffix_tree(text):
         pair, Tovermerged.depth_in_d_tree, Tovermerged.d_links)
 
   return _merge_suffix_arrays(
-      A_To, A_Te, LCP_To, LCP_Te, lca, text, Tovermerged.depth_in_d_tree)
+      A_To, A_Te, LCP_To, LCP_Te, LCA, text, Tovermerged.depth_in_d_tree)
 
 def _set_index(new_node, old_node, n):
   if old_node.index <= n:
@@ -164,39 +154,39 @@ def _get_faulty_merge_recurse(node, odd, even, n):
     e_char, e_child = e_children[j] if j < len(e_children) else (None, None)
 
     empty_node = trie.TrieNode('')
-    empty_node.node_type = _NodeType.NONE
+    empty_node.node_type = NODETYPE.NONE
     if i == len(o_children):
-      new_node = _create_node(node, e_child, _NodeType.EVEN, n)
+      new_node = _create_node(node, e_child, NODETYPE.EVEN, n)
       _get_faulty_merge_recurse(new_node, empty_node, e_child, n)
       j += 1
     elif j == len(e_children) or o_char < e_char:
-      new_node = _create_node(node, o_child, _NodeType.ODD, n)
+      new_node = _create_node(node, o_child, NODETYPE.ODD, n)
       _get_faulty_merge_recurse(new_node, o_child, empty_node, n)
       i += 1
     elif o_char == e_char:
       if len(e_child.label) > len(o_child.label):
-        new_node = _create_node(node, o_child, _NodeType.ODD, n)
+        new_node = _create_node(node, o_child, NODETYPE.ODD, n)
         split_node = sufftree.break_node(even, e_child, len(o_child.label))
-        split_node.node_type = _NodeType.NONE
+        split_node.node_type = NODETYPE.NONE
         _get_faulty_merge_recurse(new_node, o_child, split_node, n)
       elif len(e_child.label) < len(o_child.label):
-        new_node = _create_node(node, e_child, _NodeType.EVEN, n)
+        new_node = _create_node(node, e_child, NODETYPE.EVEN, n)
         split_node = sufftree.break_node(odd, o_child, len(e_child.label))
-        split_node.node_type = _NodeType.NONE
+        split_node.node_type = NODETYPE.NONE
         _get_faulty_merge_recurse(new_node, split_node, e_child, n)
       else:
         new_node = _create_node(
-            node, o_child if e_child.index > n else e_child, _NodeType.BOTH, n)
+            node, o_child if e_child.index > n else e_child, NODETYPE.BOTH, n)
         _get_faulty_merge_recurse(new_node, o_child, e_child, n)
       i, j = i + 1, j + 1
     else:
-      new_node = _create_node(node, e_child, _NodeType.EVEN, n)
+      new_node = _create_node(node, e_child, NODETYPE.EVEN, n)
       _get_faulty_merge_recurse(new_node, empty_node, e_child, n)
       j += 1
 
 def _get_faulty_merge(To, Te, n):
   root = trie.TrieNode('')
-  root.node_type = _NodeType.NONE
+  root.node_type = NODETYPE.NONE
   _get_faulty_merge_recurse.next_index = n + 2
   _get_faulty_merge_recurse(root, To, Te, n)
   return root
@@ -220,9 +210,9 @@ def _get_even_suffix_tree(text, To, A_To):
   S = radix_sort(
       [(text[v - 2], v) for v in A_To if v > 1] + [(text[-1], len(text) + 1)],
       1)
-  A_Te, lca = [t[1] - 1 for t in S], LCA(To)
+  A_Te, LCA_To = [t[1] - 1 for t in S], lca.LCA(To)
   LCP_Te = [
-      lca.query_depth(u + 1, v + 1) + 1 if text[u - 1] == text[v - 1] else 0
+      LCA_To.query_depth(u + 1, v + 1) + 1 if text[u - 1] == text[v - 1] else 0
       for u, v in zip(A_Te, A_Te[1:])]
   Te = sufftree.from_suffix_array_and_lcp(A_Te, LCP_Te, text, len(text) - 1)
   return Te, A_Te, LCP_Te
