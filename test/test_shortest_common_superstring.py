@@ -54,8 +54,8 @@ class TestShortestCommonSuperstring(unittest.TestCase):
     self.check_shortest_common_superstring(
         ['#abc', '#bca', '#cab', '#d'], '#abcabd', algorithm, bound)
 
-  @run_large
   @parameterized.parameterized.expand(SHORTEST_COMMON_SUPERSTRING_ALGORITHMS)
+  @run_large
   def test_small_words(self, _, algorithm, bound):
     tests, k, n_low, n_high, A = 100, 30, 1, 3, ['a', 'b', 'c']
     for _ in range(tests):
@@ -64,8 +64,8 @@ class TestShortestCommonSuperstring(unittest.TestCase):
       self.check_shortest_common_superstring(
           T, shortest_common_superstring.exact(T), algorithm, bound)
 
-  @run_large
   @parameterized.parameterized.expand(SHORTEST_COMMON_SUPERSTRING_ALGORITHMS)
+  @run_large
   def test_random(self, _, algorithm, bound):
     tests, k, n_low, n_high, A = 100, 10, 20, 50, ['a', 'b', 'c', 'd']
     for _ in range(tests):

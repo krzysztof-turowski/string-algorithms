@@ -48,8 +48,8 @@ class TestSuffixTrees(unittest.TestCase):
     if links is not None:
       self.assertEqual(links(*result), reference)
 
-  @run_large
   @parameterized.parameterized.expand(SUFFIX_TREE_ALGORITHMS)
+  @run_large
   def test_random_suffix_tree(self, _, algorithm, links):
     T, n, A = 100, 200, ['a', 'b']
     for _ in range(T):
@@ -59,8 +59,8 @@ class TestSuffixTrees(unittest.TestCase):
           get_suffix_links(*suffix_tree.mccreight(t, n))[1])
       self.check_suffix_trees(t, n, reference, algorithm, links)
 
-  @run_large
   @parameterized.parameterized.expand(SUFFIX_TREE_ALGORITHMS)
+  @run_large
   def test_all_suffix_tree(self, _, algorithm, links):
     N, A = 10, ['a', 'b']
     for n in range(2, N + 1):
