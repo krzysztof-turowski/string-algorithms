@@ -148,7 +148,7 @@ class _SLText:
 
   def is_lms_equal(self, a, b):
     if a != b:
-      for t in range(len(self.text)):
+      for t, _ in enumerate(self.text):
         if (self.text[a + t] != self.text[b + t]
             or self.types[a + t] != self.types[b + t]):
           return False
@@ -159,21 +159,19 @@ class _SLText:
 def _induced_sort(sltext, initial):
   class _Buckets:
     def __init__(self, text, direction):
-      self.target, self.sizes = [-1] * len(text), self._get_bucket_sizes(text)
+      self.target = [-1] * len(text)
+      self._get_bucket_sizes(text)
       self.recompute(direction)
 
     def _get_bucket_sizes(self, text):
-      sizes = [0] * (max(text) + 1)
+      self.sizes = [0] * (max(text) + 1)
       for c in text[1:]:
-        sizes[c] += 1
-      return sizes
-    
+        self.sizes[c] += 1
+
     def recompute(self, direction):
       self.direction = direction
-      self._find_heads(self.sizes)
-
-    def _find_heads(self, sizes):
-      heads = [1] + sizes[:-1] if self.direction is BUCKET_DIR.FORWARD else sizes
+      heads = ([1] + self.sizes[:-1] if self.direction is BUCKET_DIR.FORWARD
+               else self.sizes)
       self.heads = list(itertools.accumulate(heads))
 
     def set_and_advance(self, bucket, value):
