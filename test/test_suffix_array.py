@@ -8,30 +8,12 @@ from generator import rand
 from string_indexing import farach, suffix_array, suffix_tree, sl_suffix_array
 
 SUFFIX_ARRAY_ALGORITHMS = [
-    [
-        'Karp-Miller-Rosenberg',
-        suffix_array.prefix_doubling,
-    ],
-    [
-        'Karkkainen-Sanders',
-        suffix_array.skew,
-    ],
-    [
-        'Farach',
-        farach.suffix_array,
-    ],
-    [
-        'Larsson-Sadakane',
-        suffix_array.larsson_sadakane,
-    ],
-    [
-        'Ko-Aluru',
-        sl_suffix_array.small_large,
-    ],
-    [
-        'Zhang-Nong-Chan',
-        suffix_array.induced_sorting,
-    ],
+    [ 'Karp-Miller-Rosenberg', suffix_array.prefix_doubling ],
+    [ 'Karkkainen-Sanders', suffix_array.skew ],
+    [ 'Farach', farach.suffix_array ],
+    [ 'Larsson-Sadakane', suffix_array.larsson_sadakane ],
+    [ 'Ko-Aluru', sl_suffix_array.small_large ],
+    [ 'Zhang-Nong-Chan', suffix_array.induced_sorting ],
     [
         'from suffix tree',
         lambda t, n: suffix_array.from_suffix_tree(
