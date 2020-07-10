@@ -5,8 +5,8 @@ import unittest
 import parameterized
 
 from generator import rand
-from string_indexing import farach, suffix_array, suffix_tree
-                            # sl_suffix_array, is_suffix_array
+from string_indexing import farach, suffix_array, suffix_tree, \
+                            sl_suffix_array
 
 SUFFIX_ARRAY_ALGORITHMS = [
     [
@@ -14,7 +14,7 @@ SUFFIX_ARRAY_ALGORITHMS = [
         suffix_array.prefix_doubling,
     ],
     [
-        'Kärkkäinen-Sanders',
+        'Karkkainen-Sanders',
         suffix_array.skew,
     ],
     [
@@ -25,8 +25,14 @@ SUFFIX_ARRAY_ALGORITHMS = [
         'Larsson-Sadakane',
         suffix_array.larsson_sadakane,
     ],
-    # sl_suffix_array.small_large,
-    # is_suffix_array.sa_is,
+    [
+        'Ko-Aluru',
+        sl_suffix_array.small_large,
+    ],
+    [
+        'Zhang-Nong-Chan',
+        suffix_array.induced_sorting,
+    ],
     [
         'from suffix tree',
         lambda t, n: suffix_array.from_suffix_tree(
@@ -58,8 +64,8 @@ class TestSuffixArrays(unittest.TestCase):
     self.check_suffix_array(
         '#obdkbgaobg', 10, [11, 7, 2, 9, 5, 3, 10, 6, 4, 1, 8], algorithm)
 
-  @run_large
   @parameterized.parameterized.expand(SUFFIX_ARRAY_ALGORITHMS)
+  @run_large
   def test_random_suffix_array(self, _, algorithm):
     T, n, A = 100, 500, ['a', 'b']
     for _ in range(T):
@@ -67,8 +73,8 @@ class TestSuffixArrays(unittest.TestCase):
       reference = suffix_array.naive(t, n)
       self.check_suffix_array(t, n, reference, algorithm)
 
-  @run_large
   @parameterized.parameterized.expand(SUFFIX_ARRAY_ALGORITHMS)
+  @run_large
   def test_all_suffix_array(self, _, algorithm):
     N, A = 12, ['a', 'b']
     for n in range(2, N + 1):

@@ -1,10 +1,16 @@
-def _reverse(S):
+import enum
+import itertools
+
+PREFIX_TYPE = enum.IntEnum('PrefixType', 'LARGE SMALL', start = 0)
+BUCKET_DIR = enum.IntEnum('BucketDir', {'FORWARD': 1, 'BACKWARD': -1})
+
+def reverse(S):
   reverse = [0] * len(S)
-  for i, _ in enumerate(S):
-    reverse[S[i] - 1] = i + 1
+  for i, v in enumerate(S):
+    reverse[v - 1] = i + 1
   return reverse
 
-def _rank(S):
+def rank(S):
   mapping = {v: i + 1 for i, v in enumerate(sorted(set(S)))}
   return [mapping[v] for v in S]
 
@@ -26,11 +32,11 @@ def naive(text, n):
 def prefix_doubling(text, n):
   '''Computes suffix array using Karp-Miller-Rosenberg algorithm'''
   text += '$'
-  R, k = _rank(text[1:]), 1
+  R, k = rank(text[1:]), 1
   while k < 2 * n:
     pairs = [(R[i], R[i + k] if i + k < len(R) else 0) for i in range(len(R))]
-    R, k = _rank(pairs), 2 * k
-  return _reverse(R)
+    R, k = rank(pairs), 2 * k
+  return reverse(R)
 
 def skew(text, n):
   '''Computes suffix array using Kärkkäinen-Sanders algorithm'''
@@ -46,7 +52,7 @@ def skew(text, n):
     return naive(text, n)
   text += '$'
   P12 = list(range(1, n + 2, 3)) + list(range(2, n + 2, 3))
-  triples = _rank([text[i:i + 3] for i in P12])
+  triples = rank([text[i:i + 3] for i in P12])
   recursion = skew(_convert(triples), (2 * n + 1) // 3 + 1)[1:]
   L12 = [P12[v - 1] for v in recursion]
 
@@ -55,7 +61,7 @@ def skew(text, n):
 
   P0 = [i for i in range(1, n + 2) if i % 3 == 0]
   tuples = [(text[i], S.get(i + 1, 0)) for i in P0]
-  L0 = [P0[i - 1] for i in _reverse(_rank(tuples))]
+  L0 = [P0[i - 1] for i in reverse(rank(tuples))]
   return _merge(L12, L0, compare = _compare)
 
 def _ternary_sort(I, begin, end, V, get_key_for_index):
@@ -121,9 +127,106 @@ def larsson_sadakane(text, n):
     I[V[i]] = i + 1
   return I
 
+class _SLText:
+  def __init__(self, text):
+    self.text = text
+    self._get_ls_types()
+    self.lms_positions = [
+        i for i in range(2, len(self.types)) if self.is_lms(i)]
+
+  def is_lms(self, i):
+    return (i > 1 and (self.types[i - 1], self.types[i]) ==
+            (PREFIX_TYPE.LARGE, PREFIX_TYPE.SMALL))
+
+  def _get_ls_types(self):
+    self.types = [PREFIX_TYPE.SMALL] * len(self.text)
+    for i in range(len(self.text) - 2, 0, -1):
+      if self.text[i] == self.text[i + 1]:
+        self.types[i] = self.types[i + 1]
+      elif self.text[i] >= self.text[i + 1]:
+        self.types[i] = PREFIX_TYPE.LARGE
+
+  def is_lms_equal(self, a, b):
+    if a != b:
+      for t in range(len(self.text)):
+        if (self.text[a + t] != self.text[b + t]
+            or self.types[a + t] != self.types[b + t]):
+          return False
+        if t > 0 and (self.is_lms(a + t) or self.is_lms(b + t)):
+          return True
+    return True
+
+def _induced_sort(sltext, initial):
+  class _Buckets:
+    def __init__(self, text, direction):
+      self.target, self.sizes = [-1] * len(text), self._get_bucket_sizes(text)
+      self.recompute(direction)
+
+    def _get_bucket_sizes(self, text):
+      sizes = [0] * (max(text) + 1)
+      for c in text[1:]:
+        sizes[c] += 1
+      return sizes
+    
+    def recompute(self, direction):
+      self.direction = direction
+      self._find_heads(self.sizes)
+
+    def _find_heads(self, sizes):
+      heads = [1] + sizes[:-1] if self.direction is BUCKET_DIR.FORWARD else sizes
+      self.heads = list(itertools.accumulate(heads))
+
+    def set_and_advance(self, bucket, value):
+      self.target[self.heads[bucket]] = value
+      self.heads[bucket] += self.direction.value
+
+  buckets = _Buckets(sltext.text, BUCKET_DIR.BACKWARD)
+  for i in initial:
+    buckets.set_and_advance(sltext.text[i], i)
+  buckets.recompute(BUCKET_DIR.FORWARD)
+  for i in range(1, len(sltext.text)):
+    j = buckets.target[i] - 1
+    if j > 0 and sltext.types[j] == PREFIX_TYPE.LARGE:
+      buckets.set_and_advance(sltext.text[j], j)
+  buckets.recompute(BUCKET_DIR.BACKWARD)
+  for i in range(len(sltext.text) - 1, 0, -1):
+    j = buckets.target[i] - 1
+    if j > 0 and sltext.types[j] == PREFIX_TYPE.SMALL:
+      buckets.set_and_advance(sltext.text[j], j)
+  return buckets.target
+
+def _rename_lms_substrings(sltext, suf):
+  names, index, previous = [-1] * len(sltext.text), 0, suf[1]
+  for i in suf[1:]:
+    if sltext.is_lms(i):
+      if not sltext.is_lms_equal(previous, i):
+        index += 1
+      names[i], previous = index, i
+  return names
+
+def _sa_distinct(text):
+  result = [-1] * len(text)
+  for i, c in enumerate(text[1:]):
+    result[c + 1] = i
+  return result
+
+def _induced_sorting(text, n):
+  if n == 1:
+    return [-1, 1]
+
+  sltext = _SLText(text)
+  suffixes = _induced_sort(sltext, initial = sltext.lms_positions)
+  lms_names = _rename_lms_substrings(sltext, suffixes)
+  reduced_text = [-1] + [lms_names[i] for i in sltext.lms_positions]
+  reduced_array = (_induced_sorting(reduced_text, len(reduced_text) - 1)
+                   if max(reduced_text) < n - 1
+                   else _sa_distinct(reduced_text))
+  ordered_lms = [sltext.lms_positions[i - 1] for i in reduced_array[1:]]
+  return _induced_sort(sltext, initial = ordered_lms[::-1])
+
 def induced_sorting(text, n):
   '''Computes suffix array using Nong-Zhang-Chan algorithm'''
-  raise NotImplementedError
+  return _induced_sorting([-1] + rank(text[1:]) + [0], n + 1)[1:]
 
 def from_suffix_tree(ST, n):
   ST.set_depth()

@@ -1,44 +1,38 @@
 import collections
 import enum
 
-Category = enum.Enum("Category", "L S")
+from string_indexing import suffix_array
 
-def small_large(text, text_len):
-  return _small_large(_map_string(text), text_len+1)
+PREFIX_TYPE = enum.IntEnum("PrefixType", "L S", start = 0)
 
-def _map_string(s):
-  sorted_char_set = sorted(set( c for c in s[1:] ))
-  char_to_ord = { c : i for i, c in enumerate(sorted_char_set, 1) }
-  return [0] + [ char_to_ord[c] for c in s[1:] ] + [0]
-
-def _small_large(s, n):
-  A, SL = _bucket_array(s), _categorize_sl(s, n)
+def _small_large(text_int, n):
+  A, SL = _bucket_array(text_int), _categorize_sl(text_int, n)
   if n == 2:
     return [2, 1]
-  if SL.count(Category.L) == 1:
+  if SL.count(PREFIX_TYPE.L) == 1:
     return [n] + list(range(1, n))
-  if SL.count(Category.S) == 1:
-    return list(reversed(range(1, n+1)))
+  if SL.count(PREFIX_TYPE.S) == 1:
+    return list(reversed(range(1, n + 1)))
 
-  if SL[-1] == Category.S:
-    sortedS = _sort_category(s, SL, Category.S)
+  if SL[-1] == PREFIX_TYPE.S:
+    sortedS = _sort_category(text_int, SL, PREFIX_TYPE.S)
     groups = A.groups.copy()
     _move_to_group_end(
-        reversed(sortedS[1:]), lambda x: True, A, groups, front=False)
+        reversed(sortedS[1:]), lambda x: True, A, groups, front = False)
     _move_to_group_end(
-        (A.tab[i]-1 for i in range(1, len(A.tab))),
-        lambda x: SL[x] == Category.L, A, groups, front=True)
-  elif SL[-1] == Category.L:
-    sortedL = _sort_category(s, SL, Category.L)
-    groups = A.groups.copy()
-    _move_to_group_end(sortedL[1:], lambda x: True, A, groups, front=True)
-    _move_to_group_end(
-        (A.tab[i]-1 for i in reversed(range(1, len(A.tab)))),
-        lambda x: SL[x] == Category.S, A, groups, front=False)
+        (A.index[i] - 1 for i in range(1, len(A.index))),
+        lambda x: SL[x] == PREFIX_TYPE.L, A, groups, front = True)
   else:
-    raise Exception("fail")
+    sortedL = _sort_category(text_int, SL, PREFIX_TYPE.L)
+    groups = A.groups.copy()
+    _move_to_group_end(sortedL[1:], lambda x: True, A, groups, front = True)
+    _move_to_group_end(
+        (A.index[i] - 1 for i in reversed(range(1, len(A.index)))),
+        lambda x: SL[x] == PREFIX_TYPE.S, A, groups, front = False)
+  return A.index[1:]
 
-  return A.tab[1:]
+def small_large(text, n):
+  return _small_large([-1] + suffix_array.rank(text[1:]) + [0], n + 1)
 
 def _sort_category(s, SL, category):
   suff_by_dist, categ_substr = _prepare_substr_lists(
@@ -47,21 +41,21 @@ def _sort_category(s, SL, category):
   # sort categ_substr
   for i in range(1, len(suff_by_dist)):
     groups = suff_by_dist[i].sorted_groups()
-    for g in groups if category == Category.S else reversed(groups):
+    for g in groups if category == PREFIX_TYPE.S else reversed(groups):
       to_split = collections.defaultdict(list)
-      for j in suff_by_dist[i].tab[g[0]:g[1]+1]:
+      for j in suff_by_dist[i].index[g[0]:g[1]+1]:
         x = j-i
-        g_id = categ_substr.group_id[categ_substr.rev[x]]
+        g_id = categ_substr.group_id[categ_substr.reversed_index[x]]
         to_split[g_id].append(x)
 
       for g_id in to_split:
         vals = to_split[g_id]
-        if category == Category.S:
+        if category == PREFIX_TYPE.S:
           categ_substr.split_group_before(vals)
-        elif category == Category.L:
+        elif category == PREFIX_TYPE.L:
           categ_substr.split_group_after(vals)
         categ_substr.reverse_group(
-            categ_substr.group_id[categ_substr.rev[vals[0]]])
+            categ_substr.group_id[categ_substr.reversed_index[vals[0]]])
 
   # map Ssubstr to ints
   categ_substr.refresh_group_ids()
@@ -69,23 +63,23 @@ def _sort_category(s, SL, category):
   for i in range(1, len(s)):
     if SL[i] == category:
       m[len(m)] = i
-      rec_s.append(categ_substr.group_id[categ_substr.rev[i]])
+      rec_s.append(categ_substr.group_id[categ_substr.reversed_index[i]])
 
   # recursive call and undo mapping
   return [ m[i] for i in _small_large(rec_s, len(rec_s)-1) ]
 
 def _move_to_group_end(vals, condition, A, groups, front):
   for v in (v for v in vals if condition(v)):
-    idx = A.rev[v]
+    idx = A.reversed_index[v]
     g_id = A.group_id[idx]
     g = groups[g_id]
 
     if front:
       A.swap(idx, g[0])
-      groups[g_id] = (g[0]+1, g[1])
+      groups[g_id] = (g[0] + 1, g[1])
     else:
       A.swap(idx, g[1])
-      groups[g_id] = (g[0], g[1]-1)
+      groups[g_id] = (g[0], g[1] - 1)
 
 def _prepare_substr_lists(A, SL, category):
   categDist = _calc_category_dist(SL, category)
@@ -94,12 +88,12 @@ def _prepare_substr_lists(A, SL, category):
 
   for g in A.sorted_groups():
     category_substr.append_group(
-        [ A.tab[i] for i in range(g[0], g[1]+1) if SL[A.tab[i]] == category ])
+        [ A.index[i] for i in range(g[0], g[1]+1) if SL[A.index[i]] == category ])
 
   for g in A.sorted_groups():
     to_add = collections.defaultdict(list)
     for i in range(g[0], g[1]+1):
-      x = A.tab[i]
+      x = A.index[i]
       d = categDist[x]
       to_add[d].append(x)
     for d in to_add:
@@ -116,13 +110,13 @@ def _bucket_array(s):
   return A
 
 def _categorize_sl(s, n):
-  SL, i = [ "." ], 1
-  while i < len(s)-1:
+  SL, i = [None], 1
+  while i < len(s) - 1:
     j = next(j for j in range(i + 1, len(s)) if s[i] != s[j])
-    l = j-i
-    SL.extend([Category.L if s[i] > s[j] else Category.S] * l)
+    SL.extend([PREFIX_TYPE.L if s[i] > s[j] else PREFIX_TYPE.S] * (j - i))
     i = j
-  SL.append(Category.S if SL.count(Category.S) <= n/2 else Category.L)
+  SL.append(PREFIX_TYPE.S if SL.count(PREFIX_TYPE.S) <= n // 2
+            else PREFIX_TYPE.L)
   return SL
 
 def _calc_category_dist(SL, category):
@@ -138,13 +132,13 @@ def _calc_category_dist(SL, category):
 
 class GroupedArray:
   def __init__(self):
-    self.tab, self.group_id = [-1], [-1]
-    self.rev, self.groups = {}, {}
+    self.index, self.group_id = [-1], [-1]
+    self.reversed_index, self.groups = {}, {}
     self.next_free_id = 0
 
   def sorted_groups(self):
     g, i = [], 1
-    while i < len(self.tab):
+    while i < len(self.index):
       g_id = self.group_id[i]
       g.append(self.groups[g_id])
       i = self.groups[g_id][1] + 1
@@ -155,46 +149,46 @@ class GroupedArray:
     for g in self.sorted_groups():
       g_id = len(groups)
       groups[g_id] = g
-      for i in range(g[0], g[1]+1):
+      for i in range(g[0], g[1] + 1):
         self.group_id[i] = g_id
     self.next_free_id, self.groups = len(groups), groups
 
   def swap(self, i, j):
-    tab, rev = self.tab, self.rev
-    rev[tab[i]], rev[tab[j]] = rev[tab[j]], rev[tab[i]]
-    tab[i], tab[j] = tab[j], tab[i]
+    index, reversed_index = self.index, self.reversed_index
+    reversed_index[index[i]], reversed_index[index[j]] = \
+        reversed_index[index[j]], reversed_index[index[i]]
+    index[i], index[j] = index[j], index[i]
 
   def swap_by_val(self, a, b):
-    self.swap(self.rev[a], self.rev[b])
+    self.swap(self.reversed_index[a], self.reversed_index[b])
 
   def append_group(self, vals):
     g_id = self.next_free_id
     self.next_free_id += 1
-    g = (len(self.tab), len(self.tab) + len(vals) -1)
+    g = (len(self.index), len(self.index) + len(vals) - 1)
     self.groups[g_id] = g
     self.group_id.extend([g_id] * len(vals))
-    self.tab.extend(vals)
+    self.index.extend(vals)
     for i in range(g[0], g[1]+1):
-      self.rev[self.tab[i]] = i
-
+      self.reversed_index[self.index[i]] = i
 
   def split_group_after(self, vals):
-    new_g_id, old_g_id = self.next_free_id, self.group_id[self.rev[vals[0]]]
+    new_g_id, old_g_id = self.next_free_id, self.group_id[self.reversed_index[vals[0]]]
     old_g = self.groups[old_g_id]
     self.next_free_id += 1
     s = old_g[1] - len(vals) +1
     for r, v in zip(range(old_g[1], s-1, -1), reversed(vals)):
-      self.swap_by_val(self.tab[r], v)
+      self.swap_by_val(self.index[r], v)
       self.group_id[r] = new_g_id
     self.groups[new_g_id], self.groups[old_g_id] =(s,old_g[1]),(old_g[0],s-1)
 
   def split_group_before(self, vals):
-    new_g_id, old_g_id = self.next_free_id, self.group_id[self.rev[vals[0]]]
+    new_g_id, old_g_id = self.next_free_id, self.group_id[self.reversed_index[vals[0]]]
     old_g = self.groups[old_g_id]
     self.next_free_id += 1
     s = old_g[0] + len(vals)
     for l, v in zip(range(old_g[0], s), vals):
-      self.swap_by_val(self.tab[l], v)
+      self.swap_by_val(self.index[l], v)
       self.group_id[l] = new_g_id
     self.groups[new_g_id], self.groups[old_g_id] =(old_g[0],s-1),(s,old_g[1])
 
