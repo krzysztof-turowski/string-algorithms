@@ -5,20 +5,12 @@ import unittest
 from generator import rand
 from lyndon import critical_factorization
 
-CRITICAL_FACTORIZATION_ALGORITHMS = [
-    critical_factorization.constant_space
-]
-
 class TestCriticalFactorization(unittest.TestCase):
   run_large = unittest.skipUnless(
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_critical_factorization(self, t, n, reference):
-    for algorithm in CRITICAL_FACTORIZATION_ALGORITHMS:
-      self.assertIn(
-          algorithm(t, n),
-          reference,
-          'Algorithm {0} on text {1}'.format(algorithm.__name__, t))
+    self.assertIn(critical_factorization.constant_space(t, n), reference)
 
   def test_critical_factorization(self):
     self.check_critical_factorization('#aababb', 6, [(5, 1)])

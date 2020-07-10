@@ -1,15 +1,15 @@
 def lz77(text, n):
   data, index = [], 1
   while index <= n:
-      offset, length = 0, 0
-      for i in range(1, index):
-          l = 0
-          while index + l < n and text[index - i + l] == text[index + l]:
-              l += 1
-          if l > length:
-              offset, length = i, l
-      data.append((offset, length, text[index + length]))
-      index += length + 1
+    offset, length = 0, 0
+    for i in range(1, index):
+      l = 0
+      while index + l < n and text[index - i + l] == text[index + l]:
+        l += 1
+      if l > length:
+        offset, length = i, l
+    data.append((offset, length, text[index + length]))
+    index += length + 1
   return data
 
 def inverse_lz77(data):
