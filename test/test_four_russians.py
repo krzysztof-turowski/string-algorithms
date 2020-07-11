@@ -85,8 +85,8 @@ class TestAlgorithmY(unittest.TestCase):
     n_1, n_2 = 6, 6
 
     fr = four_russians.FourRussians(TEST_DISTANCE)
-    m, A, step_size_bound, t_1, t_2 = fr.prepare_parameters(t_1, t_2, n_1, n_2)
-    storage = fr.algorithm_y(m, A, step_size_bound)
+    m, A, step, t_1, t_2 = fr.prepare_parameters(t_1, t_2, n_1, n_2)
+    storage = fr.algorithm_y(m, A, step)
 
     _, diff_between_rows, diff_between_columns = get_full_matrices(
         fr, t_1, t_2, TEST_DISTANCE)
@@ -110,10 +110,9 @@ class TestAlgorithmZ(unittest.TestCase):
     n_1, n_2 = 6, 6
 
     fr = four_russians.FourRussians(TEST_DISTANCE)
-    m, A, step_size_bound, t_1, t_2 = fr.prepare_parameters(t_1, t_2, n_1, n_2)
-    storage = fr.algorithm_y(m, A, step_size_bound)
+    m, A, step, t_1, t_2 = fr.prepare_parameters(t_1, t_2, n_1, n_2)
+    storage = fr.algorithm_y(m, A, step)
     P, Q = fr.algorithm_z(m, storage, t_1, t_2)
-
     _, diff_between_rows, diff_between_columns = get_full_matrices(
         fr, t_1, t_2, TEST_DISTANCE)
 
@@ -126,62 +125,18 @@ class TestAlgorithmZ(unittest.TestCase):
                          [diff_between_columns[i * m][(j - 1) * m + 1],
                           diff_between_columns[i * m][j * m]])
 
-
-class TestDistance(unittest.TestCase):
-  def check_distance(self, t_1, t_2, n_1, n_2, expected):
-    self.assertEqual(
-        four_russians.four_russians_distance(
-            t_1, t_2, n_1, n_2, distance.INDEL_DISTANCE),
-        expected)
-
-  def test_examples(self):
-    self.check_distance('#baabab', '#ababaa', 6, 6, 4)
-    self.check_distance('#aab', '#baa', 3, 3, 2)
-    self.check_distance('#', '#', 0, 0, 0)
-    self.check_distance('#aaa', '#', 3, 0, 3)
-    self.check_distance('#aaaa', '#aaa', 4, 3, 1)
-    self.check_distance('#aaab', '#baaa', 4, 4, 2)
-    self.check_distance('#baaba', '#babaa', 5, 5, 2)
-    self.check_distance('#baaa', '#ababaa', 4, 6, 2)
-
 class TestRestoreLcsPart(unittest.TestCase):
   def test_restore_lcs_part(self):
     fr = four_russians.FourRussians(distance.INDEL_DISTANCE)
-
-    reversed_lcs, i, j = fr.restore_lcs_part(
-        '#aa', '#ab',
-        [0, 1, 1], [0, 1, 1], 2, 2, 2)
-    self.assertEqual(reversed_lcs, 'a')
-    self.assertEqual(i, 0)
-    self.assertEqual(j, 0)
-
-    reversed_lcs, i, j = fr.restore_lcs_part(
-        '#aaccc', '#aabc#',
-        [0, 1, 1, 1, 1, 1], [0, 1, 1, 1, 1, 1], 5, 5, 5)
-    self.assertEqual(reversed_lcs[::-1], 'aac')
-    self.assertEqual(i, 0)
-    self.assertEqual(j, 0)
-
-    reversed_lcs, i, j = fr.restore_lcs_part(
-        '#aaa', '#bbb', [0, 1, 1, 1], [0, 1, 1, 1], 3, 3, 3)
-    self.assertEqual(reversed_lcs, '')
-    self.assertEqual(i, 0)
-    self.assertEqual(j, 3)
-
-
-class TestRestoreLcs(unittest.TestCase):
-  def check_lcs(self, t_1, t_2, n_1, n_2, expected):
     self.assertEqual(
-        four_russians.four_russians_lcs(
-            t_1, t_2, n_1, n_2, distance.INDEL_DISTANCE),
-        expected)
-
-  def test_examples(self):
-    self.check_lcs('#baabab', '#ababaa', 6, 6, 'abab')
-    self.check_lcs('#aab', '#baa', 3, 3, 'aa')
-    self.check_lcs('#', '#', 0, 0, '')
-    self.check_lcs('#aaa', '#', 3, 0, '')
-    self.check_lcs('#aaa', '#aaa', 3, 3, 'aaa')
-    self.check_lcs('#aaab', '#baaa', 4, 4, 'aaa')
-    self.check_lcs('#baaba', '#babaa', 5, 5, 'baaa')
-    self.check_lcs('#baaa', '#ababaa', 4, 6, 'baaa')
+        fr.restore_lcs_part('#aa', '#ab',[0, 1, 1], [0, 1, 1], 2, 2, 2),
+        ('a', 0, 0))
+    self.assertEqual(
+        fr.restore_lcs_part(
+            '#aaccc', '#aabc#',
+            [0, 1, 1, 1, 1, 1], [0, 1, 1, 1, 1, 1], 5, 5, 5),
+        ('caa', 0, 0))
+    self.assertEqual(
+        fr.restore_lcs_part(
+            '#aaa', '#bbb', [0, 1, 1, 1], [0, 1, 1, 1], 3, 3, 3),
+        ('', 0, 3))

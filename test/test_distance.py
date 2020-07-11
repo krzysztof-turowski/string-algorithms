@@ -4,12 +4,12 @@ import unittest
 
 import parameterized
 
-from approximate_string_matching import distance, four_russians
+from approximate_string_matching import distance, four_russians, linear_space_lcs
 from generator import rand
 
 DISTANCE_ALGORITHMS = [
-    ['distance', distance.distance],
-    # ['other', linear_space_lcs.distance],
+    ['Wargner-Fischer', distance.distance],
+    ['Kumar-Rangan', linear_space_lcs.distance],
     ['four Russians', four_russians.four_russians_distance],
 ]
 
@@ -51,7 +51,7 @@ class TestDistance(unittest.TestCase):
         '#GAGGTAGCGGCGTT', '#GTGGTAACGGGGTT', 14, 14, 3,
         distance.HAMMING_DISTANCE, algorithm)
 
-  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)
+  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS[:-1])
   @run_large
   def test_random_hamming_distance(self, _, algorithm):
     T, n, A = 100, 100, ['a', 'b']
@@ -63,8 +63,18 @@ class TestDistance(unittest.TestCase):
 
   @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)
   @run_large
+  def test_random_edit_distance(self, _, algorithm):
+    T, n_1, n_2, A = 100, 15, 15, ['a', 'b']
+    for _ in range(T):
+      t_1, t_2 = rand.random_word(n_1, A), rand.random_word(n_2, A)
+      reference = distance.distance(t_1, t_2, n_1, n_2, distance.EDIT_DISTANCE)
+      self.check_distance(
+          t_1, t_2, n_1, n_2, reference, distance.EDIT_DISTANCE, algorithm)
+
+  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS[:-1])
+  @run_large
   def test_all_hamming_distance(self, _, algorithm):
-    N, A = 5, ['a', 'b']
+    N, A = 3, ['a', 'b']
     for n in range(3, N + 1):
       for t_1 in itertools.product(A, repeat = n):
         t_1 = '#' + ''.join(t_1)
@@ -74,13 +84,14 @@ class TestDistance(unittest.TestCase):
           self.check_distance(
               t_1, t_2, n, n, reference, distance.HAMMING_DISTANCE, algorithm)
 
-  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)  
+  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)
+  @run_large
   def test_all_indel_distance(self, _, algorithm):
-    N_1, N_2, A = 5, 5, ['a', 'b']
-    for n_1 in range(3, N_1 + 1):
+    N_1, N_2, A = 4, 4, ['a', 'b']
+    for n_1 in range(2, N_1 + 1):
       for t_1 in itertools.product(A, repeat = n_1):
         t_1 = '#' + ''.join(t_1)
-        for n_2 in range(3, N_2 + 1):
+        for n_2 in range(2, N_2 + 1):
           for t_2 in itertools.product(A, repeat = n_2):
             t_2 = '#' + ''.join(t_2)
             reference = distance.distance(

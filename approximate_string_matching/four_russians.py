@@ -1,17 +1,24 @@
 import math
 
+from approximate_string_matching import distance
+
 class FourRussians:
   def __init__(self, S):
-    self.score = S
+    self.score = distance.ScoreMatrix(
+        insert = lambda c: S.insert(c) if c != '$' else 0,
+        delete = lambda c: S.delete(c) if c != '$' else 0,
+        match = lambda c: S.match(c) if c != '$' else 0,
+        substitute = (lambda ci, cj: S.substitute(ci, cj) if '$' not in {ci, cj}
+                      else (S.insert(cj) if ci == '$' else S.delete(ci))))
 
   def prepare_parameters(self, text_1, text_2, n_1, n_2):
     m = int(math.log2(n_1)) if n_1 > 0 else 1
     A = list(sorted(set(c for c in text_1[1:] + text_2[1:])))
-    if n_1 % m > 0 or n_2 % m > 0:
-      A += ['$']
     step_size_bound = max(
         max((self.score.insert(c) for c in A), default = 0),
         max((self.score.delete(c) for c in A), default = 0))
+    if n_1 % m > 0 or n_2 % m > 0:
+      A += ['$']
     text_1 += '$' * ((m - (n_1 % m)) % m)
     text_2 += '$' * ((m - (n_2 % m)) % m)
     return m, A, step_size_bound, text_1, text_2

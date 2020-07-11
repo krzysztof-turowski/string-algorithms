@@ -25,13 +25,13 @@ def needleman_wunsch(text_1, text_2, n_1, n_2, S):
     if p[0] - d[p].previous[0] == 1 and p[1] - d[p].previous[1] == 1:
       text = d[p].letter + text
     p = d[p].previous
-  return text, d[(n_1, n_2)].distance
+  return text
 
 def hirschberg(text_1, text_2, n_1, n_2, S):
   if n_1 < n_2:
     return hirschberg(text_2, text_1, n_2, n_1, S)
   if n_2 == 0:
-    return '', n_1
+    return ''
   if n_2 == 1:
     return needleman_wunsch(text_1, text_2, n_1, n_2, S)
   split_1 = n_1 // 2
@@ -48,4 +48,4 @@ def hirschberg(text_1, text_2, n_1, n_2, S):
   out_next = hirschberg(
       text_1[0] + text_1[split_1 + 1::], text_2[0] + text_2[split_2 + 1:],
       n_1 - split_1, n_2 - split_2, S)
-  return out_previous[0] + out_next[0], out_previous[1] + out_next[1]
+  return out_previous + out_next

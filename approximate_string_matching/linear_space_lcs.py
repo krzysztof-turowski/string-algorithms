@@ -93,9 +93,8 @@ def find_lcs_length(word_1, word_2, n_1, n_2):
   return s
 
 def distance(word_1, word_2, n_1, n_2, _):
-  return n_1 + n_2 - 2 * find_lcs_length(word_1[1:], word_2[1:], n_1, n_2)
+  return n_1 + n_2 - 1 - 2 * find_lcs_length(word_1[1:], word_2[1:], n_1, n_2)
 
 def linear_space_lcs(word_1, word_2, n_1, n_2, _):
   p = find_lcs_length(word_1[1:], word_2[1:], n_1, n_2)
-  result = longest_common_subsequence(word_1[1:], word_2[1:], n_1, n_2, p)
-  return result, n_1 + n_2 - 2 * p
+  return longest_common_subsequence(word_1[1:], word_2[1:], n_1, n_2, p)
