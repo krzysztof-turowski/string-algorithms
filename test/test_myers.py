@@ -2,7 +2,7 @@ import unittest
 import os
 from random import randint
 
-from longest_common_subsequence.myers import (
+from approximate_substring_matching.myers import (
     longest_common_substring, brute_force_lcs)
 from generator.rand import random_word
 

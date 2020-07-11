@@ -4,10 +4,9 @@ class FourRussians:
   def __init__(self, S):
     self.score = S
 
-  def prepare_parameters(self, text_1, text_2):
-    n_1, n_2 = len(text_1) - 1, len(text_2) - 1
+  def prepare_parameters(self, text_1, text_2, n_1, n_2):
     m = int(math.log2(n_1)) if n_1 > 0 else 1
-    A = list(sorted(set(c for c in (text_1[1:] + text_2[1:]))))
+    A = list(sorted(set(c for c in text_1[1:] + text_2[1:])))
     if n_1 % m > 0 or n_2 % m > 0:
       A += ['$']
     step_size_bound = max(
@@ -137,15 +136,11 @@ class FourRussians:
 
   def get_distance(self, m, text_1, text_2, storage):
     P, Q = self.algorithm_z(m, storage, text_1, text_2)
-
     cost = 0
-
     for i in range(1, self.get_text_parts(m, text_1) + 1):
       cost += sum(P[i][0])
-
     for j in range(1, self.get_text_parts(m, text_2) + 1):
-      cost += sum(Q[len(text_1) // m][j])
-
+      cost += sum(Q[(len(text_1) - 1) // m][j])
     return cost
 
   def get_lcs(self, m, text_1, text_2, storage):
@@ -156,14 +151,13 @@ class FourRussians:
 def four_russians_distance(text_1, text_2, n_1, n_2, S):
   helper = FourRussians(S)
   m, A, step_size_bound, text_1, text_2 = helper.prepare_parameters(
-      text_1, text_2)
+      text_1, text_2, n_1, n_2)
   storage = helper.algorithm_y(m, A, step_size_bound)
   return helper.get_distance(m, text_1, text_2, storage)
 
 def four_russians_lcs(text_1, text_2, n_1, n_2, S):
   helper = FourRussians(S)
   m, A, step_size_bound, text_1, text_2 = helper.prepare_parameters(
-      text_1, text_2)
+      text_1, text_2, n_1, n_2)
   storage = helper.algorithm_y(m, A, step_size_bound)
-  lcs = helper.get_lcs(m, text_1, text_2, storage)
-  return lcs, n_1 + n_2 - 2 * len(lcs)
+  return helper.get_lcs(m, text_1, text_2, storage)

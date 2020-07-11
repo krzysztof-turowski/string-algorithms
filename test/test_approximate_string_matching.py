@@ -4,7 +4,6 @@ import random
 import unittest
 
 from random import randrange
-import regex
 
 from approximate_string_matching import approximate_boyer_moore, distance
 from approximate_string_matching.mismatches import string_matching_with_mismatches, brute_search

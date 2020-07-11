@@ -4,13 +4,13 @@ import unittest
 
 import parameterized
 
-from approximate_string_matching import distance, four_russians, linear_space_lcs
+from approximate_string_matching import distance, four_russians
 from generator import rand
 
 DISTANCE_ALGORITHMS = [
     ['distance', distance.distance],
-    # TODO: ['other', linear_space_lcs.distance],
-    # TODO: ['four Russians', four_russians.four_russians_distance],
+    # ['other', linear_space_lcs.distance],
+    ['four Russians', four_russians.four_russians_distance],
 ]
 
 class TestDistance(unittest.TestCase):
@@ -21,22 +21,38 @@ class TestDistance(unittest.TestCase):
     self.assertEqual(algorithm(t_1, t_2, n_1, n_2, S), reference, t_1 + ' ' + t_2)
 
   @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)
-  def test_hamming_distance(self, _, algorithm):
+  def test_examples(self, _, algorithm):
     self.check_distance(
-        '#GAGGTAGCGGCGTT', '#GTGGTAACGGGGTT', 14, 14, 3,
-        distance.HAMMING_DISTANCE, algorithm)
+        '#baabab', '#ababaa', 6, 6, 4, distance.INDEL_DISTANCE, algorithm)
+    self.check_distance(
+        '#aab', '#baa', 3, 3, 2, distance.INDEL_DISTANCE, algorithm)
+    self.check_distance(
+        '#', '#', 0, 0, 0, distance.INDEL_DISTANCE, algorithm)
+    self.check_distance(
+        '#aaa', '#', 3, 0, 3, distance.INDEL_DISTANCE, algorithm)
+    self.check_distance(
+        '#aaa', '#aaa', 3, 3, 0, distance.INDEL_DISTANCE, algorithm)
+    self.check_distance(
+        '#aaab', '#baaa', 4, 4, 2, distance.INDEL_DISTANCE, algorithm)
+    self.check_distance(
+        '#baaba', '#babaa', 5, 5, 2, distance.INDEL_DISTANCE, algorithm)
+    self.check_distance(
+        '#baaa', '#ababaa', 4, 6, 2, distance.INDEL_DISTANCE, algorithm)
 
-  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)
-  def test_edit_distance(self, _, algorithm):
+  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS[:-1])
+  def test_examples_large(self, _, algorithm):
     self.check_distance(
         '#TGGCCGCGCAAAAACAGC', '#TGACCGCGCAAAACAGC', 18, 17, 2,
         distance.EDIT_DISTANCE, algorithm)
     self.check_distance(
         '#GCGTATGCGGCTAACGC', '#GCTATGCGGCTATACGC', 17, 17, 2,
         distance.EDIT_DISTANCE, algorithm)
+    self.check_distance(
+        '#GAGGTAGCGGCGTT', '#GTGGTAACGGGGTT', 14, 14, 3,
+        distance.HAMMING_DISTANCE, algorithm)
 
   @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)
-  @run_large  
+  @run_large
   def test_random_hamming_distance(self, _, algorithm):
     T, n, A = 100, 100, ['a', 'b']
     for _ in range(T):
@@ -58,8 +74,7 @@ class TestDistance(unittest.TestCase):
           self.check_distance(
               t_1, t_2, n, n, reference, distance.HAMMING_DISTANCE, algorithm)
 
-  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)
-  @run_large
+  @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)  
   def test_all_indel_distance(self, _, algorithm):
     N_1, N_2, A = 5, 5, ['a', 'b']
     for n_1 in range(3, N_1 + 1):
