@@ -205,7 +205,7 @@ def _rename_lms_substrings(sltext, suf):
 def _sa_distinct(text):
   result = [-1] * len(text)
   for i, c in enumerate(text[1:]):
-    result[c + 1] = i
+    result[c + 1] = i + 1
   return result
 
 def _induced_sorting(text, n):
@@ -217,7 +217,7 @@ def _induced_sorting(text, n):
   lms_names = _rename_lms_substrings(sltext, suffixes)
   reduced_text = [-1] + [lms_names[i] for i in sltext.lms_positions]
   reduced_array = (_induced_sorting(reduced_text, len(reduced_text) - 1)
-                   if max(reduced_text) < n - 1
+                   if max(reduced_text) < len(reduced_text) - 2
                    else _sa_distinct(reduced_text))
   ordered_lms = [sltext.lms_positions[i - 1] for i in reduced_array[1:]]
   return _induced_sort(sltext, initial = ordered_lms[::-1])
