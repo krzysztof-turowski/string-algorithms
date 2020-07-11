@@ -125,13 +125,10 @@ def longest_common_substring(text_a, text_b, n, m):
   return _find_lcs(EditBox(text_a, text_b, 0, n, 0, m))
 
 def brute_force_lcs(text_a, text_b, n, m):
-  vertex_queue = []
-
-  vertex_queue.append((0, 0, ''))
-  visited = [[0] * (m + 1) for i in range (n+1)]
-
+  vertex_queue = [(0, 0, '')]
+  visited = [[0] * (m + 1) for i in range(n + 1)]
   while len(vertex_queue) != 0:
-    (x, y, lcs)= vertex_queue.pop(0)
+    (x, y, lcs) = vertex_queue.pop(0)
     if x == n and y == m:
       return lcs
     if x != n and visited[x + 1][y] == 0:
@@ -140,8 +137,7 @@ def brute_force_lcs(text_a, text_b, n, m):
     if y != m and visited[x][y + 1] == 0:
       visited[x][y + 1] = 1
       vertex_queue.append((x, y + 1, lcs))
-    if (x != n and y != m and
-        text_a[x + 1] == text_b[y + 1] and
+    if (x != n and y != m and text_a[x + 1] == text_b[y + 1] and
         visited[x + 1][y + 1] == 0):
       visited[x + 1][y + 1] = 1
       vertex_queue.append((x + 1, y + 1, lcs + text_a[x + 1]))
