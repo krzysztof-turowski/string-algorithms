@@ -4,15 +4,17 @@ import unittest
 
 import parameterized
 
-from approximate_string_matching import distance, lcs, four_russians, linear_space_lcs
+from approximate_string_matching import distance, lcs, four_russians
 from generator import rand
 
 LCS_ALGORITHMS = [
     [ 'Needleman-Wunsch', lcs.needleman_wunsch ],
     [ 'Hirschberg', lcs.hirschberg ],
-    # [ '???', linear_space_lcs.linear_space_lcs ],
+    [ 'Kumar-Rangan', lcs.kumar_rangan ],
+    [ 'Myers', lcs.myers],
     [ 'four Russians', four_russians.four_russians_lcs ],
 ]
+FOUR_RUSSIANS = [ 'four Russians', four_russians.four_russians_lcs ]
 
 def is_subsequence(t, w):
   it = iter(t)
@@ -41,7 +43,8 @@ class TestLongestCommonSubsequence(unittest.TestCase):
     self.check_lcs('#baaba', '#babaa', 5, 5, 2, algorithm)
     self.check_lcs('#baaa', '#ababaa', 4, 6, 2, algorithm)
 
-  @parameterized.parameterized.expand(LCS_ALGORITHMS[:-1])
+  @parameterized.parameterized.expand(
+      algorithm for algorithm in LCS_ALGORITHMS if algorithm != FOUR_RUSSIANS)
   @run_large
   def test_examples_long(self, _, algorithm):
     self.check_lcs('#COELACANTH', '#PELICAN', 10, 7, 7, algorithm)

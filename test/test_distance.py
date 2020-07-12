@@ -4,13 +4,12 @@ import unittest
 
 import parameterized
 
-from approximate_string_matching import distance, four_russians, linear_space_lcs
+from approximate_string_matching import distance, four_russians
 from generator import rand
 
 DISTANCE_ALGORITHMS = [
-    ['Wargner-Fischer', distance.distance],
-    ['Kumar-Rangan', linear_space_lcs.distance],
-    ['four Russians', four_russians.four_russians_distance],
+    [ 'Wagner-Fischer', distance.distance ],
+    [ 'four Russians', four_russians.four_russians_distance ],
 ]
 
 class TestDistance(unittest.TestCase):
@@ -18,7 +17,7 @@ class TestDistance(unittest.TestCase):
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_distance(self, t_1, t_2, n_1, n_2, reference, S, algorithm):
-    self.assertEqual(algorithm(t_1, t_2, n_1, n_2, S), reference, t_1 + ' ' + t_2)
+    self.assertEqual(algorithm(t_1, t_2, n_1, n_2, S), reference)
 
   @parameterized.parameterized.expand(DISTANCE_ALGORITHMS)
   def test_examples(self, _, algorithm):

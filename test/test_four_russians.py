@@ -97,18 +97,19 @@ class TestAlgorithmY(unittest.TestCase):
             storage[
                 t_1[i + 1:i + 3],
                 t_2[j + 1:j + 3],
-                (diff_between_rows[i + 1][j], diff_between_rows[i + 2][j]),
-                (diff_between_columns[i][j + 1], diff_between_columns[i][j + 2])],
-            ([diff_between_rows[i + 1][j + 2], diff_between_rows[i + 2][j + 2]],
-             [diff_between_columns[i + 2][j + 1], diff_between_columns[i + 2][j + 2]]))
+                (diff_between_rows[i + 1][j],
+                 diff_between_rows[i + 2][j]),
+                (diff_between_columns[i][j + 1],
+                 diff_between_columns[i][j + 2])],
+            ([diff_between_rows[i + 1][j + 2],
+              diff_between_rows[i + 2][j + 2]],
+             [diff_between_columns[i + 2][j + 1],
+              diff_between_columns[i + 2][j + 2]]))
 
 
 class TestAlgorithmZ(unittest.TestCase):
   def test_algorithm_z(self):
-    t_1 = '#baabab'
-    t_2 = '#ababaa'
-    n_1, n_2 = 6, 6
-
+    t_1, t_2, n_1, n_2 = '#baabab', '#ababaa', 6, 6
     fr = four_russians.FourRussians(TEST_DISTANCE)
     m, A, step, t_1, t_2 = fr.prepare_parameters(t_1, t_2, n_1, n_2)
     storage = fr.algorithm_y(m, A, step)
