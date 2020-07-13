@@ -1,28 +1,28 @@
 from queue import Queue
 
-class AhoCorasickNode:
+class _AhoCorasickNode:
   def __init__(self, depth=0):
     self.edges = {}
     self.final = []
     self.fail = None
     self.depth = depth
 
-class AhoCorasickMachine:
+class _AhoCorasickMachine:
   def __init__(self, patterns):
     self.root = None
-    self._create_aho_corasick_machine(patterns)
+    self.create_aho_corasick_machine(patterns)
 
-  def _create_trie(self, patterns):
-    self.root = AhoCorasickNode()
+  def create_trie(self, patterns):
+    self.root = _AhoCorasickNode()
     for pattern in patterns:
       current_node = self.root
       for char in pattern:
-        new_node = AhoCorasickNode(current_node.depth + 1)
+        new_node = _AhoCorasickNode(current_node.depth + 1)
         current_node = current_node.edges.setdefault(char, new_node)
       current_node.final.append(pattern)
 
-  def _create_aho_corasick_machine(self, patterns):
-    self._create_trie(patterns)
+  def create_aho_corasick_machine(self, patterns):
+    self.create_trie(patterns)
     queue = Queue()
     for node in self.root.edges.values():
       queue.put(node)
@@ -60,13 +60,13 @@ class DAWG:
     for pattern in patterns:
       current_node = self.root
       for char in pattern:
-        current_node = self.__update(current_node, char)
+        current_node = self.update(current_node, char)
 
-  def __update(self, node, label):
+  def update(self, node, label):
     if label in node.primary:
       return node.primary[label]
     if label in node.secondary:
-      return self.__split(node, node.secondary[label], label)
+      return self.split(node, node.secondary[label], label)
     next_node = DawgNode()
     node.primary[label] = next_node
     current_node, suffix_node = node, None
@@ -76,7 +76,7 @@ class DAWG:
         suffix_node = current_node.primary[label]
       elif label in current_node.secondary:
         child_node = current_node.secondary[label]
-        suffix_node = self.__split(current_node, child_node, label)
+        suffix_node = self.split(current_node, child_node, label)
       else:
         current_node.secondary[label] = next_node
     if suffix_node is None:
@@ -84,7 +84,7 @@ class DAWG:
     next_node.suffix = suffix_node
     return next_node
 
-  def __split(self, parent_node, child_node, label):
+  def split(self, parent_node, child_node, label):
     new_child = DawgNode()
     del parent_node.secondary[label]
     parent_node.primary[label] = new_child
@@ -102,7 +102,8 @@ class DAWG:
         return new_child
     return new_child
 
-  def traverse(self, node, text, p, q):
+  @staticmethod
+  def traverse(node, text, p, q):
     for i in range(q, p - 1, -1):
       if text[i] in node.primary:
         node = node.primary[text[i]]
@@ -112,28 +113,25 @@ class DAWG:
         return text[i+1: q+1]
     return text[p:q+1]
 
-def fast_practical_multi_string_matching_build(W):
+def build(W):
   class Utils:
     def __init__(self, W):
-      self.acm = AhoCorasickMachine(W)
+      self.acm = _AhoCorasickMachine(W)
       self.dawg = DAWG([pattern[::-1] for pattern in W])
       self.m = min(len(x) for x in W)
   return Utils(W)
 
-def fast_practical_multi_string_matching(text, n, S):
+def search(text, n, S):
   def _next1(S, gamma, char):
     return S.acm.step(gamma, char)
   def _next2(S, text, crit_pos, i):
-    tmp = S.dawg.traverse(S.dawg.root, text, crit_pos, i)
-    return S.acm.traverse(tmp)
-  i = 0
-  gamma = S.acm.root
+    return S.acm.traverse(S.dawg.traverse(S.dawg.root, text, crit_pos, i))
+  i, gamma = 0, S.acm.root
   while True:
     while gamma.depth >= S.m/2:
       if gamma.final:
         for match in gamma.final:
-          poz = i - len(match)
-          yield (match, poz)
+          yield (match, i - len(match) + 1)
       i += 1
       if i > n:
         return

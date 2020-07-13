@@ -1,23 +1,20 @@
 from queue import Queue
 
+def build(keywords, alphabet):
+  return _AhoCorasickAutomaton(keywords, alphabet)
 
-def create_aho_corasick_automaton(keywords, alphabet='ab'):
-  return AhoCorasickAutomaton(keywords, alphabet)
-
-
-def find_occurrences(text, n, ac_automaton):
+def search(text, n, ac_automaton):
   return ac_automaton.find_occurrences(text, n)
 
-
 # pylint: disable=too-few-public-methods
-class AhoCorasickAutomaton:
+class _AhoCorasickAutomaton:
   def __init__(self, keywords, alphabet):
-    self._root = AhoCorasickAutomaton.Node()
-    self._construct_goto(keywords, alphabet)
-    self._construct_fail(alphabet)
-    self._construct_nxt(alphabet)
+    self._root = _AhoCorasickAutomaton._Node()
+    self.construct_goto(keywords, alphabet)
+    self.construct_fail(alphabet)
+    self.construct_nxt(alphabet)
 
-  def _construct_goto(self, keywords, alphabet):
+  def construct_goto(self, keywords, alphabet):
     for k, k_len in keywords:
       self._enter(k, k_len)
 
@@ -34,13 +31,13 @@ class AhoCorasickAutomaton:
       j += 1
 
     for a in keyword[j:keyword_len + 1]:
-      next_state = AhoCorasickAutomaton.Node()
+      next_state = _AhoCorasickAutomaton._Node()
       current_state.update_goto(a, next_state)
       current_state = next_state
 
     current_state.append_outputs([keyword_len])
 
-  def _construct_fail(self, alphabet):
+  def construct_fail(self, alphabet):
     q = Queue()
     for s in (self._root.goto(a) for a in alphabet):
       if s != self._root:
@@ -61,7 +58,7 @@ class AhoCorasickAutomaton:
           child.update_fail(child_fallback)
           child.append_outputs(child_fallback.output())
 
-  def _construct_nxt(self, alphabet):
+  def construct_nxt(self, alphabet):
     q = Queue()
     for a in alphabet:
       a_child = self._root.goto(a)
@@ -89,7 +86,7 @@ class AhoCorasickAutomaton:
         start_pos = i - keyword_len + 1
         yield text[start_pos:i + 1], start_pos
 
-  class Node:
+  class _Node:
     def __init__(self):
       self._goto, self._fail, self._output, self._nxt = {}, None, [], {}
 

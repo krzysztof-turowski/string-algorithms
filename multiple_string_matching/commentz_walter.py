@@ -146,18 +146,18 @@ class CommentzWalterAutomaton(Trie):
         v = v.children[c_find]
         j += 1
         if v.word is not None:
-          yield (v.word[::-1], i - j + 1)
+          yield (v.word[::-1], i - j + 2)
         c_find = text[i - j]
 
       j = min(i, j)
       i += self.shift_func(v, j)
 
-def commentz_walter_build(W):
+def build(W):
   cw_auto = CommentzWalterAutomaton()
   for word in W:
     cw_auto.add_word(word)
   cw_auto.create_failure_links()
   return cw_auto
 
-def commentz_walter_search(text, n, S):
+def search(text, n, S):
   return S.report_all_matches(text, n)
