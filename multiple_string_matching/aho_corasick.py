@@ -25,16 +25,13 @@ class _AhoCorasickAutomaton:
   def _enter(self, keyword, keyword_len):
     current_state = self._root
     j = 1
-
-    while j < keyword_len and current_state.goto(keyword[j]) is not None:
+    while j <= keyword_len and current_state.goto(keyword[j]) is not None:
       current_state = current_state.goto(keyword[j])
       j += 1
-
     for a in keyword[j:keyword_len + 1]:
       next_state = _AhoCorasickAutomaton._Node()
       current_state.update_goto(a, next_state)
       current_state = next_state
-
     current_state.append_outputs([keyword_len])
 
   def construct_fail(self, alphabet):
