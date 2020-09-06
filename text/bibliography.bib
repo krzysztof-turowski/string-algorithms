@@ -105,6 +105,35 @@
 
 % EXACT STRING MATCHING
 
+@article{galil1983time,
+  title={Time-Space-Optimal String Matching},
+  author={Galil, Zvi and Seiferas, Joel},
+  journal={Journal of Computer and System Sciences},
+  volume={26},
+  pages={280--294},
+  year={1983}
+}
+
+@article{crochemore1994speeding,
+  title={Speeding up two string-matching algorithms},
+  author={Crochemore, Maxime and Czumaj, Artur and Gąsieniec, Leszek and Jarominek, Stefan and Lecroq, Thierry and Plandowski, Wojciech and Rytter, Wojciech},
+  journal={Algorithmica},
+  volume={12},
+  number={4-5},
+  pages={247--267},
+  year={1994}
+}
+
+@article{apostolico1986boyer,
+  title={The Boyer--Moore--Galil string searching strategies revisited},
+  author={Apostolico, Alberto and Giancarlo, Raffaele},
+  journal={SIAM Journal on Computing},
+  volume={15},
+  number={1},
+  pages={98--105},
+  year={1986}
+}
+
 % Constant-space exact string-matching
 @article{crochemore1991two,
   title={Two-way string-matching},
@@ -158,14 +187,35 @@
   year={1991}
 }
 
-% MULTIPLE STRING MATCHING
+% EXACT MULTIPLE STRING MATCHING
+
+@article{aho1975efficient,
+  title={Efficient string matching: an aid to bibliographic search},
+  author={Aho, Alfred and Corasick, Margaret},
+  journal={Communications of the ACM},
+  volume={18},
+  number={6},
+  pages={333--340},
+  year={1975}
+}
 
 @inproceedings{commentz1979string,
   title={A string matching algorithm fast on the average},
   author={Commentz-Walter, Beate},
   booktitle={International Colloquium on Automata, Languages, and Programming},
   pages={118--132},
-  year={1979}
+  year={1979},
+  publisher={Springer}
+}
+
+@article{crochemore1999fast,
+  title={Fast practical multi-pattern matching},
+  author={Crochemore, Maxime and Czumaj, Artur and Gąsieniec, Leszek and Lecroq, Thierry and Plandowski, Wojciech and Rytter, Wojciech},
+  journal={Information Processing Letters},
+  volume={71},
+  number={3-4},
+  pages={107--113},
+  year={1999}
 }
 
 % SUFFIX TREES
@@ -178,6 +228,28 @@
   volume={18},
   pages={32--48},
   year={2013}
+}
+
+% Drzewo McCreighta
+@article{mccreight1976space,
+  title={A space-economical suffix tree construction algorithm},
+  author={McCreight, Edward},
+  journal={Journal of the ACM},
+  volume={23},
+  number={2},
+  pages={262--272},
+  year={1976}
+}
+
+% Drzewo Ukkonena
+@article{ukkonen1995line,
+  title={On-line construction of suffix trees},
+  author={Ukkonen, Esko},
+  journal={Algorithmica},
+  volume={14},
+  number={3},
+  pages={249--260},
+  year={1995}
 }
 
 @article{giegerich1997ukkonen,
@@ -201,6 +273,7 @@
 
 % SUFFIX ARRAYS
 
+% Wyszukiwanie w O(m + log n)
 @article{manber1993suffix,
   title={Suffix arrays: a new method for on-line string searches},
   author={Manber, Udi and Myers, Gene},
@@ -220,6 +293,18 @@
   year={1992}
 }
 
+% Wyszukiwanie w O(m)
+@article{abouelhoda2004replacing,
+  title={Replacing suffix trees with enhanced suffix arrays},
+  author={Abouelhoda, Mohamed Ibrahim and Kurtz, Stefan and Ohlebusch, Enno},
+  journal={Journal of Discrete Algorithms},
+  volume={2},
+  number={1},
+  pages={53--86},
+  year={2004}
+}
+
+% Algorytm KMR
 @inproceedings{karp1972rapid,
   title={Rapid identification of repeated patterns in strings, trees and arrays},
   author={Karp, Richard and Miller, Raymond and Rosenberg, Arnold},
@@ -228,6 +313,7 @@
   year={1972}
 }
 
+% Algorytm skew
 @inproceedings{karkkainen2003simple,
   title={Simple linear work suffix array construction},
   author={K{\"a}rkk{\"a}inen, Juha and Sanders, Peter},
@@ -236,12 +322,87 @@
   year={2003}
 }
 
+@article{larsson2007faster,
+  title={Faster suffix sorting},
+  author={Larsson, Jesper and Sadakane, Kunihiko},
+  journal={Theoretical Computer Science},
+  volume={387},
+  number={3},
+  pages={258--272},
+  year={2007}
+}
+
+@inproceedings{ko2003space,
+  title={Space efficient linear time construction of suffix arrays},
+  author={Ko, Pang and Aluru, Srinivas},
+  booktitle={Annual Symposium on Combinatorial Pattern Matching},
+  pages={200--210},
+  year={2003},
+  publisher={Springer}
+}
+
+@inproceedings{nong2009linear,
+  title={Linear suffix array construction by almost pure induced-sorting},
+  author={Nong, Ge and Zhang, Sen and Chan, Wai Hong},
+  booktitle={2009 Data Compression Conference},
+  pages={193--202},
+  year={2009},
+  publisher={IEEE}
+}
+
+@inproceedings{kim2003linear,
+  title={Linear-time construction of suffix arrays},
+  author={Kim, Dong Kyue and Sim, Jeong Seop and Park, Heejin and Park, Kunsoo},
+  booktitle={Annual Symposium on Combinatorial Pattern Matching},
+  pages={186--199},
+  year={2003},
+  publisher={Springer}
+}
+
+@article{nong2013practical,
+  title={Practical linear-time $O(1)$-workspace suffix sorting for constant alphabets},
+  author={Nong, Ge},
+  journal={ACM Transactions on Information Systems},
+  volume={31},
+  number={3},
+  pages={1--15},
+  year={2013}
+}
+
 @inproceedings{li2018optimal,
   title={Optimal in-place suffix sorting},
   author={Li, Zhize and Li, Jian and Huo, Hongwei},
   booktitle={International Symposium on String Processing and Information Retrieval},
   pages={268--284},
   year={2018}
+}
+
+% Obliczanie tablicy sufiksowej w czasie O(n^2 \log{n})
+@inproceedings{itoh1999efficient,
+  title={An efficient method for in memory construction of suffix arrays},
+  author={Itoh, Hideo and Tanaka, Hozumi},
+  booktitle={6th International Symposium on String Processing and Information Retrieval},
+  pages={81--88},
+  year={1999},
+  organization={IEEE}
+}
+
+@inproceedings{cole2006suffix,
+  title={Suffix trays and suffix trists: structures for faster text indexing},
+  author={Cole, Richard and Kopelowitz, Tsvi and Lewenstein, Moshe},
+  booktitle={International Colloquium on Automata, Languages, and Programming},
+  pages={358--369},
+  year={2006},
+  publisher={Springer}
+}
+
+@inproceedings{ferragina2000opportunistic,
+  title={Opportunistic data structures with applications},
+  author={Ferragina, Paolo and Manzini, Giovanni},
+  booktitle={Proceedings 41st Annual Symposium on Foundations of Computer Science},
+  pages={390--398},
+  year={2000},
+  publisher={IEEE}
 }
 
 % LONGEST COMMON SUBSEQUENCE
@@ -268,6 +429,39 @@
   year={1980}
 }
 
+@article{hirschberg1975linear,
+  title={A linear space algorithm for computing maximal common subsequences},
+  author={Hirschberg, Daniel},
+  journal={Communications of the ACM},
+  volume={18},
+  number={6},
+  pages={341--343},
+  year={1975}
+}
+
+@article{kumar1987linear,
+  title={A linear space algorithm for the LCS problem},
+  author={Kumar, S. Kiran and Rangan, C. Pandu},
+  journal={Acta Informatica},
+  volume={24},
+  number={3},
+  pages={353--362},
+  year={1987},
+  publisher={Springer}
+}
+
+@article{myers1986ano,
+  title={An $O(nd)$ difference algorithm and its variations},
+  author={Myers, Eugene},
+  journal={Algorithmica},
+  volume={1},
+  number={1-4},
+  pages={251--266},
+  year={1986},
+  publisher={Springer}
+}
+
+% Odległość edycyjna jest trudna w O(n^{2 - eps})
 @inproceedings{backurs2015edit,
   title={Edit distance cannot be computed in strongly subquadratic time (unless SETH is false)},
   author={Backurs, Arturs and Indyk, Piotr},
@@ -284,6 +478,73 @@
   year={2015}
 }
 
+% STRING MATCHING WITH WILDCARDS
+
+@article{fischer1974string,
+  title={String matching and other products},
+  author={Fischer, Michael and Paterson, Michael},
+  journal={Complexity of Computation},
+  volume={7},
+  pages={113--125},
+  year={1974}
+}
+
+@inproceedings{kalai2002efficient,
+  title={Efficient pattern-matching with don't cares},
+  author={Kalai, Adam},
+  booktitle={Proceedings of the 13th Annual ACM-SIAM Symposium on Discrete algorithms},
+  pages={655--656},
+  year={2002},
+  publisher={Society for Industrial and Applied Mathematics}
+}
+
+% k-przybliżone dopasowanie wg odległości Hamminga
+@article{schoenmeyr2005fft,
+  title={FFT-based algorithms for the string matching with mismatches problem},
+  author={Schoenmeyr, Tor and Zhang, David Yu},
+  journal={Journal of Algorithms},
+  volume={57},
+  number={2},
+  pages={130--139},
+  year={2005}
+}
+
+% STRING MATCHING WITH ERRORS
+
+% k-przybliżone dopasowanie wg odległości Hamminga w czasie O(mk log m + nk)
+@article{landau1986efficient,
+  title={Efficient string matching with $k$ mismatches},
+  author={Landau, Gad and Vishkin, Uzi},
+  journal={Theoretical Computer Science},
+  volume={43},
+  pages={239--249},
+  year={1986},
+  publisher={Elsevier}
+}
+
+% k-przybliżone dopasowanie wg odległości Hamminga w czasie O(mk log m + n)
+@article{galil1986improved,
+  title={Improved string matching with $k$ mismatches},
+  author={Galil, Zvi and Giancarlo, Raffaele},
+  journal={ACM SIGACT News},
+  volume={17},
+  number={4},
+  pages={52--54},
+  year={1986}
+}
+
+% k-przybliżone dopasowanie wg odległości Hamminga w czasie O(mr + nk) dla r wystąpień wzorca w tekście
+@article{grossi1989simple,
+  title={Simple and efficient string matching with k mismatches},
+  author={Grossi, Roberto and Luccio, Fabrizio},
+  journal={Information Processing Letters},
+  volume={33},
+  number={3},
+  pages={113--120},
+  year={1989}
+}
+
+% k-przybliżone dopasowanie wg odległości edycyjnej (insert, delete, substitution) w czasie O(nk)
 @inproceedings{chang1990approximate,
   title={Approximate string matching in sublinear expected time},
   author={Chang, William and Lawler, Eugene},
@@ -292,19 +553,18 @@
   year={1990}
 }
 
-@article{hirschberg1975linear,
-  title={A linear space algorithm for computing maximal common subsequences},
-  author={Hirschberg, Daniel},
-  journal={Communications of the ACM},
-  volume={18},
-  number={6},
-  pages={341--343},
-  year={1975}
+% String matching with k errors in O(m log m + n k^2) time
+@article{landau1988fast,
+  title={Fast string matching with $k$ differences},
+  author={Landau, Gad and Vishkin, Uzi},
+  journal={Journal of Computer and System Sciences},
+  volume={37},
+  number={1},
+  pages={63--78},
+  year={1988}
 }
 
-% STRING MATCHING WITH ERRORS
-
-% String matching with k errors in O(nk) time
+% k-przybliżone dopasowanie wg odległości edycyjnej w czasie O(nk)
 @article{landau1989fast,
   title={Fast parallel and serial approximate string matching},
   author={Landau, Gad and Vishkin, Uzi},
@@ -315,6 +575,28 @@
   year={1989}
 }
 
+% k-przybliżone dopasowanie wg odległości edycyjnej (insert, delete, substitution) w czasie O(nk + m \log |A|)
+@article{galil1990improved,
+  title={An improved algorithm for approximate string matching},
+  author={Galil, Zvi and Park, Kunsoo},
+  journal={SIAM Journal on Computing},
+  volume={19},
+  number={6},
+  pages={989--999},
+  year={1990}
+}
+
+% k-przybliżone dopasowanie wg odległości edycyjnej (insert, delete, substitution) w czasie O(nk/(m - k) + k/|A|)
+@article{tarhio1993approximate,
+  title={Approximate Boyer--Moore string matching},
+  author={Tarhio, Jorma and Ukkonen, Esko},
+  journal={SIAM Journal on Computing},
+  volume={22},
+  number={2},
+  pages={243--260},
+  year={1993}
+}
+
 % String matching with k errors in O(n/m k^4 + n) time
 @article{cole2002approximate,
   title={Approximate string matching: A simpler faster algorithm},
@@ -323,8 +605,7 @@
   volume={31},
   number={6},
   pages={1761--1782},
-  year={2002},
-  publisher={SIAM}
+  year={2002}
 }
 
 % STRING MATCHING WITH WILDCARDS
@@ -343,7 +624,7 @@
 @article{ziv1977universal,
   title={A universal algorithm for sequential data compression},
   author={Ziv, Jacob and Lempel, Abraham},
-  journal={IEEE Transactions on information theory},
+  journal={IEEE Transactions on Information Theory},
   volume={23},
   number={3},
   pages={337--343},
@@ -352,7 +633,7 @@
 
 @article{wyner1994sliding,
   title={The sliding-window Lempel-Ziv algorithm is asymptotically optimal},
-  author={Wyner, Aaron D and Ziv, Jacob},
+  author={Wyner, Aaron and Ziv, Jacob},
   journal={Proceedings of the IEEE},
   volume={82},
   number={6},
@@ -370,6 +651,53 @@
   year={1978}
 }
 
+@article{karkkainen2007fast,
+  title={Fast BWT in small space by blockwise suffix sorting},
+  author={K{\"a}rkk{\"a}inen, Juha},
+  journal={Theoretical Computer Science},
+  volume={387},
+  number={3},
+  pages={249--257},
+  year={2007}
+}
+
+@inproceedings{karkkainen2010medium,
+  title={Medium-space algorithms for inverse BWT},
+  author={K{\"a}rkk{\"a}inen, Juha and Puglisi, Simon},
+  booktitle={European Symposium on Algorithms},
+  pages={451--462},
+  year={2010},
+  publisher={Springer}
+}
+
+@inproceedings{seward2001space,
+  title={Space-time tradeoffs in the inverse BW transform},
+  author={Seward, Julian},
+  booktitle={Proceedings DCC 2001. Data Compression Conference},
+  pages={439--448},
+  year={2001},
+  organization={IEEE}
+}
+
+@article{nong2007efficient,
+  title={Efficient algorithms for the inverse sort transform},
+  author={Nong, Ge and Zhang, Sen},
+  journal={IEEE Transactions on Computers},
+  volume={56},
+  number={11},
+  pages={1564--1574},
+  year={2007},
+  publisher={IEEE}
+}
+
+@inproceedings{matias1999optimality,
+  title={On the optimality of parsing in dynamic dictionary based data compression},
+  author={Matias, Yossi and {\c{S}}ahinalp, S{\"u}leyman Cenk},
+  booktitle={Proceedings of the Tenth Annual ACM-SIAM Symposium on Discrete Algorithms},
+  pages={943--944},
+  year={1999}
+}
+
 % SHORTEST COMMON SUPERSTRING
 
 % NPH
@@ -383,7 +711,40 @@
   year={1980}
 }
 
-% MAX-SNP
+% NPH dla alfabetu binarnego
+@article{raiha1981shortest,
+  title={The shortest common supersequence problem over binary alphabet is NP-complete},
+  author={R{\"a}ih{\"a}, Kari-Jouko and Ukkonen, Esko},
+  journal={Theoretical computer science},
+  volume={16},
+  number={2},
+  pages={187--198},
+  year={1981},
+  publisher={Elsevier}
+}
+
+% O(log n)-APX for SCS
+@inproceedings{li1990towards,
+  title={Towards a DNA sequencing theory (learning a string)},
+  author={Li, Ming},
+  booktitle={Proceedings of the 31st Annual Symposium on Foundations of Computer Science},
+  pages={125--134},
+  year={1990},
+  publisher={IEEE}
+}
+
+@article{jiang1996dna,
+  title={DNA sequencing and string learning},
+  author={Jiang, Tao and Li, Ming},
+  journal={Mathematical Systems Theory},
+  volume={29},
+  number={4},
+  pages={387--405},
+  year={1996},
+  publisher={Springer}
+}
+
+% MAX-SNP + 3-APX for SCS
 @article{blum1994linear,
   title={Linear approximation of shortest superstrings},
   author={Blum, Avrim and Jiang, Tao and Li, Ming and Tromp, John and Yannakakis, Mihalis},
@@ -446,7 +807,7 @@
 
 % APX for r-SCS
 @inproceedings{golovnev2013approximating,
-  title={Approximating shortest superstring problem using de bruijn graphs},
+  title={Approximating shortest superstring problem using de {B}ruijn graphs},
   author={Golovnev, Alexander and Kulikov, Alexander and Mihajlin, Ivan},
   booktitle={Annual Symposium on Combinatorial Pattern Matching},
   pages={120--129},
@@ -494,7 +855,30 @@
 @inproceedings{karpinski2013improved,
   title={Improved inapproximability results for the shortest superstring and related problems},
   author={Karpinski, Marek and Schmied, Richard},
-  booktitle={Proceedings of the Nineteenth Computing: The Australasian Theory Symposium-Volume 141},
+  booktitle={Proceedings of the 19th Computing: The Australasian Theory Symposium},
+  volume={141},
   pages={27--36},
+  year={2013}
+}
+
+% MAXIMUM SUFFIX
+
+@article{franceschini2011finding,
+  title={Finding the maximum suffix with fewer comparisons},
+  author={Franceschini, Gianni and Hagerup, Torben},
+  journal={Journal of Discrete Algorithms},
+  volume={9},
+  number={3},
+  pages={279--286},
+  year={2011},
+  publisher={Elsevier}
+}
+
+@article{adamczyk2013note,
+  title={A note on a simple computation of the maximal suffix of a string},
+  author={Adamczyk, Zbigniew and Rytter, Wojciech},
+  journal={Journal of Discrete Algorithms},
+  volume={20},
+  pages={61--64},
   year={2013}
 }

@@ -479,6 +479,25 @@ Zwróćmy uwagę, że dla dowolnych słów $u$, $v$ zawsze istnieje co najmniej 
   Pokaż, że $1 \le lp(u, v) \le p(uv)$ dla dowolnych słów $u$, $v$.
 \end{problem}
 
+\begin{proof}
+Pierwsza nierówność wynika z niepustości powtórzenia. 
+
+Rozważmy teraz $o$ - najmniejszy okres słowa $uv$. Rozważmy pokrycie słowa $uv$ przez $o$. Jeżeli ostatnie wystąpienie $o$ zaczynające się w $u$ kończy się wraz z końcem $u$, to $o$ jest sufiksem $u$ oraz $v$ jest sufiksem $o$ lub $o$ jest sufiksem $v$ (w zależności czy $v$ jest pokryte przez jedno czy więcej wystąpień $o$).
+
+Załóżmy, więc że w pokryciu $uv$ przez $o$ ostatnie wystąpienie $o$ zaczynające się w $u$ przecina początek $v$. Niech $o=ab$ to podział tego wystąpienia na część z $u$ i część z $v$. Czyli 
+$$uv = \underbrace{o^{x} a}_{u} \underbrace{b o^{y} c}_{v},$$
+gdzie $c$ jest prefiksem $o$.
+Pokażemy teraz, że $ba$ jest powtórzeniem dla $u, v$.
+
+Jeżeli $x=0$, to $u$ jest sufiksem $ba$, jeżeli natomiast $x>0$, to oczywiście $ba$ jest sufiksem $u$.
+ 
+Jeżeli $y>0$, to $ba$ jest prefiksem $v$, jeżeli natomiast $y=0$ to długość $c$ decyduje o tym czy $v$ jest prefiksem $ba$, czy przeciwnie. 
+ 
+Zatem najmniejsze powtórzenie jest długości co najwyżej 
+$$|ba| = |ab|,$$
+co kończy dowód.
+\end{proof}
+
 \begin{problem}{}{}
   Pokaż jak w czasie $O(n)$ dla dowolnego słowa $w$ obliczyć tablicę $lp(u, v)$ dla wszystkich $u$, $v$ takich, że $w = uv$.
 \end{problem}
@@ -509,7 +528,7 @@ Potrzebne będzie znalezienie faktoryzacji krytycznej. Okazuje się, że można 
 
   Dla dowolnego niepustego słowa $w$ niech $w = uv$ z $v$ jako maksymalnym sufiksem według $\le$ oraz $w = u'v'$ z $v'$ jako maksymalnym sufiksem według $\le^*$.
 
-  Jeśli $w = a^n$ dla pewnego $a \in \A$, to każde $(u, v)$ takie, że $w = uv$ jest faktoryzacją krytyczna.
+  Jeśli $w = a^n$ dla pewnego $a \in \A$, to każde $(u, v)$ takie, że $w = uv$ jest faktoryzacją krytyczną.
   Jeśli nie, to $v \neq v'$. Bez straty ogólności załóżmy, że $|v| < |v'|$.
 
   Niech $x$ będzie najkrótszym powtórzeniem dla $(u, v)$.
@@ -610,3 +629,100 @@ Warto zwrócić uwagę, że algorytm można zaimplementować w dwóch wersjach:
     \item Monte Carlo -- zwracamy dopasowanie od razu, gdy wykryjemy równość haszy, więc czas działania to $O(n)$, ale możliwe fałszywe dopasowania,
     \item Las Vegas -- zwracamy dopasowanie jedynie, gdy wykryjemy równość haszy i sprawdzimy z całym wzorcem, stąd brak błędów, ale pesymistyczny czas działania to $O(n m)$.
 \end{itemize}
+
+\subsection{Algorytm Galila–Seiferasa}
+
+Algorytm G--S jest algorytmem wyszukiwania wzorca który wymaga jedynie stałej pamięci dodatkowej (eliminując tablicę ,,mismatch'' używaną przez algorytmy typu Morrisa–Pratta) a jednocześnie wciąż działa w asymptotycznym czasie liniowym — osiągając tym samym teoretyczne optimum pod względem zarówno czasu jaki i pamięci.
+
+W tym opisie, tak samo jak w załączonej implementacji algorytmu, stringi indeksowane są od 1. Wszelki kod należy interpretować zgodnie z semantyką języka Python.
+
+Niech \texttt{m = len(word)}, \texttt{n = len(text)}. Rozważmy schemat algorytmu dopasowania wzorca
+\begin{verbatim}
+p,q= 0,0
+\textbf{while} True:
+  \textbf{while} text[p+q+1] == word[q+1]: q+= 1
+  \textbf{if} q == m: \textbf{yield} p+1
+  p,q= \textit{p'},\textit{q'}
+\end{verbatim}
+W powyższym pseudokodzie \texttt{p} to jest obecny kandydat na pozycję wzorca, a \texttt{q} to prefiks o którym wiemy że się zgadza.
+
+Naiwny algorytm \textit{brute-force} używa $p'= p+1$, $q'= 0$. Ponieważ wiemy jednak że $text[p+1:p+q+1] == word[1:q+1]$ to rozważanie $p'= p+x$ ma sens tylko jeśli $word[1:q-x+1] == word[x+1:q+1]$. Na tej obserwacji jest oparty algorytm Knutha–Morrisa–Pratta, obliczający $p'= p+shift[q]$, $q'= q-shift[q]$ if $q>0$ else $0$, gdzie \texttt{shift[q]} jest długością najkrótszego okresu \texttt{word[1:q+1]}.
+
+Algorytm Galila–Seiferasa jest oparty na tym schemacie oraz następującym twierdzeniu:
+\begin{theorem}{}{O dekompozycji}
+Dla ustalonego (odpowiednio dużego) \(k\), każde słowo \texttt{x} można przedstawić jako \texttt{u+v}, gdzie \texttt{v} ma co najwyżej jeden \textit{\(k\)-okres prefiksu} a \texttt{u} jest długości $O(period(v))$. 
+\end{theorem}
+Słowo \texttt{z} nazywamy \(k\)-okresem prefiksu słowa \texttt{w} jeśli \texttt{z} jest słowem pierwotnym a \texttt{z\textsuperscript{k}} jest prefiksem \texttt{w}.
+
+Do skonstruowania tej dekompozycji przyda nam się następujący lemat:
+\begin{lemma}{}{}
+Dla słowa \textit{pierwotnego} \texttt{w} istnieje dekompozycja \texttt{w == w1 + w2} taka że dla dowolnego słowa \texttt{w'}, słowo \texttt{w2 + w\textsuperscript{k-1} + w'} nie ma \(k\)-okresu prefiksu krótszego niż \texttt{len(w)}.
+\end{lemma}
+
+Pierwsza część algorytmu jest poświęcona znalezieniu dekompozycji wzorca takiej jak w twierdzeniu o dekompozycji.
+\begin{verbatim}
+s= 0
+\textbf{while} word[s+1:] \textit{ma więcej niż jeden k-okres prefiksu}:
+  p2= \textit{długość drugiego najkrótszego k-okresu prefiksu}
+  \textit{Korzystając z lematu, znajdź}
+   s' < s + p2 \textit{takie że} word[s'+1:] \textit{nie ma k-okresu prefiksu krótszego niż} p2
+  s= s'
+\end{verbatim}
+Niech \texttt{l(s)} będzie długością najkrótszego okresu \texttt{word[s+1:]} a \texttt{p1(s)} długością najkrótszego \(k\)-okresu prefiksu. Indukcyjnie można dowieść, że w każdej iteracji pętli \texttt{s < c * min(l(s), p1(s))} dla \texttt{c = (k-1)/(k-2)} — więc w szczególności na końcu \texttt{len(u) < c * l(s)}.
+
+W szczególności istnieje następujący prosty algorytm znajdowania \texttt{s'}:
+\begin{verbatim}
+s'= s
+\textbf{while} word[s'+1:] \textit{ma k-okres prefiksu krótszy niż p2}:
+  usuń najkrótszy okres prefiksu
+\end{verbatim}
+Przeanalizujmy złożoność ostatecznego kodu programu:
+\begin{verbatim}
+K= 4
+s,p1,q1= 0,1,0
+p2,q2= 0,0
+mode=0
+\textbf{while} True:
+  \textbf{if} mode==1:
+    \textit{#Znajdź najkrótszy k-okres prefiksu word[s+1:]}
+    \textbf{while} s+p1+q1 < m \textbf{and} word[s+p1+q1+1] == word[s+q1+1]: q1+= 1
+    \textbf{if} p1+q1 >= p1*K: p2, q2= q1,0; mode=2; \textbf{continue}
+    \textbf{if} s+p1+q1 == m: \textbf{break}
+    p1+= (1 \textbf{if} q1==0 \textbf{else} (q1+K-1)//K); q1= 0
+  \textbf{elif} mode==2:
+    \textit{#Znajdź drugi najkrótszy k-okres prefiksu word[s+1:].}
+    \textit{#Jeśli nie istnieje to przejdź do drugiej fazy algorytmu.}
+    \textbf{while} s+p2+q2 < m \textbf{and} word[s+p2+q2+1] == word[s+q2+1] \textbf{and} p2+q2 < p2*K: q2+= 1
+    \textbf{if} p2+q2 == p2*K: mode= 0; \textbf{continue};
+    \textbf{if} s+p2+q2 == m: \textbf{break}
+    \textbf{if} q2 == p1+q1:
+      p2+= p1; q2-= p1;
+    \textbf{else}:
+      p2+= (1 \textbf{if} q2==0 \textbf{else} (q2+K-1)//K); q2= 0
+  \textbf{else}:
+    \textit{#Zinkrementuj s}
+    \textbf{while} s+p1+q1 < m \textbf{and} word[s+p1+q1+1] == word[s+q1+1]: q1+= 1
+    \textbf{while} p1+q1 >= p1*K: s+= p1; q1-= p1;
+    p1+= (1 \textbf{if} q1==0 \textbf{else} (q1+K-1)//K); q1= 0
+    \textbf{if} p1 >= p2: mode= 1
+\end{verbatim}
+W celu przeanalizowania złożoności tej części algorytmu rozważmy wyrażenie
+\[
+2s+{\left(k+1\right)}p_1+q_1+{\left(k+1\right)}p_2+q_2
+\]
+Jego wartość jest zawsze $O{\left(\texttt{len(word)}\right)}$ a każde przypisanie ją zwiększa.
+\begin{verbatim}
+p2,q2= 0,0
+\textbf{while} True:
+  \textbf{while} p2+s+q2 < n \textbf{and} s+q2 < m \textbf{and} text[p2+s+q2+1] == word[s+q2+1]: q2+= 1
+  \textbf{if} q2 == m-s \textbf{and} text[p2+1 : p2+s+1] == word[1 : s+1]:
+    yield p2+1
+  \textbf{if} q2 == p1+q1:
+    p2+= p1; q2-= p1
+  \textbf{else}:
+    p2+= (1 \textbf{if} q2==0 \textbf{else} (q2+K-1)//K); q2= 0
+  \textbf{if} p2+s > n: \textbf{return}
+\end{verbatim}
+Przed wykonaniem drugiej części algorytmu jeśli \texttt{word[s+1:]} ma \(k\)-okres prefiksu, to jego długość wynosi \(p_1\).
+Ponadto twierdzimy, że \(s<{\left(k-1\right)}p_1/{\left(k-2\right)}\) co nam zagwarantuje że bezpośrednie sprawdzanie równości podciągów zajmie łącznie $O{\left(\texttt{len(text)}\right)}$ czasu.
+
