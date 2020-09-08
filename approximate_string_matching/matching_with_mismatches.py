@@ -18,42 +18,38 @@ def _next_possible_occurence(t, n, m, k, BM_k, BAD, j):
       if r <= n and BAD[(i, t[r])]:
         bad += 1
       i, r = i - 1, r - 1
-    if bad <= k:
-      if j <= (n + k):
-        npo = j - m - k
-        j += max(k + 1, d)
-        return npo, j
+    if bad <= k and j <= n + k:
+      npo = j - m - k
+      j += max(k + 1, d)
+      return npo, j
     j += max(k + 1, d)
   return n + 1, j
 
+def _boyer_moore_bad_environment(p, m, k, A):
+  bad_table = {(i, a): True for i in range(1, m + 1) for a in A}
+  for i in range(1, m + 1):
+    for j in range(max(0, i - k), min(i + k, m) + 1):
+      bad_table[(j, p[i])] = False
+  return bad_table
+
+def _boyer_moore_shift(p, m, k, A):
+  ready = {a: m + 1 for a in A}
+  BM_k = {(i, a): m for a in A for i in range(m, m - k - 1, -1)}
+  for i in range(m - 1, 0, -1):
+    for j in range(ready[p[i]] - 1, max(i, m - k) - 1, -1):
+      BM_k[(j, p[i])] = j - i
+    ready[p[i]] = max(i, m - k)
+  return BM_k
+
 def approximate_boyer_moore(t, p, n, m, k):
-  def _boyer_moore_bad_environment(p, m, k, A):
-    bad_table = {(i, a): True for i in range(1, m + 1) for a in A}
-    for i in range(1, m + 1):
-      for j in range(max(0, i - k), min(i + k, m) + 1):
-        bad_table[(j, p[i])] = False
-    return bad_table
-
-  def _boyer_moore_multi_dim_shift(p, m, k, A):
-    ready = {a: m + 1 for a in A}
-    BM_k = {(i, a): m for a in A for i in range(m, m - k - 1, -1)}
-    for i in range(m - 1, 0, -1):
-      for j in range(ready[p[i]] - 1, max(i, m - k) - 1, -1):
-        BM_k[(j, p[i])] = j - i
-      ready[p[i]] = max(i, m - k)
-    return BM_k
-
   A = set(list(t[1:] + p[1:]))
-  BM_k = _boyer_moore_multi_dim_shift(p, m, k, A)
+  BM_k = _boyer_moore_shift(p, m, k, A)
   BAD = _boyer_moore_bad_environment(p, m, k, A)
 
-  j, top = m, min(k + 1, m)
-  D_0 = list(range(m + 1))
-  D = D_0[:]
+  j, top, D_0 = m, min(k + 1, m), list(range(m + 1))
   current, j = _next_possible_occurence(t, n, m, k, BM_k, BAD, j)
-
   current = max(current, 1)
-  last = current + m + 2 * k
+  D, last = D_0[:], current + m + 2 * k
 
   while current <= n:
     for r in range(current, last + 1):

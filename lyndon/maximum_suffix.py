@@ -38,3 +38,7 @@ def constant_space(text, n, less = operator.__lt__):
     else:
       out, i, p = i - r, i - r + 1, 1
   return out, p
+
+def from_suffix_array(SA, t, n):
+  index = SA[-1]
+  return index, prefix.period('#' + t[index:], n - index + 1)

@@ -16,8 +16,8 @@ HAMMING_DISTANCE = ScoreMatrix(
     substitute = lambda ci, cj: 1, match = lambda ci: 0)
 
 class FirstRow(enum.Enum):
-    ZEROS = lambda x: [0] * (x + 1)
-    INCREASING = lambda x: list(range(x + 1))
+  ZEROS = lambda x: [0] * (x + 1)
+  INCREASING = lambda x: list(range(x + 1))
 
 def hamming_distance(text_1, text_2, n_1, n_2):
   if n_1 != n_2:

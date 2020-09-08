@@ -35,10 +35,11 @@ class TestShortestCommonSuperstring(unittest.TestCase):
   run_large = unittest.skipUnless(
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
-  def check_shortest_common_superstring(
-      self, W, reference, algorithm, bound):
+  def check_shortest_common_superstring(self, W, reference, algorithm, bound):
     result = algorithm(W)
-    self.assertTrue(all(word[1:] in result for word in W))
+    self.assertTrue(
+        all(word[1:] in result for word in W),
+        'Algorithm {}, words {}'.format(algorithm.__name__, W))
     if reference is not None:
       self.assertTrue(len(result) - 1 <= bound(len(reference) - 1))
 
@@ -57,7 +58,7 @@ class TestShortestCommonSuperstring(unittest.TestCase):
   @parameterized.parameterized.expand(SHORTEST_COMMON_SUPERSTRING_ALGORITHMS)
   @run_large
   def test_small_words(self, _, algorithm, bound):
-    tests, k, n_low, n_high, A = 100, 30, 1, 3, ['a', 'b', 'c']
+    tests, k, n_low, n_high, A = 100, 10, 1, 3, ['a', 'b', 'c']
     for _ in range(tests):
       T = [rand.random_word(random.randint(n_low, n_high), A)
            for _ in range(k)]

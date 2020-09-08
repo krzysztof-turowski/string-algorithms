@@ -8,8 +8,9 @@ class FourRussians:
         insert = lambda c: S.insert(c) if c != '$' else 0,
         delete = lambda c: S.delete(c) if c != '$' else 0,
         match = lambda c: S.match(c) if c != '$' else 0,
-        substitute = (lambda ci, cj: S.substitute(ci, cj) if '$' not in {ci, cj}
-                      else (S.insert(cj) if ci == '$' else S.delete(ci))))
+        substitute = (
+            lambda ci, cj: S.substitute(ci, cj) if '$' not in {ci, cj}
+            else (S.insert(cj) if ci == '$' else S.delete(ci))))
 
   def prepare_parameters(self, text_1, text_2, n_1, n_2):
     m = int(math.log2(n_1)) if n_1 > 0 else 1

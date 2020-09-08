@@ -105,13 +105,13 @@ class TestApproximateStringMatchingWithHammingDistance(
 
   @staticmethod
   def generate(n, m, k, A):
-      text = ''.join(random.choice(A) for _ in range(n))
-      index = random.randint(0, n - m)
-      word = text[index:index + m]
-      for _ in range(k - 1):
-        x = random.randint(0, m)
-        word = word[:x] + random.choice(A) + word[x + 1:]
-      return '#' + text[:n], '#' + word[:m]
+    text = ''.join(random.choice(A) for _ in range(n))
+    index = random.randint(0, n - m)
+    word = text[index:index + m]
+    for _ in range(k - 1):
+      x = random.randint(0, m)
+      word = word[:x] + random.choice(A) + word[x + 1:]
+    return '#' + text[:n], '#' + word[:m]
 
   @parameterized.parameterized.expand(
       APPROXIMATE_STRING_MATCHING_HAMMING_ALGORITHMS)
