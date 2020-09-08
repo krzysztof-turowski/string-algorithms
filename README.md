@@ -23,7 +23,7 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 2. Larsson-Sadakane algorithm
 3. Skew (Kärkkäinen-Sanders) algorithm
 4. Induced sorting (Zhang-Nong-Chan) algorithm
-5. ~~Small-large (Ko-Aluru) algorithm~~
+5. Small-large (Ko-Aluru) algorithm
 
 #### Suffix array search
 1. $O(m \log{n})$ naive algorithm
@@ -50,15 +50,15 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 4. Myers algorithm
 5. Kumar-Rangan algorithm
 
+#### Approximate string matching with Hamming distance
+1. Landau-Vishkin algorithm
+
+#### Approximate string matching with edit distance
+1. Approximate Boyer-Moore (Tarhio-Ukkonen) algorithm
+
 #### String matching with wildcards
 1. Basic algorithm based on FFT
 2. Clifford-Clifford algorithm
-
-#### Approximate string matching with Hamming distance
-1. ~~Landau-Vishkin algorithm~~
-
-#### Approximate string matching with edit distance
-1. ~~Approximate Boyer-Moore (Tarhio-Ukkonen) algorithm~~
 
 ### Shortest common superstring
 1. $\log{n}$-approximation (Li-Jiang) algorithm
