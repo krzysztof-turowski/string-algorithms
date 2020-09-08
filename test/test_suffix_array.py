@@ -5,14 +5,14 @@ import unittest
 import parameterized
 
 from generator import rand
-from string_indexing import farach, suffix_array, suffix_tree, sl_suffix_array
+from string_indexing import farach, suffix_array, suffix_tree
 
 SUFFIX_ARRAY_ALGORITHMS = [
     [ 'Karp-Miller-Rosenberg', suffix_array.prefix_doubling ],
     [ 'Karkkainen-Sanders', suffix_array.skew ],
     [ 'Farach', farach.suffix_array ],
     [ 'Larsson-Sadakane', suffix_array.larsson_sadakane ],
-    [ 'Ko-Aluru', sl_suffix_array.small_large ],
+    [ 'Ko-Aluru', suffix_array.small_large ],
     [ 'Zhang-Nong-Chan', suffix_array.induced_sorting ],
     [
         'from suffix tree',

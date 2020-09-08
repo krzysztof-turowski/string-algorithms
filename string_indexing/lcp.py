@@ -20,7 +20,7 @@ def from_suffix_tree(ST):
 def kasai(SA, text, n):
   text += '$'
   L = [-1] * (n + 1)
-  R, k = suffix_array.reverse(SA), 0
+  R, k = suffix_array.get_reverse(SA), 0
   for i in range(1, n + 2):
     if R[i - 1] != n + 1:
       j = SA[R[i - 1]]
