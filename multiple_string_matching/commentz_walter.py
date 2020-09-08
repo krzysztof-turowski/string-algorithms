@@ -136,29 +136,24 @@ class CommentzWalterAutomaton(Trie):
       max_min_diff_s1_char = max(min_depth - j - 1, node.shift1)
     return min(max_min_diff_s1_char, node.shift2)
 
-  def report_all_matches(self, text, n):
+  def _match(self, t, n):
     i = self.min_depth - 1
-
     while i < n:
-      v, j = self.root, 0
-      c_find = text[i]
-
+      v, j, c_find = self.root, 0, t[i]
       while v.children.get(c_find) is not None and i >= j:
-        v = v.children[c_find]
-        j += 1
+        v, j = v.children[c_find], j + 1
         if v.word is not None:
           yield (v.word[::-1], i - j + 2)
-        c_find = text[i - j]
-
+        c_find = t[i - j]
       j = min(i, j)
       i += self.shift_func(v, j)
 
 def build(W):
-  cw_auto = CommentzWalterAutomaton()
+  automaton = CommentzWalterAutomaton()
   for word in W:
-    cw_auto.add_word(word)
-  cw_auto.create_failure_links()
-  return cw_auto
+    automaton.add_word(word[1:])
+  automaton.create_failure_links()
+  return automaton
 
-def search(text, n, S):
-  return S.report_all_matches(text, n)
+def search(t, n, automaton):
+  return automaton._match(t[1:], n)

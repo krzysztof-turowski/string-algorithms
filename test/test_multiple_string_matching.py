@@ -12,22 +12,18 @@ from generator.rand import random_word
 MULTIPLE_STRING_MATCHING_ALGORITHMS = [
     [
         'Aho-Corasick',
-        lambda W: aho_corasick.build(
-            [(w, len(w) - 1) for w in W],
-            {chr(i) for i in range(ord('a'), ord('z') + 1)}),
+        aho_corasick.build,
         aho_corasick.search,
     ],
     [
         'Commentz-Walter',
-        lambda W: commentz_walter.build([w[1:] for w in W]),
-        lambda t, n, A: commentz_walter.search(t[1:], n, A),
+        commentz_walter.build,
+        commentz_walter.search,
     ],
     [
         'fast practical multiple string matching',
-        lambda W: fast_practical_multi_string_matching.build(
-            [w[1:] for w in W]),
-        lambda t, n, A: fast_practical_multi_string_matching.search(
-            t[1:], n, A),
+        fast_practical_multi_string_matching.build,
+        fast_practical_multi_string_matching.search,
     ],
 ]
 

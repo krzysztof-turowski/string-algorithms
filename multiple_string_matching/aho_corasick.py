@@ -1,116 +1,57 @@
-from queue import Queue
+import queue
 
-def build(keywords, alphabet):
-  return _AhoCorasickAutomaton(keywords, alphabet)
+from common import dawg
 
-def search(text, n, ac_automaton):
-  return ac_automaton.find_occurrences(text, n)
+class AhoCorasick:
+  def __init__(self, W):
+    self.root = dawg.AutomatonNode()
+    self._create_automaton(W)
 
-# pylint: disable=too-few-public-methods
-class _AhoCorasickAutomaton:
-  def __init__(self, keywords, alphabet):
-    self._root = _AhoCorasickAutomaton._Node()
-    self.construct_goto(keywords, alphabet)
-    self.construct_fail(alphabet)
-    self.construct_nxt(alphabet)
+  def _create_trie(self, W):
+    for word in W:
+      current_node = self.root
+      for c in word:
+        new_node = dawg.AutomatonNode(current_node.depth + 1)
+        if c not in current_node.children:
+            current_node.add_child(new_node, c)
+        current_node = current_node.children[c]
+      current_node.output.append(word)
 
-  def construct_goto(self, keywords, alphabet):
-    for k, k_len in keywords:
-      self._enter(k, k_len)
+  def _create_automaton(self, W):
+    self._create_trie(W)
+    Q = queue.Queue()
+    for node in self.root.children.values():
+      Q.put(node)
+      node.fail = self.root
+    while not Q.empty():
+      current_node = Q.get()
+      for label, next_node in current_node.children.items():
+        Q.put(next_node)
+        fail_node = current_node.fail
+        while fail_node is not None and label not in fail_node.children:
+          fail_node = fail_node.fail
+        next_node.fail = fail_node.children[label] if fail_node else self.root
+        next_node.output += next_node.fail.output
 
-    for a in alphabet:
-      if self._root.goto(a) is None:
-        self._root.update_goto(a, self._root)
+  def step(self, node, label):
+    while label not in node.children and node is not self.root:
+      node = node.fail
+    return node.children[label] if label in node.children else self.root
 
-  def _enter(self, keyword, keyword_len):
-    current_state = self._root
-    j = 1
-    while j <= keyword_len and current_state.goto(keyword[j]) is not None:
-      current_state = current_state.goto(keyword[j])
-      j += 1
-    for a in keyword[j:keyword_len + 1]:
-      next_state = _AhoCorasickAutomaton._Node()
-      current_state.update_goto(a, next_state)
-      current_state = next_state
-    current_state.append_outputs([keyword_len])
+  def traverse(self, t):
+    node = self.root
+    for c in t:
+      node = self.step(node, c)
+    return node
 
-  def construct_fail(self, alphabet):
-    q = Queue()
-    for s in (self._root.goto(a) for a in alphabet):
-      if s != self._root:
-        q.put(s)
-        s.update_fail(self._root)
+def build(W):
+  return AhoCorasick([w[1:] for w in W])
 
-    while not q.empty():
-      current = q.get()
-      for a, child in ((a, current.goto(a)) for a in alphabet):
-        if child is not None:
-          q.put(child)
-
-          fallback = current.fail()
-          while fallback.goto(a) is None:
-            fallback = fallback.fail()
-
-          child_fallback = fallback.goto(a)
-          child.update_fail(child_fallback)
-          child.append_outputs(child_fallback.output())
-
-  def construct_nxt(self, alphabet):
-    q = Queue()
-    for a in alphabet:
-      a_child = self._root.goto(a)
-      self._root.update_nxt(a, a_child)
-      if a_child != self._root:
-        q.put(a_child)
-    self._root.use_only_nxt()
-
-    while not q.empty():
-      current = q.get()
-      for a, child in ((a, current.goto(a)) for a in alphabet):
-        if child is not None:
-          q.put(child)
-          current.update_nxt(a, child)
-        else:
-          fallback = current.fail()
-          current.update_nxt(a, fallback.nxt(a))
-      current.use_only_nxt()
-
-  def find_occurrences(self, text, n):
-    state = self._root
-    for i in range(1, n + 1):
-      state = state.nxt(text[i])
-      for keyword_len in state.output():
-        start_pos = i - keyword_len + 1
-        yield text[start_pos:i + 1], start_pos
-
-  class _Node:
-    def __init__(self):
-      self._goto, self._fail, self._output, self._nxt = {}, None, [], {}
-
-    def goto(self, a):
-      return self._goto.get(a, None)
-
-    def update_goto(self, a, target_node):
-      self._goto[a] = target_node
-
-    def output(self):
-      return self._output
-
-    def append_outputs(self, outputs):
-      self._output += outputs
-
-    def fail(self):
-      return self._fail
-
-    def update_fail(self, target_node):
-      self._fail = target_node
-
-    def nxt(self, a):
-      return self._nxt[a]
-
-    def update_nxt(self, a, target_node):
-      self._nxt[a] = target_node
-
-    def use_only_nxt(self):
-      del self._goto
-      del self._fail
+def search(t, n, automaton):
+  i, gamma = 1, automaton.root
+  while True:
+    yield from ((match, i - len(match)) for match in gamma.output)
+    i += 1
+    if i > n + 1:
+      return
+    gamma = automaton.step(gamma, t[i - 1])
