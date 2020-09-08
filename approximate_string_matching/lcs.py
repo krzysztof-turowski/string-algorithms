@@ -114,7 +114,7 @@ def kumar_rangan(text_1, text_2, n_1, n_2, S):
   p = _lcs_length(text_1[1:], text_2[1:], n_1, n_2)
   return _lcs(text_1[1:], text_2[1:], n_1, n_2, p)
 
-class EditBox:
+class _EditBox:
   def __init__(self, text_1, text_2, start_1, end_1, start_2, end_2):
     self.text_1, self.start_1, self.end_1 = text_1, start_1, end_1
     self.text_2, self.start_2, self.end_2 = text_2, start_2, end_2
@@ -126,14 +126,14 @@ class EditBox:
     return self.text_1[x + self.start_1] == self.text_2[y + self.start_2]
 
   def cut_start(self, x, y):
-    return EditBox(self.text_1, self.text_2,
-                   self.start_1, self.start_1 + x,
-                   self.start_2, self.start_2 + y)
+    return _EditBox(self.text_1, self.text_2,
+                    self.start_1, self.start_1 + x,
+                    self.start_2, self.start_2 + y)
 
   def cut_end(self, x, y):
-    return EditBox(self.text_1, self.text_2,
-                   self.start_1 + x, self.end_1,
-                   self.start_2 + y, self.end_2)
+    return _EditBox(self.text_1, self.text_2,
+                    self.start_1 + x, self.end_1,
+                    self.start_2 + y, self.end_2)
 
   def get_first_text(self, start, end):
     return self.text_1[self.start_1 + start: self.start_1 + end + 1]
@@ -214,4 +214,4 @@ def myers(text_1, text_2, n, m, S):
   if S != distance.INDEL_DISTANCE:
     raise ValueError(
         'Myers algorithm works only for indel/lcs distances')
-  return _find_lcs(EditBox(text_1, text_2, 0, n, 0, m))
+  return _find_lcs(_EditBox(text_1, text_2, 0, n, 0, m))

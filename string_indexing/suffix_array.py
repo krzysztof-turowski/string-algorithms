@@ -157,28 +157,28 @@ class _SLText:
           return True
     return True
 
+class _Buckets:
+  def __init__(self, text, direction):
+    self.target = [-1] * len(text)
+    self._get_bucket_sizes(text)
+    self.recompute(direction)
+
+  def _get_bucket_sizes(self, text):
+    self.sizes = [0] * (max(text) + 1)
+    for c in text[1:]:
+      self.sizes[c] += 1
+
+  def recompute(self, direction):
+    self.direction = direction
+    heads = ([1] + self.sizes[:-1] if self.direction is BUCKET_DIR.FORWARD
+             else self.sizes)
+    self.heads = list(itertools.accumulate(heads))
+
+  def set_and_advance(self, bucket, value):
+    self.target[self.heads[bucket]] = value
+    self.heads[bucket] += self.direction.value
+
 def _induced_sort(sltext, initial):
-  class _Buckets:
-    def __init__(self, text, direction):
-      self.target = [-1] * len(text)
-      self._get_bucket_sizes(text)
-      self.recompute(direction)
-
-    def _get_bucket_sizes(self, text):
-      self.sizes = [0] * (max(text) + 1)
-      for c in text[1:]:
-        self.sizes[c] += 1
-
-    def recompute(self, direction):
-      self.direction = direction
-      heads = ([1] + self.sizes[:-1] if self.direction is BUCKET_DIR.FORWARD
-               else self.sizes)
-      self.heads = list(itertools.accumulate(heads))
-
-    def set_and_advance(self, bucket, value):
-      self.target[self.heads[bucket]] = value
-      self.heads[bucket] += self.direction.value
-
   buckets = _Buckets(sltext.text, BUCKET_DIR.BACKWARD)
   for i in initial:
     buckets.set_and_advance(sltext.text[i], i)
@@ -274,8 +274,8 @@ def _move_to_group_end(vals, condition, A, groups, front):
 def _prepare_substring_lists(A, SL, category):
   category_distance = _get_category_distance(SL, category)
   suffixes_by_distances = [
-      GroupedArray() for _ in range(max(category_distance) + 1)]
-  category_substrings = GroupedArray()
+      _GroupedArray() for _ in range(max(category_distance) + 1)]
+  category_substrings = _GroupedArray()
 
   for g in A.sorted_groups():
     category_substrings.append_group(
@@ -290,7 +290,7 @@ def _prepare_substring_lists(A, SL, category):
   return (suffixes_by_distances, category_substrings)
 
 def _bucket_array(s):
-  buckets, A = [[] for _ in range (len(s))], GroupedArray()
+  buckets, A = [[] for _ in range (len(s))], _GroupedArray()
   for i, e in enumerate(s[1:], start = 1):
     buckets[e].append(i)
   for b in (b for b in buckets if len(b) > 0):
@@ -318,7 +318,7 @@ def _get_category_distance(SL, category):
     category_distance.append(dist_from_last)
   return category_distance
 
-class GroupedArray:
+class _GroupedArray:
   def __init__(self):
     self.index, self.group_id, self.next_free_id = [-1], [-1], 0
     self.reversed_index, self.groups = {}, {}
