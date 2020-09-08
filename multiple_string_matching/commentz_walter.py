@@ -54,7 +54,8 @@ class CommentzWalterAutomaton(Trie):
     self.char_arr = {}
 
   def add_word(self, word):
-    super().add_word(word[::-1])
+    word = word[::-1]
+    super().add_word(word)
 
     for pos, char in enumerate(word, start = 1):
       min_char_depth = self.char_arr.get(char)
