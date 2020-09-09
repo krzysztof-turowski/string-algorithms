@@ -1,7 +1,6 @@
 \section{Dokładne dopasowanie 
 wielu wzorców}
 
-
 \subsection{Algorytm Aho-Corasick}
 
 Niech $\W=\{w_1,...,w_k\}$ będzie zbiorem wzorców (niepustych słów nad alfabetem $\Sigma$). Otrzymawszy słowo $T\in\Sigma^n$ chcemy wyznaczyć wszystkie indeksy z $[n]$, na których w $T$ zaczyna się pewien wzorzec z $\W$. Naturalnym rozwiązaniem jest $k$-krotne użycie jednego z wydajnych (liniowych) algorytmów do szukania pojedynczego wzorca. Podejście takie oczywiście jest poprawne, niestety skutkuje złożonością czasową $\Theta(kn)$. Okazuje się, że na podstawie $\W$ jesteśmy w stanie skonstruować w czasie $\Theta(\sum_{i\in[k]}|w_i|)$ odpowiednią strukturę, która będzie potrafiła znaleźć naraz wszystkie wystąpienia wzorców oglądając $T$ wyłącznie raz. Przed nami: automat Aho-Corasick.
@@ -10,7 +9,7 @@ Pomysł polega na zbudowaniu odpowiedniego deterministycznego automatu skończon
 
 Zaczniemy konstrukcję od utworzenia \textit{drzewa trie} na podstawie $\W$. Następnie dodamy do każdego stanu informacje o wzorcach które się w nim kończą i podniesiemy funkcję przejścia z częściowej do totalnej. Na koniec uprościmy automat. Po tych zabiegach otrzymamy strukturę, dzięki której wyszukiwanie wielu wzorców okaże się bardzo proste:
 
-\begin{minted}[xleftmargin=20pt,linenos]{python}
+\begin{verbatim}
 def find_occurrences(self, text, n):
   state = self._root
   for i in range(1, n + 1):
@@ -18,13 +17,13 @@ def find_occurrences(self, text, n):
   for keyword_len in state.output():
     start_pos = i - keyword_len + 1
     yield text[start_pos:i + 1], start_pos
-\end{minted}
+\end{verbatim}
 
 Warto zwrócić uwagę na fakt, że jeśli dany zbiór wzorców chcemy wyszukać w wielu różnych tekstach $T_1,...,T_t$, to wystarczy tylko raz skonstruować automat Aho-Corasick i użyć go niezależnie na każdym z $T_j$.
 
 \textit{Uwaga: sednem naszych rozważań jest opis sposobu, w jaki można przechodzić pomiędzy stanami automatu. Wygodnie nam będzie utożsamić ze sobą różne podejścia realizacji -- równoważne dla nas będą pojęcia zbioru etykietowanych krawędzi (skierowanych) pomiędzy dwoma stanami, funkcji mapujących pary (stan, symbol) w stan oraz lokalne w stanach tablice routingu.}
 
-\subsection{Drzewo trie}
+\paragraph{Drzewo trie}
 Mając zbiór słów $\W$ nad alfabetem $\Sigma$ możemy w prosty sposób zbudować tzw. \textit{drzewo trie}, ozn. $\trie_{\W}$. Jest to skierowane, ukorzenione drzewo, którego krawędzie etykietowane są symbolami z $\Sigma$. Każde słowo $w\in\W$ ma odpowiadającą mu ścieżkę z korzenia, etykietowaną kolejnymi literami $w$. Jeśli $w\in\W$ nie jest prefiksem żadnego innego słowa z $\W$, to jego ścieżka kończy się w liściu. Inaczej ujmując, istnieje bijekcja pomiędzy ścieżkami w $\trie_{\W}$ a wszystkimi (różnymi) prefiksami słów z $\W$. Krawędź etykietowaną symbolem $a$ pomiędzy $s_1$ a $s_2$ możemy kodować jako trójkę $(s_1, a, s_2)$.
 
 \begin{figure}[h!]
@@ -55,7 +54,7 @@ Zacznijmy temat konstrukcji od zdefiniowania funkcji, które będą nam potrzebn
     \item $\cnext::\states\times\Sigma\mapsto\states$ -- trzy zdefiniowane funkcje powyżej zupełnie wystarczają, aby nasz docelowy automat robił to, czego pragniemy; jak jednak łatwo zauważyć, próba przeczytania jednego znaku z $T$ może wymagać więcej niż jednego przejścia krawędzią korzystając z $\goto$ oraz $\fail$ -- możemy musieć schodzić wzdłuż $\fail$ wielokrotnie; aby uniknąć tego, pod sam koniec utworzymy funkcję $\cnext$, która skompresuje nam tego typu ścieżki i zastąpi $\goto$ oraz $\fail$
 \end{itemize}
 
-\subsection{Obliczanie $\goto$, $\out$, $\fail$}
+\paragraph{Obliczanie $\goto$, $\out$, $\fail$}
 Jak już wiemy \textit{co} chcemy policzyć, to możemy przejść do tego \textit{jak} to zrobić. Funkcję $\goto$ oraz część $\out$, jak już zauważyliśmy, możemy obliczyć konstruując $\trie_{\W}$:
 \begin{verbatim}
 def _construct_goto(self, keywords, alphabet):
@@ -115,7 +114,7 @@ Przechodzimy zatem po $\trie$ za pomocą algorytmu BFS. Będąc w wierzchołku $
 
 Znalazłszy odpowiedni wierzchołek $\texttt{child\textunderscore fallback}$ powiększamy zbiór $\out(\texttt{child})$ o wartości z  $\out(\texttt{child\textunderscore fallback})$ -- z indukcji wynika, że $\out(\texttt{child\textunderscore fallback})$ zawiera już wszystkie wzorce, które są sufiksami $\rot\rightsquigarrow\texttt{child\textunderscore fallback}$.
 
-\subsection{Obliczanie $\cnext$}
+\paragraph{Obliczanie $\cnext$}
 
 Jeśli $\goto$ była określona dla $s\in\states$ oraz $a\in\Sigma$, to $\cnext(s, a) = \goto(s, a)$. W przeciwnym wypadku będąc w $s$ i chcąc przejść symbolem $a$, powinniśmy schodzić krawędziami $\fail$ tak długo, aż znajdziemy się w $s'$, dla którego $\goto(s', a)\neq\none$. Jest to podobny zabieg co poprawka Knutha do algorytmu Morrisa-Pratta.
 \begin{verbatim}
@@ -142,7 +141,7 @@ def _construct_next(self, alphabet):
 
 Instrukcje w wierszach 8. oraz 19. pozwalają zwolnić pamięć zapominając o wartościach funkcji $\goto$ i $\fail$. Formalnie dopiero teraz, struktura $\A$ ze zbiorem stanów $\states$ oraz funkcją przejścia $\cnext$ jest deterministycznym automatem skończonym.
 
-\subsubsection{Analiza poprawności}
+\paragraph{Analiza poprawności}
 Z tego, co już zostało przedstawione, powinna wynikać poprawność zastosowanej metody. Aby jednak formalnie jej dowieść, wystarczy postawić trzy proste lematy:
 
 \begin{lemma}{}{}
@@ -159,7 +158,7 @@ Po przeczytaniu $j$ znaków z $T$ znajdujemy się w stanie $s\iff$ słowo genero
 
 \noindent Ich uzasadnienia są prostymi dowodami rekurencyjnymi zapisanymi we fragmentach kodu powyżej.
 
-\subsection{Analiza złożoności}
+\paragraph{Analiza złożoności}
 Konstrukcja całego automatu polega na sekwencyjnym wywołaniu procedur obliczających funkcje przejścia:
 
 \begin{minted}[xleftmargin=20pt,linenos]{python}
@@ -188,7 +187,7 @@ Problem może się pojawić, gdy będziemy chcieli wypisywać wszystkie wystąpi
 
 Zatem możemy określić złożoność czasową wyszukiwania wielu wzorców w tekście za pomocą automatu Aho-Corasick jako liniową w stosunku do sumy długości wszystkich wzorców oraz ilości ich wystąpień.
 
-\subsubsection{Zastosowanie do wzorców 2D}
+\paragraph{Zastosowanie do wzorców 2D}
 Okazuje się, że bardzo prosto można użyć automatu Aho-Corasick do wyszukiwania wzorców dwuwymiarowych. W skrócie:
 \begin{enumerate}
     \item niech $T$ będzie kwadratową tablicą rozmiaru $n^2$, $P$ - kwadratową tablicą rozmiaru $m^2$ o różnych kolumnach, $m < n$
@@ -263,7 +262,7 @@ dla każdego $v \in T$ definiujemy funkcję \textbf{shift2} jako $shift2(v) := w
 \includegraphics[scale=0.4]{graphics/trie-example-2.png}
 \end{center}
 
-\subsubsection{Faza wyszukiwania w tekście}
+\paragraph{Faza wyszukiwania w tekście}
 Wynikiem tej fazy jest lista par postaci $(w, i)$, gdzie $w$ to któryś z szukanym wzorców, natomiast $i$ to pozycja w tekście, na której został znaleziony wzorzec $w$. Faza ta działa następująco. Załóżmy, że mamy już zbudowane drzewo trie składające się z wszystkich wzorców, ale wstawionych do drzewa trie w odwróconej kolejności. Cała sztuczka polega teraz na tym, że dopasowywanie robimy jak w algorytmie Aho-Corasick chodząc po drzewie trie, ale korzystając z pomysłu zapożyczonego z algorytmu Boyera-Moore'a, w przypadku niezgodności znaków używamy funkcji shift1 oraz shift2, aby wykonać odpowiedni skok w tekście, w którym dopasowujemy wzorce z drzewa trie. Zamieszczony poniżej pseudokod dość dokładnie tłumaczy jak wygląda ta kluczowa faza algorytmu.
 
 \begin{algorithm}
@@ -290,10 +289,161 @@ Wynikiem tej fazy jest lista par postaci $(w, i)$, gdzie $w$ to któryś z szuka
 
 Pozostaje uzasadnić, że ten algorytm na pewno zwraca wszystkie wystąpienia wzorców w tekście. Nie ma wątpliwości co do tego, że każda zwrócona para $(w, i)$ jest na pewno dobrym wystąpieniem. Pozostaje więc się upewnić, że na pewno żadne wystąpienie któregoś z wzorców nie jest pomijane. Z budowy algorytmu wynika, że jedynym podejrzanym miejscem jest moment robienia przesunięcia w tekście. Potrzebujemy, więc podać argument, że $t[i-j+1]\cdots t[i] = w_t^R(v)$ dla pewnego $v \in T$ implikuje, że nie istnieje takie $i'$, że $i < i' < s(v, t[i-j])$ oraz $t[i'-|w|+1]\cdots t[i']$ dla pewnego wzorca $w$. Jednak z definicji $s(v, t[i-j])$ mamy tę własność po prostu za darmo.
 
-\subsubsection{Faza przygotowania wzorców}
+\paragraph{Faza przygotowania wzorców}
 W tej fazie algorytmu na wejściu mamy zbiór wzorców, a na wyjściu chcemy mieć drzewo trie dla tego zestawu wzorców oraz obliczone dla niego funkcje out, shift1, shift2 oraz char. Chcielibyśmy to wszystko zrobić w czasie liniowym względem sumy długości wzorców. Oczywiście konstrukcja trie w takim czasie jest natychmiastowo. Po prostu dodajemy kolejne słowa budując jednocześnie drzewo. Z definicji funkcji char i out również wynika prostota ich obliczania wprost z definicji. Kłopotliwe mogą się wydawać na pierwszy rzut oka kluczowe funkcje shift1 oraz shift2.
 
 Jednak cały problem mamy już rozwiązany za pomocą algorytmu Aho-Corasick. Mianowicie rozważmy pewną funkcje $f$ zdefiniowaną na wierzchołkach drzewa trie $T$ za pomocą formuły $f(v') = v$, jeżeli $w(v)$ jest maksymalnym sufiksem właściwym $w(v')$ w drzewie $T$. Funkcja ta idealnie współgra z funkcją fail z automatu Aho-Corasick, więc to co musimy zrobić, aby ją obliczyć, to odpalić fazę konstrukcji z algorytmu Aho-Corasick i w czasie jednego przejścia algorytmem bfs po drzewie trie obliczyć funkcję fail. Okazuje się bowiem, że funkcja $set1'$ odwrotna do funkcji $f$, czyli $set1'(v) = \{v' : f(v')=v \}$, to dokładnie podzbiór szukanego przez nas zbioru $set1$, który potrzebujemy do obliczenia funkcji przesunięć. Ponadto zawiera on wierzchołki $v' \in set1(v)$ takie, że $d(v')-d(v)$ jest minimalne. Wynika stąd, że funkcję shift1 można istotnie obliczyć w czasie liniowym. Analogicznie obliczamy funkcję shift2 rozważając zbiór $set2'(v) = \{ v' : v' \in set1'(v), out(v') \not = \emptyset\}$. 
 
-\subsection{Złożoność obliczeniowa algorytmu}
+\paragraph{Złożoność obliczeniowa algorytmu}
 Faza konstrukcji drzewa trie opisana powyżej jest wykonywana w czasie liniowym względem sumy długości wszystkich wzorców. Przeszukiwanie tekstu pesymistycznie może mieć czas liniowy względem iloczynu długości tekstu, w którym wyszukujemy, z długością najdłuższego wzorca, ale dzięki temu, że mamy funkcje przesunięć, bardzo często nie skanujemy całego tekstu znak po znaku, tylko jego części. Poprzez silną analogię do algorytmu Boyera-Moore'a stwierdzamy, że algorytm Commentz-Walter, działa średnio podobnie jak algorytm Boyera-Moore'a, czyli bardzo szybko. Pesymistycznie jednak pamiętać należy, że może mieć złożoność $O(nm)$, gdzie $n$, to długość tekstu, a $m$ to długość najdłuższego wzorca.
+
+\subsection{Fast practical multi-pattern matching}
+\textit{Fast practical multi-pattern matching} to algorytm tekstowy służący do wyszukiwania w zadanym tekście wystąpień słów z podanego zbioru wzorców.
+
+Algorytm jest ulepszeniem algorytmu Commentz-Waltera, czerpiąc z niego kilka istotnych obserwacji takich jak przeskakiwanie nieinteresujących obszarów tekstu oraz wykorzystanie automatu Aho-Corasick. Dodatkowym elementem zwiększającym efektywność jest wykorzystanie automatu sufiksowego zwanego dalej \textit{DAWG}.   
+
+Algorytm, który jest tematem pracy, dla tekstu o długości $n$ ma pesymistyczny czas działania $O(n)$.
+W przypadku średnim, gdzie najkrótszy spośród wzorców ma długość $m$ a suma ich długości jest wielomianowa w zależności od $m$ oraz prawdopodobieństwo wystąpienia litery z alfabetu (conajmniej dwu-elementowego) jest jednostajne i niezależne, złożoność wynosi $O(\frac{n}{m}* \log{m})$, co jest równocześnie dolnym ograniczeniem dla tego problemu.
+Dodatkowo dla odpowienio dużego $m$ algorytm osiąga dobre rezultaty w praktyce.
+
+\paragraph{Idea}
+
+Idea algorytmu oparta jest o dwie fazy zwane \textit{PROCESS1} oraz \textit{PROCESS2}. Pierwsza z nich skanuje test od lewej do prawej przesuwając potencjną pozycję zakończenia wzorca co najmniej o $\frac{m}{2}$. W tej fazie bazuje on na zmiennej $\gamma$, która spełnia niezmiennik $\gamma = $ najdłuży suffix od początku tekstu do pozycji $i$, który jest jednocześnie prefiksem jakiegoś wzorca. Jeśli długość $\gamma \leq \frac{m}{2}$ kończymy pierwszą fazę algorytmu i przechodzimy do fazy drugiej. W implementacji będziemy utorzsamiać $\gamma$ ze stanem w AC.
+
+Faza druga wykonuje skanowanie tekstu od tyłu od pozycji $i + SHIFT$ na odległość równą $m$, gdzie $SHIFT = m - |\gamma|$.
+
+Dodatkowo podczas fazy pierwszej, gdy wyznaczaczamy kolejne wartości $\gamma$, będziemy używali zbudowanego wcześniej automatu $Aho-Corasick$, aby robić to bardziej efektywnie. Natomiast faza druga w skanowaniu do tyłu używa $DAWGa$, który został zbudowany przy użyciu zbioru odwróconych wzorców.  
+
+\paragraph{Struktura dla wzorców}
+W celu przechowywania w pamięci zadanego zestawu wzorców należy przed przystąpieniem do wyszukiwania zbudować automat $Aho-Corasick$ oraz $DAWG$. Pozwoli to szybko odpowiadać na wymagane zapytania.
+
+\begin{verbatim}
+\caption{Fast practical multi-pattern matching, preprocessing}
+\begin{algorithmic}[1]
+\Procedure{MULTI-PATTERN-MATCHING-BUILD}{$PATTERNS$} \Comment{lista wzorców}
+\State $acm = build\_aho\_corasick\_machine(patterns)$ \Comment{budujemy standardowy automat AC}
+\State $reversed\_patterns = reverse(patterns)$ \Comment{odwracamy wzorce}
+\State $dawg = build\_dawg(reversed\_patterns)$ \Comment{budujemy standardowy DAWG}
+\State \textbf{return} $(acm, dawg)$ \Comment{budujemy standardowy DAWG}
+\EndProcedure
+\end{algorithmic}
+\end{verbatim}
+
+\begin{definition}{}{}
+Automat $Aho-Corasick$  powinien udostępniać:
+\begin{itemize}
+    \item $step(node, a) = $ stan $AC$ po przetworzeniu znaku $a$ zaczynając w $node$.
+    \item $traverse(node, s) = $ stan $AC$ po przetworzeniu słowa $s$ zaczynając w $node$.
+    \item wartość $depth$ oznaczającą głębokość w drzewie dla każdego wierzchołka.
+    \item listę $final$ oznaczającą jakie wzorce powinny zostać zaakceptowane dla danego wierzchołka.
+
+\end{itemize}
+\end{definition}
+
+\begin{definition}{}{}
+DAWG powinien udostępniać:
+\begin{itemize}
+    \item $traverse(node, s) = $ stan $DAWG$ po przetworzeniu słowa $s$ zaczynając w $node$.
+\end{itemize}
+\end{definition}
+
+\begin{definition}{}{}
+Potrzebne zapytania:
+\begin{itemize}
+    \item $NEXT1(\gamma, a) = $ najdłuższy sufiks słowa ${\gamma}{a}$ będący jednocześnie prefiksem jakiegoś wzorca.
+    \item $NEXT2(j, i) = $ najdłuższy sufiks podsłowa ${text[j...i]}$ będący jednocześnie prefiksem jakiegoś wzorca.
+\end{itemize}
+\end{definition}
+
+\begin{verbatim}
+\caption{Fast practical multi-pattern matching, NEXT1}
+\begin{algorithmic}[1]
+\Procedure{NEXT1}{$\gamma, character$}
+\State \textbf{return} $ acm.step(gamma, char)$ \Comment{wykonujemy jeden krok w AC}
+\EndProcedure
+\end{algorithmic}
+\end{verbatim}
+
+\begin{verbatim}
+\caption{Fast practical multi-pattern matching, NEXT2}
+\begin{algorithmic}[1]
+\Procedure{NEXT2}{$j, i$} \Comment{indeksy zakresu tekstu}
+\State $\gamma_{new} = dawg.traverse(dawg.root, j, i)$ \Comment{przechodzimy DAWG skanując znaki od i do j}
+\State \textbf{return} $ acm.traverse(acm.root, \gamma_{new})$ \Comment{przechodzimy AC aby móc utorzsamić $\gamma$ ze stanem}
+\EndProcedure
+\end{algorithmic}
+\end{verbatim}
+
+\paragraph{Wyszukiwanie wzorca}
+
+Wyszukiwanie wzorca działa na zasadzie przesuwania zakresu tekstu bazując na AC oraz DAWG. Wykonujemy naprzemiennie fazę pierwszą i drugą wspomniane na początku. Pierwsza z nich skanuje test od lewej do prawej, aby przesunąć potencjalną pozycję zakończenia wzorca co najmniej o m2. Przesunięcie opieramy na zmiennej $\gamma$, która spełnia niezmiennik $\gamma$= najdłuższy suffix od początku tekstu do pozycji i, który jest jednocześnie prefiksem jakiegoś wzorca. Jeśli długość $\gamma$, kończymy pierwszą fazę algorytmu i przechodzimy do fazy drugiej. W implementacji będziemy utożsamiać $\gamma$ ze stanem w AC, a głębokość tego stanu z długością dopasowanego prefiksu wzorca. Tak długo jak nie osiągnęliśmy wymaganej długości prefiksu, skanujemy kolejne znaki tekstu przechodząc jednocześnie po AC. Jeśli w tej fazie uda nam się dopasować jakiś wzorzec ($\gamma$ jest stanem akceptującym automatu AC), to zwracamy go poprzez \textit{yield}.
+
+Faza druga wykonuje skanowanie tekstu od tyłu od pozycji $i + SHIFT$ na odległość równą $m$, gdzie $SHIFT = m - |\gamma|$. Skanowanie odbywa się na zasadzie skanowania tekstu od tyłu jednocześnie symulując przejścia w $DAWG$. Tym sposobem dopasujemy najdłuższy sufiks spośród sufiksów wszystkich wzorców. Dla znalezionego sufiksu musimy jeszcze zaktualizować naszą pozycję w $AC$ i możemy powrócić do fazy pierwszej. 
+
+\begin{verbatim}
+\caption{Fast practical multi-pattern matching, faza wyszukiwania}
+\begin{algorithmic}[1]
+\Procedure{MULTI-PATTERN-MATCHING}{$text, n, S$} \Comment{tekst, długość, struktura}
+\State $i := 0$ \Comment{pozycja w tekście}
+\State $\gamma := S.acm.root$ \Comment{równoważnie $\gamma := S.acm.root$}
+
+\While{ $True$ } \Comment{faza skanowania, zachowany niezmiennik $\Gamma$}
+    \While {$\gamma{.depth} \geq \frac{m}{2}$} \Comment{szukamy odpowiednio długiego prefiksu wzorca}
+        \If{$\gamma$ is final state}
+            \State \textbf{yield} $(w, i)$ dla każdego $w \in \gamma{.out}$
+        \EndIf
+        \State $i = i + 1$
+        \If{$i \geq n$}
+            \State \textbf{return}
+        \EndIf
+        \State $\gamma = NEXT1(\gamma, text[i])$  \Comment{wykonujemy krok w AC}
+    \EndWhile
+    \State $crit\_pos := i - \gamma{.depth} + 1$ \Comment{pierwsza pozycja, której nie wykluczyliśmy}
+    \State $SHIFT := m - \gamma{.depth}$ 
+    \State $i = i + SHIFT$ \Comment{przeskakujemy fragment tekstu}
+    \If{$i \geq n$}
+        \State \textbf{return}
+    \EndIf
+    \State $\gamma = NEXT2(crit\_pos, i)$ \Comment{szukamy najdłuższego sufiksu w DAWG}
+\EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{verbatim}
+
+Wynikiem tej częsci jest lista par postaci $(w, i)$, gdzie $w$ to któryś z szukanych wzorców, natomiast $i$ to pozycja w tekście, na której został znaleziony wzorzec $w$.
+
+\paragraph{Złożoność obliczeniowa algorytmu}
+
+\begin{lemma}{}{}
+Zakładjąc zbudowaną strukturę $AC$ oraz $DAWG$:
+\begin{itemize}
+    \item $NEXT1(\gamma, a)$ działa w czasie $O(1)$. \\
+        Wykonanie funkcji $NEXT1$ sprowadza się do wykonania jednego kroku w automacie AC.\qed
+    \item $NEXT2(j, i)$ działa w czasie $O(min(i-j, i - crit\_pos))$. \\
+        Wykonanie funkcji $NEXT2$ wymaga przeskanowania tekstu od pozycji i do j idąc od prawej. Równoczesne symulowanie DAWG wykona taką samą liczbę kroków.\qed
+\end{itemize}
+\end{lemma}
+
+\begin{theorem}{}{}
+Algorytm w sumie porównuje co najwyżej $2n$ znaków.
+\end{theorem}
+
+\begin{proof}
+Zauważmy, że znak na danej pozycji może być przetworzony przez $PROCESS1$ co najwyżej raz. Jeśli tak się stało, to następnie zostanie tylko raz przetworzony przez $PROCESS2$ i już nigdy ponownie do niego nie wrócimy. Jeśli natomiast $PROCESS2$ odwiedzi dany znak dwa razy, mamy wtedy pewność, że dany znak nie został przeczytany przez $PROCESS1$ w ogóle. \qed
+\end{proof}
+
+Niech $\sigma$ to prawdopodobieństwo jednostajengo wystapienia symbolu w tekście. Wtedy:
+
+\begin{lemma}{}{}
+$P(\Delta(i) > (3k + 1)*log_{\sigma}m) \leq \frac{1}{m^{k+1}}$, gdzie $P$ to prawdopodobieństwo.
+\end{lemma}
+
+\begin{theorem}{}{}
+Zakładając $M \leq m^k$ algorytm wykonuje $O(\frac{n}{m} * log_{\sigma} m)$ porównań.
+\end{theorem}
+
+\begin{proof}
+Podczas działania algorytmu wykonywanych jest co najwyżej $O(\frac{n}{m})$ przesunięć.
+Wystarczy jeszcze udowodnić, że średnio pierwsza i druga faza algorytmu odwiedza zaledwie logarytmiczną liczbę znaków. Niech $K = (2k + 1) * log _{\sigma} m$. $PROCESS1$ zakończy się z dużym prawdopodobieństwem po K krokach. Jeśli nie, zrobi on $m^k$ kroków z prawdopodobieństwem $1/m^{k+1}$. Dostajemy więc średnią złożoność $O(K)$ co jest logarytmiczne.
+Sytuacja z $PROCESS2$ jest analogiczna. \qed
+\end{proof}

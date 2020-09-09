@@ -159,38 +159,6 @@ W trakcie wykonania algorytmu wyznaczamy dokładnie taką samą tablicę linków
   Ponieważ wiemy, że $S[v]$ przyjmuje dokładnie takie same wartości, jak w algorytmie McCreighta, to również tu całkowita liczba odwiedzionych wierzchołków w funkcji \texttt{fast\_find} wyniesie $O(n)$.
 \end{proof}
 
-\subsubsection{Dalsze zagadnienia}
-
-\citet{giegerich1997ukkonen} pokazali, że chociaż teoretyczne idee u podstaw wszystkich trzech algorytmów się różnią, to istnieje głębokie podobieństwo strukturalne. W szczególności można pokazać, że algorytmy McCreighta i Ukkonena wykonują dokładnie te same ciągi abstrakcyjnych operacji, a zatem możliwe jest tłumaczenie krok po kroku wykonania jednego algorytmu na drugi. Również algorytm Weinera przypomina strukturalnie algorytm Ukkonena z tą różnicą, że jest budowany ,,od końca'' i przez to korzysta jedynie z ,,przybliżonych'' linków.
-
-Okazuje się, że możliwa jest konstrukcja drzewa sufiksowego w czasie $O(n)$, niezależnym od $\A$ \citep{farach1997optimal}. Wymaga to co prawda utożsamienia alfabetu z podzbiorem liczb naturalnych zamiast z dowolnym zbiorem z liniowym porządkiem, ale w przeciwieństwie do sortowania nie stanowi żadnego problemu.
-
-Drzewa sufiksowe umożliwiają nie tylko szybkie obliczanie zapytań o przynależność, ale mogą również służyć do rozwiązywania kilku innych problemów.
-
-\begin{problem}{crochemore2002jewels}{Theorem 5.2, s. 59-60}
-  Pokaż, jak w czasie $O(m)$ odpowiadać na zapytania, ile razy słowo $w$ ($|w| = m$) występuje w tekście $t$, gdy mamy skonstruowane $ST(t)$.
-\end{problem}
-
-\begin{proof}
-Mając zbudowane drzewo sufiksowe, idziemy od korzenia w dół czytając kolejne symbole $w$, a czasami posuwamy się po wewnętrznej etykiecie pewnej krawędzi. Wówczas zbiór wystąpień odpowiada zbiorowi liści w poddrzewie węzła, do którego udało nam się w ten sposób dojść. Liczbę takich liści możemy ustalić bardzo łatwo: budując drzewo sufiksowe możemy od razu obliczyć w każdym węźle trzymać ile liści jest w jego poddrzewie. Jeżeli po drodze nie dało się dalej schodzić po drzewie, oznacza to, że $w$ nie jest podsłowem słowa $t$, więc odpowiedzią jest zero.
-\end{proof}
-
-\begin{problem}{crochemore2002jewels}{Lemma 5.1, s. 63}
-  Pokaż, jak w czasie $O(n)$ policzyć, ile różnych podsłów zawiera słowo $t$ ($|t| = n$).
-\end{problem}
-
-\begin{proof}
-Gdybyśmy zbudowali takie pełne drzewo sufiksowe bez kompresji, to wówczas jest to po prostu drzewo trie wszystkich sufiksów danego słowa. Wówczas liczba różnych podsłów słowa $n$ jest po prostu równa liczbie wierzchołków w stworzonym drzewie. W przypadku, gdy budujemy drzewo sufiksowe z kompresją, aby nie mieć kwadratowego rozmiaru całej struktury, należy również policzyć wierzchołki w zbudowanym drzewie, ale dodatkowo licząc wierzchołki liczymy je z odpowiednimi wagami, które wynikają z tego, że wierzchołki w skompresowanym drzewie sufiksowym są tak naprawdę ścieżkami wierzchołków i je też należy uwzględnić, co możemy zrobić bardzo łatwo, poprzez popatrzenie jakie etykiety są trzymane w wierzchołkach i dodając odpowiednie krotności. Możemy to wszystko zrobić jednym przejściem po drzewie, skąd wynika liniowa złożoność względem długości słowa.
-\end{proof}
-
-\begin{problem}{crochemore2002jewels}{Theorem 5.3, s. 62}
-  Pokaż, jak w czasie $O(n k)$ wyznaczyć najdłuższe wspólne podsłowo dla zbioru słów $\{t_i: 1 \le i \le k\}$ długości co najwyżej $n$.
-\end{problem}
-
-\begin{proof}
-Rozwiązanie jest oczywiście bardzo proste. Wystarczy zbudować drzewo sufiksowe, ale nie dla każdego słowa osobno, ale jedno wspólne. Robimy to w ten sposób, że najpierw budujemy drzewo sufiksowe dla pierwszego słowa. Następnie wstawiamy do niego sufiksy drugiego słowa, trzeciego itd aż do $k$-tego, z tą różnicą, że wstawiając słowa, w wierzchołkach pamiętamy sobie informacje jaki sufiks tędy przechodzi w dół, tzn. każdy wierzchołek ma informacje na temat tego, sufiksy którego słowa przez niego przechodziły. Wówczas odpowiedzią, czyli najdłuższym wspólnym podsłowem, będzie najgłębiej położony węzeł w naszym drzewie zbudowanym dla $n$ słów, przez który przeszedł jakiś sufiks każdego słowa. Oczywiście można tego LCSa bardzo łatwo odtworzyć jak już mamy taki najgłębszy wierzchołek o tej własności. Wystarczy przejść się od korzenia do niego i zobaczyć jakie etykiety mijaliśmy po drodze.
-\end{proof}
-
 \subsubsection{Algorytm Weinera}
 
 Algorytm Weinera, historycznie najwcześniejszy algorytm optymalny, polega na budowaniu drzewa sufiksowego od prawej do lewej. Zauważmy, że dzięki przeglądaniu tekstu w tej kolejności gwarantujemy, że w $i$-tym kroku budowana struktura danych jest pełnoprawnym drzewem sufiksowym dla słowa $t[(n - i - 1)..n]$.
@@ -217,31 +185,11 @@ Niniejsza implementacja jest oparta na uproszczonej wersji algorytmu, zamieszczo
   Pokaż, że Algorytm \ref{alg:suffix-tree-weiner} działa w czasie $O(n \log{|\A|})$.
 \end{problem}
 
-\subsection{Tablica sufiksowa}
-
-Tablica sufiksowa jest dużo prostszą strukturą, wprowadzoną jako alternatywa dla drzew sufiksowych równolegle w \citep{gonnet1992new} i \citep{manber1993suffix}.
-Wartości tablicy dla słowa $t$ długości $n$ definiujemy następująco:
-\begin{align*}
-    SA[i] = |\{j: t[j..n] \le t[i..n]\}|,
-\end{align*}
-czyli na $i$-tej pozycji mamy początkowy indeks $i$-tego najmniejszego sufiksu w porządku leksykograficznym.
-
-Naiwny algorytm liczenia tablicy $SA$ wymaga czasu $O(n^2 \log{n})$, gdy wykorzystujemy sortowanie wymagające $O(n \log{n})$ porównań, ponieważ każde porównanie wymaga w najgorszym przypadku czasu $O(n)$.
-
-Można również obliczyć tablicę $SA$ na podstawie zadanego drzewa sufiksowego w czasie $O(n)$: wystarczy przejrzeć drzewo wgłąb lub rekurencyjnie zgodnie z kolejnością liter w alfabecie. Zwróćmy uwagę, że Algorytm \ref{alg:suffix-array-from-suffix-tree} wyznacza długości słów na podstawie znajomości tekstu i aktualnej głębokości przeszukiwania.
-
-\begin{code}
-\captionof{listing}{Algorytm budowania tablicy sufiksowej na podstawie drzewa sufiksowego}
-\inputminted{python}{code/suffix-array/from-suffix-tree.py}
-\label{alg:suffix-array-from-suffix-tree}
-\end{code}
-
-
-    \subsection{Cel algorytmu i format wejścia}
-    Wejściem do algorytmu jest słowo $w$ o długości $n$ nad alfabetem $\Sigma = [n]$ - liczb naturalnych od $1$ do $n$. Zakładać będziemy, że $n = 2^k$ - jeśli nie, to można słowo $w$ wydłużyć o czynnik liniowy, tak żeby ta równość zachodziła, dodając na koniec odpowiednią ilość $'\$'$, a po wykonaniu algorytmu ``uciąć'' z drzewa sufiksowego poddrzewa odpowiadające tym symbolom. \\ \\
+\subsubsection{Algorytm Faracha}
+    Wejściem do algorytmu jest słowo $w$ o długości $n$ nad alfabetem $\Sigma = [n]$ - liczb naturalnych od $1$ do $n$. Zakładać będziemy, że $n = 2^k$ - jeśli nie, to można słowo $w$ wydłużyć o czynnik liniowy, tak żeby ta równość zachodziła, dodając na koniec odpowiednią ilość $'\$'$, a po wykonaniu algorytmu ``uciąć'' z drzewa sufiksowego poddrzewa odpowiadające tym symbolom.
+    
     Algorytm tworzy drzewo sufiksowe dla tego słowa w czasie $O(n)$. Od drzewa wymagane jest, aby dla każdego wierzchołka, krawędzie prowadzące do jego dzieci posortowane były leksykograficznie względem ich etykiet (w przypadku liczb naturalnych porządek leksykograficzny rozumiemy jako zdefiniowany przez zwykłą relację $<$).
     
-    \subsection{Idea algorytmu}
     Algorytm Faracha działa rekurencyjnie i każdy jego etap można zapisać w trzech krokach:
     \begin{enumerate}
      \item Zbuduj drzewo sufiksowe $T_o$ dla \textit{nieparzystych} sufiksów, czyli takich, które zaczynają się od nieparzystego indeksu (numerujemy od $1$).
@@ -255,7 +203,7 @@ Można również obliczyć tablicę $SA$ na podstawie zadanego drzewa sufiksoweg
     a więc liniową. \\
     Aby  uniknąć dodatkowego wywołania rekurencyjnego w równaniu (co zwiększyłoby złożoność do $O(nlgn)$), drzewo $T_e$ konstruowane będzie bezpośrednio z drzewa $T_o$.
     
-    \subsection{Tworzenie drzewa $T_o$}
+    \paragraph{Tworzenie drzewa $T_o$}
     Tworzenie drzewa nieparzystych sufiksów przebiega w kilku krokach:
     \begin{enumerate}
      \item $\forall i \in [\frac{n}{2}]$ stwórz parę $\langle w[2i-1], w[2i] \rangle$ i wszystkie takie pary umieść w liście $S'$ i każdą z nich zamień na jej \textit{rangę} (indeks w posortowanej leksykograficznie liście). Na przykład, dla słowa \verb|121112212221|, lista $S'$ wygląda tak: \\
@@ -280,7 +228,7 @@ Można również obliczyć tablicę $SA$ na podstawie zadanego drzewa sufiksoweg
       co również wynika z konstrukcji słowa $S'$.
     \item Na podstawie $A_{T_O}$ i $LCP_{T_o}$ skonstruuj drzewo $T_o$.
     \end{enumerate}
-    \subsection{Tworzenie drzewa $T_e$}
+    \paragraph{Tworzenie drzewa $T_e$}
     \begin{enumerate}
      \item Wstępnie przetwórz drzewo $T_o$ (w czasie liniowym od jego rozmiaru) tak aby dało się odpowiadać na zapytania o \verb|lca| na tym drzewie w czasie stałym.
      \item Korzystając z obserwacji, że każdy parzysty sufiks to nieparzysty sufiks poprzedzony jednym znakiem, stwórz $A_{T_e}$. W tym kroku możemy wykorzystać obliczoną już listę $A_{T_o}$, ``dokleić'' odpowiedni znak przed każdym elementem $A_{T_o}$ i użyć sortowania pozycyjnego tylko dla tego pierwszego znaku.
@@ -298,7 +246,7 @@ Można również obliczyć tablicę $SA$ na podstawie zadanego drzewa sufiksoweg
       \item Stwórz $T_e$ w oparciu o $A_{T_e}$ i $LCP_{T_e}$.
     \end{enumerate}
     
-\subsection{Łączenie drzew $T_o$ i $T_e$}
+\paragraph{Łączenie drzew $T_o$ i $T_e$}
 Zauważmy, że aby stworzyć drzewo $T$ z drzew $T_o$ i $T_e$, wystarczy zbudować tablice $A_T$ i $LCP_T$. Do uzyskania tych tablic potrzebujemy móc szybko (w czasie stałym) odpowiadać na pytania o najdłuższy wspólny prefiks dwóch sąsiadujących sufiksów w tablicy $A_T$. Umożliwiającą nam to wyrocznię uzyskamy poprzez \textit{zachłanne} połączenie drzew $T_o$ i $T_e$. \\ \\
 \textit{Zachłanne} połączenie $T'$ rozumiemy jako takie połączenie dwóch drzew ($T_e$ i $T_o$), w którym:
 \begin{itemize}
@@ -328,7 +276,7 @@ Wiedząc jak jest konstruowane drzewo $T'$, zapiszmy kroki do stworzenia poprawn
 \_link(u)$.
  \item Zakładając, że funkcja $d$ definiuje drzewo, dla każdego wierzchołka $u$ policz głębokość $L(u)$ w tym drzewie. Skorzystaj z faktu, że $lcp(w[2i,n], w[2j-1]) = L(lca(l_{2i}, l_{2j-1}))$ i stwórz tablicę $LCP_T$. 
 \end{enumerate}
-\subsection{Dowód poprawności}
+\paragraph{Dowód poprawności}
 Wystarczy udowodnić poprawność punktów $2.$ i $3.$
 \begin{theorem}{}{}
 Najdłuższy wspólny prefiks dowolnej pary liści $(a,b)$, takich, że $a$ - parzysty, $b$ - nieparzysty, i takich, że \verb|lca|$(a,b) = u$, jest taki sam.
@@ -363,8 +311,7 @@ Z założeń indukcyjnych wiemy, że funkcja $d$ definiuje drzewo na dotychczas 
 Wobec tego, $L(u) = $\verb| lcp|$(w[2i,n],w[2j-1,n])$, a ponadto struktura zdefiniowana przez funkcję $d$ jest drzewem.
 \end{proof}
 
-\subsection{Złożoność}
-\subsubsection{Tworzenie $T_o$}
+\paragraph{Złożoność: tworzenie $T_o$}
 \begin{enumerate}
 \item Sortowanie pozycyjne dla par, w których maksymalna liczba jest mniejsza lub równa $n$ (tak jest, bo początkowe słowo spełnia to założenie, a każde następne powstaje przez zastąpienie elementu przez jego rangę) zajmuje $O(n)$ czasu.
 \item Jeśli wszystkie inne kroki będą liniowe, to ten krok zajmie $T(n) = T(\frac{n}{2}) + O(n) = O(n)$ czasu.
@@ -373,14 +320,14 @@ Wobec tego, $L(u) = $\verb| lcp|$(w[2i,n],w[2j-1,n])$, a ponadto struktura zdefi
 \item Jest możliwe skonstruowanie drzewa sufiksowego w czasie liniowym z tablic $A$ i $LCP$.\\ Idea: wstawiamy kolejne sufiksy w kolejności leksykograficznej. \\
 Po wstawieniu każdego sufiksu, zatrzymujemy się w liściu, który go reprezentuje i dopóki \verb|lcp|$(word(v), next\_suffix) < |word(v)|$ wykonujemy, $v = v.parent$, a następnie dodajemy nową krawędź z wierzchołka $v$ albo dzielimy już wychodzącą.
 \end{enumerate}
-\subsubsection{Tworzenie $T_e$}
+\paragraph{Złożoność: tworzenie $T_e$}
 \begin{enumerate}
 \item Da się w czasie liniowym zrobić preprocessing drzewa tak aby w czasie stałym odpowiadać na zapytania \verb|lca|. Jest to nietrywialny algorytm, który jest opisany w \url{https://www.ics.uci.edu/~eppstein/261/BenFar-LCA-00.pdf}.
 \item Sortowanie pozycyjne na liczbach nieprzekraczających $n$ działą w $O(n)$.
 \item Ponieważ zapytania o \verb|lcp| przetwarzane są w czasie stałym, czas działania tego kroku to $O(n)$.
 \item Analogicznie jak dla $T_o$ - $O(n)$.
 \end{enumerate}
-\subsubsection{Łączenie drzew $T_o$ i $T_e$}
+\paragraph{Złożoność: łączenie drzew $T_o$ i $T_e$}
 \begin{enumerate}
 \item Ten krok to zwykły DFS działający liniowo względem sumarycznej ilości wierzchołków w drzewach $T_o$ i $T_e$, a ponieważ są to poprawne drzewa sufiksowe, to mają liniowe rozmiary względem $O(\frac{n}{2})$.
 \item Odpowiednią parę liści dla każdego wierzchołka z $T'$ możemy znaleźć przy pomocy jednego DFS-a, korzystając z obliczonych wcześniej wartości dla potomków tego wierzchołka.
@@ -388,6 +335,59 @@ Po wstawieniu każdego sufiksu, zatrzymujemy się w liściu, który go reprezent
 Funkcję $d$ liczymy dla każdego wierzchołka w czasie stałym, po wcześniejszym liniowym przetworzeniu drzewa $T'$ do zapytań o \verb|lca|.
 \item Głębokość w drzewie liczymy ponownie używając algorytmu DFS i korzystając z obliczonych wartości, każdy element $LCP_T$ liczymy w czasie stałym. Odtworzenie drzewa z tablic $A_T$ i $LCP_T$ wykonujemy w czasie $O(n)$, jak wyżej.
 \end{enumerate}
+
+
+\subsubsection{Dalsze zagadnienia}
+
+\citet{giegerich1997ukkonen} pokazali, że chociaż teoretyczne idee u podstaw wszystkich trzech algorytmów się różnią, to istnieje głębokie podobieństwo strukturalne. W szczególności można pokazać, że algorytmy McCreighta i Ukkonena wykonują dokładnie te same ciągi abstrakcyjnych operacji, a zatem możliwe jest tłumaczenie krok po kroku wykonania jednego algorytmu na drugi. Również algorytm Weinera przypomina strukturalnie algorytm Ukkonena z tą różnicą, że jest budowany ,,od końca'' i przez to korzysta jedynie z ,,przybliżonych'' linków.
+
+Okazuje się, że możliwa jest konstrukcja drzewa sufiksowego w czasie $O(n)$, niezależnym od $\A$ \citep{farach1997optimal}. Wymaga to co prawda utożsamienia alfabetu z podzbiorem liczb naturalnych zamiast z dowolnym zbiorem z liniowym porządkiem, ale w przeciwieństwie do sortowania nie stanowi żadnego problemu.
+
+Drzewa sufiksowe umożliwiają nie tylko szybkie obliczanie zapytań o przynależność, ale mogą również służyć do rozwiązywania kilku innych problemów.
+
+\begin{problem}{crochemore2002jewels}{Theorem 5.2, s. 59-60}
+  Pokaż, jak w czasie $O(m)$ odpowiadać na zapytania, ile razy słowo $w$ ($|w| = m$) występuje w tekście $t$, gdy mamy skonstruowane $ST(t)$.
+\end{problem}
+
+\begin{proof}
+Mając zbudowane drzewo sufiksowe, idziemy od korzenia w dół czytając kolejne symbole $w$, a czasami posuwamy się po wewnętrznej etykiecie pewnej krawędzi. Wówczas zbiór wystąpień odpowiada zbiorowi liści w poddrzewie węzła, do którego udało nam się w ten sposób dojść. Liczbę takich liści możemy ustalić bardzo łatwo: budując drzewo sufiksowe możemy od razu obliczyć w każdym węźle trzymać ile liści jest w jego poddrzewie. Jeżeli po drodze nie dało się dalej schodzić po drzewie, oznacza to, że $w$ nie jest podsłowem słowa $t$, więc odpowiedzią jest zero.
+\end{proof}
+
+\begin{problem}{crochemore2002jewels}{Lemma 5.1, s. 63}
+  Pokaż, jak w czasie $O(n)$ policzyć, ile różnych podsłów zawiera słowo $t$ ($|t| = n$).
+\end{problem}
+
+\begin{proof}
+Gdybyśmy zbudowali takie pełne drzewo sufiksowe bez kompresji, to wówczas jest to po prostu drzewo trie wszystkich sufiksów danego słowa. Wówczas liczba różnych podsłów słowa $n$ jest po prostu równa liczbie wierzchołków w stworzonym drzewie. W przypadku, gdy budujemy drzewo sufiksowe z kompresją, aby nie mieć kwadratowego rozmiaru całej struktury, należy również policzyć wierzchołki w zbudowanym drzewie, ale dodatkowo licząc wierzchołki liczymy je z odpowiednimi wagami, które wynikają z tego, że wierzchołki w skompresowanym drzewie sufiksowym są tak naprawdę ścieżkami wierzchołków i je też należy uwzględnić, co możemy zrobić bardzo łatwo, poprzez popatrzenie jakie etykiety są trzymane w wierzchołkach i dodając odpowiednie krotności. Możemy to wszystko zrobić jednym przejściem po drzewie, skąd wynika liniowa złożoność względem długości słowa.
+\end{proof}
+
+\begin{problem}{crochemore2002jewels}{Theorem 5.3, s. 62}
+  Pokaż, jak w czasie $O(n k)$ wyznaczyć najdłuższe wspólne podsłowo dla zbioru słów $\{t_i: 1 \le i \le k\}$ długości co najwyżej $n$.
+\end{problem}
+
+\begin{proof}
+Rozwiązanie jest oczywiście bardzo proste. Wystarczy zbudować drzewo sufiksowe, ale nie dla każdego słowa osobno, ale jedno wspólne. Robimy to w ten sposób, że najpierw budujemy drzewo sufiksowe dla pierwszego słowa. Następnie wstawiamy do niego sufiksy drugiego słowa, trzeciego itd aż do $k$-tego, z tą różnicą, że wstawiając słowa, w wierzchołkach pamiętamy sobie informacje jaki sufiks tędy przechodzi w dół, tzn. każdy wierzchołek ma informacje na temat tego, sufiksy którego słowa przez niego przechodziły. Wówczas odpowiedzią, czyli najdłuższym wspólnym podsłowem, będzie najgłębiej położony węzeł w naszym drzewie zbudowanym dla $n$ słów, przez który przeszedł jakiś sufiks każdego słowa. Oczywiście można tego LCSa bardzo łatwo odtworzyć jak już mamy taki najgłębszy wierzchołek o tej własności. Wystarczy przejść się od korzenia do niego i zobaczyć jakie etykiety mijaliśmy po drodze.
+\end{proof}
+
+
+\subsection{Tablica sufiksowa}
+
+Tablica sufiksowa jest dużo prostszą strukturą, wprowadzoną jako alternatywa dla drzew sufiksowych równolegle w \citep{gonnet1992new} i \citep{manber1993suffix}.
+Wartości tablicy dla słowa $t$ długości $n$ definiujemy następująco:
+\begin{align*}
+    SA[i] = |\{j: t[j..n] \le t[i..n]\}|,
+\end{align*}
+czyli na $i$-tej pozycji mamy początkowy indeks $i$-tego najmniejszego sufiksu w porządku leksykograficznym.
+
+Naiwny algorytm liczenia tablicy $SA$ wymaga czasu $O(n^2 \log{n})$, gdy wykorzystujemy sortowanie wymagające $O(n \log{n})$ porównań, ponieważ każde porównanie wymaga w najgorszym przypadku czasu $O(n)$.
+
+Można również obliczyć tablicę $SA$ na podstawie zadanego drzewa sufiksowego w czasie $O(n)$: wystarczy przejrzeć drzewo wgłąb lub rekurencyjnie zgodnie z kolejnością liter w alfabecie. Zwróćmy uwagę, że Algorytm \ref{alg:suffix-array-from-suffix-tree} wyznacza długości słów na podstawie znajomości tekstu i aktualnej głębokości przeszukiwania.
+
+\begin{code}
+\captionof{listing}{Algorytm budowania tablicy sufiksowej na podstawie drzewa sufiksowego}
+\inputminted{python}{code/suffix-array/from-suffix-tree.py}
+\label{alg:suffix-array-from-suffix-tree}
+\end{code}
 
 \subsubsection{Algorytm Karpa-Millera-Rosenberga}
 
@@ -485,30 +485,272 @@ Co więcej, na podstawie danego $t'$ możliwe jest scalenie również częściow
   Czas działania algorytmu \ref{alg:suffix-array-skew} wynosi $O(n)$.
 \end{theorem}
 
-\subsubsection{Wykonywanie zapytań w czasie $O(m \log{n})$}
-
-Sprawdzanie, czy słowo $w$ o długości $m$ występuje w tekście $t$ dla danej tablicy sufiksowej $SA(t)$ jest wykonalne w czasie $O(m \log{n})$: wystarczy zwykłe binarne wyszukiwanie słowa $w$ w $SA(t)$.
-
-Co więcej, tablica sufiksowa umożliwia nie tylko zliczenie wszystkich wystąpień słowa $w$ w tekście w czasie $O(m \log{n})$, ale również odnalezienie ich w czasie $O(m \log{n} + k)$. Wystarczy tylko wyszukać pozycje odpowiadające słowom $w$ oraz $w\#$, gdzie $\# \notin \A$ oraz $a < \#$ dla każdego $a \in \A$. Pozycje te wyznaczają w tablicy $SA(t)$ sekwencję początków sufiksów, dla których $w$ musi być prefiksem -- chociaż niekoniecznie w kolejności rosnącej.
-
-\subsubsection{Wykonywanie zapytań w czasie $O(m + \log{n})$}
-
-\todo[inline]{Algorytm Manbera-Myersa}
-
-\subsubsection{Dalsze zagadnienia}
-
-\citet{li2018optimal} pokazali algorytm obliczania tablicy sufiksowej w czasie $O(n)$ wymagający zaledwie $O(1)$ dodatkowej pamięci.
 
 
-\section{Algorytm small-large}
+\subsubsection{Algorytm SA-IS}
+
+\paragraph{Notacja}
+
+Jako $S$ będziemy oznaczać słowo, którego tablicę sufiksową mamy obliczyć.
+Przyjmujemy, że $S$ kończy się znakiem \(\$\), który nie występuje nigdzie
+indziej w słowie i w porządku leksykograficznym jest najmniejszy.
+
+Dodatkowo niech $n$ będzie długością słowa $S$, a znaki będą numerowane od 1.
+Wtedy $S_{i} = S[i..n]$ dla $i \in \range{1}{n}$ jest sufiksem $S$
+rozpoczynającym się na $i$-tej pozycji.
+
+\paragraph{Algorytm}
+
+Ogólny sposób działania SA-IS polega na sortowaniu sufiksów na podstawie
+tablicy sufiksowej krótszego słowa $S'$, obliczanej rekurencyjnie.
+Słowo $S'$ powstaje przez wybór pewnych podsłów $S$, i przepisaniu każdego
+z nich na pojedynczy znak zachowując kolejność leksykograficzną.
+Aby osiągnąć czas $O(n)$, obie te czynności wykonywane są za pomocą
+\textit{sortowania indukowanego}.
+
+Aby przedstawić dokładne działanie algorytmu, koniecznie są następujące pojęcia:
+
+\begin{definition}{}{}
+	$S_i$ jest sufiksem typu S (typu L) gdy $S_i < S_{i+1}$ ($S_i > S_{i+1}$).
+
+	$S_n = '\$'$ jest typu S.
+
+	Typ znaku $S[i]$ określany jest jako ten sam co typ sufiksu $S_i$.
+\end{definition}
+
+\begin{definition}{}{}
+	Znak $S[i]$, $i \in \range{2}{n}$, jest LMS-znakiem (leftmost S-type) gdy
+	$S[i-1]$ i $S[i]$ są odpowiednio typu L i typu S.
+\end{definition}
+
+\begin{definition}{}{}
+	LMS-podsłowo to 1. \(S[n] = \$\); lub 2.\ podsłowo $S[i..j]$, gdzie
+	$S[i]$, $S[j]$ to kolejne LMS-znaki w $S$.
+\end{definition}
+
+Podsłowa początkowo wybierane z $S$ to właśnie LMS-podsłowa. Sortowanie indukowane
+zarówno dla LMS-podsłów (celem zredukowania podsłów do $S'$), jak i sufiksów $S$,
+działa opierając się na podziale sufiksów na typ S i typ L.
+
+Całość algorytmu zawiera się w poniższych krokach:
+
+\begin{enumerate}
+	\item Określ typ każdego z sufiksów $S$
+	\item Wyznacz LMS-podsłowa $S$
+	\item Posortuj znalezione LMS-podsłowa za pomocą sortowania indukowanego
+	\item Przepisz każde LMS-podsłowo na literę odpowiadającą jego pozycji
+		w porządku i utwórz z nich słowo $S'$ zachowując kolejność występowania
+		w $S$
+	\item Oblicz tablicę sufiksową $SA'$ słowa $S'$
+	\item Wyznacz tablicę sufiksową $SA$ słowa $S$ za pomocą sortowania
+		indukowanego na podstawie $SA'$
+\end{enumerate}
+
+W kroku 5, jeżeli nie występują dwa identyczne LMS-podsłowa (wszystkie znaki
+$S'$ są unikalne), $SA'$ można uzyskać bezpośrednio jako odwrotność permutacji
+reprezentowanej przez $S'$; w przeciwnym przypadku, jest ona pozyskiwana
+rekurencyjnie.
+
+\paragraph{Wyznaczanie LMS-podsłów}
+
+Typ każdego z sufiksów można ustalić, przeglądając $S$ od końca:
+
+\begin{enumerate}
+	\item \$ jest typu S
+	\item jeśli $S[i] = S[i+1]$, typ $S_i$ jest ten sam co $S_{i+1}$
+	\item wpp. $S[i] \neq S[i+1]$, a typ $S_i$ zależy bezpośrednio od nich.
+\end{enumerate}
+
+Tablica przechowująca typy sufiksów $S$ pozwala wskazać pozycje, na których
+zaczynają się kolejne LMS-podsłowa. W dalszej części algorytmu LMS-podsłowa
+będą reprezentowane przez indeks ich pierwszego znaku.
+
+\paragraph{Redukcja do mniejszego problemu}
+
+Na LMS-podsłowach jest zdefiniowany następujący porządek: porównując parami
+kolejne znaki obu podsłów, jeśli się różnią, decyduje ich kolejność
+leksykograficzna; w przepiwnym przypadku znak typu L jest mniejszy od znaku
+typu S. Ten porządek odpowiada temu, że jeśli $S_i$ jest typu S, $S_j$ typu L,
+i pierwsze litery są sobie równe, to $S_j < S_i$.
+
+Sortowanie indukowane pracuje na wynikowej tablicy $SA$, podzielonej
+na kubełki dla każdego znaku w $S$. W trakcie sortowania wyłania się dodatkowy
+podział każdego kubełka na te przeznaczone dla sufiksów różnego typu w
+kolejności L, S;\@ ale nie jest on reprezentowany bezpośrednio. Dla każdej
+litery w tablicy $B$ rozmiaru alfabetu przechowywany jest wskaźnik na pewne
+miejsce w odpowiadającym kubełku. Wskazywane miejsce zależy od etapu
+sortowania.
+
+Samo sortowanie odbywa się w trzech krokach:
+
+\begin{enumerate}
+	\item wyznacz koniec każdego z kubełków. Wstaw każde z LMS-podsłów do jego
+		kubełka (odp.\ pierwszemu znakowi podsłowa);
+	\item wyznacz początek każdego z kubełków. Dla każdego $i = 1, \elps, n$:
+		jeśli $c = S[SA[i] - 1]$ jest typu L, wstaw $SA[i] - 1$ do kubełka $c$;
+	\item wyznacz koniec każdego z kubełków. Dla każdego $i = n, \elps, 1$:
+		jeśli $c = S[SA[i] - 1]$ jest typu S, wstaw $SA[i] - 1$ do kubełka $c$.
+\end{enumerate}
+
+Dokładniej, wyznaczenie początku (końca) kubełka $c$ oznacza zapisanie
+odpowiedniego indeksu do $B[c]$, natomiast wstawianie elementu odbywa się przez
+zapisanie go do $SA[B[c]]$ i przesunięcie $B[c]$ o jeden w lewo (prawo).
+
+$S'$ jest utworzone przez ułożenie LMS-podsłów tak, jak występują w $S$ i
+zamianę każdego z nich na kolejne liczby zgodnie z porządkiem uzyskanym z
+powyższego sortowania (identyczne podsłowa otrzymują tę samą liczbę).
+
+\paragraph{Sortowanie wszystkich sufiksów}
+
+Procedura odtworzenia tablicy sufiksowej $S$ przez sortowanie indukowane jest
+niemal identyczna z sortowaniem LMS-podsłów.  Jedyna różnica występuje w
+pierwszym kroku: na końce kubełków należy wstawić LMS-podsłowa (indeksy
+pierwszych znaków) w zgodzie z kolejnością uzyskaną w $SA'$. Po jego wykonaniu
+zawartość $SA$ jest tablicą sufiksową $S$.
+
+\paragraph{Poprawność sortowania}
+
+Rozważmy ostatni krok całego algorytmu:
+
+\begin{lemma}{}{}
+	Mając dane posortowane wszystkie sufiksy typu L, krok 3 sortuje wszystkie
+	sufiksy $S$ w czasie $O(n)$.
+\end{lemma}
+
+\begin{proof}
+Pokażemy przez indukcję, że w momencie przeglądania $SA[i]$, $S_{SA[i]}$
+został już zapisany na swoim miejscu.
+
+\item Dla $i = n$, największy sufiks musi być typu L, zatem był posortowany w
+kroku 2.
+
+\item Dla $i < n$, gdy wszystkie $SA[i+1], \elps, SA[n]$ są uzupełnione
+poprawnie, załóżmy że sufiks, który powinien znajdować się w $SA[i]$ leży
+pod $SA[k]$, $k < i$. Ponieważ sufiksy typu L zostały posortowane, w
+$SA[i]$, $SA[k]$ znajdują się sufiksy typu S. Sufiksy są już w swoich
+kubełkach, więc $SA[i] = c\alpha$, $SA[k] = c\beta$ dla jakiegoś $c$.
+$c\beta < \beta < \alpha$, zatem poprawne pozycje $\beta$, $\alpha$
+znajdują się wśród już wstawionych i przeglądniętych $SA[i+1], \elps,
+SA[n]$, a $c\alpha$ powinno było zostać wstawione na koniec swojego kubełka
+przed $c\beta$, co jest sprzeczne z obecnym stanem tablicy $SA$.
+\end{proof}
+
+Gdyby najpierw posortować sufiksy typu S, a następnie wykonać krok 2, wszystkie
+sufiksy typu L również zostały by posortowane, co można wykazać w analogiczny
+sposób. Ze względu na to, że tylko LMS-sufiksy biorą udział w ich sortowaniu,
+wystarczy zacząć od wstawienia do $SA$ LMS-sufiksów w kolejności
+leksykograficznej, aby uzyskać ten sam rezultat. Tym samym, o ile tablica $SA'$
+wyznacza poprawny porządek LMS-sufiksów, ostatni etap algorytmu jest poprawny.
+
+Niech $P[i]$ wskazuje na początek $i$-tego LMS-podsłowa. Wtedy
+
+\begin{lemma}{}{}
+	$S'_i < S'_j$ jest równoważne z $S_{P[i]} < S_{P[j]}$.
+\end{lemma}
+
+\begin{proof}
+	Jeśli $S'[i] \neq S'[j]$, to znak świadczący o różnicy w odpowiadających im
+	LMS-podsłowach wyznacza kolejność sufiksów zaczynających się na tych samych
+	pozycjach, natomiast porządek na LMS-podsłowach jest zgody z porzadkiem
+	leksykograficznym na sufiksach. W przeciwynm wypadku, zauważmy, że $S'[i] =
+	S'[j]$ oznacza równą długość odpowiednich LMS-podsłów, zatem
+	możliwe jest przeprowadzenie powyższego rozumowania na pierwszym różniącym
+	się znaku sufiksów w $S'$.
+\end{proof}
+
+Pozostaje wykazać, że pierwsze użycie sortowania indukowanego sortuje
+LMS-podsłowa. Mechanizm dowodu jest podobny, z kilkoma różnicami: w pierwszym
+kroku chcemy otrzymać poprawny porządek na LMS-podsłowach obciętych do
+pierwszego znaku. Wystarczy, że zostaną wstawione do odpowiednich kubełków,
+co zapewnia krok 1. Te z kolei wystarczą do posortowania sufiksów typu L
+obciętych do pierwszego LMS-znaku w kroku 2. Analogicznie dzieje się dla
+sufiksów typu S w kroku 3, z wyjątkiem LMS-sufiksów, które są rozważane
+do miejsca wystąpienia \textit{drugiego} LMS-znaku, czyli LMS-podsłów.
+
+\paragraph{Złożoność}
+
+Zarówno wyznaczanie LMS-podsłów, jak i sortowanie indukowane działa w oczywisty
+sposób w czasie $O(n)$. Ponieważ LMS-podsłów jest nie więcej niż połowa
+długości $S$ (z wyjątkiem \(\$\) w środku każdego z nich musi się znajdować
+przynajmniej jeden znak typu L), całkowity czas wykonania można określić
+równaniem $T(n) = T(\left \lfloor{n/2}\right \rfloor) + O(n)$, które daje
+$O(n)$.
+
+\subsubsection{Algorytm Larssona-Sadakane}
+
+Problem który będzie rozwiązywany definiujemy następująco. Niech $X = x_1 x_2 \ldots x_n \$ $ będzie ciągiem znaków złożonym z ciągu wejściowego długości $n$ z dopisanym symbolem $\$$, który jest leksykograficznie przed wszystkimi symbolami ciągu wejściowego. Jako $S_i,\ 1 \leq i \leq n+1$ będziemy oznaczać sufiks $X$ zaczynający się w pozycji $i$. Wyjściem algorytmu ma być tablica indeksów $I$ (\textit{tablica sufiksowa}) taka że $S_{I[k-1]}$ jest leksykograficznie mniejsze od $S_{I[k]}$ dla $0 < k \leq n$.
+
+Algorytm tworzenia tablicy sufiksowej zaprezentowany przez N. Larssona i K. Sadakane działa w czasie $O(n\ \log{n})$ gdzie $n$ jest długością wejściowego tekstu. Autorzy rozbudowują podejście  `podwajania` znane z algorytmu Karpa, Millera, Rosenberga które polega na użyciu pozycji sufiksów po fazie sortowania jako kluczy do sortowania dwukrotnie dłuższych sufiksów w kolejnej fazie. Autorzy formalizują to podejście definiując pojęcie \textit{h-order}, czyli porządek leksykograficzny sufiksów rozważając jedynie $h$ początkowych znaków każdego sufiksu. Zauważmy, że \textit{h-order} niekoniecznie jest jednoznaczny jeśli $h < n$.
+\begin{lemma}{}{}
+\label{obs1}
+Sortowanie sufiksów przy użyciu klucza w postaci pary złożonej z pozycji sufiksu $S_i$ w \textit{h-order} oraz pozycji sufiksu $S_{i+h}$ w \textit{h-order} daje sortowanie sufiksów w \textit{2h-order}.
+\end{lemma}
+
+\begin{definition}{}{}
+Dla tablicy sufiksów $I$ która jest w \textit{h-order} definiujemy
+\begin{itemize}
+    \item Maksymalna (względem długości) spójna sekwencja sufiksów w $I$ które mają te same początkowe $h$ znaków to \textbf{grupa}
+    \item Grupa składająca się z co najmniej 2 sufiksów jest \textbf{grupą nieposortowaną}
+    \item Grupa składająca się z jednego sufiksu jest \textbf{grupą posortowaną}
+    \item Maksymalna spójna sekwencja posortowanych grup jest \textbf{wspólną grupą posortowaną}
+\end{itemize}
+\end{definition}
+Grupy będziemy numerować żeby móc przeprowadzać obliczenia na poszczególnych grupach z osobna. Dla grupy $I[f \ldots g]$ numer tej grupy to $g$. Ponadto tablica $V[i] = g$ zawiera informację, że sufiks $S_{i+1}$ znajduje się w grupie o numerze $g$. Dodatkowo będziemy korzystać z tablicy $L$ która trzyma długości nieposortowanych grup oraz długości wspólnych grup posortowanych. Dla rozróżnienia, długości tych późniejszych będą trzymane jako liczba ujemna. Tablicę $L$ użyjemy w podstawowej wersji algorytmu. Udoskonalenia omówione pod koniec tego omówienia pozwolą nam obyć się bez osobnej tablicy na długości grup.
+\begin{lemma}{}{}
+\label{obs2}
+Gdy I jest w \textit{h-order}, każdy sufiks w \textbf{wspólnej grupie posortowanej} jest unikalnie rozróżnialny od wszystkich innych sufiksów przy pomocy pierwszych $h$ symboli.
+\end{lemma}
+
+\paragraph{Algorytm}
+
+Algorytm po każdej iteracji konstruuje z tablicy sufiksów w porządku \textit{h-order} tablicę w porządku \textit{2h-order} korzystając z obserwacji \ref{obs1}. Zgodnie z obserwacją \ref{obs2}, sufiksy znajdujące się we wspólnych grupach posortowanych są już na swoich miejscach. Mając to na uwadze możemy wykorzystać to w algorytmie i przy procesowaniu nieposortowanych grup sufiksów `przeskakiwać` nad wspólnymi grupami posortowanymi. Po każdej iteracji jest szansa, że pojawią się nowe grupy posortowane więc dodatkowo będziemy pilnować aby spójne sekwencje grup posortowanych były przez nas łączone we wspólne grupy posortowane.
+
+Podstawowy algorytm będzie się prezentował następująco:
+\begin{enumerate}
+    \item Umieść sufiksy $1 \ldots n+1$ w tablicy $I$. Posortuj $I$ używając $x_i$ jako klucza dla sufiksu $i$ (pierwsza litera). Ustaw $h=1$
+    \item Dla każdego sufiksu $S_{i+1}$ ustaw numer grupy do której należy w $V[i]$
+    \item Dla każdej nieposortowanej grupy lub wspólnej grupy posortowanej zapisz jej długość (lub zanegowaną długość) do tablicy $L$
+    \item Przesortuj każdą nieposortowaną grupę z osobna za pomocą \textit{ternary quick sorta} (czyli takiego co dzieli na podtablice $[< \textit{pivot}, = \textit{pivot}, > \textit{pivot}]$), używając $V[S_k + h - 1]$ jako klucza dla każdego sufiksu $S_k$ w grupie
+    \item Zaznacz pozycje podziału pomiędzy nierównymi kluczami w dla każdej przetworzonej nieposortowanej grupy na potrzeby aktualizacji tablic $V$ oraz $L$
+    \item Podwój $h$. Stwórz nowe grupy poprzez podział na zaznaczonych pozycjach (aktualizując odpowiednio $V$ i $L$)
+    \item Zakończ jeśli $I$ składa się tylko z jednej posortowanej grupy. W przeciwnym przypadku idź do kroku 4.
+\end{enumerate}
+
+W podstawowej wersji algorytmu tablice $V$ oraz $L$ aktualizujemy po wykonaniu sortowania. Możemy to wykonać np. zaznaczając pozycje podziałów w procedurze quicksort np. używając bitów znaku w tablicy $I$. Na tej podstawie aktualizujemy $V$ - ujemny wpis oznacza nową grupę - a następnie tablicę $L$.
+
+Na pierwszy rzut oka można by wyciągnąć wniosek, że algorytm działa w czasie $O(n\ \log{n}^2)$. Dokładniejsza analiza pozwala na ograniczenie przez $O(n\ \log{n})$. Na potrzeby analizy zakładamy, że \textit{ternary quicksort} dzieli zawsze w medianie (możliwe do uzyskania przy wydajnym algorytmie znajdowania mediany, nieefektywne w praktyce). Proces sortowania całej tablicy sufiksowej (nie tylko jednego quicksorta) przedstawimy jako ternarne drzewo obliczeń.
+
+\begin{lemma}{}{}
+Długość ścieżki od korzenia do liścia jest ograniczona z góry przez $2 \log{n} + 3$
+\end{lemma}
+\begin{proof}
+Każdy węzeł `środkowy` na ścieżce odpowiada podwojeniu \textit{h-order} w którym znajduje się rozważana tablica. Takich węzłów może być więc $\log{n} + 1$ Z faktu, że używamy mediany po zejściu lewym lub prawym dzieckiem długość rozważanej tablicy zmniejsza się o połowę. Znów takich węzłów będzie maksymalnie $\log{n} + 1$
+\end{proof}
+Na danym poziomie drzewa ilość wykonanej pracy będzie $O(n)$ bo to obliczenie odpowiada wykonaniu podziału na rozłączne podtablice. Stąd dostajemy złożoność $O(n\ \log{n})$ bo aktualizacja podtablic odpowiedzialnych za grupy również jest wykonywana w czasie liniowym od rozmiaru podtablicy.
+
+\paragraph{Usprawnienia}
+
+W algorytmie autorzy wprowadzają usprawnienia które nie wpływają negatywnie na czas wykonania. Opiszemy tutaj większość z nich (te które zostały wykorzystane w implementacji).
+
+\textbf{Eliminacja tablicy długości $L$}. Tablica długości dla grup nieposortowanych jest nam zbędna ze względu na to jak numerujemy grupy. Przypomnijmy, numer grupy $I[f \ldots g]$ to $g$, czyli $V[f-1] = g$ a w konsekwencji rozmiar grupy to $V[f-1] - g + 1$. Do spamiętania rozmiarów wspólnych grup posortowanych możemy użyć tablicy $I$. Wpólne grupy posortowane nie pojawią się w wywołaniu quicksorta a tylko tam korzystamy z $I$ w trakcie działania algorytmu. Jedynym problemem pozostaje odzyskanie porządku w $I$ na samym końcu algorytmu, ale tutaj wystarczy, że skorzystamy z tablicy $V$ trzymającej numery grup (indywidualne grupy posortowane mają różne numery), więc $I[V[i]] = i$ dla $0 \leq i < n+1$ odzyska tablicę sufiksową na końcu. Ostatecznie otrzymujemy następującą procedurę odzyskania długości grupy: jeśli $I[i] < 0$ to $I[i \ldots i - I[i] - 1]$ jest wspólną grupą posortowaną. W przeciwnym wypadku $I[i \ldots i + V[I[i]-1]]$ jest nieposortowaną grupą. 
+
+\textbf{Połączenie sortowania i aktualizowania tablic}. Zauważmy, że wykonanie połączenia dwóch następujących wspólnych grup posortowanych możemy wykonywać dopiero przy kroku 4 algorytmu gdy iterujemy się po kolejnych nieposortowanych grupach w $I$ przeskakując nad wspólnymi grupami posortowanymi. Aktualizacja tablic dla grup nieposortowanych w czasie wykonania sortowania musi być wykonana z uwagą na to żeby nie zmienić wartości w $V$ które będą wykorzystane jako klucze sortowania. Fakt wykorzystania quicksorta zapewnia nam, że ustalenie kolejności aktualizacji tablic jest proste. Niektóre elementy w pierwszej partycji będą wykorzystywać jako klucz numery grup elementów z środkowej partycji (bo bierzemy $V[I[currentElement] + h - 1]$ jako klucz). Tym samym aktualizację numerów grup z partycji środkowej wykonujemy po rekurencyjnym posortowaniu pierwszej partycji.
+\begin{enumerate}
+    \item Podziel tablice względem $pivot$ na trzy partycje
+    \item Wywołaj się rekurencyjnie na sekcji `$< \textit{pivot}$`
+    \item Zaktualizuj numery grup w sekcji `$= \textit{pivot}$` która się staje w całości nową grupą
+    \item Wywołaj się rekurencyjnie na sekcji `$> \textit{pivot}$`
+\end{enumerate}
+
+\subsubsection{Algorytm small-large}
 
 
-\subsection{Tablica sufiksów}
+\paragraph{Tablica sufiksów}
 Dla słowa s niech $T_i$ oznacza sufiks rozpoczynający się na indeksie $i$, a $t_i$ to znak na $i$-tej pozycji. Tablica sufiksów słowa $s$ to tablica zawierająca indeksy sufiksów $s$ posortowanych według porządku leksykograficznego tych sufiksów. Tablica ta przydaje się np. przy budowaniu drzew sufiksowych. Poniżej przedstawiony jest algorytm budujący tablicę sufiksów w czasie i pamięci liniowej.
 
 W poniższych rozważaniach bez straty ogólności zakładamy, że każde słowo $s$ kończy się znakiem unikalnym i najmniejszym w słowie. Zakładamy również że alfabet to $\{1,2,...,n\}$.
 
-\subsection{SL - kategoryzacja sufiksów}
+\paragraph{SL - kategoryzacja sufiksów}
 
 Na początek przedstawimy kategoryzacje prefiksów na typy S (small) i L (large). Główna idea algorytmu jest oparta właśnie na tej kategoryzacji i jej własnościach.
 
@@ -548,7 +790,7 @@ Z typów $T_i$ i $T_j$ mamy $c_1 \geq c$ i $c \geq c_2$ (dowód podobnie jak cas
 
 \end{proof}
 
-\subsection{Algorytm small-large}
+\paragraph{Algorytm}
 
 Na algorytm można patrzeć w dwóch fazach - sortowanie sufiksów S/L, w zależności których z nich jest mniej. Następnie wykorzystujemy otrzymane informacje utworzenie porządku na wszystkich sufiksach. Wybieranie gałęzi z mniejszą ilością prefiksów danego typu jest konieczne aby zachować złożoność, ale nie wpływa na poprawność algorytmu.
 
@@ -566,7 +808,7 @@ Na algorytm można patrzeć w dwóch fazach - sortowanie sufiksów S/L, w zależ
 
 W kolejnych sekcjach opisane zostaną bardziej szczegółowo funkcje $sortS$ i $finishS$. Procedury dla typu L są bardzo podobne - należy przeglądać niektóre listy w odwrotnej kolejności, operacje przeniesienia na początek/koniec grupy zamienić na przeniesienie na koniec/początek i zastąpić odniesienia do typu S odniesieniami do typu L.
 
-\subsection{Sortowanie S sufiksów - faza 1}
+\paragraph{Sortowanie S sufiksów - faza 1}
 
 \begin{definition}{}{}
 S odległość - dystans od $i$ do najbliższego na lewo S sufiksu (nie wliczając $i$).
@@ -612,7 +854,7 @@ Rozważa się pierwszy znak różniący $T'_i < T'_j$. Jest to numer jakiejś gr
 \end{proof}
 
 
-\subsection{Sortowanie całości - faza 2}
+\paragraph{Sortowanie całości - faza 2}
 
 
 \begin{algorithmic}
@@ -655,9 +897,99 @@ $\beta < \alpha$, więc $T_{A[k]}$ był przesunięty na początek grupy (w gał�
 Z \Cref{SL_order} i \Cref{phase2-invariant} wynika poprawność algorytmu.
 
 
-\subsection{Złożoność}
+\paragraph{Złożoność}
 Ze względu na rekurencję $T(n) = T(n/2) + \mathcal{O}(n)$ otrzymujemy złożoność czasową i pamięciową liniową w stosunku do długości słowa.
 
+
+
+\subsubsection{Wykonywanie zapytań w czasie $O(m \log{n})$}
+
+Sprawdzanie, czy słowo $w$ o długości $m$ występuje w tekście $t$ dla danej tablicy sufiksowej $SA(t)$ jest wykonalne w czasie $O(m \log{n})$: wystarczy zwykłe binarne wyszukiwanie słowa $w$ w $SA(t)$.
+
+Co więcej, tablica sufiksowa umożliwia nie tylko zliczenie wszystkich wystąpień słowa $w$ w tekście w czasie $O(m \log{n})$, ale również odnalezienie ich w czasie $O(m \log{n} + k)$. Wystarczy tylko wyszukać pozycje odpowiadające słowom $w$ oraz $w\#$, gdzie $\# \notin \A$ oraz $a < \#$ dla każdego $a \in \A$. Pozycje te wyznaczają w tablicy $SA(t)$ sekwencję początków sufiksów, dla których $w$ musi być prefiksem -- chociaż niekoniecznie w kolejności rosnącej.
+
+\subsubsection{Wykonywanie zapytań w czasie $O(m + \log{n})$}
+
+Tablica sufiksowa $SA$ zawiera początkowe indeksy leksykograficznie uporządkowanych sufiksów słowa $t$. Oznaczmy taki sufiks wskazany przez indeks $a$ w $SA$ jako $t_a = t[SA[a]\ldots n]$. Mając tablicę sufiksową, można ją wykorzystać do indeksowania tekstu -- poprzez zwykłe wyszukiwanie binarne można odnaleźć pierwszą ($l_w$) i ostatnią ($r_w$) pozycję w $SA$ taką, że $w$ jest prefiksem $t_i, i \in l_w \leq i \leq r_w$. Wtedy $SA[i]$ wskazują wszystkie wystąpienia $w$ w $t$. Jednak to podejście wymaga $O(m \log{n})$ czasu.
+
+Manber i Myers w 1993 r. zaproponowali prosty algorytm przyśpieszający takie zapytania do $O(m + \log{n})$. Wykorzystywana jest do tego struktura $LCP\textrm{-}LR$ zawierająca najdłuższe wspólne prefiksy (\textit{lcp}) sufiksów $w$. 
+
+\paragraph{Zapytania do $SA$ z wykorzystaniem $LCP\textrm{-}LR$}
+
+Załóżmy, że mamy tablicę $SA$ oraz $LCP\textrm{-}LR$ (jej konstrukcja zostanie omówiona w następnej sekcji). Informację o \textit{lcp} sufiksów $t$ można wykorzystać do przyśpieszenia wyszukiwania binarnego, ograniczając liczbę wykonywanych porównań symboli. 
+
+Oznaczmy jako $l$ i $r$ lewą i prawą granicę rozpatrywanego przedziału $SA$ w wyszukiwaniu binarnym. $c = (l + r) / 2 $ jest zatem pozycja oznaczająca sufiks $t_c$, z którym porównywamy wyszukiwane słowo $w$. Dalej oznaczmy $L = lcp(t_l, w)$ i $R = lcp(t_r, w)$. Podczas biegu algorytmu będą wartości $L$ i $R$ aktualizowane (niezmiennik), i to z wykorzystaniem minimalnej ilości porównań. Niech $H = \max (L, R)$ i $C = lcp(t_c, w)$. 
+
+Bez straty ogólności załóżmy, że w danym cyklu wyszukiwania $H = L \geq R$. Mogą zajść trzy przypadki (w praktyce można pierwsze dwa implementować razem):
+
+\begin{enumerate}
+    \item $lcp(t_l, t_c) > L$ \\
+          Wtedy $C = L$. \\
+          $w$ ma pierwszych $L$ znaków zgodnych z $t_l$ i różni się $L+1$-szym. Skoro $t_l$ i $t_c$ zgadzają się przynajmniej w pierwszych $L+1$ znakach, $w$ i $t_c$ będą również mieli pierwszych $L$ znaków identycznych i $L+1$-szy inny, więc $C = L$.
+    \item $lcp(t_l, t_c) = L$ \\
+          W takim przypadku musimy porównać $L+1, L+2\ldots$-ty symbol $w$ i $t_c$ póki nie znajdziemy $i$ takie, że $w[L+i] \neq t_c[L+i]$. Wtedy $C = L + i - 1$. \\
+          Podobnie jak w przypadku 1, skoro $w$ i $t_l$ są identyczne w pierwszych $L$ znakach oraz $t_l$ i $t_c$ są też identyczne w pierwszych $L$ znakach, to pierwszych $L$ znaków $w$ i $t_c$ będzie również identycznych. Jednak $lcp(w, t_c)$ może być dłuższy od $L$, więc musimy zrobić skan po znakach dalej.  
+    \item $lcp(t_l, t_c) < L$ \\
+          Wtedy $C = lcp(t_l, t_c)$. \\
+          Analogicznie do przypadku 1, tylko na odwrót.
+          
+\end{enumerate}
+
+Kiedy znamy $C$, wystarczy porównać $C+1$-szy symbol $w$ i $t_c$, żeby zdecydować, czy przesunąć lewą lub prawą granicę przeszukiwania oraz czy zaktualizować wartość $L$ lub $R = C$. W przypadku, kiedy $C = m$, decydujemy według tego, czy szukamy $l_w$ (przesuwamy $r$) albo $r_w$ (przesuwamy $l$).
+
+\begin{theorem}{}{}
+Algorytm poprawnie znajduje $l_w$/$r_w$.
+\end{theorem}
+
+\begin{proof}[Dowód]
+Algorytm działa na takiej samej zasadzie, co podstawowe wyszukiwanie binarne, tylko z szybką identyfikacją pierwszego różniącego się symbolu.
+\end{proof}
+
+\begin{theorem}{}{}
+Algorytm działa w czasie $O(m + \log{n})$.
+\end{theorem}
+
+\begin{proof}[Dowód]
+Tak samo, jak w wyszukiwaniu binarnym, będziemy musieli wykonać w najgorszym przypadku $O(\log{n})$ cykli. Zauważmy, że poza jednym obowiązkowym porównaniem znaku w każdym cyklu, dodatkowe porównywania są wykonywane tylko w opcji 2 z wyżej wymienionych. Biorąc pod uwagę, że jest to jedyna opcja, przy której się zmienia $H$ (jeżeli zachodzi opcja 3, wtedy szukane $l_w$/$r_w$ znajduje się w lewej połowie i w związku z tym aktualizujemy $R$, czyli mniejszą z wartości $L$, $R$), że $H$ może tylko rosnąć (przybliżamy się do szukanej pozycji) oraz że $H$ jest z definicji ograniczone przez $m$, takich porównań będzie maksymalnie $m$. Łącznie więc otrzymujemy $O(m + \log{n})$ porównań.
+\end{proof}
+
+\subsection*{$LCP\textrm{-}LR$ i jej konstrukcja}
+
+$LCP\textrm{-}LR$ pozwala na zapytania o \textit{lcp} dwu sufiksów $t$ w czasie $O(1)$. Jeżeli mielibyśmy przechowywać tę informację o każdych dwu sufiksach $t$, $LCP\textrm{-}LR$ zajmowałaby $O(n^2)$ pamięci, jednak ograniczenie się do par potrzebnych w trakcie wyszukiwania binarnego redukuje wymagania pamięciowe do $O(n)$.
+
+Manber i Meyers proponują implementację $LCP\textrm{-}LR$ jako dwu tablic $Llcp$ i $Rlcp$, gdzie dla każdej trójki pozycji $(r, c, l)$, która może zostać rozpatrzona w trakcie wyszukiwania binarnego, $Llcp[c] = lcp(t_l, t_c)$ i $Rlcp[c] = lcp(t_r, t_c)$. Alternatywnie można zastosować słownik (hash table) indeksowany dwójkami $LCP\textrm{-}LR[(a, b)] = lcp(t_a, t_b)$.
+
+Mając tablicę LCP (obliczoną np. algorytmem Kasai), potrzebne $lcp$ można łatwo uzyskać z wykorzystaniem rekursji:
+
+\begin{align*}
+   lcp(t_l, t_r) = 
+   \begin{cases}
+        LCP[r] & \text{jeżeli } r = l + 1 \\
+        min(lcp(t_l, t_c), lcp(t_c, t_r)) & \text{wpp}
+   \end{cases}
+\end{align*} 
+gdzie $c = (l + r) / 2$.
+
+\begin{theorem}{}{}
+Powyższy algorytm zwraca poprawne wartości $LCP\textrm{-}LR$ dla wszystkich potrzebnych $(a, b)$.
+\end{theorem}
+
+\begin{proof}[Dowód]
+Algorytm wybiera pary $(a, b)$ w dokładnie ten sam sposób co wyszukiwanie binarne, uzyskamy więc dokładnie te same $(a, b)$. Biorąc pod uwagę, że sufiksy w $SA$ są uporządkowane leksykograficznie, $lcp(t_a, t_b) = \min(lcp(t_a, t_{a + 1}), \allowbreak lcp(t_{a + 1}, t_{a + 2}) \ldots \allowbreak lcp(t_{b-1}, t_{b}))= \min_{a + 1 \leq i \leq b} LCP[i] $, co gwarantuje poprawność wyników.
+\end{proof}
+
+\begin{theorem}{}{}
+$LCP\textrm{-}LR$ uzyskujemy w czasie $O(n)$.
+\end{theorem}
+
+\begin{proof}
+Ilość porównań jest z góry ograniczona przez $$\sum_{i=0}^{\log_2{n}} \frac{n}{2^i} = 2n \in O(n)$$
+\end{proof}
+
+
+\subsubsection{Dalsze zagadnienia}
+
+\citet{li2018optimal} pokazali algorytm obliczania tablicy sufiksowej w czasie $O(n)$ wymagający zaledwie $O(1)$ dodatkowej pamięci.
 
 \subsection{Tablica największych wspólnych prefiksów}
 
@@ -711,6 +1043,7 @@ Ze względu na rekurencję $T(n) = T(n/2) + \mathcal{O}(n)$ otrzymujemy złożon
   \end{align*}
   ponieważ $\sum_{i = 0}^{n - 1} \left(n - SA[i + 1]\right)$ to zarazem liczba wszystkich (niekoniecznie różnych) podsłów w tekście.
 \end{proof}
+
 
 \subsection{Suffix trays}
 
