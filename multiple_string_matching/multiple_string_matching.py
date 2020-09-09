@@ -92,25 +92,22 @@ class CommentzWalter(AhoCorasick):
       self.min_depth = min(self.min_depth, len(word))
 
   def compute_shift_values(self):
-    self.root.shift1, self.root.shift2 = 1, self.min_depth
-    Q = collections.deque()
+    Q, L = collections.deque(), []
     Q.extend(self.root.children[key] for key in self.root.children)
     while Q:
       node = Q.popleft()
-      difference = node.depth - node.fail.depth
-      if node.fail.shift1 > difference:
-        node.fail.shift1 = difference
-      if node.output and node.fail.shift2 > difference:
-        node.fail.shift2 = difference
+      L.append(node)
       Q.extend(node.children[key] for key in node.children)
-
-    Q = collections.deque()
-    Q.extend(self.root.children[key] for key in self.root.children)
-    while Q:
-      node = Q.popleft()
+    for node in L[::-1]:
+      difference = node.depth - node.fail.depth
+      node.fail.shift1 = min(node.fail.shift1, difference)
+      if node.output:
+        node.fail.shift2 = min(node.fail.shift2, difference)
+      node.fail.shift2 = min(node.fail.shift2, node.shift2 + difference)
+    self.root.shift1, self.root.shift2 = 1, self.min_depth
+    for node in L:
       node.shift1 = min(node.shift1, self.min_depth)
       node.shift2 = min(node.shift2, node.parent.shift2)
-      Q.extend(node.children[key] for key in node.children)
 
   def shift(self, node, j):
     if node.parent is None:
@@ -137,7 +134,7 @@ class FastPracticalMultipleStringMatching:
   def __init__(self, W):
     self.acm = AhoCorasick(W)
     self.dawg = dawg.DAWG([w[::-1] for w in W])
-    self.min_m = min(len(w) for w in W)
+    self.min_depth = min(len(w) for w in W)
 
 def fast_practical_multi_string_matching_build(W):
   return FastPracticalMultipleStringMatching([w[1:] for w in W])
@@ -145,7 +142,7 @@ def fast_practical_multi_string_matching_build(W):
 def fast_practical_multi_string_matching_search(t, n, automaton):
   i, gamma = 1, automaton.acm.root
   while True:
-    while gamma.depth >= automaton.min_m / 2:
+    while gamma.depth >= automaton.min_depth // 2:
       if gamma.output:
         for match in gamma.output:
           yield (match, i - len(match))
@@ -153,7 +150,7 @@ def fast_practical_multi_string_matching_search(t, n, automaton):
       if i > n + 1:
         return
       gamma = automaton.acm.step(gamma, t[i - 1])
-    crit_pos, shift = i - gamma.depth + 1, automaton.min_m - gamma.depth
+    crit_pos, shift = i - gamma.depth + 1, automaton.min_depth - gamma.depth
     i += shift
     if i > n + 1:
       return

@@ -64,8 +64,8 @@ class TestMultipleStringMatching(unittest.TestCase):
         {('ab', 1), ('aba', 1), ('cca', 8), ('ab', 4)},
         build, algorithm)
     self.check_all_matches(
-        '#bcbbcbacac', 10, ['#ccca', '#cac', '#bbac', '#bbcac'],
-        {('cac', 8)},
+        '#bacac', 5, ['#bca', '#cac'],
+        {('cac', 3)},
         build, algorithm)
 
   @parameterized.parameterized.expand(MULTIPLE_STRING_MATCHING_ALGORITHMS)
