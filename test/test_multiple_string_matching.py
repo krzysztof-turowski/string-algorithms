@@ -32,10 +32,15 @@ class TestMultipleStringMatching(unittest.TestCase):
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_all_matches(self, t, n, W, reference, build, algorithm):
-    self.assertSetEqual(set(algorithm(t, n, build(W))), set(reference))
+    self.assertSetEqual(
+        set(algorithm(t, n, build(W))),
+        set(reference),
+        'Algorithm {}, text {}, patterns {}'.format(algorithm.__name__, t, W))
 
   def check_no_match(self, t, n, W, build, algorithm):
-    self.assertFalse(list(algorithm(t, n, build(W))))
+    self.assertFalse(
+        list(algorithm(t, n, build(W))),
+        'Algorithm {}, text {}, patterns {}'.format(algorithm.__name__, t, W))
 
   @parameterized.parameterized.expand(MULTIPLE_STRING_MATCHING_ALGORITHMS)
   def test_examples_all_matches(self, _, build, algorithm):

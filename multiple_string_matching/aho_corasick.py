@@ -1,24 +1,33 @@
 import queue
 
-from common import dawg
+from common import trie
+
+class AhoCorasickNode(trie.TrieNode):
+  def __init__(self, w, depth = 0):
+    super().__init__(w)
+    self.fail, self.output, self.depth = None, [], depth
 
 class AhoCorasick:
-  def __init__(self, W):
-    self.root = dawg.AutomatonNode()
-    self._create_automaton(W)
+  def __init__(self, W, reverse_word = False, add_to_output = True):
+    self.root = self.create_node('')
+    self.create_trie(W, reverse_word)
+    self.create_automaton(add_to_output)
 
-  def _create_trie(self, W):
+  @staticmethod
+  def create_node(label, depth = 0):
+    return AhoCorasickNode(label, depth)
+
+  def create_trie(self, W, reverse_word):
     for word in W:
       current_node = self.root
       for c in word:
-        new_node = dawg.AutomatonNode(current_node.depth + 1)
         if c not in current_node.children:
-            current_node.add_child(new_node, c)
+          new_node = self.create_node(c, current_node.depth + 1)
+          current_node.add_child(new_node)
         current_node = current_node.children[c]
-      current_node.output.append(word)
+      current_node.output.append(word[::-1] if reverse_word else word)
 
-  def _create_automaton(self, W):
-    self._create_trie(W)
+  def create_automaton(self, add_to_output):
     Q = queue.Queue()
     for node in self.root.children.values():
       Q.put(node)
@@ -31,7 +40,8 @@ class AhoCorasick:
         while fail_node is not None and label not in fail_node.children:
           fail_node = fail_node.fail
         next_node.fail = fail_node.children[label] if fail_node else self.root
-        next_node.output += next_node.fail.output
+        if add_to_output:
+          next_node.output += next_node.fail.output
 
   def step(self, node, label):
     while label not in node.children and node is not self.root:

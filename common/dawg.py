@@ -1,12 +1,3 @@
-class AutomatonNode:
-  def __init__(self, depth = 0):
-    self.parent, self.children, self.fail = None, {}, None
-    self.output, self.depth = [], depth
-
-  def add_child(self, child, label):
-    self.children[label] = child
-    child.parent = self
-
 class DawgNode:
   def __init__(self):
     self.primary, self.secondary, self.suffix = {}, {}, None

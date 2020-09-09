@@ -26,7 +26,10 @@ class TestSuffixArrays(unittest.TestCase):
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_suffix_array(self, t, n, reference, algorithm):
-    self.assertEqual(algorithm(t, n), reference)
+    self.assertEqual(
+        algorithm(t, n),
+        reference,
+        'Algorithm {}, text {}'.format(algorithm.__name__, t))
 
   @parameterized.parameterized.expand(SUFFIX_ARRAY_ALGORITHMS)
   def test_examples(self, _, algorithm):

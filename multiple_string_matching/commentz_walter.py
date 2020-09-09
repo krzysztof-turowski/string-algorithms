@@ -1,159 +1,69 @@
-from collections import deque
+import collections
+import math
 
-class Node():
-  def __init__(self, char, depth, parent):
-    self.char = char
-    self.depth = depth
-    self.word = None
-    self.parent = parent
-    self.ac_suffix = None
-    self.ac_output = None
-    self.children = {}
+from multiple_string_matching import aho_corasick
 
-class CommentzWalterNode(Node):
-  def __init__(self, char, depth, parent):
-    Node.__init__(self, char, depth, parent)
-    self.min_diff_s1 = -1
-    self.min_diff_s2 = -1
-    self.cw_suffix = None
-    self.cw_output = None
-    self.shift1 = None
-    self.shift2 = None
+class CommentzWalterNode(aho_corasick.AhoCorasickNode):
+  def __init__(self, label, depth = 0):
+    super().__init__(label, depth)
+    self.shift1, self.shift2 = math.inf, math.inf
 
-# pylint: disable=no-self-use
-class Trie():
-  def create_node(self, char, depth, parent):
-    return Node(char, depth, parent)
+class CommentzWalter(aho_corasick.AhoCorasick):
+  def __init__(self, W):
+    super().__init__(W, reverse_word = True, add_to_output = False)
+    self.min_depth, self.min_letter_depth = math.inf, {}
+    self.compute_depth(W)
+    self.compute_shift_values()
 
-  def __init__(self):
-    self.size = 0
-    self.root = self.create_node(None, 0, None)
+  @staticmethod
+  def create_node(label, depth = 0):
+    return CommentzWalterNode(label, depth)
 
-  def add_word(self, word):
-    curr_node = self.root
-    for curr_depth, char in enumerate(word, start = 1):
-      next_node = curr_node.children.get(char)
-      if not next_node:
-        next_node = self.create_node(char, curr_depth, curr_node)
-        curr_node.children[char] = next_node
+  def compute_depth(self, W):
+    for word in W:
+      for i, c in enumerate(word):
+        if c not in self.min_letter_depth or self.min_letter_depth[c] > i:
+          self.min_letter_depth[c] = i
+      self.min_depth = min(self.min_depth, len(word))
 
-      curr_node = next_node
-      curr_depth += 1
-
-    if curr_node.word is None:
-      curr_node.word = word
-      self.size += 1
-
-class CommentzWalterAutomaton(Trie):
-  def create_node(self, char, depth, parent):
-    return CommentzWalterNode(char, depth, parent)
-
-  def __init__(self):
-    Trie.__init__(self)
-    self.min_depth = None
-    self.char_arr = {}
-
-  def add_word(self, word):
-    word = word[::-1]
-    super().add_word(word)
-
-    for pos, char in enumerate(word, start = 1):
-      min_char_depth = self.char_arr.get(char)
-      if (min_char_depth is None) or (min_char_depth > pos):
-        self.char_arr[char] = pos
-      pos += 1
-
-    if self.min_depth is None or len(word) < self.min_depth:
-      self.min_depth = len(word)
-
-  def init_shift_values(self):
+  def compute_shift_values(self):
     self.root.shift1, self.root.shift2 = 1, self.min_depth
-    bfs_queue = deque()
-    bfs_queue.extend(self.root.children[key] for key in self.root.children)
+    Q = collections.deque()
+    Q.extend(self.root.children[key] for key in self.root.children)
+    while Q:
+      node = Q.popleft()
+      difference = node.depth - node.fail.depth
+      if node.fail.shift1 > difference:
+        node.fail.shift1 = difference
+      if node.output and node.fail.shift2 > difference:
+        node.fail.shift2 = difference
+      Q.extend(node.children[key] for key in node.children)
 
-    while bfs_queue:
-      curr_node = bfs_queue.popleft()
+    Q = collections.deque()
+    Q.extend(self.root.children[key] for key in self.root.children)
+    while Q:
+      node = Q.popleft()
+      node.shift1 = min(node.shift1, self.min_depth)
+      node.shift2 = min(node.shift2, node.parent.shift2)
+      Q.extend(node.children[key] for key in node.children)
 
-      curr_node.shift1 = (self.min_depth \
-        if curr_node.cw_suffix is None else curr_node.min_diff_s1)
-
-      curr_node.shift2 = (curr_node.parent.shift2 \
-        if curr_node.cw_output is None else curr_node.min_diff_s2)
-
-      bfs_queue.extend(curr_node.children[key] for key in curr_node.children)
-
-  def create_failure_links(self):
-    bfs_queue = deque()
-
-    for key in self.root.children:
-      child = self.root.children[key]
-      child.ac_suffix = self.root
-      bfs_queue.extend(child.children[key2] for key2 in child.children)
-
-    while bfs_queue:
-      curr_node = bfs_queue.popleft()
-      bfs_queue.extend(curr_node.children[key] for key in curr_node.children)
-
-      search = curr_node.parent.ac_suffix
-
-      while (search.char is not None) and \
-      (search.children.get(curr_node.char) is None):
-        search = search.ac_suffix
-
-      if search.children.get(curr_node.char) is not None:
-        ac_suffix_node = search.children[curr_node.char]
-      else:
-        ac_suffix_node = search
-
-      curr_node.ac_suffix = ac_suffix_node
-      suffix_is_word = curr_node.ac_suffix.word is not None
-      curr_node.ac_output = curr_node.ac_suffix \
-      if suffix_is_word else curr_node.ac_suffix.ac_output
-      if curr_node.ac_output is not None:
-        pass
-
-      difference = curr_node.depth - ac_suffix_node.depth
-
-      if ac_suffix_node.min_diff_s1 == -1 or \
-      ac_suffix_node.min_diff_s1 > difference:
-        ac_suffix_node.min_diff_s1 = difference
-        ac_suffix_node.cw_suffix = curr_node
-
-      if curr_node.word is not None:
-        if ac_suffix_node.min_diff_s2 == -1 or \
-        ac_suffix_node.min_diff_s2 > difference:
-          ac_suffix_node.min_diff_s2 = difference
-          ac_suffix_node.cw_output = curr_node
-
-    self.init_shift_values()
-
-  def shift_func(self, node, j):
-    max_min_diff_s1_char = 0
-    if node.char is None:
-      max_min_diff_s1_char = node.shift1
+  def shift(self, node, j):
+    if node.parent is None:
+      shift = node.shift1
     else:
-      min_depth = self.char_arr.get(node.char, self.min_depth + 1)
-      max_min_diff_s1_char = max(min_depth - j - 1, node.shift1)
-    return min(max_min_diff_s1_char, node.shift2)
-
-  def _match(self, t, n):
-    i = self.min_depth - 1
-    while i < n:
-      v, j, c_find = self.root, 0, t[i]
-      while v.children.get(c_find) is not None and i >= j:
-        v, j = v.children[c_find], j + 1
-        if v.word is not None:
-          yield (v.word[::-1], i - j + 2)
-        c_find = t[i - j]
-      j = min(i, j)
-      i += self.shift_func(v, j)
+      min_depth = self.min_letter_depth.get(node.label, self.min_depth + 1)
+      shift = max(min_depth - j, node.shift1)
+    return min(shift, node.shift2)
 
 def build(W):
-  automaton = CommentzWalterAutomaton()
-  for word in W:
-    automaton.add_word(word[1:])
-  automaton.create_failure_links()
-  return automaton
+  return CommentzWalter([w[:0:-1] for w in W])
 
 def search(t, n, automaton):
-  return automaton._match(t[1:], n)
+  i = automaton.min_depth - 1
+  while i < n:
+    v, j, c = automaton.root, 0, t[i + 1]
+    while c in v.children and i >= j:
+      v, j = v.children[c], j + 1
+      yield from ((w, i - j + 2) for w in v.output)
+      c = t[i - j + 1]
+    i += automaton.shift(v, min(i, j))
