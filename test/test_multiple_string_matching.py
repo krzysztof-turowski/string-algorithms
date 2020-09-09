@@ -4,26 +4,25 @@ import os
 
 import parameterized
 
-from multiple_string_matching import aho_corasick, commentz_walter, \
-    fast_practical_multi_string_matching
+from multiple_string_matching import multiple_string_matching
 from exact_string_matching import forward
 from generator.rand import random_word
 
 MULTIPLE_STRING_MATCHING_ALGORITHMS = [
     [
         'Aho-Corasick',
-        aho_corasick.build,
-        aho_corasick.search,
+        multiple_string_matching.aho_corasick_build,
+        multiple_string_matching.aho_corasick_search,
     ],
     [
         'Commentz-Walter',
-        commentz_walter.build,
-        commentz_walter.search,
+        multiple_string_matching.commentz_walter_build,
+        multiple_string_matching.commentz_walter_search,
     ],
     [
         'fast practical multiple string matching',
-        fast_practical_multi_string_matching.build,
-        fast_practical_multi_string_matching.search,
+        multiple_string_matching.fast_practical_multi_string_matching_build,
+        multiple_string_matching.fast_practical_multi_string_matching_search,
     ],
 ]
 
@@ -63,6 +62,10 @@ class TestMultipleStringMatching(unittest.TestCase):
     self.check_all_matches(
         '#abaabbacca', 10, ['#aba', '#cbbaa', '#cca', '#aabc', '#ab'],
         {('ab', 1), ('aba', 1), ('cca', 8), ('ab', 4)},
+        build, algorithm)
+    self.check_all_matches(
+        '#bcbbcbacac', 10, ['#ccca', '#cac', '#bbac', '#bbcac'],
+        {('cac', 8)},
         build, algorithm)
 
   @parameterized.parameterized.expand(MULTIPLE_STRING_MATCHING_ALGORITHMS)
