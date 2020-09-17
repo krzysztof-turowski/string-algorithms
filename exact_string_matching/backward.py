@@ -117,10 +117,10 @@ def turbo_boyer_moore(t, w, n, m):
       i = i + shift
       memory = min(m - shift, match)
 
-def Q(i, k, m, w):
-  return (k <= i and w[(i-k+1):i] == w[(m-k+1):m]) or (k > i and w[1:i] != w[(m-i+1):m])
 
 def boyer_moore_apostolico_giancarlo(t, w, n, m):
+  def Q(i, k, m, w):
+    return (k <= i and w[(i-k+1):i] == w[(m-k+1):m]) or (k > i and w[1:i] == w[(m-i+1):m])
   BM = suffix.boyer_moore_shift(w, m)
   skip = [0] * (n + 1)
   i = 1
