@@ -22,7 +22,10 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Turbo-Boyer-Moore', backward.turbo_boyer_moore ],
     [ 'bad shift heuristic', backward.bad_shift_heuristic ],
     [ 'quick search heuristic', backward.quick_search ],
-    [ 'Boyer-Moore-Apostolico-Giancarlo', backward.boyer_moore_apostolico_giancarlo ],
+    [
+        'Boyer-Moore-Apostolico-Giancarlo',
+        backward.boyer_moore_apostolico_giancarlo
+    ],
     [ 'Horspool', backward.horspool ],
     [ 'Karp-Rabin', other.karp_rabin ],
     [ 'fast-on-average', other.fast_on_average ],

@@ -119,20 +119,20 @@ def turbo_boyer_moore(t, w, n, m):
 
 
 def boyer_moore_apostolico_giancarlo(t, w, n, m):
-  def Q(i, k, m, w):
-    return (k <= i and w[(i-k+1):i] == w[(m-k+1):m]) or (k > i and w[1:i] == w[(m-i+1):m])
+  def Q(i, k):
+    return w[max(0, i - k) + 1:i] == w[m - min(k, i) + 1:m]
   BM = suffix.boyer_moore_shift(w, m)
   skip = [0] * (n + 1)
   i = 1
   while i <= n - m + 1:
     j = m
     while j > 0:
-      if (Q(j, skip[i+j-1], m, w) or (skip[i+j-1] == 0)) and t[i + j - 1] == w[j]:
-        j = j - max(1, skip[i+j-1])
+      if Q(j, skip[i + j - 1]) and t[i + j - 1] == w[j]:
+        j = j - max(1, skip[i + j - 1])
       else:
         break
     if j <= 0:
       yield i
       j = 1
-    skip[i+m-1] = m-j
+    skip[i + m - 1] = m - j
     i = i + BM[j]
