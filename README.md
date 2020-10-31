@@ -74,12 +74,12 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 
 ## Testing
 
-Run all tests:
+Run all small tests:
 ```bash
   python3 -B -m unittest discover test -v
 ```
 
 Run example large test:
 ```bash
-  LARGE=1 python3 -B -m unittest test.test_exact_string_matching.TestExactStringMatching.test_random_exact_string_matching -v
+  LARGE=1 python3 -B -m unittest test.test_exact_string_matching.TestExactStringMatching -v
 ```
