@@ -34,15 +34,13 @@
 \pagenumbering{roman}
 \pagestyle{plain}
 
-\input{text/front-back/Titlepage}
-
-%%% \include{front-back/Titleback}
-
-%%% \cleardoublepage\include{front-back/Dedication} % Dedication page
-
-%%% \cleardoublepage\include{front-back/Foreword} % Uncomment and create a Foreword.tex to include a foreword
-
-%%% \cleardoublepage\include{front-back/Acknowledgments} % Acknowledgements page
+\input{text/front-back/titlepage.tex}
+% \cleardoublepage
+% \input{text/front-back/dedication.tex}
+% \cleardoublepage
+% \input{text/front-back/foreword.tex}
+% \cleardoublepage
+% \input{text/front-back/acknowledgments.tex}
 
 \pagestyle{scrheadings}
 \cleardoublepage
@@ -73,6 +71,6 @@
 %\part{Kompresja tekstu}
 %\cleardoublepage
 
-%%% \cleardoublepage\include{front-back/Colophon} % Colophon
+% \input{text/front-back/colophon.tex}
 
 \end{document}
