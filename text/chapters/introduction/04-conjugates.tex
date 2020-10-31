@@ -1,0 +1,27 @@
+\subsection{Słowa sprzężone}
+
+\begin{definition}{}{}
+  Słowa $v, w$ są \textbf{\textit{sprzężone}} wtedy i tylko wtedy, gdy istnieją słowa $u_1$, $u_2$ takie, że $v = u_1 u_2$ i $w = u_2 u_1$.
+\end{definition}
+
+\begin{corollary}{}{}
+  Relacja sprzężenia (cyklicznego obrotu) jest relacją równoważności, więc definiuje klasy równoważności w $\A^*$.
+\end{corollary}
+
+\begin{problem}{lothaire2002algebraic}{}
+  Pokaż, ile elementów ma klasa równoważności dla słowa $v$.
+\end{problem}
+
+\begin{problem}{crochemore2002jewels}{s. 17}
+  Pokaż dowód małego twierdzenia Fermata na bazie wiedzy, że słowo pierwotne $v$ należy do klasy równoważności o mocy $|v|$.
+\end{problem}
+
+\begin{proof}
+Przypomnijmy na wstępie dowodu wypowiedź małego twierdzenia Fermata: jeżeli $p$ jest liczbą pierwszą, a $n$ dowolną liczbą naturalną, to $p | (n^p-n)$.
+
+Zdefiniujmy taką relację na słowach, że $x$ jest w relacji z $y$, jeżeli tylko $x$ jest cyklicznym przesunięciem $y$. Oczywiście jest to relacja równoważności. Rozważmy słowa unarne długości $p$, czyli słowa postaci $a^p$, gdzie $a$ jest pewną literą. Niech $K$ będzie zbiorem wszystkich nieunarnych słów długości $p$ nad alfabetem $\{1,\cdots,n\}$. Wszystkie te słowa są pierwotne, ponieważ ich długość jest liczbą pierwszą oraz nie są unarne. Na podstawie założeń dostajemy, że każda klasa równoważności naszej relacji ma dokładnie $p$ elementów. Dodatkowo zauważmy, że zbiór $K$ ma dokładnie $n^p-n$ elementów. Ponieważ $K$ może być podzielony na rozłączne podzbiory mające po $p$ elementów, to $p|(n^p-n)$, co kończy dowód.
+\end{proof}
+
+\begin{definition}{}{}
+  Słowo $w$ jest \textbf{\textit{słowem Lyndona}} wtedy i tylko wtedy, gdy jest minimalnym (leksykograficznie, wojskowo) słowem w ramach klasy sprzężenia.
+\end{definition}

@@ -1,0 +1,107 @@
+\section{Morfizmy i klasy słów}
+
+\begin{definition}{}{}
+  Funkcja $f: \A^* \to \B^*$ jest \textbf{\textit{morfizmem}} (\textbf{\textit{podstawieniem}}) jeśli $f(xy) = f(x)f(y)$ dla wszystkich $x, y \in \A^*$.
+  \\
+  Morfizm jest dosłowny (\emph{literal}), gdy dla każdego $x \in \A$ zachodzi $|f(x)| = 1$.
+  \\
+  Morfizm jest nieusuwający (\emph{non-erasing}), gdy dla każdego $x \in \A$ zachodzi $f(x) \neq \varepsilon$.
+\end{definition}
+
+\subsection{Słowa Fibonacciego}
+
+\begin{definition}{lothaire2002algebraic}{s. 10-11}
+  Słowo $f_n$ jest \textbf{\textit{słowem Fibonacciego}}, gdy $f_0 = 0$, $f_1 = 01$ oraz $f_{k + 2} = f_{k + 1} f_k$ dla $k = 0, 1, \ldots$.
+  \\
+  Równoważnie, $f_k = \phi^n(0)$ dla morfizmu $\phi(0) = 01$, $\phi(1) = 0$.
+\end{definition}
+
+\begin{problem}{}{}
+  Dla $k \ge 1$ niech $u = f_k f_{k + 1}$ i $v = f_{k + 1} f_k$. Pokaż, że $u$ powstaje z $v$ przez zamianę dwóch ostatnich liter.
+\end{problem}
+
+\begin{problem}{lothaire2002algebraic}{Problem 8.2.7, s. 308}
+  Jeśli dla $u \in \A^+$ słowo $u^2$ jest podsłowem pewnego $f_k$, to $|u|$ jest pewną liczbą Fibonacciego i $u$ jest sprzężone z pewnym $f_l$.
+\end{problem}
+
+\subsection{Słowa Thuego-Morse'a}
+
+\begin{definition}{lothaire2002algebraic}{s. 11}
+  Słowo $u_n$ jest \textbf{\textit{słowem Thuego-Morse'a}}, gdy $u_0 = 0$, $v_0 = 1$ oraz $u_{k + 1} = u_k v_k$, $v_{k + 1} = v_k u_k$ dla $k = 0, 1, \ldots$.
+  \\
+  Równoważnie, $u_k = \mu^n(0)$ dla morfizmu $\mu(0) = 01$, $\mu(1) = 10$.
+\end{definition}
+
+\begin{problem}{}{}
+  Udowodnić że słowa Thuego-Morse'a $u_n$ i $v_n$ są słowami pierwotnymi.
+\end{problem}
+
+\begin{proof}
+Rozważmy ciąg $u_i$, $v_i$ z wykładu, który służył do definicji słów Thuego Morse'a. Pokażemy, że każde z słów $u_i, v_i$ jest pierwotne.
+Oczywiście dla $i=0$, słowa $0$, $1$ są pierwotne.
+
+Załóżmy teraz, że dla każdego $i < n$ wiemy, że $u_i, v_i$ są pierwotne. Pokażemy jak z tego wywnioskować, że $u_n$ jest pierwotne. Dowód dla $v_n$ jest zupełnie analogiczny, więc go pominiemy.
+
+Zauważmy, że długość $u_n$ to $2^n$, czyli jeżeli $u^n = s^k$ to $|s| = \frac{2^n}{k}$. Jako, że $k$ to przynajmniej $2$ i dzieli $2^n$ to jest postaci $2^l$, gdzie $1 \leq l \leq n-1$. Z tego natychmiast wynika, że $s$ jest też okresem $u_{n-1}$ - sprzeczność.
+\end{proof}
+
+\begin{problem}{}{}
+  Udowodnić że słowa Thuego-Morse'a $u_{2n}$ są palindromami.
+\end{problem}
+
+\begin{proof}
+Zgodnie z definicją rekurencyjną mamy $u_0=0,v_0=1$ oraz $u_{k+1}=u_kv_k$, $v_{k+1}=v_ku_k$. Rozumować będziemy indukcyjnie. Dla $n=0$, słowo $u_0=0, v_0=1$ są oczywiście palindromami. Załóżmy zatem, że dla wszystkich $k < n$ prawdą jest, że $u_{2k}$ oraz $v_{2k}$ są palindromami. Będziemy chcieli wykazać, że jest to prawdą także dla $u_{2n}$ i $v_{2n}$. Z definicji rekurencyjnej dostajemy, że $u_{2n}=u_{2n-1}v_{2n-1}=u_{2n-2}v_{2n-2}v_{2n-2}u_{2n-2}$. Ponieważ $u_{2n_2}$ oraz $v_{2n-2}$ są palindromami na mocy założenia indukcyjnego, to $u_{2n}$ też jest palindromem. Dokładnie taki sam argument pokazuje, że $v_{2n}$ również jest palindromem. Zatem zakończyliśmy dowód kroku indukcyjnego, a więc też cały dowód.
+\end{proof}
+
+\begin{problem}{lothaire2002algebraic}{3.1.1, s. 113-114}
+  Sprawdzić czy słowa Thuego-Morse'a zawierają podsłowa $u^3$ lub $(uv)^2u$ dla pewnych $u, v \in \A^+$.
+\end{problem}
+
+\section{Kody}
+
+\begin{definition}{}{}
+  $X \subset \A^+$ jest \textbf{\textit{kodem}}, gdy dla dowolnych $x_1, \ldots, x_n, y_1, \ldots, y_m \in X$ jeśli dla $x_1 \ldots x_n = y_1 \ldots y_m$, to $n = m$ oraz $x_i = y_i$ dla $i = 1, \ldots, n$.
+\end{definition}
+
+\begin{definition}{}{}
+  $X \subset \A^+$ jest \textbf{\textit{kodem prefiksowym}} gdy $X$ jest kodem i dla żadnych $x, y \in X$ słowo $x$ nie jest prefiksem $y$.
+\end{definition}
+
+\begin{problem}{lothaire2002algebraic}{6.1.3, s. 198-199}
+  Zbiór $X \subset A^{+}$ jest kodem dla $B^{*}$ wtedy i tylko wtedy, gdy dowolna bijekcja $f:\ X \rightarrow B$ indukuje iniekcyjny morfizm z $B^{*}$ na $A^{*}$.
+\end{problem}
+
+\begin{proof}
+Rozważmy morfizm indukowany $\phi$. Niech
+$$\phi(s_1s_2\dots s_n) = \phi(w_1s_2\dots w_m).$$ 
+Czyli
+$$\phi(s_1)\phi(s_2)\dots \phi(s_n) = \phi(w_1)\phi(w_2)\dots \phi(w_m),$$
+zatem
+$$f(s_1)f(s_2)\dots f(s_n) =  f(w_1)f(w_2)\dots f(w_n) \Leftrightarrow x_1 x_2\dots x_n = y_1 y_2 \dots y_n.$$
+Skoro $x_i, y_j \in X$ i $X$ jest kodem to $n = m$, $x_i = y_i$ czyli z bijektywności $f$:
+$$s_1s_2\dots s_n = w_1s_2\dots w_m,$$
+czyli $\phi$ jest iniekcją.
+
+Teraz dowiedziemy implikacji w drugą stronę:
+
+Załóżmy, że $X$ nie jest kodem. Jeżeli istnieją $n < m$ oraz słowa $x_1, \dots, x_n, y_1, \dots, y_m \in X$ takie, że 
+$$x_1 \dots x_n = y_1 \dots y_m,$$ 
+to niech $f$ będzie dowolną bijekcją z $B$ w $X$ i $b_i = f^{-1}(x_i)$ oraz $a_j = f^{-1}(y_j)$. Słowa
+$$a_1 \dots a_n \text{ oraz } b_1 \dots b_m$$
+są różnej długości więc są różne. Równocześnie dla $\phi$ - morfizmu indukowanego przez $f$ zachodzi
+$$\phi(a_1 \dots a_n) = x_1 \dots x_n = y_1 \dots y_m = \phi(b_1 \dots b_m),$$
+czyli nie jest iniekcją - sprzeczność.
+
+Jeżeli natomiast $n=m$ i $x_1, \dots, x_n, y_1, \dots, y_n \in X$ takie, że
+$x_1 \dots x_n = y_1 \dots y_n$
+oraz istnieje $i$ spełniające 
+$x_i \neq y_i,$
+to ponownie rozważamy dowolną bijekcję z $B$ w $X$ i $b_j = f^{-1}(x_j)$ oraz $a_j = f^{-1}(y_j)$.
+
+Słowa
+$a_1 \dots a_n \text{ oraz } b_1 \dots b_n$
+są różne, bo $a_i \neq b_i$. Równocześnie dla $\phi$ -- morfizmu indukowanego przez $f$ zachodzi
+$$\phi(a_1 \dots a_n) = x_1 \dots x_n = y_1 \dots y_n = \phi(b_1 \dots b_n),$$
+czyli nie jest iniekcją - sprzeczność.
+To kończy cały dowód.
+\end{proof}

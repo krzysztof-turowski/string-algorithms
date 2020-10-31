@@ -1,0 +1,19 @@
+\chapter{Dokładne dopasowanie wzorca}
+
+\begin{algorithm}[H]
+    \caption{Dokładne dopasowanie wzorca}
+    \Input{Słowa $t, w \in \A^+$ ($|t| = n$, $|w| = m$)}
+    \Output{\textsc{True} jeśli $w$ jest podsłowem $t$, \textsc{False} w przeciwnym przypadku}
+\end{algorithm}
+
+\begin{algorithm}[H]
+    \caption{Wyszukiwanie wszystkich wystąpień wzorca w tekście}
+    \Input{Słowa $t, w \in \A^+$ ($|t| = n$, $|w| = m$)}
+    \Output{Zbiór liczb $S = \{1 \le i \le n: t[i..(i + m - 1)] = w\}$.}
+\end{algorithm}
+
+\input{text/chapters/chapter-01/01-naive.tex}
+\input{text/chapters/chapter-01/02-forward.tex}
+\input{text/chapters/chapter-01/03-backward.tex}
+\input{text/chapters/chapter-01/04-other.tex}
+\input{text/chapters/chapter-01/05-hash.tex}

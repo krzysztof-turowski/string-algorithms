@@ -1,0 +1,15 @@
+\section{Algorytm Karpa-Rabina}
+
+Alternatywne podejście można oprzeć o obliczanie funkcji skrótu $h$ dla poszczególnych podsłów długości $m$. Jeśli funkcja jest zwykłą liniową funkcją modulo, to łatwo obliczyć $h(t[i + 1..m + i + 1])$ na podstawie $h(t[i..m + i])$.
+
+\begin{code}
+\captionof{listing}{Algorytm Karpa-Rabina}
+\inputminted{python}{code/exact-string-matching/karp-rabin.py}
+\label{alg:exact-string-matching-karp-rabin}
+\end{code}
+
+Warto zwrócić uwagę, że algorytm można zaimplementować w dwóch wersjach:
+\begin{itemize}
+    \item Monte Carlo -- zwracamy dopasowanie od razu, gdy wykryjemy równość haszy, więc czas działania to $O(n)$, ale możliwe fałszywe dopasowania,
+    \item Las Vegas -- zwracamy dopasowanie jedynie, gdy wykryjemy równość haszy i sprawdzimy z całym wzorcem, stąd brak błędów, ale pesymistyczny czas działania to $O(n m)$.
+\end{itemize}
