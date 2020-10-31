@@ -6,9 +6,10 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 ### Exact string matching
 1. Morris-Pratt and Knuth-Morris-Pratt algorithms
 2. Boyer-Moore algorithm with many variants
-3. _fast-on-average_ (Crochemore et al.) algorithm
-4. Two-way (Crochemore-Perrin) constant space algorithm
-5. Karp-Rabin hashing-based algorithm
+3. Boyer-Moore-Apostolico-Giancarlo algorithm
+4. Constant space: two-way (Crochemore-Perrin) algorithm
+5. _fast-on-average_ (Crochemore et al.) algorithm
+6. Karp-Rabin hashing-based algorithm
 
 ### String indexing
 
@@ -73,12 +74,12 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 
 ## Testing
 
-Run all tests:
+Run all small tests:
 ```bash
   python3 -B -m unittest discover test -v
 ```
 
 Run example large test:
 ```bash
-  LARGE=1 python3 -B -m unittest test.test_exact_string_matching.TestExactStringMatching.test_random_exact_string_matching -v
+  LARGE=1 python3 -B -m unittest test.test_exact_string_matching.TestExactStringMatching -v
 ```

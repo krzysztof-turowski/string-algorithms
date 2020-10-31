@@ -1,138 +1,76 @@
-\documentclass[12pt]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Classicthesis Typographic Thesis
+% LaTeX Template
+% Version 1.4 (1/1/16)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% André Miede (http://www.miede.de) with commenting modifications by:
+% Vel (vel@LaTeXTemplates.com)
+%
+% License:
+% GNU General Public License (v2)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-%\usepackage{polski}
-\usepackage{fullpage}
-\usepackage{amsmath,amssymb,amsfonts,amsthm}
-\usepackage{thmtools}
-\usepackage[polish]{babel}
-%\usepackage{ebgaramond,ebgaramond-maths}
-%\usepackage[cmintegrals,cmbraces]{newtxmath}
-\usepackage{braket}
-\usepackage{enumitem}
-\usepackage{color}
-\usepackage{ifthen}
-\usepackage{cleveref}
-\usepackage{mathtools}
+\documentclass[
+		twoside,titlepage,headinclude,
+	 	footinclude=true,cleardoublepage=empty,dottedtoc,
+		BCOR=5mm,paper=a4,fontsize=11pt,
+		ngerman,american,polish]{scrreprt}
+\input{classicthesis-config}
 
-\setlength{\marginparwidth}{2cm}
-\usepackage[backgroundcolor=lightgray]{todonotes}
+\addbibresource{bibliography/bibliography.bib}
 
-\usepackage{tikz}
-\usepackage{xcolor}
-\usetikzlibrary{chains,fit,shapes,decorations.pathreplacing}
-\edef\sizetape{0.6cm} 
-\tikzstyle{tmtape}=[draw,minimum size=\sizetape]
-\definecolor{lightgrey}{RGB}{192,192,192}
-
-\usepackage[cache=false,newfloat]{minted}
-\usepackage{caption}
-\usepackage{csquotes}
-\usepackage[titlenumbered,ruled]{algorithm2e}
-\usepackage{algpseudocode}
-\renewcommand*{\algorithmcfname}{Problem}
-\SetKwInOut{Input}{Wejście}
-\SetKwInOut{Output}{Wyjście}
-
-\newenvironment{code}{\captionsetup{type=listing}}{}
-\SetupFloatingEnvironment{listing}{name=Algorytm}
-
-\PassOptionsToPackage{
-backend=bibtex8,bibencoding=ascii, % alternatively: backend=biber
-language=auto,
-style=authoryear-comp, % alternatively: style=numeric-comp
-%bibstyle=authoryear,dashed=false, % dashed: substitute rep. author with ---
-sorting=nyt,
-maxbibnames=10,
-natbib=true
-}{biblatex}
-\usepackage{biblatex}
-
-\addbibresource{bibliography.bib}
-
-\theoremstyle{plain}
-\newtheorem{theorem-thm}{Twierdzenie}[section]
-\newtheorem{lemma-thm}[theorem-thm]{Lemat}
-\theoremstyle{definition}
-\newtheorem{definition-thm}[theorem-thm]{Definicja}
-\newtheorem{corollary-thm}[theorem-thm]{Wniosek}
-\newtheorem{remark-thm}[theorem-thm]{Obserwacja}
-\newtheorem{problem-thm}{Problem}[section]
-
-\newenvironment{theorem}[2]
-  {\ifthenelse{\not\equal{#1}{}}{\begin{theorem-thm}[{\citealt[#2]{#1}}]}{\begin{theorem-thm}}}
-  {\end{theorem-thm}}
-
-\newenvironment{lemma}[2]
-  {\ifthenelse{\not\equal{#1}{}}{\begin{lemma-thm}[{\citealt[#2]{#1}}]}{\begin{lemma-thm}}}
-  {\end{lemma-thm}}
-
-\newenvironment{definition}[2]
-  {\ifthenelse{\not\equal{#1}{}}{\begin{definition-thm}[{\citealt[#2]{#1}}]}{\begin{definition-thm}}}
-  {\end{definition-thm}}
-
-\newenvironment{corollary}[2]
-  {\ifthenelse{\not\equal{#1}{}}{\begin{corollary-thm}[{\citealt[#2]{#1}}]}{\begin{corollary-thm}}}
-  {\end{corollary-thm}}
-
-\newboolean{show-problem-refs}
-\setboolean{show-problem-refs}{false}
-\newenvironment{problem}[2]
-  {\ifthenelse{\boolean{show-problem-refs} \and \not\equal{#1}{} }{\begin{problem-thm}[{\citealt[#2]{#1}}]}{\begin{problem-thm}}}
-  {\end{problem-thm}}
-
-\setlist{nosep}
-
-\newcommand{\B}{\mathcal{B}}
-\newcommand{\N}{\mathbb{N}}
-\newcommand{\Q}{\mathbb{Q}}
-
-\newcommand{\TBM}{Turbo\_BM}
-
-\newcommand{\elps}{\makebox[.8em][c]{.\hfil.\hfil.}}
-\newcommand{\range}[2]{\{#1, \elps, #2\}}
-
-\DeclareMathOperator{\rot}{\mathfrak{r}}
-\DeclareMathOperator{\W}{\mathcal{W}}
-\DeclareMathOperator{\A}{\mathcal{A}}
-\DeclareMathOperator{\Otime}{\mathcal{O}}
-\DeclareMathOperator{\states}{\mathcal{S}}
-\DeclareMathOperator{\trie}{\mathcal{T}}
-\DeclareMathOperator{\goto}{\texttt{goto}}
-\DeclareMathOperator{\cnext}{\texttt{next}}
-\DeclareMathOperator{\fail}{\texttt{fail}}
-\DeclareMathOperator{\out}{\texttt{output}}
-\DeclareMathOperator{\none}{\texttt{None}}
-
-\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
-\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
-
-\newcommand\defeq{\stackrel{\mathclap{\normalfont\mbox{def}}}{=}}
-\setlength\parskip{2mm}
+%\hyphenation{Put special hyphenation here}
 
 \begin{document}
-\title{Algorytmy tekstowe\vspace{-2ex}}
-%\author{Krzysztof \textsc{Turowski}\vspace{-2ex}}
-\author{}
-\date{}
-\maketitle
 
-\tableofcontents
-\newpage
+\frenchspacing
+\raggedbottom
+\selectlanguage{polish}
+\renewcommand*{\bibname}{References}
+\pagenumbering{roman}
+\pagestyle{plain}
 
-\input{01-notacja.tex}
-\input{11-exact-string-matching.tex}
-\input{12-string-indexing.tex}
-\input{13-factorization.tex}
-\input{14-longest-common-superstring}
-\input{15-wildcard-pattern-matching}
-\input{16-approximate-pattern-matching}
-\input{17-compression}
-\input{18-shortest-common-superstring}
-\input{19-multiple-string-matching}
+\input{text/front-back/titlepage.tex}
+% \cleardoublepage
+% \input{text/front-back/dedication.tex}
+% \cleardoublepage
+% \input{text/front-back/foreword.tex}
+% \cleardoublepage
+% \input{text/front-back/acknowledgments.tex}
 
-\nocite{*}
-\printbibliography
+\pagestyle{scrheadings}
+\cleardoublepage
+\input{text/front-back/Contents}
+\cleardoublepage
+\input{text/chapters/introduction/00-main.tex}
+\cleardoublepage
+\pagenumbering{arabic}
+\cleardoublepage
+
+\input{text/chapters/chapter-01/00-main.tex}
+\cleardoublepage
+%\chapter{Dokładne dopasowanie wielu wzorców}
+%\include{text-new/chapters/chapter-01/00-main.tex}
+%\cleardoublepage
+%\chapter{Indeksowanie tekstu: drzewa sufiksowe}
+%\cleardoublepage
+%\chapter{Indeksowanie tekstu: tablice sufiksowe}
+%\cleardoublepage
+%\chapter{Dopasowanie wzorca z wieloznacznikami}
+%\cleardoublepage
+%\part{Przybliżone dopasowanie wzorca}
+%\cleardoublepage
+%\part{Najdłuższy wspólny podciąg}
+%\cleardoublepage
+%\part{Najkrótsze wspólne nadsłowo}
+%\cleardoublepage
+%\part{Kompresja tekstu}
+%\cleardoublepage
+
+% \input{text/front-back/colophon.tex}
 
 \end{document}
