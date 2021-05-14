@@ -9,7 +9,7 @@ class TrieNode:
     child.parent = self
 
   def get_all_leaves(self, f):
-    if len(self.children) == 0:
+    if not self.children:
       return [f(self)]
     return [value for _, child in sorted(self.children.items())
             for value in child.get_all_leaves(f)]

@@ -4,7 +4,7 @@ from compression.core.dictionary import TrieReverseTrie
 # pylint: disable=too-few-public-methods
 class LZ78DictParser(parser.DictParser):
   def __init__(self, dictionary):
-    super(LZ78DictParser, self).__init__(
+    super().__init__(
         dictionary,
         lambda dict_parser, c: (dict_parser.phrase.index, c),
         lambda dict_parser, c: dict_parser.dict.trie
@@ -13,7 +13,7 @@ class LZ78DictParser(parser.DictParser):
 class LZ78Compressor(compressor.Compressor):
   def __init__(self, parser_output):
     dictionary = TrieReverseTrie()
-    super(LZ78Compressor, self).__init__(
+    super().__init__(
         dictionary,
         LZ78DictParser,
         parser_output
@@ -23,7 +23,7 @@ class LZ78Compressor(compressor.Compressor):
 class LZ78Decompressor(compressor.Decompressor):
   def __init__(self):
     dictionary = TrieReverseTrie()
-    super(LZ78Decompressor, self).__init__(dictionary, LZ78DictParser)
+    super().__init__(dictionary, LZ78DictParser)
 
     self.reference[0] = dictionary.trie
 

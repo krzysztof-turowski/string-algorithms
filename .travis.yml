@@ -2,7 +2,7 @@ language: python
 dist: focal
 
 python:
-  - 3.7
+  - 3.8
 
 addons:
   apt:
@@ -17,8 +17,11 @@ branches:
     - master
 
 before_script:
-  - python --version
+  - python3 --version
+  - pip --version
+  - sudo python3 -m pip install parameterized scipy numpy --upgrade
   - sudo python3 -m pip install pylint
+  - export PYTHONPATH=`sudo python3 -m pip show parameterized | grep 'Location:' | cut -d ' ' -f 2`
   - export LARGE=1
 
 script:

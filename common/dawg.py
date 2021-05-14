@@ -1,3 +1,4 @@
+# pylint: disable=too-few-public-methods
 class DawgNode:
   def __init__(self):
     self.primary, self.secondary, self.suffix = {}, {}, None
