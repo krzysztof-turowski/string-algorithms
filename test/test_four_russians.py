@@ -77,7 +77,6 @@ def get_full_matrices(fr, t_1, t_2, S):
 
   return whole_matrix, diff_between_rows, diff_between_columns
 
-
 class TestAlgorithmY(unittest.TestCase):
   def test_algorithm_y(self):
     t_1 = '#baabab'
@@ -106,7 +105,7 @@ class TestAlgorithmY(unittest.TestCase):
              [diff_between_columns[i + 2][j + 1],
               diff_between_columns[i + 2][j + 2]]))
 
-
+# pylint: disable=too-many-locals
 class TestAlgorithmZ(unittest.TestCase):
   def test_algorithm_z(self):
     t_1, t_2, n_1, n_2 = '#baabab', '#ababaa', 6, 6

@@ -41,6 +41,7 @@ def _boyer_moore_shift(p, m, k, A):
     ready[p[i]] = max(i, m - k)
   return BM_k
 
+# pylint: disable=too-many-locals
 def approximate_boyer_moore(t, p, n, m, k):
   A = set(list(t[1:] + p[1:]))
   BM_k = _boyer_moore_shift(p, m, k, A)

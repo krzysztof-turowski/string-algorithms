@@ -130,6 +130,7 @@ def commentz_walter_search(t, n, automaton):
       c = t[i - j + 1]
     i += automaton.shift(v, min(i, j))
 
+# pylint: disable=too-few-public-methods
 class FastPracticalMultipleStringMatching:
   def __init__(self, W):
     self.acm = AhoCorasick(W)

@@ -45,7 +45,7 @@ class GreedyOutputParser(OutputParser):
 
 class OptimalOutputParser(OutputParser):
   def __init__(self, dictionary):
-    super(OptimalOutputParser, self).__init__(dictionary)
+    super().__init__(dictionary)
     self.beginning, self.f_beginning, self.offset = 1, 1, 0
     self.tmp_out = ""
 
