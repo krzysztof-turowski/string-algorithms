@@ -1,0 +1,27 @@
+language: python
+dist: trusty
+
+python:
+  - 3.6
+  - 3.7
+  - 3.8
+  - 3.9
+  - 3.10
+
+branches:
+  only:
+    - master
+
+before_script:
+  - python3 --version
+  - export LARGE=1
+
+script:
+  - make check
+  - make test
+
+after_success:
+  - echo "success"
+ 
+after_failure:
+  - echo "failure"
