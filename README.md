@@ -7,9 +7,10 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 1. Morris-Pratt and Knuth-Morris-Pratt algorithms
 2. Boyer-Moore algorithm with many variants
 3. Boyer-Moore-Apostolico-Giancarlo algorithm
-4. Constant space: two-way (Crochemore-Perrin) algorithm
+4. Constant space two-way (Crochemore-Perrin) algorithm
 5. _fast-on-average_ (Crochemore et al.) algorithm
-6. Karp-Rabin hashing-based algorithm
+6. Turbo Boyer-Moore (Crochemore et al.) algorithm
+6. Hashing-based (Karp-Rabin) algorithm
 
 ### String indexing
 
@@ -31,7 +32,7 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 2. Manber-Myers $O(m + \log{n})$ algorithm
 
 #### Longest common prefix
-1. Kasai algorithm
+1. Kasai et al. algorithm
 
 ### Multiple exact string matching
 1. Aho-Corasick algorithm
@@ -47,7 +48,7 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 #### Longest common subsequence
 1. Needleman-Wunsch algorithm
 2. Hirschberg algorithm
-3. Four Russians algorithm
+3. Four Russians (Masek-Paterson) algorithm
 4. Myers algorithm
 5. Kumar-Rangan algorithm
 
