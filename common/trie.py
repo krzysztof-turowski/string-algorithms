@@ -41,10 +41,11 @@ class TrieNode:
     return object.__hash__(self)
 
   def __eq__(self, other):
-    if (self.label != other.label
-        or self.children.keys() != other.children.keys()):
+    if self.label != other.label:
       return False
-    for key in self.children:
-      if self.children[key] != other.children[key]:
+    if self.children.keys() != other.children.keys():
+      return False
+    for key, child, in self.children.items():
+      if child != other.children[key]:
         return False
     return True

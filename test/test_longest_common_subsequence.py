@@ -30,7 +30,7 @@ class TestLongestCommonSubsequence(unittest.TestCase):
     self.assertTrue(self.is_subsequence(t_2, result))
     self.assertEqual(
         len(result), (n_1 + n_2 - d) // 2,
-        'Algorithm {}, texts {}, {}'.format(algorithm.__name__, t_1, t_2))
+        f'Algorithm {algorithm.__name__}, texts {t_1}, {t_2}')
 
   @parameterized.parameterized.expand(LCS_ALGORITHMS + FOUR_RUSSIANS)
   def test_examples(self, _, algorithm):

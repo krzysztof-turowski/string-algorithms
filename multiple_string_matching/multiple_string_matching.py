@@ -93,7 +93,7 @@ class CommentzWalter(AhoCorasick):
 
   def compute_shift_values(self):
     Q, L = collections.deque(), []
-    Q.extend(self.root.children[key] for key in self.root.children)
+    Q.extend(self.root.children.values())
     while Q:
       node = Q.popleft()
       L.append(node)

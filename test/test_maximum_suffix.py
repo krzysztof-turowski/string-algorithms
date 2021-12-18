@@ -26,7 +26,7 @@ class TestMaximumSuffix(unittest.TestCase):
     self.assertEqual(
         algorithm(t, n),
         reference,
-        'Algorithm: {}'.format(algorithm.__name__))
+        f'Algorithm: {algorithm.__name__}, text {t}')
 
   @parameterized.parameterized.expand(MAXIMUM_SUFFIX_ALGORITHMS)
   def test_maximum_suffix(self, _, algorithm):

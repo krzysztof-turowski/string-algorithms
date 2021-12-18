@@ -5,3 +5,5 @@ check:
 
 test:
 	python3 -B -m unittest discover test -v
+
+.PHONY: test check
