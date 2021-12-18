@@ -36,19 +36,19 @@ class TestApproximateStringMatching(unittest.TestCase):
     self.assertEqual(
         next(algorithm(t, w, n, m, k)),
         reference,
-        'Algorithm {}, text {}, pattern {}'.format(algorithm.__name__, t, w))
+        f'Algorithm {algorithm.__name__}, text {t}, pattern {w}')
 
   def check_get_all_matches(
       self, t, w, n, m, k, reference, algorithm):
     self.assertEqual(
         list(algorithm(t, w, n, m, k)),
         reference,
-        'Algorithm {}, text {}, pattern {}'.format(algorithm.__name__, t, w))
+        f'Algorithm {algorithm.__name__}, text {t}, pattern {w}')
 
   def check_no_match(self, t, w, n, m, k, algorithm):
     self.assertFalse(
         list(algorithm(t, w, n, m, k)),
-        'Algorithm {}, text {}, pattern {}'.format(algorithm.__name__, t, w))
+        f'Algorithm {algorithm.__name__}, text {t}, pattern {w}')
 
 class TestApproximateStringMatchingWithHammingDistance(
     TestApproximateStringMatching):

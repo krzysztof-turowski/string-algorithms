@@ -39,7 +39,7 @@ class TestShortestCommonSuperstring(unittest.TestCase):
     result = algorithm(W)
     self.assertTrue(
         all(word[1:] in result for word in W),
-        'Algorithm {}, words {}'.format(algorithm.__name__, W))
+        f'Algorithm {algorithm.__name__}, words {W}')
     if reference is not None:
       self.assertTrue(len(result) - 1 <= bound(len(reference) - 1))
 

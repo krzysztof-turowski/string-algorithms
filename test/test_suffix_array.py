@@ -29,7 +29,7 @@ class TestSuffixArrays(unittest.TestCase):
     self.assertEqual(
         algorithm(t, n),
         reference,
-        'Algorithm {}, text {}'.format(algorithm.__name__, t))
+        f'Algorithm {algorithm.__name__}, text {t}')
 
   @parameterized.parameterized.expand(SUFFIX_ARRAY_ALGORITHMS)
   def test_examples(self, _, algorithm):

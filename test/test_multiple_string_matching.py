@@ -34,12 +34,12 @@ class TestMultipleStringMatching(unittest.TestCase):
     self.assertSetEqual(
         set(algorithm(t, n, build(W))),
         set(reference),
-        'Algorithm {}, text {}, patterns {}'.format(algorithm.__name__, t, W))
+        f'Algorithm {algorithm.__name__}, text {t}, patterns {W}')
 
   def check_no_match(self, t, n, W, build, algorithm):
     self.assertFalse(
         list(algorithm(t, n, build(W))),
-        'Algorithm {}, text {}, patterns {}'.format(algorithm.__name__, t, W))
+        f'Algorithm {algorithm.__name__}, text {t}, patterns {W}')
 
   @parameterized.parameterized.expand(MULTIPLE_STRING_MATCHING_ALGORITHMS)
   def test_examples_all_matches(self, _, build, algorithm):
