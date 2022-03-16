@@ -4,7 +4,8 @@ def prefix_suffix(w, m):
   for i in range(1, m + 1):
     # niezmiennik: t = B[i - 1]
     while t >= 0 and w[t + 1] != w[i]:
-      t = B[t] # prefikso-sufiks to relacja przechodnia
+      # prefikso-sufiks to relacja przechodnia
+      t = B[t]
     t = t + 1
     B[i] = t
   return B
@@ -23,7 +24,8 @@ def strong_prefix_suffix(w, m):
     if i == m or w[t + 1] != w[i + 1]:
       sB[i] = t
     else:
-      sB[i] = sB[t] # silny prefikso-sufiks slabego prefikso-sufiksu jest silny
+      # silny prefikso-sufiks slabego prefikso-sufiksu jest silny
+      sB[i] = sB[t]
   return sB
 
 def prefix_suffix_from_strong_prefix_suffix(sB):
@@ -41,7 +43,6 @@ def prefix_prefix_brute_force(w, m):
       if w[i:i+j] == w[1:1+j]:
         PREF[i] = j
         break
-  PREF[1] = m
   return PREF
 
 def prefix_prefix(w, m):
@@ -64,7 +65,6 @@ def prefix_prefix(w, m):
     else:
       PREF[i] = (s_max - i + 1) + naive_scan(s_max + 1, s_max - i + 2)
       s = i
-  PREF[1] = m
   return PREF
 
 

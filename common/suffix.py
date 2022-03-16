@@ -20,9 +20,9 @@ def weak_boyer_moore_shift(w, m):
         l_prim[j] = k
         j += 1
   L = [0] * (m + 1)
-  for k in range(1, m + 1):
+  for k in range(1, m):
     L[m - S[k]] = k
-  for k in range(3, m + 1):
+  for k in range(2, m + 1):
     L[k] = max(L[k - 1], L[k])
   wBM = [m - (L[k] if L[k] > 0 else l_prim[k]) for k in range(m + 1)]
   return wBM
@@ -52,14 +52,13 @@ def boyer_moore_shift(w, m):
         l_prim[j] = k
         j += 1
   L_prim = [0] * (m + 1)
-  for k in range(1, m + 1):
+  for k in range(1, m):
     L_prim[m - S[k]] = k
   BM = [m - (L_prim[k] if L_prim[k] > 0 else l_prim[k]) for k in range(m + 1)]
-  BM[0] = prefix.period(w, m)
   return BM
 
 def last_occurrence(w):
   LAST = {}
-  for i, v in enumerate(w[1:]):
-    LAST[v] = i + 1
+  for i, v in enumerate(w[1:], start = 1):
+    LAST[v] = i
   return LAST
