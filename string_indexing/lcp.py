@@ -1,3 +1,4 @@
+from math import ceil
 from common import prefix
 from string_indexing import suffix_array
 
@@ -102,3 +103,72 @@ def contains(SA, LCP_LR, text, word, n, m):
   high = _find_bound_with_lcplr(
       SA, LCP_LR, text, word, n, m, lower_bound = False)
   yield from sorted([SA[i] for i in range(low, high)])
+
+def build_plcp_a(SA, text, n, q = 1):
+  """q is a compression factor
+  Computes PLCP of size (n/q) using PHI array"""
+  text += '$'
+  PHI = _compute_phi(SA, n, q)
+  return _compute_plcp_from_phi(PHI, text, q)
+
+def build_plcp_b(SA, text, n, q = 1):
+  """q is a compression factor
+  Computes PLCP of size (n/q) using Irreducible LCP values"""
+  text += '$'
+  return _compute_plcp_from_irreducible_lcp_values(SA, text, n, q)
+
+def _compute_phi(SA, n, q):
+  """Computes array PHI[SA[i]] = SA[i - 1]"""
+  PHI = [-1] + [0 for _ in range(ceil(n / q))]
+  for i in range(1, len(SA)):
+    if SA[i] % q == 0:
+      PHI[SA[i] // q] = SA[i - 1]
+  return PHI
+
+def _compute_plcp_from_phi(PHI, text, q):
+  """Computes array PLCP[i] = lcp(i, PHI[i])"""
+  PLCP = [0 for _ in range(len(PHI))]
+  l = 0
+  for i in range(1, len(PLCP)):
+    j = PHI[i]
+    while text[i * q + l] == text[j + l]:
+      l += 1
+    PLCP[i] = l
+    l = max(l - q, 0)
+  return PLCP
+
+def _compute_plcp_from_irreducible_lcp_values(SA, text, n, q):
+  """Computes irreducible lcp values:
+  PLCP[i] such that text[i - 1] != text[PHI[i] - 1],
+  then fills in remaining values"""
+  PLCP = [0] + [0 for _ in range(ceil(n / q))]
+  for i in range(1, n):
+    j = SA[i]
+    k = SA[i + 1]
+    if text[j - 1] != text[k - 1]:
+      l = prefix.get_longest_common_prefix(text[j:], text[k:])
+      k_ = ceil(k / q)
+      if PLCP[k_] < l - k_ * q + k:
+        PLCP[k_] = l - k_ * q + k
+  for i in range(1, len(PLCP) - 1):
+    if PLCP[i + 1] < PLCP[i] - q:
+      PLCP[i + 1] = PLCP[i] - q
+  return PLCP
+
+def convert_plcp_to_lcp(PLCP, SA, text, q = 1):
+  """Computes array LCP[i] = PLCP[SA[i]]"""
+  text += '$'
+  def _plcp(i, j):
+    a = j // q
+    b = j % q
+    if b == 0:
+      return PLCP[a]
+    l = max(PLCP[a] - b, 0)
+    if a + 1 < len(PLCP):
+      r = PLCP[a + 1] + q - b
+    else:
+      r = q # or (n - i)
+    s1 = SA[i]
+    s2 = SA[i - 1]
+    return next((i for i in range(l, r + 1) if text[s1 + i] != text[s2 + i]), r)
+  return [-1] + [_plcp(i, SA[i]) for i in range(1, len(SA))]
