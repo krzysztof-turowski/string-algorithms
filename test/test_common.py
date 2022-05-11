@@ -1,8 +1,7 @@
-import itertools
 import os
 import unittest
 
-from common import prefix, suffix
+from common import prefix
 
 class TestCommon(unittest.TestCase):
   run_large = unittest.skipUnless(
