@@ -1,4 +1,4 @@
-from math import ceil
+import math
 from common import prefix
 from string_indexing import suffix_array
 
@@ -119,20 +119,18 @@ def build_plcp_b(SA, text, n, q = 1):
 
 def _compute_phi(SA, n, q):
   """Computes array PHI[SA[i]] = SA[i - 1]"""
-  PHI = [-1] + [0 for _ in range(ceil(n / q))]
-  for i in range(1, len(SA)):
-    if SA[i] % q == 0:
-      PHI[SA[i] // q] = SA[i - 1]
+  PHI = [-1] + [0] * math.ceil(n / q)
+  for SA_prev, SA_next in zip(SA, SA[1:]):
+    if SA_next % q == 0:
+      PHI[SA_next // q] = SA_prev
   return PHI
 
 def _compute_plcp_from_phi(PHI, text, q):
   """Computes array PLCP[i] = lcp(i, PHI[i])"""
-  PLCP = [0 for _ in range(len(PHI))]
+  PLCP = [0] * len(PHI)
   l = 0
-  for i in range(1, len(PLCP)):
-    j = PHI[i]
-    while text[i * q + l] == text[j + l]:
-      l += 1
+  for i, phi in enumerate(PHI[1:], start = 1):
+    l += prefix.get_longest_common_prefix(text[i * q + l:], text[phi + l:])
     PLCP[i] = l
     l = max(l - q, 0)
   return PLCP
@@ -141,34 +139,24 @@ def _compute_plcp_from_irreducible_lcp_values(SA, text, n, q):
   """Computes irreducible lcp values:
   PLCP[i] such that text[i - 1] != text[PHI[i] - 1],
   then fills in remaining values"""
-  PLCP = [0] + [0 for _ in range(ceil(n / q))]
-  for i in range(1, n):
-    j = SA[i]
-    k = SA[i + 1]
-    if text[j - 1] != text[k - 1]:
-      l = prefix.get_longest_common_prefix(text[j:], text[k:])
-      k_ = ceil(k / q)
-      if PLCP[k_] < l - k_ * q + k:
-        PLCP[k_] = l - k_ * q + k
+  PLCP = [0] * (1 + math.ceil(n / q))
+  for SA_prev, SA_next in zip(SA[1:], SA[2:]):
+    if text[SA_prev - 1] != text[SA_next - 1]:
+      l = prefix.get_longest_common_prefix(text[SA_prev:], text[SA_next:])
+      k = math.ceil(SA_next / q)
+      PLCP[k] = max(PLCP[k], l - k * q + SA_next)
   for i in range(1, len(PLCP) - 1):
-    if PLCP[i + 1] < PLCP[i] - q:
-      PLCP[i + 1] = PLCP[i] - q
+    PLCP[i + 1] = max(PLCP[i + 1], PLCP[i] - q)
   return PLCP
 
 def convert_plcp_to_lcp(PLCP, SA, text, q = 1):
   """Computes array LCP[i] = PLCP[SA[i]]"""
   text += '$'
   def _plcp(i, j):
-    a = j // q
-    b = j % q
-    if b == 0:
-      return PLCP[a]
-    l = max(PLCP[a] - b, 0)
-    if a + 1 < len(PLCP):
-      r = PLCP[a + 1] + q - b
-    else:
-      r = q # or (n - i)
-    s1 = SA[i]
-    s2 = SA[i - 1]
-    return next((i for i in range(l, r + 1) if text[s1 + i] != text[s2 + i]), r)
-  return [-1] + [_plcp(i, SA[i]) for i in range(1, len(SA))]
+    d, rem = j // q, j % q
+    if rem == 0:
+      return PLCP[d]
+    l = max(PLCP[d] - rem, 0)
+    r = PLCP[d + 1] + q - rem if d + 1 < len(PLCP) else q
+    return next((k for k in range(l, r) if text[SA[i] + k] != text[SA[i - 1] + k]), r)
+  return [-1] + [_plcp(i, SA[i]) for i, sa in enumerate(SA[1:], start = 1)]

@@ -28,6 +28,7 @@
 \section{Notacja}
 
 \begin{itemize}
+\item $a * b$ znaczykatenację słów $a$ i $b$.
 \item Tekst wejściowy oznaczam $t[1..n]$
 \item Sufiks $i$ znaczy $t[i..n]$
 \item Tablica sufiksowa dla $t$ to $\SA[1..n]$
@@ -59,13 +60,20 @@ Niech $j, j'$ takie że $\SA[j] = i$ oraz $\SA[j'] = i - 1$. Mamy z definicji
 \PLCP[i] = \LCP[j] &= lcp(\SA[j - 1], i) \\
 \PLCP[i - 1] = \LCP[j'] &= lcp(\SA[j' - 1], i - 1)
 \end{align*}
-Oczywiście $lcp(\SA[j' - 1]+1, i) = lcp(\SA[j' - 1], i - 1) - 1$. Skoro nie ma sufiksów pomiędzy $\SA[j - 1]$ a $\SA[j]=i$ w porządku leksykograficznym, czyli
+Rozważmy następujące sufiksy
+\begin{align*}
+A = t[\SA[j - 1] - 1..n] &= t[\SA[j - 1] - 1] * t[\SA[j - 1]..n] \\
+B = t[\SA[j' - 1]..n] &= t[\SA[j' - 1]] * t[\SA[j' - 1] + 1..n] \\
+C = t[i - 1..n] &= t[i - 1] * t[i..n] \\
+B &\le C \text{ (poprzedni leksykograficznie)}
+\end{align*}
+Oczywiście $lcp(\SA[j' - 1]+1, i) \ge lcp(\SA[j' - 1], i - 1) - 1$, przy czym równość jest wtw gdy $t[\SA[j' - 1]] = t[i - 1]$. Skoro nie ma sufiksów pomiędzy $\SA[j - 1]$ a $\SA[j]=i$ w porządku leksykograficznym, to
+\begin{gather*}
+t[\SA[j' - 1] + 1..n] \le t[\SA[j - 1]..n] < t[i..n]
+\end{gather*}
+Zatem
 \[
-text[\SA[j' - 1] + 1..n] \le text[\SA[j - 1]..n] \le text[i..n]
-\]
-to
-\[
-lcp(\SA[j - 1], i) \ge lcp(\SA[j' - 1] + 1, i) = lcp(\SA[j' - 1], i - 1) - 1
+lcp(\SA[j - 1], i) \ge lcp(\SA[j' - 1] + 1, i) \ge lcp(\SA[j' - 1], i - 1) - 1
 \]
 \end{proof}
 \end{lemma}
@@ -94,7 +102,7 @@ Ten lemat prawie wprost prowadzi do wydajnego Algorytmu A obliczenia PLCP: mają
 
 Łatwo widać, że złożoność czasowa Algortymu A jest $O(n)$, bo zmniejszamy $l$ o 1 co najwyżej $n$ razy, a maksymalna wartość $l$ jest co najwyżej $n$. Z punktu widzenia pamięci, potrzebuje dodatkowej tablicy $\Phi$ rozmiaru $n$.
 \par
-W dość naturalny sposób można ulepszyć kontrolę nad space-time trade-off modyfikując algorytm tak, żeby produkował tylko co $q$-ty element $\PLCP$, a obliczenie dowolnego elementu $\PLCP$ na bazie co $q$-tego było w czasie amortyzowanym $O(q)$ (dowód omijam).
+W dość naturalny sposób można ulepszyć kontrolę nad space-time trade-off modyfikując algorytm tak, żeby produkował tylko co $q$-ty element $\PLCP$ (wystarczy obliczyć tylko co $q$-ty element $\Phi$; naiwne liczenie $\PLCP[i]$ zaczynamy od $(\PLCP[i - 1] - q)$ - wynika z Lematu 1), a obliczenie dowolnego elementu $\PLCP$ na bazie co $q$-tego było w czasie amortyzowanym $O(q)$ (dla dowolnego $i$ szukamy najbliższych takich $k$, $k+q$ na których wartość $\PLCP$ jest znana; wtedy obliczamy naiwnie $\PLCP[i]$ w interwale zadanym przez $\PLCP[k]$ i $\PLCP[k + q]$, którego długość jest średnio $O(q)$).
 
 \begin{definition}
 Nazywamy wartość $\PLCP[i] = lcp(i, \Phi[i])$ redukowalną, gdy $t[i - 1] = t[\Phi[i] - 1]$.
@@ -103,7 +111,23 @@ Nazywamy wartość $\PLCP[i] = lcp(i, \Phi[i])$ redukowalną, gdy $t[i - 1] = t[
 \begin{lemma}
 Jeśli $PLCP[i]$ jest redukowalna, to $PLCP[i] = PLCP[i - 1] - 1$.
 \begin{proof}
-Wystarczy popatrzyć na dowodu Lematu 1 (zwłaszcza końcówkę).
+Pokażemy to, kontynuując dowód Lematu 1 z dodatkowym założeniem
+\[
+t[i - 1] = t[\SA[j - 1] - 1]
+\]
+W takim razie mamy $A < C$, ponieważ $\SA[j - 1]$ i $\SA[j] = i$ to są kolejne sufiksy. Skoro $B$ i $C$ to też kolejne sufiksy
+\[
+A \le B < C
+\]
+Skoro pierwsze litery $A$ i $C$ są równe, pierwsza litera $B$ musi być taka sama. Oznaczmy $A', B', C'$ odpowiednio $A, B, C$ bez pierwszych liter. Mamy
+\[
+A' \le B' < C'
+\]
+Ale $A'$ i $C'$ to kolejne sufiksy, więc $A' = B'$, oraz $\SA[j - 1] = \SA[j' - 1] + 1$. W końcu
+\[
+lcp(\SA[j - 1], i) = lcp(\SA[j' - 1] + 1, i) = lcp(\SA[j' - 1], i - 1) - 1
+\]
+ponieważ $t[i - 1] = t[\SA[j - 1] - 1] = t[\SA[j' - 1]]$.
 \end{proof}
 \end{lemma}
 
@@ -140,16 +164,16 @@ t[i + l] &\neq t[j + l]
 \end{align*}
 Dla każdego $0 \le k \le l-1$, będziemy przydzielać koszt 1 do pary $t[i + k] = t[j + k]$ w następujący sposób.
 \par
-Rozpatrzmy drzewo sufiksowe $\rev(t)$; niech $v_{i+k}$ i $v_{j+k}$ będą liśćmi odpowiadającymi prefiksom $t[1..i+k]$ i $t[1..j+k]$. Najniższy wspólny przodek $u$ węzłów $v_{i+k}$ i $v_{j+k}$ odpowiada $\rev(t[i..i+k])$ - te prefiksy zgadzają się na dokładnie $k$ znaków od końca. Jeśli $v_{i+k}$ jest w mniejszym poddrzewie $u$, to koszt pary $t[i + k] = t[j + k]$ przydzielamy do węzła $v_{i+k}$, wpp do $v_{j+k}$. Gdy $v_{i+k}$ został wybrany, nazwiemy $u$ \textit{drogim przodkiem} $v_{i+k}$, a $v_{j+k}$ \textit{drogim bratem} $v_{i+k}$, wpp analogicznie.
+Rozpatrzmy drzewo sufiksowe słowa $\overline{t}$; niech $v_{i+k}$ i $v_{j+k}$ będą liśćmi odpowiadającymi prefiksom $t[1..i+k]$ i $t[1..j+k]$. Najniższy wspólny przodek $u$ węzłów $v_{i+k}$ i $v_{j+k}$ odpowiada $t[i..i+k]$ - te prefiksy zgadzają się na dokładnie $(k+1)$ znaków od końca. Jeśli $v_{i+k}$ jest w mniejszym poddrzewie $u$, to koszt pary $t[i + k] = t[j + k]$ przydzielamy do węzła $v_{i+k}$, wpp do $v_{j+k}$. Gdy $v_{i+k}$ został wybrany, nazwiemy $u$ \textit{drogim przodkiem} węzła $v_{i+k}$, a $v_{j+k}$ \textit{drogim bratem} węzła $v_{i+k}$ w odniesieniu do $u$, wpp analogicznie.
 \par
-Teraz wystarczy pokazać, że każdy liść ma koszt co najwyżej $2\log n$. W szczególności, pokażmy, że (a) każdy liść ma co najwyżej $\log n$ drogich przodków, i (b) dla każdego drogiego przodka istnieje co najwyżej 2 drogich braci.
+Teraz wystarczy pokazać, że każdy liść ma koszt co najwyżej $2\log n$. W szczególności, pokażmy, że (a) każdy liść ma co najwyżej $\log n$ drogich przodków, i (b) w odniesieniu do każdego z tych drogich przodków dany liść ma co najwyżej 2 drogich braci.
 \begin{itemize}
-\item Rozważmy ścieżkę od $v$ do korzenia. Z konstrukcji, przy każdym drogim przodku na ścieżce poddrzewo rośnie przynajmniej w 2 razy. Zatem może być nie więcej niż $\log n$ takich przodków.
-\item Niech $u$ to drogi przodek i $w$ to odpowiedni drogi brat. Mamy, że $v,u,w$ odpowiadają
+\item Rozważmy ścieżkę od $v$ do korzenia. Z konstrukcji, przy każdym drogim przodku węzła $v$ na ścieżce, poddrzewo rośnie przynajmniej w 2 razy. Zatem może być nie więcej niż $\log n$ takich przodków.
+\item Niech $u$ to drogi przodek węzła $v$ i $w$ to drogi brat węzła $v$ w odniesieniu do $u$. Mamy, że $v,u,w$ odpowiadają
 \[
-t[1..i+k], t[i..i+k],t[1..j+k] \text{ dla pewnych } i, j \text{ tż } i = \Phi[j] \text{ lub } j = \Phi[i]
+t[1..i+k], t[i..i+k],t[1..j+k] \text{ dla pewnych $i, j$ tż  $i = \Phi[j]$ lub $j = \Phi[i]$}
 \]
-Bez ograniczenia ogólności, niech $i = \Phi[j]$. Załóżmy, że istnieje inny drogi brat $w' \neq w$ pochodzący od drogiego przodka $u$. Teraz $w'$ musi odpowiadać $t[1..j'+k]$ dla $j' = \Phi[i]$ (ponieważ $i = \Phi[j] \neq \Phi[j']$). Od razu widać, że trzeciego takiego brata nie może istnieć.
+Bez ograniczenia ogólności, niech $i = \Phi[j]$. Załóżmy, że istnieje inny drogi brat $w' \neq w$ węzła $v$ w odniesieniu do $u$. Teraz $w'$ musi odpowiadać $t[1..j'+k]$ dla $j' = \Phi[i]$ (ponieważ $i = \Phi[j] \neq \Phi[j']$). Od razu widać, że trzeciego takiego brata nie może istnieć.
 \end{itemize}
 Suma kosztów wszystkich liści w drzewie (równa sumie wszystkich nieredukowalnych wartości lcp) jest ograniczona przez $2n\log n$.
 \end{proof}
@@ -159,6 +183,6 @@ Z tego lematu wnioskujemy, że złożoność czasowa Algorytmu B jest $O(n\log n
 \par
 Podobnie jak wcześniej, ten algorytm da się w naturalny sposób zmodyfikować tak, żeby produkował co $q$-ty element $\PLCP$, a obliczenie dowolnego na bazie co $q$-tego zajmowało średnio $O(q)$.
 \par
-Warto dodać, że takie obliczenie $\PLCP$ jest znacznie szybsze w praktyce, niż standardowe algorytmy obliczenia $\LCP$, w szczególności dlatego, że bardzo skutecznie wykorzystuje właśność \textit{locality of reference}.
+Warto dodać, że przedstawione algorytmy obliczenia $\PLCP$ są znacznie szybsze w praktyce, niż standardowe algorytmy obliczenia $\LCP$. Zaletą Algorytmu A jest bardzo skuteczne wykorzystanie właśności \textit{locality of reference}, drugiego - wymagania pamięciowe (jeśli przedstawić $\PLCP$ jako bit-tablicę, potencjalnie można zmieścić się 3n bitów pamięci).
 
 \end{document}
