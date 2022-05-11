@@ -30,6 +30,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Karp-Rabin', other.karp_rabin ],
     [ 'fast-on-average', other.fast_on_average ],
     [ 'two-way constant space', other.two_way ],
+    [ 'fft', other.fft ],
     [
         'suffix tree',
         lambda t, w, n, m: suffix_tree.contains(
