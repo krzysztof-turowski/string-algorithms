@@ -10,6 +10,7 @@ class TestPrefixSuffixArrays(unittest.TestCase):
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_prefix_suffix(self, t, n, reference):
+    self.assertEqual(prefix.prefix_suffix_brute_force(t, n), reference)
     self.assertEqual(prefix.prefix_suffix(t, n), reference)
     self.assertEqual(prefix.prefix_suffix_from_strong_prefix_suffix(
         prefix.strong_prefix_suffix(t, n)), reference)
@@ -50,8 +51,42 @@ class TestPrefixSuffixArrays(unittest.TestCase):
     self.check_boyer_moore_shift('#abaaba', 6, [3, 3, 3, 3, 5, 2, 1])
 
   @run_large
+  def test_random_prefix_suffix(self):
+    T, n, A = 200, 200, ['a', 'b']
+    for _ in range(T):
+      t = rand.random_word(n, A)
+      reference_result = prefix.prefix_suffix_brute_force(t, n)
+      self.check_prefix_suffix(t, n, reference_result)
+
+  @run_large
+  def test_all_prefix_suffix(self):
+    N, A = 15, ['a', 'b']
+    for n in range(2, N + 1):
+      for t in itertools.product(A, repeat = n):
+        t = '#' + ''.join(t)
+        reference_result = prefix.prefix_suffix_brute_force(t, n)
+        self.check_prefix_suffix(t, n, reference_result)
+
+  @run_large
+  def test_random_prefix_prefix(self):
+    T, n, A = 200, 200, ['a', 'b']
+    for _ in range(T):
+      t = rand.random_word(n, A)
+      reference_result = prefix.prefix_prefix_brute_force(t, n)
+      self.check_prefix_prefix(t, n, reference_result)
+
+  @run_large
+  def test_all_prefix_prefix(self):
+    N, A = 15, ['a', 'b']
+    for n in range(2, N + 1):
+      for t in itertools.product(A, repeat = n):
+        t = '#' + ''.join(t)
+        reference_result = prefix.prefix_prefix_brute_force(t, n)
+        self.check_prefix_prefix(t, n, reference_result)
+
+  @run_large
   def test_random_weak_boyer_moore_shift(self):
-    T, n, A = 100, 100, ['a', 'b']
+    T, n, A = 200, 200, ['a', 'b']
     for _ in range(T):
       t = rand.random_word(n, A)
       reference_result = suffix.weak_boyer_moore_shift_brute_force(t, n)
@@ -59,7 +94,7 @@ class TestPrefixSuffixArrays(unittest.TestCase):
 
   @run_large
   def test_all_weak_boyer_moore_shift(self):
-    N, A = 12, ['a', 'b']
+    N, A = 14, ['a', 'b']
     for n in range(2, N + 1):
       for t in itertools.product(A, repeat = n):
         t = '#' + ''.join(t)
@@ -68,7 +103,7 @@ class TestPrefixSuffixArrays(unittest.TestCase):
 
   @run_large
   def test_random_boyer_moore_shift(self):
-    T, n, A = 100, 100, ['a', 'b']
+    T, n, A = 200, 200, ['a', 'b']
     for _ in range(T):
       t = rand.random_word(n, A)
       reference_result = suffix.boyer_moore_shift_brute_force(t, n)
@@ -76,7 +111,7 @@ class TestPrefixSuffixArrays(unittest.TestCase):
 
   @run_large
   def test_all_boyer_moore_shift(self):
-    N, A = 12, ['a', 'b']
+    N, A = 14, ['a', 'b']
     for n in range(2, N + 1):
       for t in itertools.product(A, repeat = n):
         t = '#' + ''.join(t)
