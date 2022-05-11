@@ -1,5 +1,6 @@
 import math
 import random
+import scipy.signal
 
 from exact_string_matching import forward
 from lyndon import critical_factorization
@@ -47,3 +48,20 @@ def two_way(text, word, n, m):
     if j == memory:
       yield i
     i, memory = i + p, m - p if use_memory else 0
+
+def fft(text, word, n, m):
+  if n < m:
+    return
+  A = set(list(text[1:] + word[1:]))
+  letter_mapping = {c: i for i, c in enumerate(A, start = 1)}
+  text = [letter_mapping.get(c) for c in text[1:]]
+  word = [letter_mapping.get(c) for c in word[:0:-1]]
+
+  convolutions = scipy.signal.convolve(
+      text, word, mode = 'valid', method = 'fft')
+  p, t = sum(c * c for c in word), sum(c * c for c in text[:m])
+  text += [0]
+  for index, convolution in enumerate(convolutions):
+    if t + p - 2 * convolution == 0:
+      yield index + 1
+    t = t + text[index + m] ** 2 - text[index] ** 2
