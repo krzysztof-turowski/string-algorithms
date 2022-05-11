@@ -97,7 +97,7 @@ def _find_bound_with_lcplr(SA, LCP_LR, text, word, n, m, lower_bound):
 
 def contains(SA, LCP_LR, text, word, n, m):
   """Finds occurences of word in text in O(m + log n) (Manber & Myers, 1993)"""
-  text += "$"
+  text += '$'
   low = _find_bound_with_lcplr(
       SA, LCP_LR, text, word, n, m, lower_bound = True)
   high = _find_bound_with_lcplr(
@@ -158,5 +158,6 @@ def convert_plcp_to_lcp(PLCP, SA, text, q = 1):
       return PLCP[d]
     l = max(PLCP[d] - rem, 0)
     r = PLCP[d + 1] + q - rem if d + 1 < len(PLCP) else q
-    return next((k for k in range(l, r) if text[SA[i] + k] != text[SA[i - 1] + k]), r)
+    return next((k for k in range(l, r)
+                 if text[SA[i] + k] != text[SA[i - 1] + k]), r)
   return [-1] + [_plcp(i, SA[i]) for i, sa in enumerate(SA[1:], start = 1)]
