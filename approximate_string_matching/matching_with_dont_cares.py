@@ -37,7 +37,8 @@ def clifford_clifford(text, word, n, m):
   if n < m:
     return
   A = set(list(text[1:] + word[1:])) - set('?')
-  letter_mapping = {c: i for i, c in enumerate(A, start = 1)} | {'?': 0}
+  letter_mapping = {c: i for i, c in enumerate(A, start = 1)}
+  letter_mapping.update({'?': 0})
   text = [letter_mapping.get(c) for c in text[1:]]
   word = [letter_mapping.get(c) for c in word[:0:-1]]
 
