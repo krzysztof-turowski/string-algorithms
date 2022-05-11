@@ -5,15 +5,13 @@ import scipy.signal
 def basic_fft(text, word, n, m):
   if n < m:
     return
-  alphabet = set(list(text[1:] + word[1:])) - set('?')
+  A = set(list(text[1:] + word[1:])) - set('?')
   mismatches = [0] * (n - m + 1)
-  for first_letter in alphabet:
-    masked_text = [int(current_char == first_letter) for current_char in
-                   text[1:]]
-    for second_letter in alphabet:
+  for first_letter in A:
+    masked_text = [int(c == first_letter) for c in text[1:]]
+    for second_letter in A:
       if first_letter != second_letter:
-        masked_word = [int(current_char == second_letter)
-                       for current_char in reversed(word[1:])]
+        masked_word = [int(c == second_letter) for c in reversed(word[1:])]
         mismatches_ab = scipy.signal.convolve(
             masked_text, masked_word, mode = 'valid', method = 'fft')
         mismatches = [x + y for x, y in zip(mismatches, mismatches_ab)]
@@ -38,24 +36,18 @@ def clifford_clifford(text, word, n, m):
 
   if n < m:
     return
-  alphabet = set(list(text[1:] + word[1:])) - set('?')
-  letter_mapping = {'?': 0}
-  letter_mapping.update(
-      {letter: index for index, letter in enumerate(alphabet, start = 1)})
+  A = set(list(text[1:] + word[1:])) - set('?')
+  letter_mapping = {c: i for i, c in enumerate(A, start = 1)}
+  letter_mapping.update({'?': 0})
   text = [letter_mapping.get(c) for c in text[1:]]
   word = [letter_mapping.get(c) for c in word[:0:-1]]
-  masked_text = [int(v != 0) for v in text]
-  masked_word = [int(v != 0) for v in word]
 
   first_component = scipy.signal.convolve(
-      _times(masked_word, _times(word, word)), masked_text,
-      mode = 'valid', method = 'fft')
+      _times(word, _times(word, word)), text, mode = 'valid', method = 'fft')
   second_component = scipy.signal.convolve(
-      _times(masked_word, word), _times(masked_text, text),
-      mode = 'valid', method = 'fft')
+      _times(word, word), _times(text, text), mode = 'valid', method = 'fft')
   third_component = scipy.signal.convolve(
-      masked_word, _times(masked_text, _times(text, text)),
-      mode = 'valid', method = 'fft')
+      word, _times(text, _times(text, text)), mode = 'valid', method = 'fft')
   result = [first - 2 * second + third for first, second, third in
             zip(first_component, second_component, third_component)]
   yield from (index + 1 for index, value in enumerate(result) if value == 0)
