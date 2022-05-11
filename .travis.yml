@@ -19,9 +19,10 @@ branches:
 before_script:
   - python3 --version
   - pip --version
-  - sudo pip install parameterized scipy numpy --upgrade
-  - sudo pip install pylint
-  - export PYTHONPATH=`sudo pip show parameterized | grep 'Location:' | cut -d ' ' -f 2`
+  - sudo python3 -m pip install --user pipenv
+  - sudo python3 -m pip install parameterized scipy numpy --upgrade
+  - sudo python3 -m pip install pylint
+  - export PYTHONPATH=`sudo python3 -m pip show parameterized | grep 'Location:' | cut -d ' ' -f 2`
   - export LARGE=1
 
 script:
