@@ -25,6 +25,30 @@ LCP_ARRAY_ALGORITHMS = [
         'from suffix array',
         lambda t, n: lcp.from_suffix_array(
             suffix_array.prefix_doubling(t, n), t, n),
+    ],
+    [
+        'from PLCP#a',
+        lambda t, n: lcp.convert_plcp_to_lcp(
+            lcp.build_plcp_a(suffix_array.prefix_doubling(t, n), t, n),
+            suffix_array.prefix_doubling(t, n), t),
+    ],
+    [
+        'from PLCP#b',
+        lambda t, n: lcp.convert_plcp_to_lcp(
+            lcp.build_plcp_b(suffix_array.prefix_doubling(t, n), t, n),
+            suffix_array.prefix_doubling(t, n), t),
+    ],
+    [
+        'from sparse PLCP#a',
+        lambda t, n: lcp.convert_plcp_to_lcp(
+            lcp.build_plcp_a(suffix_array.prefix_doubling(t, n), t, n, q = 2),
+            suffix_array.prefix_doubling(t, n), t, q = 2),
+    ],
+    [
+        'from sparse PLCP#b',
+        lambda t, n: lcp.convert_plcp_to_lcp(
+            lcp.build_plcp_b(suffix_array.prefix_doubling(t, n), t, n, q = 2),
+            suffix_array.prefix_doubling(t, n), t, q = 2),
     ]
 ]
 
@@ -93,3 +117,15 @@ class TestLcpLr(unittest.TestCase):
     self.check_lcp_lr("#banana", 6, {
         (1, 2): 1, (2, 3): 3, (1, 3): 1, (3, 4): 0, (4, 5): 0, (5, 6): 2,
         (4, 6): 0, (3, 6): 0, (1, 6): 0})
+
+class TestPlcp(unittest.TestCase):
+  def check_plcp(self, text, n, reference):
+    plcp = lcp.build_plcp_a(suffix_array.skew(text, n), text, n)
+    self.assertEqual(plcp, reference)
+    plcp = lcp.build_plcp_b(suffix_array.skew(text, n), text, n)
+    self.assertEqual(plcp, reference)
+
+  def test_construction(self):
+    self.check_plcp("#banana", 6, [0, 0, 3, 2, 1, 0, 0])
+    self.check_plcp('#abaaabbabbba', 12,
+      [0, 1, 2, 1, 2, 2, 3, 2, 3, 2, 1, 0, 0])
