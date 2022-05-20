@@ -136,3 +136,28 @@ def boyer_moore_apostolico_giancarlo(t, w, n, m):
       j = 1
     skip[i + m - 1] = m - j
     i = i + BM[j]
+
+def bitap_shift_add(text: str, word: str, n: int, m: int):
+    Sigma = set()
+    for c in text[1:]:
+        Sigma.add(c)
+    for c in word[1:]:
+        Sigma.add(c)
+    
+    ones = (1 << m) - 1
+
+    initval = ones
+
+    T = {c: initval for c in Sigma}
+    for (idx, c) in enumerate(word[1:]):
+          T[c] = T[c] ^ (1<<idx)
+
+    state = ones
+
+    for (index, c) in enumerate(text):
+        if c == '#': continue
+        state = state << 1
+        state |= T[c]
+        state &= ones
+        if (state & (1<<(m-1)) == 0):
+            yield index-m+1
