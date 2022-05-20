@@ -1,49 +1,56 @@
 import numpy as np
-from scipy import signal
+from scipy.signal import convolve
 from scipy.stats import binom
 import itertools
 
-def __get_clifford_array(text_mapped, word_mapped, positional):
-  indices = np.ones(len(text_mapped)) if not positional else np.arange(len(text_mapped))
+__TOO_MANY_MISMATCHES = 'too many'
+
+def __get_clifford_array(text_numeric, word_numeric, positional):
+  """
+  returns \Sum_{j=1^m} p_j*t_{i+j-1}*(p_j - t_{i+j-1})^2 if positional == False
+          otherwise \Sum_{j=1^m} (i+j-1)*p_j*t_{i+j-1}*(p_j - t_{i+j-1})^2.
+          Note a slight difference - we use plain p,t outside the square, instead of clipped p',t', so the result
+          will be scaled by these factors
+  """
+  indices = np.ones(len(text_numeric)) if not positional else np.arange(len(text_numeric))
  
-  first_component = signal.convolve(
-    (word_mapped**3)[::-1], indices*text_mapped, mode = 'valid', method = 'fft')
-  second_component = signal.convolve(
-    (word_mapped**2)[::-1], indices*text_mapped**2, mode = 'valid', method = 'fft')
-  third_component = signal.convolve(
-    (word_mapped)[::-1], indices*text_mapped**3, mode = 'valid', method = 'fft', )
+  first_component = convolve(
+    (word_numeric**3)[::-1], indices*text_numeric, mode = 'valid', method = 'fft')
+  second_component = convolve(
+    (word_numeric**2)[::-1], indices*text_numeric**2, mode = 'valid', method = 'fft')
+  third_component = convolve(
+    (word_numeric)[::-1], indices*text_numeric**3, mode = 'valid', method = 'fft', )
 
   return np.rint(first_component - 2*second_component + third_component).astype(int)
 
-def __are_all_mismatches_found_at(i, mismatch_positions_in_text, text_mapped, word_mapped, clifford_array):    
+def __are_all_mismatches_found_at(i, mismatch_positions_in_text, text_numeric, word_numeric, clifford_array):    
   correlation_correction = 0
   for mismatch_pos in mismatch_positions_in_text:
-      if mismatch_pos is not None and mismatch_pos < len(text_mapped) and mismatch_pos-i < len(word_mapped):
-        tv = text_mapped[mismatch_pos]
-        wv = word_mapped[mismatch_pos-i]
+      if mismatch_pos is not None and mismatch_pos < len(text_numeric) and mismatch_pos-i < len(word_numeric):
+        tv = text_numeric[mismatch_pos]
+        wv = word_numeric[mismatch_pos-i]
         correlation_correction += tv*wv*(tv-wv)**2
 
   return correlation_correction == clifford_array[i]
 
-def one_hamming_mismatch(text_mapped, word_mapped, corrections=[]):
-  a0 = __get_clifford_array(text_mapped, word_mapped, False)
-  a1 = __get_clifford_array(text_mapped, word_mapped, True)
+def one_hamming_mismatch(text_numeric, word_numeric, corrections=[]):
+  a0 = __get_clifford_array(text_numeric, word_numeric, False)
+  a1 = __get_clifford_array(text_numeric, word_numeric, True)
 
   for j, corrections_at_j in enumerate(corrections):
-    if word_mapped[j] != 0:
+    if word_numeric[j] != 0:
       for i in corrections_at_j:
-        tv = text_mapped[i+j]
-        wv = word_mapped[j]
+        tv = text_numeric[i+j]
+        wv = word_numeric[j]
         a0[i] -= tv*wv*(tv-wv)
         a1[i] -=  i*tv*wv*(tv-wv) 
 
   possible_mismatch_position_in_text = [None if x0 == 0 else x1//x0 for x0,x1 in zip(a0,a1)]
   mismatch_position = [
-    x if __are_all_mismatches_found_at(i, [x], text_mapped, word_mapped, a0) else 'too many mismatches' 
+    x if __are_all_mismatches_found_at(i, [x], text_numeric, word_numeric, a0) else __TOO_MANY_MISMATCHES
     for i,x in enumerate(possible_mismatch_position_in_text)
   ]
   return mismatch_position
-
 
 def apply_preprocessing(func):
   def wrapper(text, word, n, m, k, *args, **kwargs):
@@ -56,30 +63,30 @@ def apply_preprocessing(func):
       letter_mapping.update({'?': 0})
 
       # remove sharps, since signal.convolve requires 0-indexing
-      text = np.array([letter_mapping.get(c) for c in text[1:]])
-      word = np.array([letter_mapping.get(c) for c in word[1:]])
+      text_numeric = np.array([letter_mapping.get(c) for c in text[1:]])
+      word_numeric = np.array([letter_mapping.get(c) for c in word[1:]])
 
-      yield from map(lambda x: x+1, func(text, word, n, m, k, *args, **kwargs))
+      yield from map(lambda x: x+1, func(text_numeric, word_numeric, n, m, k, *args, **kwargs))
 
   return wrapper
 
 
 @apply_preprocessing
-def nonrecursive(text_mapped, word_mapped, n, m, k):
+def nonrecursive(text_numeric, word_numeric, n, m, k):
   sample_rate = 1/max(k,1)
   mismatches = [set() for _ in range(n-m+1)]
 
   for it in range(int(k*(40+np.log(n)))):
-    masked_word = np.array([x if np.random.random() < sample_rate else 0 for x in word_mapped])
-    found_mismatches = one_hamming_mismatch(text_mapped, masked_word)
+    masked_word = np.array([x if np.random.random() < sample_rate else 0 for x in word_numeric])
+    found_mismatches = one_hamming_mismatch(text_numeric, masked_word)
     for i, x in enumerate(found_mismatches):
-        if x is not None and x != "too many mismatches" and len(mismatches[i]) < k:
+        if x is not None and x != __TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
           mismatches[i].add(x)
 
-  yield from __checking_stage(text_mapped, word_mapped, mismatches)
+  yield from __checking_stage(text_numeric, word_numeric, mismatches)
 
 @apply_preprocessing
-def recursive(text_mapped, word_mapped, n, m, k):
+def recursive(text_numeric, word_numeric, n, m, k):
   mismatches = [set() for _ in range(n-m+1)]
   E = [set() for _ in range(m)]
 
@@ -87,26 +94,41 @@ def recursive(text_mapped, word_mapped, n, m, k):
   while ks >= 1:
     sample_rate = 1/ks
     for it in range(40*int(ks + np.log(n))):
-      masked_word = np.array([x if np.random.random() < sample_rate else 0 for x in word_mapped])
-      found_mismatches = one_hamming_mismatch(text_mapped, masked_word, corrections=E)
+      masked_word = np.array([x if np.random.random() < sample_rate else 0 for x in word_numeric])
+      found_mismatches = one_hamming_mismatch(text_numeric, masked_word, corrections=E)
       
       for i, x in enumerate(found_mismatches):
-        if x is not None and x != "too many mismatches" and len(mismatches[i]) < k:
+        if x is not None and x != __TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
           mismatches[i].add(x)
           E[x-i].add(i)
 
       ks /= 2
 
-  yield from __checking_stage(text_mapped, word_mapped, mismatches)
+  yield from __checking_stage(text_numeric, word_numeric, mismatches)
+
+@apply_preprocessing
+def deterministic(text_numeric, word_numeric, n, m, k):
+  mismatches = [set() for _ in range(n-m+1)]
+
+  ssf = generate_strongly_selective_family(m,k)
+
+  for s in ssf:
+    masked_word = np.array([x if i in s else 0 for i,x in enumerate(word_numeric)])
+    found_mismatches = one_hamming_mismatch(text_numeric, masked_word)
+    for i, x in enumerate(found_mismatches):
+        if x is not None and x != __TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
+          mismatches[i].add(x)
+
+  yield from __checking_stage(text_numeric, word_numeric, mismatches)
 
 
-def __checking_stage(text_mapped, word_mapped, mismatches):
-  clifford_array = __get_clifford_array(text_mapped, word_mapped, False)
+def __checking_stage(text_numeric, word_numeric, mismatches):
+  clifford_array = __get_clifford_array(text_numeric, word_numeric, False)
   number_of_mismatches = [
-    len(x) if __are_all_mismatches_found_at(i, x, text_mapped, word_mapped, clifford_array) else 'too many mismatches'
+    len(x) if __are_all_mismatches_found_at(i, x, text_numeric, word_numeric, clifford_array) else __TOO_MANY_MISMATCHES
     for i,x in enumerate(mismatches)
   ]
-  return [i for i,x in enumerate(number_of_mismatches) if x != 'too many mismatches']
+  return [i for i,x in enumerate(number_of_mismatches) if x != __TOO_MANY_MISMATCHES]
 
 
 def entropy(x, q):
@@ -124,10 +146,13 @@ def is_prime(n):
     i += 1
   return True
 
-def generate_ssf(n, r):
-  if r*r*np.log(n) >= n:
+def generate_strongly_selective_family(n, r):
+  if r == 0:
+    return [[]]
+
+  if n == 1 or r*r*np.log(n) >= n:
     return [{i} for i in range(n)]
-  
+
   delta = (r-1)/r
   q = 2*r
   while not is_prime(q):
@@ -135,7 +160,7 @@ def generate_ssf(n, r):
 
   k = int(np.ceil(np.log(n) / np.log(q)))
   m = int(np.ceil(k/(1-entropy(delta,q))))
-  matrix = derandomized(m, k, delta, q)
+  matrix = linear_code_matrix_with_high_rate(m, k, delta, q)
   S = {(i,l): set() for i in range(m) for l in range(q)}
 
   for i,y in enumerate(itertools.product(range(q), repeat=k)):
@@ -146,7 +171,7 @@ def generate_ssf(n, r):
 
   return list(x for x in S.values() if len(x) > 0)
 
-def derandomized(m, k, delta, q):
+def linear_code_matrix_with_high_rate(m, k, delta, q):
   G = np.zeros((m,k), dtype=int)
   modular_inverse = all_modular_inverses_array(q)
 
