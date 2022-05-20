@@ -148,9 +148,7 @@ def bitap_shift_add(text: str, word: str, _n: int, m: int):
 
   state = ones
 
-  for index, c in enumerate(text):
-    if c == '#':
-      continue
+  for index, c in enumerate(text[1:], start = 1):
     state = ((state << 1) | T[c]) & ones
     if state & (1<<(m-1)) == 0:
       yield index-m+1
