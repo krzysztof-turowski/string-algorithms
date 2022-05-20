@@ -2,10 +2,116 @@ import numpy as np
 from scipy.signal import convolve
 from scipy.stats import binom
 import itertools
+TOO_MANY_MISMATCHES = 'too many'
 
-__TOO_MANY_MISMATCHES = 'too many'
+def apply_preprocessing(func):
+  def wrapper(text, word, n, m, k, *args, **kwargs):
+    if m > n:
+      yield from ()
+    else:
+      # map characters to numbers, such that don't care is 0
+      alphabet = set(list(text[1:] + word[1:])) - set('?')
+      letter_mapping = {c: i for i, c in enumerate(alphabet, start = 1)}
+      letter_mapping.update({'?': 0})
 
-def __get_clifford_array(text_numeric, word_numeric, positional):
+      """
+      Since signal.convolve requires 0-indexing and we'll be working
+      only on numbers from now, we'll remove sharps so
+      text_numeric and word_numeric will be 0-indexed
+      """
+      text_numeric = np.array([letter_mapping.get(c) for c in text[1:]])
+      word_numeric = np.array([letter_mapping.get(c) for c in word[1:]])
+
+      yield from map(lambda x: x+1, func(text_numeric, word_numeric, n, m, k, *args, **kwargs))
+  return wrapper
+
+@apply_preprocessing
+def nonrecursive_randomised(text_numeric, word_numeric, n, m, k):
+  sample_rate = 1/max(k,1)
+  
+  def random_masked_word_generator():
+    for _ in range(int(k*(40+np.log(n)))):
+      yield np.array([x if np.random.random() < sample_rate else 0 for x in word_numeric])
+
+  return __nonrecursive_algorithm(text_numeric, word_numeric, n, m, k, random_masked_word_generator)
+
+@apply_preprocessing
+def nonrecursive_deterministic(text_numeric, word_numeric, n, m, k):
+  ssf = generate_strongly_selective_family(m,k)
+
+  def ssf_masked_word_generator():
+    for s in ssf:
+      yield np.array([x if i in s else 0 for i,x in enumerate(word_numeric)])
+
+  return __nonrecursive_algorithm(text_numeric, word_numeric, n, m, k, ssf_masked_word_generator)
+
+def __nonrecursive_algorithm(text_numeric, word_numeric, n, m, k, masked_word_generator):
+  mismatches = [set() for _ in range(n-m+1)]
+
+  for masked_word in masked_word_generator():
+    found_mismatches = one_hamming_mismatch(text_numeric, masked_word)
+    for i, x in enumerate(found_mismatches):
+        if x is not None and x != TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
+          mismatches[i].add(x)
+
+  yield from __checking_stage(text_numeric, word_numeric, mismatches)
+
+@apply_preprocessing
+def recursive(text_numeric, word_numeric, n, m, k):
+  mismatches = [set() for _ in range(n-m+1)]
+  E = [set() for _ in range(m)]
+
+  ks = k
+  while ks >= 1:
+    sample_rate = 1/ks
+    for it in range(40*int(ks + np.log(n))):
+      masked_word = np.array([x if np.random.random() < sample_rate else 0 for x in word_numeric])
+      found_mismatches = one_hamming_mismatch(text_numeric, masked_word, corrections=E)
+      
+      for i, x in enumerate(found_mismatches):
+        if x is not None and x != TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
+          mismatches[i].add(x)
+          E[x-i].add(i)
+
+      ks /= 2
+
+  yield from __checking_stage(text_numeric, word_numeric, mismatches)
+
+
+def __checking_stage(text_numeric, word_numeric, mismatches):
+  clifford_array = __get_clifford_array(text_numeric, word_numeric, False)
+  number_of_mismatches = [
+    len(x) if __are_all_mismatches_found_at(i, x, text_numeric, word_numeric, clifford_array) else TOO_MANY_MISMATCHES
+    for i,x in enumerate(mismatches)
+  ]
+  return [i for i,x in enumerate(number_of_mismatches) if x != TOO_MANY_MISMATCHES]
+
+def one_hamming_mismatch(text_numeric, word_numeric, corrections=[]):
+  """
+  returns array of size (n-m+1), where i-th entry is either:
+          * None, if text[i:i+m] and word matches exactly, ignoring already known mismatches from `corrections`
+          * j, if there is exactly one not known yet mismach between text[i:i+m] and word, at position text[j] (and word[j-i]]
+          * `TOO_MANY_MISMATCHES`, if there are more than 2 mismatches not know yet between text[i:i+m] and word
+  """
+  a0 = __get_clifford_array(text_numeric, word_numeric, False)
+  a1 = __get_clifford_array(text_numeric, word_numeric, True)
+
+  for j, corrections_at_j in enumerate(corrections):
+    if word_numeric[j] != 0:
+      for i in corrections_at_j:
+        tv = text_numeric[i+j]
+        wv = word_numeric[j]
+        a0[i] -= tv*wv*(tv-wv)
+        a1[i] -=  i*tv*wv*(tv-wv) 
+
+  possible_mismatch_position_in_text = [None if x0 == 0 else x1//x0 for x0,x1 in zip(a0,a1)]
+  mismatch_position = [
+    x if __are_all_mismatches_found_at(i, [x], text_numeric, word_numeric, a0) else TOO_MANY_MISMATCHES
+    for i,x in enumerate(possible_mismatch_position_in_text)
+  ]
+  return mismatch_position
+
+def __get_clifford_array(text_numeric, word_numeric, positional=False):
   """
   returns \Sum_{j=1^m} p_j*t_{i+j-1}*(p_j - t_{i+j-1})^2 if positional == False
           otherwise \Sum_{j=1^m} (i+j-1)*p_j*t_{i+j-1}*(p_j - t_{i+j-1})^2.
@@ -33,118 +139,11 @@ def __are_all_mismatches_found_at(i, mismatch_positions_in_text, text_numeric, w
 
   return correlation_correction == clifford_array[i]
 
-def one_hamming_mismatch(text_numeric, word_numeric, corrections=[]):
-  a0 = __get_clifford_array(text_numeric, word_numeric, False)
-  a1 = __get_clifford_array(text_numeric, word_numeric, True)
 
-  for j, corrections_at_j in enumerate(corrections):
-    if word_numeric[j] != 0:
-      for i in corrections_at_j:
-        tv = text_numeric[i+j]
-        wv = word_numeric[j]
-        a0[i] -= tv*wv*(tv-wv)
-        a1[i] -=  i*tv*wv*(tv-wv) 
-
-  possible_mismatch_position_in_text = [None if x0 == 0 else x1//x0 for x0,x1 in zip(a0,a1)]
-  mismatch_position = [
-    x if __are_all_mismatches_found_at(i, [x], text_numeric, word_numeric, a0) else __TOO_MANY_MISMATCHES
-    for i,x in enumerate(possible_mismatch_position_in_text)
-  ]
-  return mismatch_position
-
-def apply_preprocessing(func):
-  def wrapper(text, word, n, m, k, *args, **kwargs):
-    if m > n:
-      yield from ()
-    else:
-      # map characters to numbers, such that don't care is 0
-      alphabet = set(list(text[1:] + word[1:])) - set('?')
-      letter_mapping = {c: i for i, c in enumerate(alphabet, start = 1)}
-      letter_mapping.update({'?': 0})
-
-      # remove sharps, since signal.convolve requires 0-indexing
-      text_numeric = np.array([letter_mapping.get(c) for c in text[1:]])
-      word_numeric = np.array([letter_mapping.get(c) for c in word[1:]])
-
-      yield from map(lambda x: x+1, func(text_numeric, word_numeric, n, m, k, *args, **kwargs))
-
-  return wrapper
-
-
-@apply_preprocessing
-def nonrecursive(text_numeric, word_numeric, n, m, k):
-  sample_rate = 1/max(k,1)
-  mismatches = [set() for _ in range(n-m+1)]
-
-  for it in range(int(k*(40+np.log(n)))):
-    masked_word = np.array([x if np.random.random() < sample_rate else 0 for x in word_numeric])
-    found_mismatches = one_hamming_mismatch(text_numeric, masked_word)
-    for i, x in enumerate(found_mismatches):
-        if x is not None and x != __TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
-          mismatches[i].add(x)
-
-  yield from __checking_stage(text_numeric, word_numeric, mismatches)
-
-@apply_preprocessing
-def recursive(text_numeric, word_numeric, n, m, k):
-  mismatches = [set() for _ in range(n-m+1)]
-  E = [set() for _ in range(m)]
-
-  ks = k
-  while ks >= 1:
-    sample_rate = 1/ks
-    for it in range(40*int(ks + np.log(n))):
-      masked_word = np.array([x if np.random.random() < sample_rate else 0 for x in word_numeric])
-      found_mismatches = one_hamming_mismatch(text_numeric, masked_word, corrections=E)
-      
-      for i, x in enumerate(found_mismatches):
-        if x is not None and x != __TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
-          mismatches[i].add(x)
-          E[x-i].add(i)
-
-      ks /= 2
-
-  yield from __checking_stage(text_numeric, word_numeric, mismatches)
-
-@apply_preprocessing
-def deterministic(text_numeric, word_numeric, n, m, k):
-  mismatches = [set() for _ in range(n-m+1)]
-
-  ssf = generate_strongly_selective_family(m,k)
-
-  for s in ssf:
-    masked_word = np.array([x if i in s else 0 for i,x in enumerate(word_numeric)])
-    found_mismatches = one_hamming_mismatch(text_numeric, masked_word)
-    for i, x in enumerate(found_mismatches):
-        if x is not None and x != __TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
-          mismatches[i].add(x)
-
-  yield from __checking_stage(text_numeric, word_numeric, mismatches)
-
-
-def __checking_stage(text_numeric, word_numeric, mismatches):
-  clifford_array = __get_clifford_array(text_numeric, word_numeric, False)
-  number_of_mismatches = [
-    len(x) if __are_all_mismatches_found_at(i, x, text_numeric, word_numeric, clifford_array) else __TOO_MANY_MISMATCHES
-    for i,x in enumerate(mismatches)
-  ]
-  return [i for i,x in enumerate(number_of_mismatches) if x != __TOO_MANY_MISMATCHES]
-
-
-def entropy(x, q):
-  if x in [0,1]:
-    return 0
-  return x*np.log((q-1)/x)/np.log(q) + (1-x)*np.log(1/(1-x)/np.log(q))
-
-def is_prime(n):
-  if n <= 1:
-    return False
-  i = 2
-  while i*i <= n:
-    if n%i == 0:
-      return False
-    i += 1
-  return True
+"""
+Strongly selective families
+https://doi.org/10.48550/arXiv.0712.3876
+"""
 
 def generate_strongly_selective_family(n, r):
   if r == 0:
@@ -156,7 +155,7 @@ def generate_strongly_selective_family(n, r):
   delta = (r-1)/r
   q = 2*r
   while not is_prime(q):
-    q+=1
+    q += 1
 
   k = int(np.ceil(np.log(n) / np.log(q)))
   m = int(np.ceil(k/(1-entropy(delta,q))))
@@ -194,6 +193,25 @@ def all_modular_inverses_array(modulo):
   for i in range(2, modulo):
     modular_inverse[i] = (modulo-(modulo//i)*modular_inverse[modulo%i])%modulo
   return modular_inverse
+
+def entropy(x, q):
+  """ 
+  q-ary entropy from Gilbert-Varshamov bound 
+  (https://en.wikipedia.org/wiki/Gilbert%E2%80%93Varshamov_bound_for_linear_codes) 
+  """
+  if x in [0,1]:
+    return 0
+  return x*np.log((q-1)/x)/np.log(q) + (1-x)*np.log(1/(1-x)/np.log(q))
+
+def is_prime(n):
+  if n <= 1:
+    return False
+  i = 2
+  while i*i <= n:
+    if n%i == 0:
+      return False
+    i += 1
+  return True
 
 def verify_if_is_strongly_selective(ss, n, r):
   for A in itertools.combinations(range(n), r):
