@@ -160,7 +160,7 @@ def landau_vishkin(t, w, n, m, k):
 
 def bitap_shift_add(text: str, word: str, _n: int, m: int, k: int):
   # the alphabet we're working on
-  Sigma = set(text[1:])
+  A = set(text[1:])
 
   # number of bits required for each
   # position in the pattern
@@ -174,24 +174,22 @@ def bitap_shift_add(text: str, word: str, _n: int, m: int, k: int):
   # as well as calculating the lookup
   initval = 0
   for _ in range(m):
-    initval = initval << B
-    initval |= 1
+    initval = (initval << B) | 1
 
   # overflow mask for clearing and
   # recording the overflow bits
   mask = 0
   for _ in range(m):
-    mask = mask << B
-    mask |= 1 << (B-1)
+    mask = (mask << B) | (1 << (B-1))
 
   # lookup for each character
   # T[c] has 0 at i-th position iff word[i] == c
   # and 1 otherwise.
   # We ignore characters not in text
   # since we'll never look them up
-  T = {c: initval for c in Sigma}
+  T = {c: initval for c in A}
   for (index, c) in enumerate(word[1:]):
-    if c in Sigma:
+    if c in A:
       T[c] = T[c] ^ (1 << (index*B))
 
   # the state (mismatches up to the i-th position)
@@ -201,17 +199,12 @@ def bitap_shift_add(text: str, word: str, _n: int, m: int, k: int):
   # exceeded `k` in the state
   overflow = mask
 
-  for (index, c) in enumerate(text):
-    if c == '#':
-      continue
-
+  for index, c in enumerate(text[1:], start = 1):
     # shift-add operation
-    state = (state << B) + T[c]
-    state &= ones
+    state = ((state << B) + T[c]) & ones
 
     # record overflow bits
-    overflow = (overflow << B) | (state & mask)
-    overflow &= ones
+    overflow = ((overflow << B) | (state & mask)) & ones
 
     # clear the overflow bits from state
     state &= ~mask
