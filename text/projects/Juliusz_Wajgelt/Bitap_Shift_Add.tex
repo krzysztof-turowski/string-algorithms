@@ -1,0 +1,170 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage[]{amsthm} %lets us use \begin{proof}
+\usepackage[]{amssymb} %gives us the character \varnothing
+\usepackage{amsmath}
+
+\title{Algorytm Bitap Shift-Add \\ \large W oparciu o ,,A new approach to text searching"\\ Ricardo Baeza-Yates, Gaston H. Gonnet}
+\author{Juliusz Wajgelt}
+\date{Maj 2022}
+
+\begin{document}
+
+\maketitle
+
+\section{Wstęp}
+Algorytm Shift-Add służy do znajdowania przybliżonych dopasowań (approximate matching) wzorca w tekście.
+Pozwala on na znalezienie wszystkich dopasowań wzorca w odległości (Hamminga) co najwyżej $k$ w czasie $O(nm\log k)$ z dodatkowym preprocessingiem w czasie $O(|\Sigma|m\log k)$ oraz pamięci $O(|\Sigma|m\log k)$.
+Algorytm może być również łatwo rozszerzony aby pozwalać na przypisanie niedopasowaniom różnych wag (np. wliczanie do odległości niedopasowań między spółgłoskami a samogłoskami z wagą 2 razy większą, niż pozostałych), dopasowania do skończonych klas znaków, oraz dopasowań do wielu wzorców jednocześnie.
+
+Co istotne, złożoność algorytmu zależy od rozmiaru słowa maszynowego komputera, na którym jest uruchamiany. Dla $b=\lceil \log_2(k+1) \rceil+1$ oraz $w$ równego długości słowa maszynowego, algorytm wykonuje $O(\lceil\frac{mb}{w}\rceil n)$ operacji i używa $O(|\Sigma|\cdot\lceil\frac{mb}{w}\rceil)$ pamięci, co przyczynia się do dobrej wydajności w praktycznych zastosowaniach dla krótkich wzorców.
+
+\section{Opis algorytmu}
+
+\subsection{Dopasowania dokładne}
+\subsubsection*{Algorytm}
+Główna część algorytmu polega na liniowym przejściu po kolejnych znakach tekstu.
+W trakcie działania utrzymujemy zmienną \texttt{state}, będącą wektorem długości $m$ mówiącą o stanie dopasowania wzorca kończącym się w rozpatrywanym miejscu tekstu.
+Dokładniej, gdy rozpatrujemy $j$-ty znak tekstu, \texttt{state[i]} będzie mówiło, czy wzorzec na pozycjach $1..i$ pasuje do tekstu na pozycjach $(j-i+1)..j$ - jeżeli tak, wartość \texttt{state[i]} będzie równa 0, a w przeciwnym przypadku 1.
+Oznacza to, że mamy do czynienia z dopasowaniem wzorca wtedy i tylko wtedy, gdy $\texttt{m}=0$.
+
+Oznaczmy $s_i(j)$ wartość \texttt{state[i]} gdy rozpatrujemy $j$-ty znak tekstu. Nietrudno zauważyć, że
+$$
+s_i(j) = s_{i-1}(j-1) \oplus \begin{cases}
+0&\text{jeżeli } \textit{pat}_i = \textit{text}_j\\
+1&\text {wpp.}
+\end{cases} 
+$$
+gdzie $\oplus$ oznacza dodawanie boolowskie.
+
+Ponieważ dla każdej pozycji \texttt{state} w danym kroku iteracji algorytmu potrzebujemy tylko jednego bitu informacji, możemy cały \texttt{state} trzymać jako maskę bitową długości $m$. Jedna iteracja polega na przesunięciu bitowym maski \texttt{state} o jedno miejsce w lewo (co odpowiada operacji $s_i(j)=s_{i-1}(j-1)$) a następnie wykonaniu \textit{bitwise-or} z maską bitową $\texttt t$ t.że:
+$$
+\texttt{t}_i = \begin{cases}
+0&\text{jeżeli } \textit{pat}_i = \textit{text}_j\\
+1&\text {wpp.}
+\end{cases}
+$$
+Zauważmy, że (przy ustalonym wzorcu $\textit{pat}$) ponieważ wartość $\texttt t$ zależy tylko od $j$-tego znaku tekstu $\textit{text}_j$, możemy przed wykonaniem głównej pętli wyliczyć dla każdego znaku alfabetu $c\in\Sigma$ tablicę $\texttt{T[c]}$ taką, że
+$$
+\texttt{T[c]}_i = \begin{cases}
+0&\text{jeżeli } \textit{pat}_i = c\\
+1&\text {wpp.}
+\end{cases}
+$$
+dzięki czemu pojedyncza iteracja algorytmu to po prostu
+$$
+\texttt{state} := (\texttt{state << 1})\,\oplus\,\texttt{T[}\textit{text}_j\texttt{]}
+$$
+gdzie $\oplus$ oznacza operację \textit{bitwise-or} (tzn. dodawanie boolowskie po współrzędnych) a $\texttt{<<}$ przesunięcie bitowe w lewo (ucinające $(m+1)$-szą cyfrę). 
+
+To, czy na obecnie rozpatrywanej pozycji kończy się dopasowanie możemy rozstrzygnąć sprawdzając, czy $m$-ty bit maski \texttt{state} jest równy 0, albo, równoważnie, czy $\texttt{state} < 2^{m-1}$.
+
+\subsubsection*{Złożoność}
+Główna pętla algorytmu wykonuje $n$ iteracji, w każdej wykonując dwie czynności:
+\begin{itemize}
+    \item wyliczenie nowego stanu $\texttt{state} := (\texttt{state << 1})\,\oplus\,\texttt{T[}\textit{text}_j\texttt{]}$
+    \item sprawdzenie, czy znaleziono dopasowanie $\texttt{state} < 2^{m-1}$
+\end{itemize}
+Pierwsza z nich wymaga przesunięcia bitowego maski o jedno miejsce, co wymaga $\lceil \frac{m}{w} \rceil$ operacji procesora dla długości słowa maszynowego $w$ oraz policzenia \textit{bitwise-or} z drugą maską długości $m$, co również wymaga $\lceil \frac{m}{w} \rceil$ operacji.
+
+Druga może być wykonana w jednej operacji - wystarczy porównać najbardziej znaczące słowa zapisu \texttt{state} oraz $2^{m-1}$.
+
+Daje to w sumie $O(\lceil \frac{m}{w} \rceil n)$ operacji dla głównej pętli algorytmu.
+
+Preprocessing polega na wyliczeniu tablicy \texttt{T}. Możemy to zrobić inicjalizując dla każdego $c\in \Sigma$: $\texttt{T[c]}=1..1$, a następnie iterując się po wzorcu i ustawiając $$\texttt{T[}\text{pat}_i\texttt{]} = \texttt{T[}\text{pat}_i\texttt{]} \odot 1..10_i1..1$$
+gdzie $\odot$ to iloczyn boolowski po współrzędnych (\textit{bitwise-and}). Ponieważ w każdym kroku modyfikujemy tylko jedną pozycję w jednej masce, możemy to zrobić w czasie stałym, co daje złożoność preprocessingu $O(|\Sigma|\cdot m)$.
+
+W trakcie działania algorytmu musimy utrzymywać w pamięci jedynie stan \texttt{state} oraz tablicę \texttt{T}, co daje złożoność pamięciową
+$$O(\left\lceil\frac{m}{w}\right\rceil + |\Sigma|\cdot\left\lceil\frac{m}{w}\right\rceil) =
+O(|\Sigma|\cdot\left\lceil\frac{m}{w}\right\rceil)$$
+Co istotne, nie musimy przechowywać w pamięci tekstu wejściowego (możemy go przetwarzać jako strumień znaków).
+
+\subsection{Dopasowanie przybliżone}
+\subsubsection*{Algorytm}
+Algorytm dla dopasowania dokładnego można łatwo zmodyfikować tak, aby pozwalał na znajdowanie przybliżonych dopasowań wzorca o odległości Hamminga nieprzekraczającej $k$.
+
+W tym przypadku stan \texttt{state} zamiast trzymać informację, czy na danym prefiksie wzorca nastąpiło niedopasowanie z sufiksem tekstu, będziemy zliczać, ile niedopasowań wystąpiło, to znaczy gdy rozpatrujemy $j$-ty znak tekstu, $$\texttt{state[i]} = \#\{k\; : \;1\leq k \leq i,\, \textit{pat}_k \neq \textit{text}_{j-i+1+k}\}$$
+
+Ponownie, jeżeli oznaczymy $s_i(j)$ wartość \texttt{state[i]} gdy rozpatrujemy $j$-ty znak tekstu to
+$$
+s_i(j) = s_{i-1}(j-1) + \begin{cases}
+0&\text{jeżeli } \textit{pat}_i = \textit{text}_j\\
+1&\text {wpp.}
+\end{cases} 
+$$
+
+Podobnie jak w poprzedniej wersji algorytmu, możemy przygotować sobie wartości, które dodajemy w każdej iteracji żeby wyliczyć nowy stan jako
+$$
+\texttt{T[c]}_i = \begin{cases}
+0&\text{jeżeli } \textit{pat}_i = c\\
+1&\text {wpp.}
+\end{cases}
+$$
+
+Jeżeli pojedynczą komórkę stanu \texttt{state[i]} zapiszemy za pomocą $b$ bitów, to pojedynczy krok algorytmu wyglądałby następująco:
+$$
+\texttt{state} := (\texttt{state << }b)\,+\,\texttt{T[}\textit{text}_j\texttt{]}
+$$
+W zależności od wyboru $b$ pojawia się tu problem - ponieważ wykonujemy operację dodawania, może nastąpić przepełnienie \texttt{state[i]}, w wyniku czego zmodyfikujemy \texttt{state[i+1]}.
+Możemy w prosty sposób zapobiec temu poprzez dodanie dodatkowego bitu przepełnienia dla każdego \texttt{state[i]}, który w każdym kroku algorytmu przepisujemy do osobnej maski bitowej \texttt{overflow[i]}, a następnie zerujemy.
+Daje to zmodyfikowany algorytm:
+\begin{align*}
+\texttt{state} &:= (\texttt{state << }b)\,+\,\texttt{T[}\textit{text}_j\texttt{]}\\
+\texttt{overflow} &:= (\texttt{overflow << }b)\, \oplus (\texttt{state}\odot\texttt{mask})\\
+\texttt{state} &:= \texttt{state}\odot \overline{\texttt{mask}}
+\end{align*}
+Gdzie \texttt{mask} to maska bitowa z \texttt{1} na co $b$-tym bicie (czyli na pozycjach bitów przepełnienia).
+
+W tym algorytmie mamy dopasowanie przybliżone o odległości co najwyżej $k$, jeżeli $\texttt{state[m]}\leq k$ oraz $\texttt{overflow[m]}=0$.
+
+Ostatni szczegół to ustalenie odpowiedniej wartości $b$. Ponieważ interesuje nas tylko, czy liczba niedopasowań wzorca nie przekroczyła $k$, wystarczy, że każda komórka \texttt{state[i]} będzie mogła przechować liczby do $k$ oraz dodatkowy bit przepełnienia, co daje wartość $b$
+$$
+b = \left\lceil \log_2(k+1) \right\rceil + 1
+$$
+
+\subsubsection*{Złożoność}
+Analiza złożoności jest analogiczna do wariantu z dopasowaniem dokładnym, z jedyną różnicą, że każda komórka masek \texttt{state}, \texttt{overflow}, \texttt{T[c]} zajmuje $b$ bitów, a więc złożoność każdej operacji zmienia się na $O(\left\lceil\frac{mb}{w}\right\rceil)$, dając ostatecznie złożoność głównej pętli algorytmu $O(\left\lceil\frac{mb}{w}\right\rceil)$, preprocessingu $O(|\Sigma|\cdot mb)$ oraz złożoność pamięciową $O(|\Sigma|\cdot\left\lceil\frac{mb}{w}\right\rceil)$.
+
+Ponieważ stosunek długości wzorca $m$ i liczby dopuszczalnych niedopasowań $k$ do długości słowa maszynowego ma duże przełożenie na wydajność algorytmu, warto rozważyć, dla różnych wartości $k$, dla jakich długości wzorca $m$ możemy zmieścić w całości maski bitowe używane w algorytmie w jednym słowie maszynowym. 
+\begin{center}
+    
+\begin{tabular}{c|c|c|c}
+    $k$ & $w=64$ & $w=128$ & $w=256$ \\
+    \hline
+    1 & $m=32$ & $m=64$ & $m=128$\\
+    2-3 & $m=21$ & $m=42$ & $m=85$\\
+    4-7 & $m=16$ & $m=32$ & $m=64$\\
+    8-15 & x & $m=25$ & $m=51$ \\
+    16-21 & x & x & $m=42$ \\ 
+\end{tabular}
+
+\end{center}
+
+\subsection{Skończone klasy znaków}
+Oba algorytmy można łatwo rozszerzyć o możliwość dopasowania na każdej pozycji nie pojedynczego znaku, a jednego z pewnego skończonego zbioru znaków.
+Zauważmy, że jedyne miejsce, w którym sprawdzamy, czy znak tekstu pasuje do wzorca, to dodanie wartości $\texttt{T[}\textit{text}_j\texttt ]$ do stanu \texttt{state}.
+Modyfikacja algorytmu polegać będzie na wyliczeniu tablicy \texttt{T} jako:
+$$
+\texttt{T[c]}_i = \begin{cases}
+0&\text{jeżeli } c\in\textit{pat}_i\\
+1&\text {wpp.}
+\end{cases}
+$$
+gdzie $\textit{pat}_i$ to zbiór znaków, które możemy dopasować na $i$-tej pozycji wzorca. 
+
+\subsection{Niedopasowania z wagami}
+Algorytm dopasowania przybliżonego możemy rozszerzyć tak, aby liczył różne niedopasowania z różnymi wagami.
+Niech $\text{cost}(p, t)$ oznacza koszt niedopasowania znaku $p$ we wzorcu do znaku $t$ w tekście.
+Modyfikacja algorytmu polega na wyliczeniu tablicy \texttt{T} jako:
+$$
+\texttt{T[c]}_i = \begin{cases}
+0&\text{jeżeli } \textit{pat}_i = c\\
+\text{cost}(\textit{pat}_i, c)&\text {wpp.}
+\end{cases}
+$$
+Łatwo zauważyć, że dla takiej tablicy $\texttt{T}$, algorytm dopasowania przybliżonego zwróci podsłowa tekstu takie, że suma kosztów wszystkich niedopasowań wzorca do tego podsłowa jest conajwyżej $k$.
+
+\end{document}
