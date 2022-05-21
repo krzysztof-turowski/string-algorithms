@@ -1,7 +1,8 @@
 import os
+import string
 import unittest
 
-from compression import lpf
+from string_indexing import lpf
 from generator import rand
 
 
@@ -9,36 +10,63 @@ class TestLPF(unittest.TestCase):
   run_large = unittest.skipUnless(
     os.environ.get('LARGE', False), 'Skip test in small runs')
 
-  def check_input(self, text, answer=None):
+  def check_input(self, text, reference, algorithm):
     n = len(text)
-    text = '#' + text
-    answer = answer or lpf.naive(text, n)
+    t = '#' + text
+    self.assertEqual(algorithm(t, n), reference)
 
-    alg0 = lpf.naive(text, n)
-    alg1 = lpf.chrochemore_ille_smith(text, n)
-    alg2 = lpf.chrochemore_ille_smith_no_stack(text, n)
+  def check_input_forall(self, text, reference=None):
+    if reference is None:
+      reference = lpf.naive('#' + text, len(text))
+    else:
+      reference = [-1] + reference
 
-    self.assertEqual(alg0, answer)
-    self.assertEqual(alg1, answer)
-    self.assertEqual(alg2, answer)
+    self.check_input(text, reference,
+                     lpf.naive)
+    self.check_input(text, reference,
+                     lpf.crochemore_ilie_smyth)
+    self.check_input(text, reference,
+                     lpf.crochemore_ilie_smyth_no_stack)
 
   def test_lpf_corners(self):
-    self.check_input('', [-1])
-    self.check_input('a', [-1, 0])
-    self.check_input('aa', [-1, 0, 1])
-    self.check_input('ab', [-1, 0, 0])
-    self.check_input('aaaa', [-1, 0, 3, 2, 1])
-    self.check_input('abab', [-1, 0, 0, 2, 1])
-    self.check_input('abbaabbbaaabab')
-    self.check_input('ababcbababaa')
-    self.check_input('eacacad')
-    self.check_input('aacaacabcabaaac')
-    self.check_input('abaab')
-    self.check_input('aabbbbc')
+    self.check_input_forall('', [])
+    self.check_input_forall('a', [0])
+    self.check_input_forall('aa', [0, 1])
+    self.check_input_forall('ab', [0, 0])
+    self.check_input_forall('aaaa', [0, 3, 2, 1])
+    self.check_input_forall('abab', [0, 0, 2, 1])
+    self.check_input_forall('abbaabbbaaabab')
+    self.check_input_forall('ababcbababaa')
+    self.check_input_forall('eacacad')
+    self.check_input_forall('aacaacabcabaaac')
+    self.check_input_forall('abaab')
+    self.check_input_forall('aabbbbc')
 
   @run_large
   def test_lpf_random(self):
     T, n, A = 100, 500, ['a', 'b', 'c']
     for _ in range(T):
-      text = rand.random_word(n, A)
-      self.check_input(text)
+      text = rand.random_word(n, A)[1:]
+      self.check_input_forall(text)
+
+  @run_large
+  def test_lpf_random_short_strings(self):
+    T, n, A = 5, 500, ['a', 'b', 'c']
+    for _ in range(T):
+      text = rand.random_word(n, A)[1:]
+      self.check_input_forall(text)
+
+  @run_large
+  def test_lpf_random_cyclic(self):
+    T, n, A = 10, 200, ['a', 'b', 'c']
+    for _ in range(T):
+      text = rand.random_word(n, A)[1:]
+      text = text * 10
+      self.check_input_forall(text)
+
+  @run_large
+  def test_lpf_random_big_alphabet(self):
+    T, n, A = 100, 500, string.ascii_letters + string.digits
+    for _ in range(T):
+      text = rand.random_word(n, A)[1:]
+      self.check_input_forall(text)
