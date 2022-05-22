@@ -5,8 +5,8 @@ import unittest
 
 import parameterized
 
-from approximate_string_matching import distance, matching_with_dont_cares_and_mismatches
-from generator import rand
+from approximate_string_matching import distance
+from approximate_string_matching import matching_with_dont_cares_and_mismatches
 
 MATCHING_WITH_DONT_CARES_AND_MISMATCHES_ALGORITHMS = [
     [
@@ -67,8 +67,12 @@ class TestMatchingWithDontCaresAndMismatchesWithHammingDistance(
   @parameterized.parameterized.expand(
       MATCHING_WITH_DONT_CARES_AND_MISMATCHES_ALGORITHMS)
   def test_get_all_matches(self, _, algorithm):
-    self.check_get_all_matches('#bbbbaaa?', '#a?b', 8, 3, 1, [1,2, 5, 6], algorithm)
-    self.check_get_all_matches('#ababba?aba??aba', '#abcc?aa', 15, 7, 2, [1, 6, 8], algorithm)
+    self.check_get_all_matches(
+      '#bbbbaaa?', '#a?b', 8, 3, 1, [1,2, 5, 6], algorithm
+    )
+    self.check_get_all_matches(
+      '#ababba?aba??aba', '#abcc?aa', 15, 7, 2, [1, 6, 8], algorithm
+    )
 
   @parameterized.parameterized.expand(
       MATCHING_WITH_DONT_CARES_AND_MISMATCHES_ALGORITHMS)
@@ -83,8 +87,6 @@ class TestMatchingWithDontCaresAndMismatchesWithHammingDistance(
               continue
             t = '#' + ''.join(t)
             for w in itertools.product(A, repeat = m):
-              if sum(c == '?' for c in w) > 1:
-                continue
               w = '#' + ''.join(w)
               reference = [index for index in range(1, n + 1)
                            if self.check_hamming_distance(t, w, m, k, index)]
