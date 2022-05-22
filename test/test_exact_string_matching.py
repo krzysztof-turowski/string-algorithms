@@ -41,6 +41,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
             suffix_array.prefix_doubling(t, n), t, w, n, m),
     ],
     [ 'lcp-lr array', lcp_lr_contains ],
+    [ 'Galil-Seifaras', forward.galil_seifaras]
 ]
 
 class TestExactStringMatching(unittest.TestCase):
