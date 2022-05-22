@@ -42,7 +42,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
             suffix_array.prefix_doubling(t, n), t, w, n, m),
     ],
     [ 'lcp-lr array', lcp_lr_contains ],
-    [ 'bitap-shift-add', backward.bitap_shift_add ]
+    [ 'bitap-shift-add', backward.bitap_shift_add ],
     [ 'Galil-Seifaras', forward.galil_seifaras]
 ]
 
