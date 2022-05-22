@@ -59,7 +59,9 @@ def _preprocess_first_two_hrps(w, m, k):
 
 
 def _perfect_factorization(w, m, k):
-  '''Returns strings u, v and k-HRP of v, such that w = u*v and v has only one k-Highly-Repeating-Prefix'''
+  '''Returns strings u, v and k-HRP of v,
+  such that w = u*v and v has only one k-HRP
+  '''
   j = 0
   hrp1, hrp2 = _preprocess_first_two_hrps(w, m, k)
 
@@ -74,8 +76,8 @@ def _perfect_factorization(w, m, k):
 
 def _simple_text_search(t, v, n, m, hrp1, k):
   '''Iterates over every occurrence of pattern v in text t.
-  
-  Assumes v has only one k-Highly-Repeating-Prefix hrp1.
+
+  Assumes v has only one k-HRP hrp1.
   '''
   pos, j = 0, 0
   while pos + m <= n:
