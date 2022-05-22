@@ -17,6 +17,10 @@ APPROXIMATE_STRING_MATCHING_HAMMING_ALGORITHMS = [
         'Landau-Vishkin',
         matching_with_mismatches.landau_vishkin,
     ],
+    [
+        'Bitap-Shift-Add',
+        matching_with_mismatches.bitap_shift_add,
+    ],
 ]
 
 APPROXIMATE_STRING_MATCHING_EDIT_ALGORITHMS = [
