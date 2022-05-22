@@ -1,3 +1,12 @@
+def prefix_suffix_brute_force(w, m):
+  B = [-1] * (m + 1)
+  for i in range(1, m + 1):
+    for j in range(i - 1, -1, -1):
+      if w[1:1+i].endswith(w[1:1+j]):
+        B[i] = j
+        break
+  return B
+
 def prefix_suffix(w, m):
   '''Computes table of prefix-suffix lengths for a word w'''
   B, t = [-1] + [0] * m, -1
