@@ -13,7 +13,7 @@ def preprocess_first_two_hrps(w: str, m: int):
   j = 0
   hrp1: Optional[Hrp] = None
   while pos + j < m:
-    while pos + j + 1 < m and w[j + 1] == w[pos + j + 1]:
+    while pos + j < m and w[j + 1] == w[pos + j + 1]:
       j += 1
     prefix_len = pos + j
 
@@ -68,7 +68,7 @@ def galil_seifaras(t: str, w: str, n: int, m: int):
     if i > uLen and u[1:] == t[i - uLen :i]:
       yield i - uLen
 
-# if __name__ == "__main__":
-#   # '#abaaabbaababb', '#abb', 13, 3, [5, 11]
-#   print(list(galil_seifaras('#abaaabbaababb', '#abb', 13, 3)))
-#   # Expect [5, 11]
+if __name__ == "__main__":
+  # '#aaaaa', '#aaaa', 13, 3, [5, 11]
+  print(list(galil_seifaras('#aaaaa', '#aaaa', 5, 4)))
+  # Expect [1, 2]
