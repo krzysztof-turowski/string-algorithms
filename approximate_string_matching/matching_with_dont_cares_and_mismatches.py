@@ -2,6 +2,7 @@ import numpy as np
 from scipy.signal import convolve
 from scipy.stats import binom
 import itertools
+from approximate_string_matching import distance
 TOO_MANY_MISMATCHES = 'too many'
 
 def apply_preprocessing(func):
@@ -30,7 +31,9 @@ def nonrecursive_randomised(text_numeric, word_numeric, n, m, k):
   sample_rate = 1/max(k,1)
   
   def random_masked_word_generator():
-    for _ in range(int(k*(40+np.log(n)))):
+    # O(k * log(n)), constant selected empirically with 2x safety threshold,
+    # which means, that c=15 also passes unit tests
+    for _ in range(int(k*(30+np.log(n)))):
       yield np.array([x if np.random.random() < sample_rate else 0 for x in word_numeric])
 
   return __nonrecursive_algorithm(text_numeric, word_numeric, n, m, k, random_masked_word_generator)
@@ -47,10 +50,9 @@ def nonrecursive_deterministic(text_numeric, word_numeric, n, m, k):
 
 def __nonrecursive_algorithm(text_numeric, word_numeric, n, m, k, masked_word_generator):
   mismatches = [set() for _ in range(n-m+1)]
-
   for masked_word in masked_word_generator():
-    found_mismatches = one_hamming_mismatch(text_numeric, masked_word)
-    for i, x in enumerate(found_mismatches):
+      found_mismatches = one_hamming_mismatch(text_numeric, masked_word)
+      for i, x in enumerate(found_mismatches):
         if x is not None and x != TOO_MANY_MISMATCHES and len(mismatches[i]) < k:
           mismatches[i].add(x)
 
@@ -64,7 +66,9 @@ def recursive(text_numeric, word_numeric, n, m, k):
   ks = k
   while ks >= 1:
     sample_rate = 1/ks
-    for it in range(40*int(ks + np.log(n))):
+    # O(ks + log(n)), constant selected empirically with 2x safety threshold,
+    # which means, that c=20 also passes unit tests
+    for _ in range(int(40*ks + np.log(n))):
       masked_word = np.array([x if np.random.random() < sample_rate else 0 for x in word_numeric])
       found_mismatches = one_hamming_mismatch(text_numeric, masked_word, corrections=E)
       
@@ -140,6 +144,11 @@ def __are_all_mismatches_found_at(i, mismatch_positions_in_text, text_numeric, w
   return correlation_correction == clifford_array[i]
 
 
+def naive_hamming_with_mismatches(t, w, n, m, k):
+  for i in range(1, n - m + 2):
+    if distance.hamming_distance('#' + t[i:i + m], w, m, m, wildcard_symbol='?') <= k:
+      yield i
+
 """
 Strongly selective families
 https://doi.org/10.48550/arXiv.0712.3876
@@ -154,7 +163,7 @@ def generate_strongly_selective_family(n, r):
 
   delta = (r-1)/r
   q = 2*r
-  while not is_prime(q):
+  while not is_prime(q): # after O(ln q) steps we'll find prime
     q += 1
 
   k = int(np.ceil(np.log(n) / np.log(q)))
@@ -173,18 +182,36 @@ def generate_strongly_selective_family(n, r):
 def linear_code_matrix_with_high_rate(m, k, delta, q):
   G = np.zeros((m,k), dtype=int)
   modular_inverse = all_modular_inverses_array(q)
+  number_of_non_zeroes_in_Gy = {tuple(x_r)+(x,):0 for x in range(1,q) for j in range(k) for x_r in itertools.product(range(q), repeat=j)}
 
   for i in range(m):
     for j in range(k):
       W = np.zeros(q, dtype=np.float64)
       for x in range(1,q):
+        """
+        the original paper uses Gray code order to achieve constant time updates per changing x_r,
+        but for this problem we can simply iterate in the default order and increase complexity by factor `k`, 
+        since constructing ssf takes less time than running the pattern matching algorithm 
+        (k in this algorithm is log m in the pattern matching problem).
+        """
         for x_r in itertools.product(range(q), repeat=j):
-          y = np.array(list(x_r)+[x]+[0]*(k-j-1))
           v = (-modular_inverse[x])*sum(G[i][t]*x_r[t] for t in range(j)) % q
-          Gy = G@y
-          c = sum(Gy[t]%q != 0 for t in range(i))
+          c = number_of_non_zeroes_in_Gy[tuple(x_r) + (x,)]
+          # Above line does the same as the code listed below, but has better complexity
+          # y = np.array(list(x_r)+[x]+[0]*(k-j-1))
+          # Gy = G@y
+          # c2 = sum(Gy[t]%q != 0 for t in range(i))
+          # assert c == c2
+
           W[v] -= binom.pmf(np.floor(delta*m-c), m-j, 1-1/q)
+          
       G[i][j] = np.argmax(W)
+
+    # after selecting whole row G[i] update number of non zeroes
+    for j in range(k): 
+      for x in range(1,q):
+        for x_r in itertools.product(range(q), repeat=j):
+          number_of_non_zeroes_in_Gy[tuple(x_r)+(x,)] += (0 if np.dot(G[i][:j+1], list(x_r)+[x])%q == 0 else 1)
   return G
 
 def all_modular_inverses_array(modulo):
@@ -212,13 +239,3 @@ def is_prime(n):
       return False
     i += 1
   return True
-
-def verify_if_is_strongly_selective(ss, n, r):
-  for A in itertools.combinations(range(n), r):
-    for a in A:
-      sel = False
-      for B in ss:
-        sel |= set(A).intersection(B) == {a}
-        if sel:
-          break
-      assert sel

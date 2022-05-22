@@ -19,11 +19,11 @@ class FirstRow(enum.Enum):
   ZEROS = lambda x: [0] * (x + 1)
   INCREASING = lambda x: list(range(x + 1))
 
-def hamming_distance(text_1, text_2, n_1, n_2):
+def hamming_distance(text_1, text_2, n_1, n_2, wildcard_symbol=None):
   if n_1 != n_2:
     raise ValueError(
         'Hamming distance is defined only for strings of equal length')
-  return sum(ci != cj for ci, cj in zip(text_1[1:], text_2[1:]))
+  return sum(ci != cj and ci != wildcard_symbol and cj != wildcard_symbol for ci, cj in zip(text_1[1:], text_2[1:]))
 
 def distance_row(text_1, text_2, _, n_2, S, initialize = FirstRow.INCREASING):
   previous_row, current_row = None, initialize(n_2)
