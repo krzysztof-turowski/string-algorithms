@@ -21,6 +21,14 @@ APPROXIMATE_STRING_MATCHING_HAMMING_ALGORITHMS = [
         'Bitap-Shift-Add',
         matching_with_mismatches.bitap_shift_add,
     ],
+    [   'grossi_luccio A3',
+        matching_with_mismatches.grossi_luccio_a3,
+    ],
+    [
+        'grossi_luccio A4',
+        lambda t, w, n, m, k: matching_with_mismatches.grossi_luccio_a4(
+            t, w, n, m, k, matching_with_mismatches.LcpLca),
+    ],
 ]
 
 APPROXIMATE_STRING_MATCHING_EDIT_ALGORITHMS = [
@@ -45,7 +53,7 @@ class TestApproximateStringMatching(unittest.TestCase):
   def check_get_all_matches(
       self, t, w, n, m, k, reference, algorithm):
     self.assertEqual(
-        list(algorithm(t, w, n, m, k)),
+        sorted(list(algorithm(t, w, n, m, k))),
         reference,
         f'Algorithm {algorithm.__name__}, text {t}, pattern {w}')
 
