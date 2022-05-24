@@ -223,44 +223,78 @@ def bitap_shift_add(text: str, word: str, _n: int, m: int, k: int):
 def _permutation_matching(t, w, n, m, k):
   Q, counter = collections.deque(), {}
   for c in w:
-    if c not in counter:
-      counter[c] = 1
-    else:
-      counter[c] += 1
+    counter[c] = counter.get(c, 0) + 1
   counter['#'] = 0
-  Z = 0
+  # Counter for number of current mismatches
+  z = 0
   for j in range(1, n + 1):
     Q.append(t[j])
     counter[t[j]] -= 1
     if counter[t[j]] < 0:
-      Z += 1
+      z += 1
     # Pop from Q, until there are at most k mismatches
-    while Z > k:
+    while z > k:
       x = Q.popleft()
       if counter[x] < 0:
-        Z -= 1
+        z -= 1
       counter[x] += 1
     # Yield match and prepare Q for next iteration
     if len(Q) == m:
       yield j - m + 1
       x = Q.popleft()
       if counter[x] < 0:
-        Z -= 1
+        z -= 1
       counter[x] += 1
 
-
-def grossi_luccio_a3(t, w, n, m, k):
+def grossi_luccio_linear(t, w, n, m, k):
+  """Solves matching with k mismatches in time `O(n log |A_w| + rm)`"""
+  if n < m:
+    return
   A_w = set(w)
   t_sub = ''.join([c if c in A_w else '#' for c in t])
   for i in _permutation_matching(t_sub, w, n, m, k):
     if distance.hamming_distance('#' + t[i:i + m], w, m, m) <= k:
       yield i
 
-# Returnes true iff H(P@T', P@T'[j:j+m]) <= k
-# where P is the pattern
-# T' is the text with characters not in P changed to `#`
-# lcp is a longest common prefix structure for all suffixes in P@T'
+# pylint: disable=too-few-public-methods
+class LCP:
+  """Class for making longest common prefix queries between any suffixes"""
+  def __init__(self, word, ST):
+    self.word = word
+    self.suffix_tree = ST
+
+  def query(self, i, j):
+    """Returns length of longest common prefix\
+       between suffixes starting at index `i` and `j`"""
+    raise NotImplementedError
+
+# pylint: disable=too-few-public-methods
+class LcpLinear(LCP):
+  """LCP using LCA constructed in time `O(n)`. Answers queries in time `O(n)"""
+  def query(self, i, j):
+    return prefix.get_longest_common_prefix(self.word[i:], self.word[j:])
+
+# pylint: disable=too-few-public-methods
+class LcpLca(LCP):
+  """LCP using LCA constructed in time `O(n log n)`.\
+     Answers queries in time `O(1)`"""
+  def __init__(self, w, ST):
+    super().__init__(w, ST)
+    self.lca = lca.LCA(ST)
+    leaves = ST.get_all_leaves(lambda x: (x.depth, x.index))
+    self.nodes = [None] * (len(leaves) + 1)
+    for (depth, index) in leaves:
+      self.nodes[len(leaves) - depth + 1] = index
+
+  def query(self, i, j):
+    return self.lca.query_depth(self.nodes[i], self.nodes[j])
+
 def _mismatch(j, m, k, lcp):
+  """Returns true iff H(P@T', P@T'[j:j+m]) <= k\n
+    * P is the pattern
+    * T' is the text with characters not in P changed to `#`
+    * lcp is a longest common prefix structure for all suffixes in P@T'
+  """
   # Index in pattern
   w = 1
   # Index in text
@@ -272,63 +306,38 @@ def _mismatch(j, m, k, lcp):
   # if it extends pattern we have a match with c mistakes
   # else we get a mistake and search again after the found prefix
   while w <= m and c <= k:
-    q = lcp.get(w, t)
+    q = lcp.query(w, t)
     if w + q <= m:
       c += 1
     w = w + q + 1
     t = t + q + 1
   return c <= k
 
-
 def _preorder_visit(ST, n, m, k, lcp, marked):
-  result = []
   if ST.depth >= m > ST.parent.depth:
-    leaves = ST.get_all_leaves(lambda x: x)
-    if leaves[0].index in marked and _mismatch(
-        m + n + 1 - leaves[0].depth + 2, m, k, lcp):
-      return [n - l.depth + 2 for l in leaves if l.depth != n + m + 2]
+    lengths = ST.get_all_leaves(lambda x: x.depth-2)
+    j = m + 1 + n - lengths[0]
+    is_marked = j in marked
+    is_first = lengths[0] == n + m
+    if (is_marked or is_first) and _mismatch(j, m, k, lcp):
+      yield from [n - l for l in lengths if l != n+m]
   for child in ST.children.values():
-    result += _preorder_visit(child, n, m, k, lcp, marked)
-  return result
+    yield from _preorder_visit(child, n, m, k, lcp, marked)
 
 
-class LcpLinear:
-
-  def __init__(self, w, _n, _ST):
-    self.word = w
-
-  def get(self, i, j):
-    return prefix.get_longest_common_prefix(self.word[i:], self.word[j:])
-
-
-class LcpLca:
-
-  def __init__(self, _w, _n, ST):
-    self.lca = lca.LCA(ST)
-    leaves = ST.get_all_leaves(lambda x: (x.depth, x.index))
-    self.nodes = [None] * (len(leaves) + 1)
-    for (depth, index) in leaves:
-      self.nodes[len(leaves) - depth + 1] = index
-
-  def get(self, i, j):
-    return self.lca.query_depth(self.nodes[i], self.nodes[j])
-
-
-def grossi_luccio_a4(t, w, n, m, k, lcp_class):
+def grossi_luccio_tree(t, w, n, m, k, lcp:LCP):
+  """Solves matching with k mismatches in time `O(n log |A_w| + rm)`\
+    if provided with LCP class having construction time `O(n)`\
+    and querry time `O(1)`"""
+  if n < m:
+    return
   A_w = set(w[1:])
   t_sub = ''.join([c if c in A_w else '#' for c in t[1:]])
   w_t = w + '@' + t_sub
   ST, _ = suffix_tree.mccreight(w_t, n + m + 1)
-  pi_occurences = [m + i + 1 for i in _permutation_matching('#'+t_sub, w, n, m, k)]
+  marked = {
+    m + i + 1 for i in _permutation_matching('#'+t_sub, w, n, m, k)}
   ST.set_depth()
   ST.set_index()
-  marked = {
-    i
-    for i in ST.get_all_leaves(lambda x: x.index
-                   if m + n + 1 - x.depth + 2 in pi_occurences
-                   or x.depth == n + m + 2 else None)
-    if i is not None
-  }
-  lcp = lcp_class(w_t, n, ST)
-  result = _preorder_visit(ST, n, m, k, lcp, marked)
+  result = _preorder_visit(ST, n, m, k, lcp(w_t, ST), marked)
   yield from result

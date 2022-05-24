@@ -21,12 +21,12 @@ APPROXIMATE_STRING_MATCHING_HAMMING_ALGORITHMS = [
         'Bitap-Shift-Add',
         matching_with_mismatches.bitap_shift_add,
     ],
-    [   'grossi_luccio A3',
-        matching_with_mismatches.grossi_luccio_a3,
+    [   'grossi_luccio linear',
+        matching_with_mismatches.grossi_luccio_linear,
     ],
     [
-        'grossi_luccio A4',
-        lambda t, w, n, m, k: matching_with_mismatches.grossi_luccio_a4(
+        'grossi_luccio tree',
+        lambda t, w, n, m, k: matching_with_mismatches.grossi_luccio_tree(
             t, w, n, m, k, matching_with_mismatches.LcpLca),
     ],
 ]
