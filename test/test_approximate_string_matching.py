@@ -31,6 +31,12 @@ APPROXIMATE_STRING_MATCHING_HAMMING_ALGORITHMS = [
     ],
 ]
 
+APPROXIMATE_STRING_PERMUTATION_MATCHING_ALGORITHMS = [
+    [   'permutation matching',
+        matching_with_mismatches.permutation_matching,
+    ],
+]
+
 APPROXIMATE_STRING_MATCHING_EDIT_ALGORITHMS = [
     [
         'naive edit distance',
@@ -61,6 +67,16 @@ class TestApproximateStringMatching(unittest.TestCase):
     self.assertFalse(
         list(algorithm(t, w, n, m, k)),
         f'Algorithm {algorithm.__name__}, text {t}, pattern {w}')
+
+  @staticmethod
+  def generate(n, m, k, A):
+    text = ''.join(random.choice(A) for _ in range(n))
+    index = random.randint(0, n - m)
+    word = text[index:index + m]
+    for _ in range(k - 1):
+      x = random.randint(0, m)
+      word = word[:x] + random.choice(A) + word[x + 1:]
+    return '#' + text[:n], '#' + word[:m]
 
 class TestApproximateStringMatchingWithHammingDistance(
     TestApproximateStringMatching):
@@ -115,16 +131,6 @@ class TestApproximateStringMatchingWithHammingDistance(
                            if self.check_hamming_distance(t, w, m, k, index)]
               self.check_get_all_matches(t, w, n, m, k, reference, algorithm)
 
-  @staticmethod
-  def generate(n, m, k, A):
-    text = ''.join(random.choice(A) for _ in range(n))
-    index = random.randint(0, n - m)
-    word = text[index:index + m]
-    for _ in range(k - 1):
-      x = random.randint(0, m)
-      word = word[:x] + random.choice(A) + word[x + 1:]
-    return '#' + text[:n], '#' + word[:m]
-
   @parameterized.parameterized.expand(
       APPROXIMATE_STRING_MATCHING_HAMMING_ALGORITHMS)
   @run_large
@@ -134,6 +140,77 @@ class TestApproximateStringMatchingWithHammingDistance(
       t, w = self.generate(n, m, k, A)
       reference = [index for index in range(1, n + 1)
                    if self.check_hamming_distance(t, w, m, k, index)]
+      self.check_get_all_matches(t, w, n, m, k, reference, algorithm)
+
+class TestApproximateStringPermutationMatching(
+    TestApproximateStringMatching):
+  run_large = unittest.skipUnless(
+      os.environ.get('LARGE', False), 'Skip test in small runs')
+
+  @staticmethod
+  def check_mismatches(t, w, m, k, index):
+    if index + m > len(t):
+      return False
+    c_t, c_w = {}, {}
+    for c in t[index:index + m]:
+      c_t[c] = c_t.get(c, 0) + 1
+    for c in w[1:]:
+      c_w[c] = c_w.get(c, 0) + 1
+    return sum(
+        [max(count - c_t.get(c, 0), 0) for (c, count) in c_w.items()]) <= k
+
+  @parameterized.parameterized.expand(
+      APPROXIMATE_STRING_PERMUTATION_MATCHING_ALGORITHMS)
+  def test_get_first_match(self, _, algorithm):
+    self.check_get_first_match('#bbbbaaa', '#aab', 7, 3, 1, 3, algorithm)
+
+  @parameterized.parameterized.expand(
+      APPROXIMATE_STRING_PERMUTATION_MATCHING_ALGORITHMS)
+  def test_get_all_matches(self, _, algorithm):
+    self.check_get_all_matches(
+        '#bbbbaaab', '#aab', 8, 3, 1, [3, 4, 5, 6], algorithm)
+    self.check_get_all_matches(
+        '#abbaba', '#?ba', 6, 3, 1, [1, 2, 3, 4], algorithm)
+    self.check_get_all_matches(
+        '#abbab', '#?ba', 5, 3, 3, [1, 2, 3], algorithm)
+
+  @parameterized.parameterized.expand(
+      APPROXIMATE_STRING_PERMUTATION_MATCHING_ALGORITHMS)
+  @run_large
+  def test_random_string_matching(self, _, algorithm):
+    T, n, m, K, A = 100, 20, 10, 6, ['a', 'b']
+    for _ in range(T):
+      for k in range(1, K + 1):
+        t, w = rand.random_word(n, A), rand.random_word(m, A)
+        reference = [index for index in range(1, n + 1)
+                     if self.check_mismatches(t, w, m, k, index)]
+        self.check_get_all_matches(t, w, n, m, k, reference, algorithm)
+
+  @parameterized.parameterized.expand(
+      APPROXIMATE_STRING_PERMUTATION_MATCHING_ALGORITHMS)
+  @run_large
+  def test_all_string_matching(self, _, algorithm):
+    N, M, K, A = 7, 3, 3, ['a', 'b']
+    for n in range(2, N + 1):
+      for m in range(1, M + 1):
+        for k in range(1, K + 1):
+          for t in itertools.product(A, repeat = n):
+            t = '#' + ''.join(t)
+            for w in itertools.product(A, repeat = m):
+              w = '#' + ''.join(w)
+              reference = [index for index in range(1, n + 1)
+                           if self.check_mismatches(t, w, m, k, index)]
+              self.check_get_all_matches(t, w, n, m, k, reference, algorithm)
+
+  @parameterized.parameterized.expand(
+      APPROXIMATE_STRING_PERMUTATION_MATCHING_ALGORITHMS)
+  @run_large
+  def test_random_string_matching_with_mismatches(self, _, algorithm):
+    T, n, m, k, A = 100, 50, 10, 4, ['a', 'b']
+    for _ in range(T):
+      t, w = self.generate(n, m, k, A)
+      reference = [index for index in range(1, n + 1)
+                   if self.check_mismatches(t, w, m, k, index)]
       self.check_get_all_matches(t, w, n, m, k, reference, algorithm)
 
 class TestApproximateStringMatchingWithEditDistance(

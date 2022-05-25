@@ -220,7 +220,7 @@ def bitap_shift_add(text: str, word: str, _n: int, m: int, k: int):
     if (state | overflow) < ((k+1) << (m-1)*B):
       yield index-m+1
 
-def _permutation_matching(t, w, n, m, k):
+def permutation_matching(t, w, n, m, k):
   Q, counter = collections.deque(), {}
   for c in w:
     counter[c] = counter.get(c, 0) + 1
@@ -228,9 +228,12 @@ def _permutation_matching(t, w, n, m, k):
   # Counter for number of current mismatches
   z = 0
   for j in range(1, n + 1):
-    Q.append(t[j])
-    counter[t[j]] -= 1
-    if counter[t[j]] < 0:
+    c = t[j]
+    if c not in counter:
+      c = '#'
+    Q.append(c)
+    counter[c] -= 1
+    if counter[c] < 0:
       z += 1
     # Pop from Q, until there are at most k mismatches
     while z > k:
@@ -252,7 +255,7 @@ def grossi_luccio_linear(t, w, n, m, k):
     return
   A_w = set(w)
   t_sub = ''.join([c if c in A_w else '#' for c in t])
-  for i in _permutation_matching(t_sub, w, n, m, k):
+  for i in permutation_matching(t_sub, w, n, m, k):
     if distance.hamming_distance('#' + t[i:i + m], w, m, m) <= k:
       yield i
 
@@ -336,7 +339,7 @@ def grossi_luccio_tree(t, w, n, m, k, lcp:LCP):
   w_t = w + '@' + t_sub
   ST, _ = suffix_tree.mccreight(w_t, n + m + 1)
   marked = {
-    m + i + 1 for i in _permutation_matching('#'+t_sub, w, n, m, k)}
+    m + i + 1 for i in permutation_matching('#'+t_sub, w, n, m, k)}
   ST.set_depth()
   ST.set_index()
   result = _preorder_visit(ST, n, m, k, lcp(w_t, ST), marked)
