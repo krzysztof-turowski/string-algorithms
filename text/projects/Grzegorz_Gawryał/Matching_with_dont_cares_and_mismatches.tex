@@ -34,7 +34,7 @@ Można zauważyć, że ta suma będzie zerowa wtw, gdy każdy jej składnik będ
 Powyższą sumę dla każdego $i$ można obliczyć poprzez klasyczny splot $(+, *)$, wykonując go na ciągach:
 \begin{itemize}
     \item $\Big(f(w_1)^3, \dots, f(w_m)^3\Big)$ oraz $\Big(f(t_{i+m-1}), \dots, f(t_{i})\Big)$
-    \item $\Big(-2f(w_1)^2, \dots, -2f(w_m)^3\Big)$ oraz $\Big(f(t_{i+m-1})^2, \dots, f(t_{i})^2\Big)$
+    \item $\Big(-2f(w_1)^2, \dots, -2f(w_m)^2\Big)$ oraz $\Big(f(t_{i+m-1})^2, \dots, f(t_{i})^2\Big)$
     \item $\Big(f(w_1), \dots, f(w_m)\Big)$ oraz $\Big(f(t_{i+m-1})^3, \dots, f(t_{i})^3\Big)$
 \end{itemize}
 a następnie sumując otrzymane wektory. Całość zajmuje czas $O(n \log m)$, wykorzystując FFT.
@@ -45,7 +45,7 @@ Lekko zmodyfikujmy poprzednią sumę:
 Zauważmy, że jeśli $w$ różni się na dokładnie jednej pozycji $x$ od podsłowa $t[i\dots i+m-1]$, to $A_0(i) = f(w_x) f(t_{i+x-1})(f(w_x) - f(t_{i+x-1}))^2$ oraz $A_1(i) = (i+x-1)f(w_x) f(t_{i+x-1})(f(w_x) - f(t_{i+x-1}))^2$. Dla każdego indeksu $i$ zachodzi więc dokładnie jeden z przypadków:
 \begin{itemize}
     \item $A_0(i) = 0$ -- wtedy odpowiednie słowa pasują do siebie bez błędów,
-    \item $A_0(i) \ne 0$ -- wówczas liczymy $B(i) = \frac{A_1(i)}{A_0(i)}$. Jeśli odpowiednie słowa różnią się na dokładnie jednej pozycji, to będzie to indeks $y$. Sprawdzamy więc, czy $A_0(i) = (i+y-1)f(w_y) f(t_{i+y-1})(f(w_y) - f(t_{i+y-1}))^2$ -- jeśli tak, to będzie to jedyny błąd, a jeśli nie, to znaczy, że mamy więcej błędów.
+    \item $A_0(i) \ne 0$ -- wówczas liczymy $B(i) = \frac{A_1(i)}{A_0(i)}$. Jeśli odpowiednie słowa różnią się na dokładnie jednej pozycji, to będzie to indeks $y = B(i)$. Sprawdzamy więc, czy $A_0(i) = f(w_y) f(t_{i+y-1})(f(w_y) - f(t_{i+y-1}))^2$ -- jeśli tak, to będzie to jedyny błąd, a jeśli nie, to znaczy, że mamy więcej błędów.
 \end{itemize}
 Analogicznie jak wyżej, wektor $A_1$ możemy obliczyć za pomocą 3 splotów, otrzymując tę samą złożoność. Powyższy algorytm może zwrócić wektor $B$ mówiący, na której pozycji znajduje się jedyny błąd, o ile istnieje.
 
