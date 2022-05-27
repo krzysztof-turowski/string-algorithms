@@ -62,12 +62,17 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 1. Basic algorithm based on FFT
 2. Clifford-Clifford algorithm
 
+#### Approximate string matching with wildcards and Hamming distance
+1. Nonrecursive randomised algorithm (Clifford, Eremenko et al.)
+2. Recursive randomised algorithm (Clifford, Eremenko et al.)
+3. Nonrecursive deterministic algorithm (Clifford, Eremenko et al.)
+
 ### Shortest common superstring
 1. $\log{n}$-approximation (Li-Jiang) algorithm
 2. $4$- and $3$-approximation (Blum et al.) algorithms based on overlaps
 3. Greedy overlap algorithm
 
-### Compression
+### Compressions
 1. Burrows-Wheeler transform
 2. ~~Lempel-Ziv 77 algorithm~~
 3. ~~Lempel-Ziv 78 algorithm~~
