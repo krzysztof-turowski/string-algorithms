@@ -96,8 +96,8 @@ def recursive(text_numeric, word_numeric, n, m, k):
       for i, x in enumerate(found_mismatches):
         if x is not None and x != TOO_MANY_MISMATCHES:
           if len(mismatches[i]) < k:
-            mismatches[i].add(x)
             E[x-i].add(i)
+            mismatches[i].add(x)
 
       ks /= 2
 
