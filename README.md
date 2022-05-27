@@ -10,7 +10,8 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 4. Constant space two-way (Crochemore-Perrin) algorithm
 5. _fast-on-average_ (Crochemore et al.) algorithm
 6. Turbo Boyer-Moore (Crochemore et al.) algorithm
-6. Hashing-based (Karp-Rabin) algorithm
+7. Bitap Shift-Add (Baeza-Yates-Gonnet) algorithm
+8. Hashing-based (Karp-Rabin) algorithm
 
 ### String indexing
 
@@ -33,15 +34,15 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 
 #### Longest common prefix
 1. Kasai et al. algorithm
+2. $\phi$ array-based (Kärkkäinen-Manzini-Puglisi) algorithm
+3. Irreducible LCPs-based (Kärkkäinen-Manzini-Puglisi) algorithm
+
+#### Longest previous factor
 
 ### Multiple exact string matching
 1. Aho-Corasick algorithm
 2. Commentz-Walter algorithm
 3. _fast-on-average_ (Crochemore et al.) algorithm
-
-### Lyndon factorization
-1. Maximum suffix algorithm based on prefix-suffix array
-2. Maximum suffix algorithm in constant space, based on critical factorization
 
 ### Approximate string matching
 
@@ -54,6 +55,7 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 
 #### Approximate string matching with Hamming distance
 1. Landau-Vishkin algorithm
+2. Bitap Shift-Add (Baeza-Yates-Gonnet) algorithm
 
 #### Approximate string matching with edit distance
 1. Approximate Boyer-Moore (Tarhio-Ukkonen) algorithm
@@ -72,11 +74,17 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 2. $4$- and $3$-approximation (Blum et al.) algorithms based on overlaps
 3. Greedy overlap algorithm
 
-### Compressions
-1. Burrows-Wheeler transform
-2. ~~Lempel-Ziv 77 algorithm~~
-3. ~~Lempel-Ziv 78 algorithm~~
-4. ~~Lempel-Ziv-Welch algorithm~~
+### Compression
+
+#### Burrows-Wheeler transform
+
+#### Lempel-Ziv 77 factorization
+
+### Other problems
+
+### Lyndon factorization
+1. Maximum suffix algorithm based on prefix-suffix array
+2. Maximum suffix algorithm in constant space, based on critical factorization
 
 ## Testing
 
