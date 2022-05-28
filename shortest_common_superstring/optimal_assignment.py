@@ -1,6 +1,6 @@
 from enum import IntEnum
-import numpy
 import math
+import numpy
 
 class Zero(IntEnum):
   NORMAL = 0
@@ -11,12 +11,14 @@ def new_alternating_path(matrix, i, j):
   position = (i,j)
   path = [position]
   while True:
-    starred_zero = next((i for i, v in enumerate(matrix.T[position[1]]) if v == Zero.STARRED), None)
-    if starred_zero == None:
+    starred_zero = next((i for i, v in enumerate(matrix.T[position[1]]) \
+        if v == Zero.STARRED), None)
+    if starred_zero is None:
       break
     position = (starred_zero, position[1])
     path.append(position)
-    primed_zero = next((i for i, v in enumerate(matrix[position[0]]) if v == Zero.PRIMED))
+    primed_zero = next((i for i, v in enumerate(matrix[position[0]]) \
+        if v == Zero.PRIMED))
     position = (position[0], primed_zero)
     path.append(position)
   for position in path:
@@ -34,7 +36,8 @@ def cover_zeros(matrix):
         matrix[i,j] = Zero.NORMAL
       if matrix[i,j] == Zero.STARRED:
         marked_cols.add(j)
-      elif matrix[i,j] == Zero.NORMAL and Zero.STARRED not in row and Zero.STARRED not in col:
+      elif matrix[i,j] == Zero.NORMAL and \
+          Zero.STARRED not in row and Zero.STARRED not in col:
         matrix[i,j] = Zero.STARRED
         marked_cols.add(j)
 
@@ -48,7 +51,8 @@ def cover_zeros(matrix):
           new_prime = True
           if Zero.STARRED in row:
             marked_rows.add(i)
-            marked_cols.discard(next((i for i, v in enumerate(row) if v == Zero.STARRED)))
+            marked_cols.discard(next((i for i, v in enumerate(row) \
+                if v == Zero.STARRED)))
           else:
             new_alternating_path(matrix, i, j)
             return cover_zeros(matrix)

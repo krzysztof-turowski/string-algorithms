@@ -60,7 +60,7 @@ def greedy_insert(cc):
   F,G = ([],[])
   for c in cc:
     if len(c) == 2:
-      shorter, longer = c[0],c[1] if len(c[0])<len(c[1]) else c[1],c[0]
+      shorter, longer = (c[0],c[1]) if len(c[0])<len(c[1]) else (c[1],c[0])
       F.append(shorter)
       G.append(longer)
 
