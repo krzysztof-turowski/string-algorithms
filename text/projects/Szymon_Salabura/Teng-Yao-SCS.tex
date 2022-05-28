@@ -45,7 +45,7 @@ Prosta obserwacja pokazuje, że suma długości słów w cyklu $E$ jest równa $
 
 Pokryciem cyklowym grafu $G$ jest zbiór cykli taki, że każdy wierzchołek $G$ należy do któregoś z nich.
 Optymalne pokrycie cyklowe jest pokryciem cyklowym z (w tym przypadku) najmniejszą możliwą sumą wag krawędzi.
-Można je znaleźć w czasie $O(n^3)$ algorytmem węgierskim \footnote{\url{https://en.wikipedia.org/wiki/Hungarian_algorithm}}. \\
+Można je znaleźć między innymi za pomocą algorytmu węgierskiego \footnote{\url{https://en.wikipedia.org/wiki/Hungarian_algorithm}} działającego w czasie $O(n^3)$ . \\
 
 Niech $C=\{c_1,c_2,\dots,c_k\}$ będzie pokryciem cyklowym.
 By udowodnić współczynnik aproksymacji należy wprowadzić najpierw kilka lematów.
@@ -54,11 +54,11 @@ By udowodnić współczynnik aproksymacji należy wprowadzić najpierw kilka lem
 $d(C) \leq opt(S)$ oraz $ov(C) \geq |S|-opt(S)$.
 \end{lemma}
 \begin{lemma}
-Niech $ov_m=\sum\,ov(C)$ dla cykli składających się z $m$ wierzchołków.
+Niech $ov_m=\sum_{C:|V(C)|=m}\,ov(C)$.
 Niech $C'$ będzie podzbiorem $C$ powstałym przez usunięcie krawędzi z najmniejszym $ov(s,t)$ z każdego cyklu.
-Wtedy $ov(C') \geq ov_2/2+ov_3/3+ov_4/4+\dots$.
+Wtedy $ov(C') \geq \sum_{i=2}^n ov_i/i$.
 \end{lemma}
-Warto zauważyć, że nadsłowo powstałe przez złączenie ze sobą wszystkich ścieżek z $C'$ uzyskuje $ov(C') \geq ov(C)/2$, a więc jest co najmniej tak dobre jak nadsłowo stworzone algorytmem zachłannym.
+Warto zauważyć, że nadsłowo powstałe przez złączenie ze sobą wszystkich ścieżek z $C'$ uzyskuje $ov(C') \geq ov(C)/2$, a więc daje nam to tak samo dobrą gwarancję kompresji jak algorytm zachłanny.
 \begin{lemma}[\cite{Blum-Jiang}]
 Niech $c_1,c_2 \in C$ oraz $s_1 \in c_1, s_2 \in c_2$.
 Wtedy $ov(s_1,s_2) \leq d(c_1)+d(c_2)$.

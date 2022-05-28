@@ -18,9 +18,9 @@ def exact(T):
 
 def naive(T):
   '''Does not change the order of words, only overlaps them'''
-  return '#' + ''.join(w1[1:-prefix.get_overlap(w1,w2)]
-      if prefix.get_overlap(w1,w2)>0 else w1[1:] for w1,w2 in zip(T,T[1:])) \
-          + T[-1][1:] if T else ''
+  prefixes = [w1[1:-prefix.get_overlap(w1,w2)] if prefix.get_overlap(w1,w2)>0 \
+      else w1[1:] for w1,w2 in zip(T,T[1:])]
+  return '#' + ''.join(prefixes) + T[-1][1:] if T else ''
 
 def group_merge(T):
   def _get_all_merges(word_1, word_2):
