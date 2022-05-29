@@ -1,0 +1,308 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage[]{amsthm} %lets us use \begin{proof}
+\usepackage[]{amssymb} %gives us the character \varnothing
+\usepackage{algorithm}
+\usepackage[noend]{algorithmic}
+\usepackage{amsmath}
+\usepackage{tikz}
+
+\newtheorem{definition}{Definicja}[section]
+\newtheorem{lemma}{Lemat}[section]
+\newtheorem{theorem}{Twierdzenie}[section]
+
+\DeclareMathOperator{\HRP}{HRP}
+
+\title{Wyszukiwanie wzorca w tekście w stałej pamięci\\ i czasie liniowym}
+\author{Łukasz Selwa}
+\date{Maj 2022}
+
+\begin{document}
+
+\maketitle
+
+\section{Wprowadzenie}
+Naiwny algorytm wyszukiwania wzorca $w$ w tekście $t$ wymaga jedynie stałej pamięci ale zajmuje czas $O(|w| \cdot |t|)$. 
+Znane są algorytmy rozwiązujące problem wyszukiwania wzorca w czasie liniowym $O(|w| + |t|)$, jak algorytm Knutha-Morrisa-Pratta, jednak najczęściej potrzebują liniowej dodatkowej pamięci.
+
+
+W pracy ,,Time-Space-Optimal String Matching'' Z. Galil i J. Seiferas jako pierwsi przedstawili algorytm do wyszukiwania wzorca działający w czasie liniowym i stałej pamięci.
+Niniejszy tekst jest oparty na późniejszej pracy M. Crochemore i W. Rytter ,,Squares, Cubes, and Time-Space Efficient StringS earching'', która zawiera uproszczony opis i dowód oryginalnego algorytmu Galil-Seiferas.
+
+\section{Algorytm}
+
+\subsection{Idea algorytmu}
+Idea algorytmu Galil-Seiferas polega na zmodyfikowaniu działania algorytmu Morris–Pratta tak aby oszczędzić trzymania w pamięci całej tablicy prefikso-sufiksów.
+Dokonuje się tego poprzez dekompozycje wzorca $w$ na słowa $u,v$, takie że $w = u v$, $u$ jest stosunkowo krótkim słowem a $v$ nie zawiera dużych prefiksów.
+W słowie $t$ szukając wystąpień wzorca $w$ będziemy znajdować wystąpienia $v$ i dla każdego wystąpienia naiwnie sprawdzać czy bezpośrednio przed $v$ występuje $u$.
+Okazuję się, że da się to zrobić tak, żeby cały algorytm dalej działał w czasie liniowym od $|t| + |w|$.
+
+\subsection{Opis Algorytmu}
+
+\begin{definition}
+\textbf{\textit{k-HRP}}.
+Dla $k \geq 3$ mówimy, że słowo $v$ jest $k$-wysoce-powtarzanym-prefiksem ($k$-HRP, ang. $k$-\textit{highly-repeating-prefix}) słowa $w$, jeśli $v^i$ jest prefiksem $w$ dla pewnego $i \geq k$ oraz $v$ jest słowem pierwotnym.
+Będziemy oznaczać $k$-HRP przez samo HRP jeśli $k$ będzie jasne z kontekstu.
+\end{definition}
+
+Zauważmy, że najkrótszy okres słowa $v^2$ to $|v|$. Inaczej $v$ nie byłoby słowem pierwotnym. Z definicji $k$-HRP $v^2$ jest prefiksem $w$. Dzięki temu możemy zdefiniować zakres $v$.
+
+\begin{definition}
+\textbf{\textit{Zakres.}}
+Niech $v$ będzie $k$-HRP słowa $w$. Przedział $[L, R]$ nazywamy zakresem $v$ jeśli $L = |v^2|$ oraz $[L,R]$ jest najdłuższym przedziałem takim, że dla każdego $i \in [L, R]$ najkrótszy okres $w[1...i]$ jest równy $|v|$.
+\end{definition}
+
+\begin{lemma}\label{Lem_1}
+Niech $v_1, v_2$ to $k$-HRP słowa $w$, $|v_1| < |v_2|$ oraz $[L_1, R_1], [L_2, R_2]$ to zakresy odpowiednio $v_1, v_2$. Wtedy $R_1 < L_2$.
+\end{lemma}
+\begin{proof}
+Niech $z$ będzie prefiksem $w$ długości $R_1$. Jeśli $L_2 \leq R_1$ to z tego wynika, że $v_2^2$ jest prefiksem $z$. Ponieważ, $|v_1| < |v_2|$ i $|v_1|$ jest okresem $z = v_2^2 z'$ to $|v_1|$ jest też okresem $v_2^2$. Z lematu o okresowości wynika, że $\gcd(|v_1|, |v_2|)$ też musi być okresem $v_2^2$. Ale $\gcd(|v_1|, |v_2|) < |v_2|$ stąd sprzeczność z pierwotnością $v_2$.
+\end{proof}
+
+Dla słowa $x$, przez $p(x)$ oznaczamy najkrótszy okres $x$.
+
+\begin{lemma}\label{Lem_2}
+Niech $v_1, ..., v_r$ będzie sekwencją wszystkich $k$-HRP słowa $w$. Niech $[L_i, R_i]$ to zakres $v_i$. Wtedy dla każdego niepustego prefiksu $u$ słowa $w$ zachodzi:
+$$\begin{array}{rl}
+    p(u) = L_i/2 & \text{jeśli $|u| \in [L_i, R_i]$ dla pewnego $i$} \\
+    p(u) > |u|/k & \text{w przeciwnym przypadku}
+\end{array}$$
+\end{lemma}
+\begin{proof}
+Jeśli $|u|$ nie należy do żadnego przedziału $[L_i, R_i]$ to każdy okres $u$ musi być większy od $|u|/k$. 
+Jeśli $|u| \in [L_i, R_i]$ to $u$ musi być prefiksem $v_i^e$, dla $e \geq 2$. Z pierwotności $v_i$ najkrótszy okres $u$ to $|v_i| = L_i / 2$.
+\end{proof}
+
+Załóżmy, że $w$ jest wzorcem, dla którego $v_1$ jest jedynym $k$-HRP z zakresem $[L_1, R_1]$. Wtedy możemy znaleźć wszystkie wystąpienia $w$ w tekście $t$ w czasie liniowym.
+Niech $m = |w|, n = |t|$.
+
+\begin{algorithm}[H]
+\caption{SIMPLE-TEXT-SEARCH}
+\label{simple-text-search}
+\begin{algorithmic} 
+\STATE $pos \gets 0, j \gets 0$
+\WHILE{$pos + m \leq n$}
+    \WHILE{$j < m \land w[j + 1] = t[pos + j + 1] $}
+        \STATE $j \gets j + 1$
+    \ENDWHILE
+    \IF{$j = m$}
+        \RETURN Match at position $pos$.
+    \ENDIF
+    \IF{$j \in [L_1, R_1]$}
+        \STATE $pos \gets pos + L_1 / 2$
+        \STATE $j \gets j - L_1 / 2$
+    \ELSE
+        \STATE $pos \gets pos + \lfloor j / k \rfloor + 1$
+        \STATE $j \gets 0$
+    \ENDIF
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+Poprawność algorytmu wynika z lematu \ref{Lem_2}. Algorytm działa w czasie liniowym ponieważ cały czas rośnie wartość $k \cdot pos + j$. Łatwo też zauważyć, że dodatkowa pamięć wymagana przez algorytm jest stała.
+
+\begin{definition}
+\textbf{\textit{k-perfekcyjna-dekompozycja.}} Dla danego $w$ mówimy, że słowa $u,v$ są $k$-perfekcyjną dekompozycją jeśli $w = uv$, $v$ ma co najwyżej jedno $k$-HRP oraz $|u| < 2p(v)$.
+\end{definition}
+
+Zauważmy, że jeśli dla wzorca $w$ mamy $k$-perfekcyjną dekompozycję to możemy łatwo znaleźć wszystkie wystąpienia wzorca w czasie liniowym i stałej pamięci za pomocą algorytmu \ref{simple-text-search}. W czasie liniowym możemy wyszukać wszystkie wystąpienia $v$ i dla każdego sprawdzić czy jest poprzedzane przez $u$.
+Złożoność zamortyzuje się do czasu liniowego ponieważ $|u| \leq 2|v|$.
+Przedstawimy algorytm znajdujący $k$-perfekcyjną dekompozycję.
+
+\subsection{Znajdowanie dekompozycji}
+
+Ustalmy $k \geq 3$. Przez $\HRP i(x)$ oznaczamy $i$-ty najkrótszy $\HRP$ słowa $x$.
+\begin{lemma}\label{Lem_3}
+Załóżmy, że $x$ ma $\HRP$, niech $z=\HRP(x)$ oraz $x = zx'$.
+\begin{enumerate}
+    \item Jeśli istnieje $\HRP2(x)$ to $|\HRP2(x)| > 2\cdot |\HRP1(x)|$
+    \item Jeśli istnieje $\HRP1(x')$ to $\HRP1(x)$ jest prefiksem $\HRP1(x')$
+\end{enumerate}
+\begin{proof}
+Załóżmy nie wprost, że $|\HRP2(x)| \leq 2\cdot |\HRP1(x)|$. Ponieważ z definicji $\HRP1(x)^2$ jest prefiksem $x$ to $\HRP2(x)$ jest prefiksem $\HRP1(x)^2$. Co przeczy pierwotności $\HRP2(x)$.
+
+Ponieważ $k \geq 3$ to $(\HRP1(x))^2$ jest prefiksem $x'$. Jeśli zachodziłoby $|\HRP1(x')| < |\HRP1(x)|$ to albo $\HRP1(x)$ nie byłoby słowem pierwotnym albo nie byłoby najkrótszym $\HRP$ słowa $x$.
+\end{proof}
+\end{lemma}
+
+\begin{definition}
+\textbf{\textit{Ciąg czynników.}} Dla słowa $x$ ciąg $V(x) = (v_1, v_2, ...)$ definiujemy następująco, $v_1 = \HRP1(x)$. Niech $x'$ będzie słowem takim, że $x = v_1x'$. Wtedy $x_2 = \HRP(x')$ i tak dalej dopóki $\HRP$ istnieją.
+\end{definition}
+Z lematu \ref{Lem_3} wynika, że ciąg czynników jest rosnący ze względu na długość.
+
+\begin{lemma}[Kluczowy Lemat]\label{Lem_Key}
+Niech $V(x) = (v_1, v_2, v_3 ...)$ będzie ciągiem czynników i niech $\HRP2(x)$ istnieje.
+Niech $i$ będzie największą liczbą taką, że $|v_1...v_i| < |\HRP2(x)|$.
+Wtedy jeśli $v_{i+1}$ istnieje to $|v_{i+1}| \geq |\HRP2(x)|$
+\end{lemma}
+\textit{Szkic dowodu.}
+Niech $w = \HRP2(x)$. Załóżmy nie wprost, że $|v_{i+1}| \leq |w|$. 
+Zauważmy, że $v_{i+1}$ musi przecinać dwa wystąpienia $w$, to jest istnieją słowa $u, y$ takie, że $v = uy$, $y \neq \epsilon$ jest prefiksem $w$ a $u$ jest sufiksem $w$.
+Niech $z$ spełnia $w = yz$. Ponieważ $v_1...v_i$ jest prefiksem $w$, a $w$ jest prefiksem $v_1...v_{i+1}$ to dla pewnego $j$, $z$ jest podsłowem $v_j...v_{i+1}$.
+Ponieważ $|v_{i+1}|<|w|$ to $j < i+1$. Przykładowa sytuacja pokazana jest na rysunku \ref{fig:Lem_3_proof}.
+
+\begin{figure}[H]
+    \centering
+
+    \tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
+    \begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-0.75,xscale=0.75]
+        uncomment if require: \path (0,231); %set diagram left start at 0, and has height of 231
+        
+        %Straight Lines [id:da1957076587621409] 
+        \draw  [dash pattern={on 6pt off 3.75pt}]  (110,50) -- (110,115) -- (110,180) ;
+        %Straight Lines [id:da024820241842662627] 
+        \draw  [dash pattern={on 6pt off 3.75pt}]  (349.03,50) -- (349.03,180) ;
+        %Straight Lines [id:da6568483119571034] 
+        \draw  [dash pattern={on 6pt off 3.75pt}]  (260,50) -- (260,180) ;
+        %Shape: Rectangle [id:dp5163576947584385] 
+        \draw  [draw opacity=0][fill={rgb, 255:red, 255; green, 255; blue, 255 }  ,fill opacity=1 ] (20,80) -- (520,80) -- (520,100) -- (20,100) -- cycle ;
+        %Shape: Rectangle [id:dp024969728190506135] 
+        \draw  [line width=0.75]  (20,30) -- (30,30) -- (30,50) -- (20,50) -- cycle ;
+        %Shape: Rectangle [id:dp1609505850759838] 
+        \draw  [line width=0.75]  (30,30) -- (51.13,30) -- (51.13,50) -- (30,50) -- cycle ;
+        %Shape: Rectangle [id:dp9401250370747307] 
+        \draw  [line width=0.75]  (90,30) -- (140,30) -- (140,50) -- (90,50) -- cycle ;
+        %Shape: Rectangle [id:dp9602383760078768] 
+        \draw  [line width=0.75]  (160,30) -- (230,30) -- (230,50) -- (160,50) -- cycle ;
+        %Shape: Rectangle [id:dp8849018663449073] 
+        \draw  [line width=0.75]  (230,30) -- (349.03,30) -- (349.03,50) -- (230,50) -- cycle ;
+        %Shape: Rectangle [id:dp6358644703769141] 
+        \draw  [line width=0.75]  (51.13,30) -- (80,30) -- (80,50) -- (51.13,50) -- cycle ;
+        %Shape: Rectangle [id:dp33959321982134627] 
+        \draw  [fill={rgb, 255:red, 255; green, 255; blue, 255 }  ,fill opacity=1 ][line width=0.75]  (20,130) -- (260,130) -- (260,150) -- (20,150) -- cycle ;
+        %Straight Lines [id:da5043964909686485] 
+        \draw [line width=0.75]    (20,80) -- (20,100) ;
+        %Straight Lines [id:da2723027326882619] 
+        \draw [fill={rgb, 255:red, 255; green, 255; blue, 255 }  ,fill opacity=1 ][line width=0.75]    (20,100) -- (520,100) ;
+        %Straight Lines [id:da1772478057309408] 
+        \draw [line width=0.75]    (20,80) -- (520,80) ;
+        %Shape: Rectangle [id:dp9201569548012696] 
+        \draw  [fill={rgb, 255:red, 255; green, 255; blue, 255 }  ,fill opacity=1 ][line width=0.75]  (260,180) -- (349.03,180) -- (349.03,200) -- (260,200) -- cycle ;
+        %Shape: Rectangle [id:dp7813216967065244] 
+        \draw  [fill={rgb, 255:red, 255; green, 255; blue, 255 }  ,fill opacity=1 ][line width=0.75]  (349.03,180) -- (500,180) -- (500,200) -- (349.03,200) -- cycle ;
+        %Shape: Rectangle [id:dp2923055166189936] 
+        \draw  [fill={rgb, 255:red, 255; green, 255; blue, 255 }  ,fill opacity=1 ][line width=0.75]  (110,180) -- (260,180) -- (260,200) -- (110,200) -- cycle ;
+        %Shape: Rectangle [id:dp8791179928480817] 
+        \draw  [fill={rgb, 255:red, 255; green, 255; blue, 255 }  ,fill opacity=1 ][line width=0.75]  (260,130) -- (500,130) -- (500,150) -- (260,150) -- cycle ;
+        
+        %Straight Lines [id:da29631456153516145] 
+        \draw  [dash pattern={on 1.5pt off 1.5pt}]  (140,30) -- (160,30) ;
+        %Straight Lines [id:da9823812330034041] 
+        \draw  [dash pattern={on 1.5pt off 1.5pt}]  (140,50) -- (160,50) ;
+        %Straight Lines [id:da13329629141424637] 
+        \draw  [dash pattern={on 1.5pt off 1.5pt}]  (80,50) -- (90,50) ;
+        %Straight Lines [id:da2235563762134123] 
+        \draw  [dash pattern={on 1.5pt off 1.5pt}]  (80,30) -- (90,30) ;
+        
+        % Text Node
+        \draw (272,85) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$x$};
+        % Text Node
+        \draw (141,135) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$w$};
+        % Text Node
+        \draw (371,135) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$w$};
+        % Text Node
+        \draw (298,185) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$y$};
+        % Text Node
+        \draw (418,185) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$z$};
+        % Text Node
+        \draw (181,185) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$z$};
+        % Text Node
+        \draw (281,35) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$v_{i+1}$};
+        % Text Node
+        \draw (191,35) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$v_i$};
+        % Text Node
+        \draw (108,35) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$v_j$};
+        % Text Node
+        \draw (60,35) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$v_3$};
+        % Text Node
+        \draw (32,35) node [anchor=north west][inner sep=0.75pt]  [font=\small] [align=left] {$v_2$};
+    \end{tikzpicture}
+
+    \caption{Ilustracja do dowodu lematu.}
+    \label{fig:Lem_3_proof}
+\end{figure}
+
+Należy rozważyć dwa przypadki. Pierwszy kiedy $v_j$ jest prefiksem $z$. Wtedy za pomocą lematu \ref{Lem_3} można pokazać, że $w$ nie jest słowem pierwotnym.
+Drugi przypadek jest kiedy początek $z y$ znajduje się ściśle wewnątrz $v_j$. 
+Za pomocą lematu \ref{Lem_3} można pokazać, że w tym przypadku $v_j$ nie może być słowem pierwotnym.
+
+\begin{definition}
+\textbf{\textit{Pozycja specjalna.}} Lemat \ref{Lem_Key} pozwala na zdefiniowanie pojęcia pozycji specjalnych. Niech $V(x) = (v_1, ...)$ to ciąg czynników $x$. Pierwszą pozycją specjalną słowa $x$ jest długość słowa $v_1...v_i$ takiego, że $v_{i+1}$ albo nie istnieje albo $|v_1...v_{i+1}| \geq \HRP2(x)$. Jeśli $x = v_1...v_i x'$ to kolejną pozycją specjalną definiujemy analogicznie dla $x'$. Robimy tak dopóki dla $x$ istnieje $\HRP2(x)$.
+\end{definition}
+
+\begin{theorem}[O dekompozycji]\label{Th_Decomposition}
+Niech $j$ będzie ostatnią specjalną pozycją słowa $x$.
+Niech $u = x[1...j], v=x[j+1...n]$. Wtedy $uv$ jest $k$-perfekcyjną dekompozycją $x$.
+\end{theorem}
+Z definicji $v$ nie może mieć $\HRP2(v)$ pozostało zauważyć, że $|u| < p(v)$.
+Kluczową obserwacją jest fakt, że dla kolejnych pozycji specjalnych $j$, $j'$ zachodzi $2\cdot |\HRP2(x[j...])| \leq |\HRP2(x[j'...])|$. Wynika to z lematów \ref{Lem_3}. \ref{Lem_Key}.
+Na podstawie twierdzenia \ref{Th_Decomposition} możemy skonstruować algorytm do wyznaczania $k$-perfekcyjnej dekompozycji.
+\begin{algorithm}[H]
+\caption{PERFECT-DECOMPOSITION}
+\label{perfect_decomposition}
+\begin{algorithmic} 
+\STATE $j \gets 0, hrp1 \gets |\HRP1(x)|, hrp2 \gets |\HRP2(x)|$
+\WHILE{$hrp1 \neq \texttt{NULL} \land hrp2 \neq \texttt{NULL}$}
+    \STATE $j \gets j + hrp1$
+    \STATE $hrp1 \gets |\HRP1(x[j...n])$
+    \IF{$hrp1 \geq hrp2$}
+        \STATE $hrp2 \gets|\HRP2(x[j...n])$
+    \ENDIF
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+
+Galil Seiferas pokazali, że jeśli potrafimy obliczyć $\HRP1(x)$ oraz $\HRP2(x)$ w czasie proporcjonalnym do $|\HRP2(x)|$ to powyższy algorytm jest liniowy. Dowód tego faktu pominiemy.
+Pokażemy za to sam algorytm wyznaczania $\HRP1(x)$ i $\HRP2(x)$ w odpowiednim czasie.
+
+\subsection{Wyznaczanie $k$-HRP}
+
+Przedstawimy jak wyznaczyć wszystkie $\HRP$ słowa $w$ o długości $n$.
+Załóżmy, że mamy policzony ciąg pierwszych $\HRP$ $v_1, v_2, ..., v_r$ i ich odpowiednie zakresy $[L_1, R_1], [L_2, R_2], ..., [L_r, R_r]$.
+W tedy z lematu \ref{Lem_1} wiemy, że kolejny $\HRP$ może pojawić się od pozycji $R_r / 2$. 
+
+Ustalmy pozycję $pos > R_r / 2$.
+Załóżmy, że sprawdziliśmy wszystkie pozycje w przedziale $[R_r / 2, pos)$ i wiemy, że żadna z nich nie jest $\HRP$.
+Niech $j$ będzie liczbą taką, że $w[1...j]$ to najdłuższy wspólny prefiks $w$ oraz $w[pos...n]$. 
+Jeśli $pos \cdot k \leq pos + j$ to $v[1...pos]$ jest $k$-HRP słowa $w$, ponieważ $(w[1...pos])^k$ jest prefiksem $w$ oraz $w$ jest słowem pierwotnym bo inaczej znaleźlibyśmy $k$-HRP wcześniej.
+Mamy też od razu obliczony zakres $v_{r+1}$, ponieważ z definicji $L_{r+1} = 2 \cdot pos$ oraz $R_{r+1} = pos + j$.
+Jeśli natomiast $pos \cdot k > pos + j$ to $w[1...pos]$ nie może być $k$-HRP.
+
+Zastanówmy się gdzie może być następny potencjalny koniec $k$-HRP.
+Jeśli $j$ nie należy do żadnego zakresu $[L_i, R_i]$ to z lematu \ref{Lem_2} najkrótszy okres $w[1...j]$ jest większy od $j/k$. W takim przypadku możemy więc przesunąć pozycję $pos$ o $\lfloor j / k \rfloor + 1$ i mieć pewność, że nie pominęliśmy kolejnego $k$-HRP.
+
+Jeśli natomiast $j \in [L_i, R_i]$ dla pewnego $k$-HRP $v_i$ to z lematu \ref{Lem_2} wiemy, że $p(w[1...j]) = L_i / 2$. Stąd następna potencjalna pozycja jest równa $pos + L_i / 2$. Ale ponieważ $j \geq L_i$ to wiemy, że najdłuższy prefiks $w$ i $w[pos...n]$ ma co najmniej długość $j - L_i / 2$. 
+Taka analiza prowadzi do następującego algorytmu.
+
+\begin{algorithm}[H]
+\caption{PREPROCESS}
+\label{preprocess}
+\begin{algorithmic} 
+\STATE $\textit{spcopes} \gets \texttt{empty list}$
+\STATE $pos \gets 1, j \gets 0$
+\WHILE{$pos + m < n$}
+    \WHILE{$pos + j < m \land w[j + 1] = w[pos + j + 1] $}
+        \STATE $j \gets j + 1$
+    \ENDWHILE
+    \IF{$k \cdot pos \leq pos + j$}
+        \STATE Append $[2 \cdot pos, pos + j]$ to list \textit{spcopes}.
+    \ENDIF
+    \IF{$j \in [L_i, R_i]$ for some $[L_i, R_i]$ in \textit{scopes}}
+        \STATE $pos \gets pos + L_i / 2$
+        \STATE $j \gets j - L_i / 2$
+    \ELSE
+        \STATE $pos \gets pos + \lfloor j / k \rfloor + 1$
+        \STATE $j \gets 0$
+    \ENDIF
+\ENDWHILE
+\RETURN \textit{scopes}
+\end{algorithmic}
+\end{algorithm}
+
+Podobnie jak w przypadku algorytmu \ref{simple-text-search} podany algorytm jest liniowy ponieważ cały czas rośnie wartość $k \cdot pos + j$.
+
+Zauważmy, że jeśli zatrzymamy algorytm gdy znajdziemy $\HRP1$ i $\HRP2$ to dostaniemy algorytm obliczający pierwsze dwa $\HRP$ w stałej pamięci i liniowy od długości $\HRP2$.
+To kończy opis działania algorytmu Galil-Seiferas w wersji Crochemore-Rytter.
+\end{document}
