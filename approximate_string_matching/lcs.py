@@ -1,5 +1,6 @@
 import collections
 import math
+import bisect
 
 from approximate_string_matching import distance
 
@@ -215,3 +216,279 @@ def myers(text_1, text_2, n, m, S):
     raise ValueError(
         'Myers algorithm works only for indel/lcs distances')
   return _find_lcs(_EditBox(text_1, text_2, 0, n, 0, m))
+
+def _make_matchlists(text_1, text_2, n_1, n_2):
+  matchlists = collections.defaultdict(list)
+  result = [None] * (n_1 + 1)
+  for j in range(n_2, 0, -1):
+    matchlists[text_2[j]].append(j)
+  for i in range(1, n_1 + 1):
+    result[i] = matchlists[text_1[i]]
+  return result
+
+def hunt_szymanski(text_1, text_2, n_1, n_2, S):
+  """
+  Calculates the longest common subsequence of text_1 and text_2
+  using the Hunt-Szymanski algorithm.
+  Only works with for indel/lcs distance.
+  """
+  if S != distance.INDEL_DISTANCE:
+    raise ValueError(
+        'Hunt-Szymanski algorithm works only for indel/lcs distances')
+  if n_2 == 0:
+    return ""
+  matchlist = _make_matchlists(text_1, text_2, n_1, n_2)
+  threshold = [0] + [n_2 + 1] * n_2 
+  link = [None] * (n_2 + 1)
+  for i in range(1, n_1 + 1):
+    for j in matchlist[i]:
+      k = bisect.bisect_left(threshold, j)
+      if j < threshold[k]:
+        threshold[k], link[k] = j, (i, j, link[k-1])
+  k = n_2
+  while threshold[k] == n_2 + 1:
+    k -= 1
+  ptr, result = link[k], []
+  while ptr is not None:
+    result.append(text_1[ptr[0]])
+    ptr = ptr[2]
+  return "".join(reversed(result))
+
+def _tree_parent(value):
+  """Return the parent of node value"""
+  return value // 2
+  
+def _tree_left(value):
+  """Return the left son of node value"""
+  return 2 * value
+
+def _tree_right(value):
+  """Return the right son of node value"""
+  return 2 * value + 1
+
+class _CTree:
+  """
+  Implementation of Characteristic Trees as described in
+  Apostolico, Guerra - The longest common subsequence problem revisited.
+  The tree stores a sorted list of numbers from a set universum.
+  It maintains pointers to recently accessed leaves to improve performance
+  of sequential operations
+  ...
+
+  Attributes
+  ----------
+  U : list of int
+      the universum
+  inf : int
+      the number to represent infinity
+  empty : bool
+      whether the starting list is empty
+
+  Methods
+  -------
+  search(v)
+    returns the smallest number u such that u >= v
+  insert(v)
+    inserts v into the list
+  delete(v)    
+    deletes v from the list
+  first()
+    returns the smallest number in the list or inf if the list is empty
+  """
+  
+  def __init__(self, U, inf, empty=False):
+    self.size = 2
+    while self.size <= len(U) + 1:
+      self.size *= 2
+    self.inf = inf
+    self.U = [0] + U + [inf] * (self.size - len(U) - 1)
+    self.first_inf = len(U) + 1
+    self.left_max = [0] * (2 * self.size)
+    self.right_max = [0] * (2 * self.size)
+    self.count = [0] * (2 * self.size)
+    self.prev = [None] * (self.size + 1)
+    self.next = [None] * (self.size + 1)
+    for i in range(self.size, 2 * self.size):
+      self.left_max[i] = self.right_max[i] = self.U[i-self.size]
+      self.count[i] = 1 if not empty or i == self.size else 0
+    for i in range(self.size-1, 0, -1):
+      self.left_max[i] = self.right_max[_tree_left(i)]
+      self.right_max[i] = self.right_max[_tree_right(i)]
+      self.count[i] = max(self.count[_tree_left(i)], self.count[_tree_right(i)])
+    self.next[0] = self.first_inf if empty else 1
+    if not empty:
+      self.prev[1] = 0
+      for i in range(1, len(U)+1):
+        self.next[i] = i + 1
+        self.prev[i+1] = i
+    self.prev[self.first_inf] = 0 if empty else self.first_inf - 1
+    self.search_finger = 0
+    self.change_finger = 0
+
+  def _is_leaf(self, value):
+    """Return true if node value is a leaf"""
+    return value >= self.size
+  
+  def _leaf_value(self, value):
+    """Return the value at leaf v"""
+    return self.U[value - self.size]
+    
+  def _find_neigh(self, node, value):
+    """
+    Finds a leaf of a predecessor or successor of value in the tree.
+    Returns the node of the largest number p such that p < value
+    or the node of the smallest number s >= value.
+    It starts searching from leaf it.
+    """
+    while self.right_max[node] < value or self.count[node] == 0:
+      node = _tree_parent(node)
+    while not self._is_leaf(node):
+      left, right = _tree_left(node), _tree_right(node)
+      if self.left_max[node] >= value and \
+        self.count[left] > 0 or self.count[right] == 0:
+        node = left
+      else:
+        node = right
+    return node
+  
+  def _find_exact(self, node, value):
+    """
+    Returns the leaf corresponding to value in the tree
+    It starts searching from leaf node.
+    """
+    while self.right_max[node] < value:
+      node = _tree_parent(node)
+    while not self._is_leaf(node):
+      node = _tree_left(node) if self.left_max[node] >= value else _tree_right(node)
+    return node
+    
+  def search(self, value):
+    """
+    Returns the smallest number u such that u >= value
+    """
+    if value == self.inf:
+      return self.inf
+    if self.U[self.search_finger] > value:
+      self.search_finger = 0
+    neigh = self._find_neigh(self.size + self.search_finger, value)
+    if self._leaf_value(neigh) >= value:
+      self.search_finger = neigh - self.size
+      return self._leaf_value(neigh)
+    res = self.next[neigh - self.size]
+    self.search_finger = res
+    return self.U[res]
+    
+  def insert(self, value):
+    """
+    Inserts value into the list
+    """
+    if value == self.inf:
+      return
+    if self.U[self.change_finger] > value:
+      self.change_finger = 0
+      
+    exact = self._find_exact(self.size + self.change_finger, value)
+    pred = self._find_neigh(self.size + self.change_finger, value) - self.size
+    if self.U[pred] > value:
+      pred = self.prev[pred]
+    succ, leaf = self.next[pred], exact - self.size
+    self.next[pred], self.next[leaf] = leaf, succ
+    self.prev[leaf], self.prev[succ] = pred, leaf
+    self.change_finger, node = leaf, exact
+    while self.count[node] == 0:
+      self.count[node], node = 1, _tree_parent(node)
+
+  def delete(self, value):
+    """   
+    Deletes value from the list
+    """
+    if value == self.inf:
+      return
+    if self.U[self.change_finger] > value:
+      self.change_finger = 0
+      
+    exact = self._find_exact(self.size + self.change_finger, value)
+    pred, succ = self.prev[exact-self.size], self.next[exact-self.size]
+    self.next[pred], self.prev[succ] = succ, pred
+    self.change_finger = exact - self.size
+    self.count[exact], node = 0, _tree_parent(exact)
+    while self.count[node] == 1 and self.count[_tree_left(node)] == 0 \
+        and self.count[_tree_right(node)] == 0:
+      self.count[node], node = 0, _tree_parent(node)
+    
+  def first(self):
+    """
+    Returns the smallest number in the list or inf if the list is empty
+    """
+    return self.U[self.next[0]]
+  
+  def __repr__(self):
+    res = []
+    i = self.next[0]
+    while i < self.first_inf:
+      res.append(self.U[i])
+      i = self.next[i]
+    return f'[{", ".join(map(str, res))}]'
+		
+def _make_amatchlists(text_2, n_2):
+  amatchlists = collections.defaultdict(list)
+  for i in range(1, n_2+1):
+    amatchlists[text_2[i]].append(i)
+  return {k: _CTree(v, n_2+1) for k, v in amatchlists.items()}
+def hunt_szymanski1(text_1, text_2, n_1, n_2, S):
+  """
+  Calculates the longest common subsequence of text_1 and text_2
+  using an improved version of the Hunt-Szymanski algorithm.
+  Only works with for indel/lcs distance.
+  """
+  if S != distance.INDEL_DISTANCE:
+    raise ValueError(
+        'Hunt-Szymanski algorithm works only for indel/lcs distances')
+  if n_2 == 0:
+    return ""
+  # Lists of active matches and thresholds as Characteristic Trees
+  amatchlist = _make_amatchlists(text_2, n_2)
+  threshold = _CTree(list(range(1, n_2+2)), n_2+1, empty=True)
+  # Links used to retrieve the result
+  link = [None] * (n_2 + 2)
+  # Maintains the values of the matrix in the current row
+  rank = [0] * (n_2 + 1) + [1]
+  # Current maximum LCS
+  max_k = 0
+  for i in range(1, n_1 + 1):
+    sigma_1 = text_1[i]
+    if sigma_1 not in amatchlist:
+      continue
+    j = amatchlist[sigma_1].first()
+    flag, links = True, []
+    while flag:
+      T = threshold.search(j)
+      if T == n_2 + 1:
+        flag = False
+      k = rank[T]
+      # Update the threshold list
+      threshold.insert(j)
+      threshold.delete(T)
+      if j != n_2 + 1:
+        # Delay linking to only access values from the previous row
+        links.append((j, k))
+        max_k = max(max_k, k)
+        rank[j], rank[n_2+1] = k, max_k + 1
+      # Remove j from the list of active matches
+      amatchlist[sigma_1].delete(j)
+      j = amatchlist[sigma_1].search(T)
+      k = rank[j]
+      # Return T to the list of active matches
+      if T != n_2 + 1:
+        amatchlist[text_2[T]].insert(T)
+    # Update links in the decresing order to only reference
+    # links from the previous row
+    for j, k in links[::-1]:
+      link[k] = (j, link[k-1])
+  # Retrieve the result in the reverse order
+  ptr, result = link[max_k], []
+  while ptr is not None:
+    if ptr[0] <= n_2:
+      result.append(text_2[ptr[0]])
+    ptr = ptr[1]
+  return "".join(reversed(result))
