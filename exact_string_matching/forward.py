@@ -66,11 +66,11 @@ def _preprocess_first_hrps(w, m, k, limit = 2):
 
 def _get_hrp1(w, m, k):
   hrps = _preprocess_first_hrps(w, m, k, limit=1)
-  return hrps[0] if len(hrps) > 0 else []
+  return hrps[0] if len(hrps) > 0 else None
 
 def _get_hrp2(w, m, k):
   hrps = _preprocess_first_hrps(w, m, k, limit=2)
-  return hrps[0] if len(hrps) > 1 else []
+  return hrps[0] if len(hrps) > 1 else None
 
 def _perfect_decomposition(w, m, k):
   '''Returns strings u, v and k-HRP of v,
