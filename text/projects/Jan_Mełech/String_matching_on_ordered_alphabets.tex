@@ -35,7 +35,9 @@ Autor przedstawia liniowy algorytm do znajdowania wzorca w tekście. Przedstawio
 
 \section{Główna idea algorytmu}
 
-Przyjmijmy, że mamy sytuację jak na rysunku \ref{fig:mismatch}. Algorytmy MP I KMP wykonują w takiej sytuacji przesunięcia odpowiednio o $p(y)$ i $p'(y)$, jednak oba podejścia wymagają pamięci wielkości proporcjonalnej do wielkości wzorca. 
+Przyjmijmy, że mamy sytuację jak na rysunku \ref{fig:mismatch}. Oznaczmy $y$ - prefiks wzorca już dopasowanego, $b$ - pierwszy znak w tekście, który jest różny od odpowiadającego mu znaku we wzorcu (lub kolejny znak w tekście gdy znaleźliśmy dopasowanie).
+\par 
+Algorytmy MP I KMP wykonują w takiej sytuacji przesunięcia odpowiednio o $p(y)$ i $p'(y)$, jednak oba podejścia wymagają pamięci wielkości proporcjonalnej do wielkości wzorca. 
 \par 
 Crochemore stosuje nieco inne podejście. Najpierw zauważa, że najlepszym możliwym przesunięciem jest $p(yb)$. Następnie na podstawie dekompozycji słowa $yb$ opartej na maksymalnym sufiksie oblicza przybliżoną wartość  $p(yb)$. Samo obliczenie będzie wymagało stałej liczby komórek pamięci, zaś przybliżenie będzie wystarczająco dobre, aby osiągnąć liniową złożoność czasową.
 
@@ -47,7 +49,7 @@ Crochemore stosuje nieco inne podejście. Najpierw zauważa, że najlepszym moż
 \end{figure}
 
 \section{Okresy słowa, a maksymalne sufiksy}
-Niech $v$ będzie maksymalnym leksykograficznie sufiksem niepustego słowa $x$. Przedstawmy $v$ jako $w^ew'$, gdzie $e \geq 1$, $|w| = p(v)$, zaś $w'$ jest właściwym prefiksem $w$. Niech $u$ będzie prefiksem $x$, takim że $x = uv = uw^ew'$. Czwórkę $(u, w, e, w')$ będziemy nazywać MS-dekompozycją słowa $x$.
+Niech $v$ będzie maksymalnym leksykograficznie sufiksem niepustego słowa $x$. Przedstawmy $v$ jako $w^ew'$, gdzie $e \geq 1$, $|w| = p(v)$, zaś $w'$ jest właściwym prefiksem $w$. Niech $u$ będzie prefiksem $x$, takim że $x = uv = uw^ew'$. Czwórkę $(u, w, e, w')$ będziemy nazywać MS-dekompozycją (skrót z angielskiego \textit{maximum-suffix decomposition}) słowa $x$.
 \par
 Na początku przywołajmy lemat, że element $w$ w MS-dekompozycji nie może mieć właściwego prefikso-sufiksu:
 \begin{lemma}\label{lem:w_is_borderless}
@@ -114,7 +116,7 @@ Niech $(u, w, e, w')$ będzie MS-dekompozycją niepustego słowa $x = uw^ew'$. Z
 Do obliczania MS-dekompozycji będziemy używać pomocniczej metody next\_maximal\_suffix. Na wejściu mamy słowo $w$ długości $m$ or MS-czwórkę $(i,j,k,p)$ dla pewnego słowa $z$ będącego prefiksem $w$. Sama metoda polega na iterowaniu się po całym słowie $w$ zaczynając od prefiksu $z$ i odpowiednim aktualizowaniu poszczególnych wartości MS-czwórki w zależności od tego czy znaleźliśmy nowy maksymalny sufiks czy nie.
 
 \begin{algorithm}[H]
-\caption{next\_maximal\_suffix$(w[1]...w[m], (i, j, k, p))$}\label{alg:next_maximal_suffix}
+\caption{next\_maximal\_suffix$(w[1] \ldots w[m], (i, j, k, p))$}\label{alg:next_maximal_suffix}
 \begin{algorithmic} 
 \STATE $t\_pos \gets 0,  w\_pos \gets 1$
 \STATE $(i,j,k,p) \gets (0,1,1,1)$
@@ -137,7 +139,7 @@ Do obliczania MS-dekompozycji będziemy używać pomocniczej metody next\_maxima
 \end{algorithm}
 
 \section{Główny algorytm}
-Przedstawmy główny algorytm string\_matching. Wpisuje się on w klasyczny schemat algorytmów skanujących tekst od lewej do prawej i wykonujących przesunięcia. Omówmy najważniejszą część tego algorytmu, czyli obliczenie przesunięcia. Oznaczmy jak wcześniej $y$ - prefiks wzorca już dopasowanego, $b$ - pierwszy znak w tekście, który jest różny od odpowiadającego mu znaku we wzorcu (lub kolejny znak w tekście gdy znaleźliśmy dopasowanie). Najpierw obliczamy MS-czwórkę słowa $yb$ używając metody next\_maximal\_suffix, dostając $yb = uw^ew'$. Następnie na bazie wniosku \ref{col:MS_decomposition_bounds} sprawdzamy czy $u$ jest sufiksem słowa $w$:
+Przedstawmy główny algorytm string\_matching. Wpisuje się on w klasyczny schemat algorytmów skanujących tekst od lewej do prawej i wykonujących przesunięcia. Omówmy najważniejszą część tego algorytmu, czyli obliczenie przesunięcia. Przyjmijmy oznaczenia z rysunku \ref{fig:mismatch}. Najpierw obliczamy MS-czwórkę słowa $yb$ używając metody next\_maximal\_suffix, dostając $yb = uw^ew'$. Następnie na bazie wniosku \ref{col:MS_decomposition_bounds} sprawdzamy czy $u$ jest sufiksem słowa $w$:
 \begin{itemize}
     \item jeżeli tak, to $p(yb) = |w|$ i o tyle możemy przesunąć tekst. Dodatkowo sprawdzamy czy $j - i > p$ (co jest równoważne sprawdzeniu $e > 1$) , aby w miarę możliwości nie obliczać następnej MS-czwórki od początku (na podstawie lematu \ref{lem:maximul_suffix_of_prefix}). 
     \item jeżeli nie, to przesuwamy o $max(|u|, min(|v|, |uw^e|))$.
@@ -147,11 +149,11 @@ Przedstawmy główny algorytm string\_matching. Wpisuje się on w klasyczny sche
 W obu przypadkach wartość przesunięcia nie przekracza $p(yb)$ zatem nic nie przeoczymy na przesunięciach, a na sprawdzanych pozycjach w oczywisty sposób poprawnie zwrócimy wystąpienia wzorca.
 
 \subsection{Skrót dowodu złożoności}
-Najpierw zauważmy, że podczas sprawdzania czy $u$ jest sufiksem $w$ porównamy co najwyżej $i = |u|$ znaków z tekstu $t[text\_pos + 1]...t[text\_pos + i]$. W każdej iteracji tekst przesuniemy o co najmniej $i$, zatem porównań znaków wykonanych w linii 14 będzie co najwyżej $|t|$ podczas całego algorytmu. 
+Najpierw zauważmy, że podczas sprawdzania czy $u$ jest sufiksem $w$ porównamy co najwyżej $i = |u|$ znaków z tekstu $t[t\_pos + 1] \ldots t[t\_pos + i]$. W każdej iteracji tekst przesuniemy o co najmniej $i$, zatem porównań znaków wykonanych w linii 14 będzie co najwyżej $|t|$ podczas całego algorytmu. 
 
-Nastęnie autor pokazuje, że każde pozostałe porównanie w algorytmie string\_matching zwiększy wartość wyrażenia $5 \cdot text\_pos + w\_pos + i + j + k$. Na końcu wyrażenie osiągnie wartość $5|t| + 8$, co da nam liniową złożoność czasową.
+Nastęnie autor pokazuje, że każde pozostałe porównanie w algorytmie string\_matching zwiększy wartość wyrażenia $5 \cdot t\_pos + w\_pos + i + j + k$. Na końcu wyrażenie osiągnie wartość $5|t| + 8$, co da nam liniową złożoność czasową.
 
-Możemy prześledzić jak zachowuje się wyrażenie $5 \cdot text\_pos + w\_pos + i + j + k$:
+Możemy prześledzić jak zachowuje się wyrażenie $5 \cdot t\_pos + w\_pos + i + j + k$:
 \begin{itemize}
     \item można zauwazyć, że każde porównanie znaków w metodzie next\_maximal\_suffix zwiększa wartość wyrażenia $i + j + k$ o co najmniej 1,
     \item pomyślne porównanie znaków w trakcie skanu zwiększa $w\_pos$ o 1,
@@ -176,8 +178,8 @@ Możemy prześledzić jak zachowuje się wyrażenie $5 \cdot text\_pos + w\_pos 
         \STATE break
     \ENDIF
     
-    \STATE $(i,j,k,p) \gets next\_maximal\_suffix(w[1]...[ w\_pos-1]t[t\_pos +  w\_pos], (i, j, k, p))$
-    \IF {$w[1]...w[i]$ is suffix of prefix of length $p$ of $w[i+1]...[ w\_pos-1]t[t\_pos +  w\_pos]$}
+    \STATE $(i,j,k,p) \gets next\_maximal\_suffix(w[1] \ldots [ w\_pos-1]t[t\_pos +  w\_pos], (i, j, k, p))$
+    \IF {$w[1] \ldots w[i]$ is suffix of prefix of length $p$ of $w[i+1] \ldots [ w\_pos-1]t[t\_pos +  w\_pos]$}
         \STATE $t\_pos \gets t\_pos + p$, $ w\_pos \gets  w\_pos - p + 1$
         \IF {$j - i > p$}
             \STATE $j \gets j - p$
