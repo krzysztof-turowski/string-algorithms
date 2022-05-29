@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple
+from typing import List, Tuple
 from common import prefix
 
 def brute_force(t, w, n, m):
@@ -44,7 +44,7 @@ def _preprocess_first_hrps(w, m, k, limit = 2):
   A prefix is k-HRP if it is basic period with at least k periods.
   '''
   period, j = 1, 0
-  hrps: list[_Hrp]= []
+  hrps: List[_Hrp] = []
   while period + j < m:
     while period + j < m and w[j + 1] == w[period + j + 1]:
       j += 1
