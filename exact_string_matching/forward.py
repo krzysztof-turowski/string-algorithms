@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from typing import Tuple
 from common import prefix
 
 def brute_force(t, w, n, m):
@@ -30,51 +32,63 @@ def knuth_morris_pratt(t, w, n, m):
       yield i
     i, j = i + j - sB[j], max(0, sB[j])
 
-def _preprocess_first_two_hrps(w, m, k):
-  '''Compute first two  k-Highly-Repeating-Prefix (k-HRP).
+@dataclass
+class _Hrp:
+  period: int
+  scope: Tuple[int, int]
+
+
+def _preprocess_first_hrps(w, m, k, limit = 2):
+  '''Compute list of first n k-Highly-Repeating-Prefixes (k-HRP).
 
   A prefix is k-HRP if it is basic period with at least k periods.
   '''
   period, j = 1, 0
-  hrp1 = None
+  hrps: list[_Hrp]= []
   while period + j < m:
     while period + j < m and w[j + 1] == w[period + j + 1]:
       j += 1
     prefix_len = period + j
 
     if period * k <= prefix_len:
-      next_hrp = (period, prefix_len)
-      if hrp1 is not None:
-        return hrp1, next_hrp
-      hrp1 = next_hrp
+      hrps.append(_Hrp(period=period, scope=(2 * period, prefix_len)))
+      if len(hrps) == limit:
+        return hrps
 
-    if hrp1 is not None and hrp1[0] * 2 <= j <= hrp1[1]:
-      period += hrp1[0]
-      j -= hrp1[0]
+    hrp = next((h for h in hrps if 2 * h.scope[0] <= j <= h.scope[1]), None)
+    if hrp is not None:
+      period += hrp.period
+      j -= hrp.period
     else:
       period += (j // k) + 1
       j = 0
+  return hrps
 
-  return hrp1, None
+def _get_hrp1(w, m, k):
+  hrps = _preprocess_first_hrps(w, m, k, limit=1)
+  return hrps[0] if len(hrps) > 0 else []
 
+def _get_hrp2(w, m, k):
+  hrps = _preprocess_first_hrps(w, m, k, limit=2)
+  return hrps[0] if len(hrps) > 1 else []
 
-def _perfect_factorization(w, m, k):
+def _perfect_decomposition(w, m, k):
   '''Returns strings u, v and k-HRP of v,
   such that w = u*v and v has only one k-HRP
   '''
   j = 0
-  hrp1, hrp2 = _preprocess_first_two_hrps(w, m, k)
+  hrp1, hrp2 = _get_hrp1(w, m, k), _get_hrp2(w, m, k)
 
-  while hrp1 is not None and hrp2 is not None:
-    j += hrp1[0]
-    hrp1, next_hrp2 = _preprocess_first_two_hrps(w[j:], m - j, k)
-    if hrp1 is not None and hrp1[0] >= hrp2[0]:
-      hrp2 = next_hrp2
+  while hrp1 and hrp2:
+    j += hrp1.period
+    hrp1 = _get_hrp1(w[j:], m - j, k)
+    if hrp1 and hrp1.period >= hrp2.period:
+      hrp2 = _get_hrp2(w[j:], m - j, k)
 
   return w[:j+1], w[j:], j, m - j, hrp1
 
 
-def _simple_text_search(t, v, n, m, hrp1, k):
+def _simple_text_search(t, v, n, m, hrp1: _Hrp, k):
   '''Iterates over every occurrence of pattern v in text t.
 
   Assumes v has only one k-HRP hrp1.
@@ -87,16 +101,16 @@ def _simple_text_search(t, v, n, m, hrp1, k):
     if j == m:
       yield pos + 1
 
-    if hrp1 is not None and 2 * hrp1[0] <= j <= hrp1[1]:
-      pos = pos + hrp1[0]
-      j = j - hrp1[0]
+    if hrp1 and 2 * hrp1.scope[0] <= j <= hrp1.scope[1]:
+      pos = pos + hrp1.period
+      j = j - hrp1.period
     else:
       pos += (j // k) + 1
       j = 0
 
 def galil_seifaras(t, w, n, m):
   k = 4
-  u, v, uLen, vLen, hrp1 = _perfect_factorization(w, m, k)
+  u, v, uLen, vLen, hrp1 = _perfect_decomposition(w, m, k)
   for i in _simple_text_search(t, v, n, vLen, hrp1, k):
     if i > uLen and u[1:] == t[i - uLen :i]:
       yield i - uLen
