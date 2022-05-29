@@ -222,31 +222,29 @@ def bitap_shift_add(text: str, word: str, _n: int, m: int, k: int):
 
 def permutation_matching(t, w, n, m, k):
   Q, counter = collections.deque(), {}
-  for c in w:
-    counter[c] = counter.get(c, 0) + 1
-  counter['#'] = 0
+  counter = collections.Counter(w[1:])
+  counter['%'] = 0
   # Counter for number of current mismatches
-  z = 0
-  for j in range(1, n + 1):
-    c = t[j]
+  mismatches = 0
+  for j, c in zip(range(1, n+1), t[1:]):
     if c not in counter:
-      c = '#'
+      c = '%'
     Q.append(c)
     counter[c] -= 1
     if counter[c] < 0:
-      z += 1
+      mismatches += 1
     # Pop from Q, until there are at most k mismatches
-    while z > k:
+    while mismatches > k:
       x = Q.popleft()
       if counter[x] < 0:
-        z -= 1
+        mismatches -= 1
       counter[x] += 1
     # Yield match and prepare Q for next iteration
     if len(Q) == m:
       yield j - m + 1
       x = Q.popleft()
       if counter[x] < 0:
-        z -= 1
+        mismatches -= 1
       counter[x] += 1
 
 def grossi_luccio_linear(t, w, n, m, k):
@@ -254,7 +252,7 @@ def grossi_luccio_linear(t, w, n, m, k):
   if n < m:
     return
   A_w = set(w)
-  t_sub = ''.join([c if c in A_w else '#' for c in t])
+  t_sub = ''.join([c if c in A_w else '%' for c in t])
   for i in permutation_matching(t_sub, w, n, m, k):
     if distance.hamming_distance('#' + t[i:i + m], w, m, m) <= k:
       yield i
@@ -298,23 +296,18 @@ def _mismatch(j, m, k, lcp):
     * T' is the text with characters not in P changed to `#`
     * lcp is a longest common prefix structure for all suffixes in P@T'
   """
-  # Index in pattern
-  w = 1
-  # Index in text
-  t = j
-  # Mismatch counter
-  c = 0
+  # Index in pattern, index in text, mismatch counter
+  w, t, mismatches = 1, j, 0
   # while index is still in pattern, and we don't have more than k mismatches
   # we get longest common prefix for P@T'[w:] and P@T'[t:]
   # if it extends pattern we have a match with c mistakes
   # else we get a mistake and search again after the found prefix
-  while w <= m and c <= k:
+  while w <= m and mismatches <= k:
     q = lcp.query(w, t)
     if w + q <= m:
-      c += 1
-    w = w + q + 1
-    t = t + q + 1
-  return c <= k
+      mismatches += 1
+    w, t  = w + q + 1, t + q + 1
+  return mismatches <= k
 
 def _preorder_visit(ST, n, m, k, lcp, marked):
   if ST.depth >= m > ST.parent.depth:
@@ -331,15 +324,15 @@ def _preorder_visit(ST, n, m, k, lcp, marked):
 def grossi_luccio_tree(t, w, n, m, k, lcp:LCP):
   """Solves matching with k mismatches in time `O(n log |A_w| + rm)`\
     if provided with LCP class having construction time `O(n)`\
-    and querry time `O(1)`"""
+    and query time `O(1)`"""
   if n < m:
     return
   A_w = set(w[1:])
-  t_sub = ''.join([c if c in A_w else '#' for c in t[1:]])
+  t_sub = ''.join([c if c in A_w else '%' for c in t[1:]])
   w_t = w + '@' + t_sub
   ST, _ = suffix_tree.mccreight(w_t, n + m + 1)
   marked = {
-    m + i + 1 for i in permutation_matching('#'+t_sub, w, n, m, k)}
+    m + i + 1 for i in permutation_matching('#' + t_sub, w, n, m, k)}
   ST.set_depth()
   ST.set_index()
   result = _preorder_visit(ST, n, m, k, lcp(w_t, ST), marked)
