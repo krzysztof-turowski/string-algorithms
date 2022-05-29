@@ -16,6 +16,12 @@ def exact(T):
         return superword
     superwords = [superword + c for superword in superwords for c in A]
 
+def naive(T):
+  '''Does not change the order of words, only overlaps them'''
+  prefixes = [w1[1:-prefix.get_overlap(w1,w2)] if prefix.get_overlap(w1,w2)>0 \
+      else w1[1:] for w1,w2 in zip(T,T[1:])]
+  return '#' + ''.join(prefixes) + T[-1][1:] if T else ''
+
 def group_merge(T):
   def _get_all_merges(word_1, word_2):
     return [word_1 + word_2[1:], word_2 + word_1[1:]] \
