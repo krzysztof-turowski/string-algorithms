@@ -1,0 +1,188 @@
+\documentclass[12pt]{article}
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\newgeometry{left=1in,right=1in,top=1in,bottom=1in}
+
+\newtheorem{theorem}{Twierdzenie}[section]
+\newtheorem{lemma}{Lemat}[section]
+
+\begin{document}
+
+\begin{center}
+    \Large{Algorytm 2.89-aproksymacyjny \\ dla problemu najkrótszego wspólnego nadsłowa} \\
+    \large{autorstwa Shang-Hua Teng oraz Frances F. Yao \cite{Teng-Yao}}
+\end{center}
+
+\section{Notacja i definicje}
+
+Dla danego na wejściu zbioru słów $S$ chcemy znaleźć najkrótsze słowo $\alpha$ będące nadsłowem tego zbioru, t.j. $\forall_{s \in S} \, s$ jest podsłowem $\alpha$.
+Standardowo, zakładamy że dla żadnej pary słów nie zachodzi sytuacja, w której jedno jest podsłowem drugiego.
+Wprowadzamy następujące definicje i oznaczenia:
+\begin{itemize}
+\item $|s|$ jest długością słowa $s$,
+\item $|S|=\sum_{s \in S}\,|s|$,
+\item $opt(S)$ jest długością wyniku optymalnego - najkrótszego nadsłowa słów ze zbioru $S$.
+\end{itemize}
+Dla każdej pary słów $s=uv$, $t=vw$:
+\begin{itemize}
+\item $ov(s,t)=|v|$ jest długością ``nakładania się'' na siebie słów $s$ i $t$,
+\item $pref(s,t)=u$.
+\end{itemize}
+Dla takich słów $s$ i $t$ najkrótszym ich nadsłowem, w którym $s$ występuje przed $t$ jest $uvw=pref(s,t)t$.
+Słowo takie nazywamy złączeniem słów $s$ i $t$ oraz oznaczamy je przez $\langle s,t \rangle$.
+Łatwo zauważyć, że najkrótsze nadsłowo $\alpha$ jest równe $\langle s_{\pi(1)},s_{\pi(2)},\dots,s_{\pi(n)} \rangle$ dla pewnej permutacji $\pi$ zbioru $\{1,2,\dots,n\}$. \\
+
+Problem znajdowania najkrótszego nadsłowa może zostać przeformułowany na problem grafowy.
+Dla zbioru słów $S$ możemy stworzyć ważony graf skierowany $G=(S,E)$, w którym wagi krawędzi są równe $d(s,t)=|pref(s,t)|$.
+Dla zbioru krawędzi zdefiniujmy $d(E)=\sum_{(s,t) \in E}\,d(s,t)$ i analogicznie $ov(E)=\sum_{(s,t) \in E}\,ov(s,t)$.
+Prosta obserwacja pokazuje, że suma długości słów w cyklu $E$ jest równa $d(E)+ov(E)$. 
+
+\section{Optymalne pokrycie cyklowe}
+
+Pokryciem cyklowym grafu $G$ jest zbiór cykli taki, że każdy wierzchołek $G$ należy do któregoś z nich.
+Optymalne pokrycie cyklowe jest pokryciem cyklowym z (w tym przypadku) najmniejszą możliwą sumą wag krawędzi.
+Można je znaleźć między innymi za pomocą algorytmu węgierskiego \footnote{\url{https://en.wikipedia.org/wiki/Hungarian_algorithm}} działającego w czasie $O(n^3)$ . \\
+
+Niech $C=\{c_1,c_2,\dots,c_k\}$ będzie pokryciem cyklowym.
+By udowodnić współczynnik aproksymacji należy wprowadzić najpierw kilka lematów.
+
+\begin{lemma}
+$d(C) \leq opt(S)$ oraz $ov(C) \geq |S|-opt(S)$.
+\end{lemma}
+\begin{lemma}
+Niech $ov_m=\sum_{C:|V(C)|=m}\,ov(C)$.
+Niech $C'$ będzie podzbiorem $C$ powstałym przez usunięcie krawędzi z najmniejszym $ov(s,t)$ z każdego cyklu.
+Wtedy $ov(C') \geq \sum_{i=2}^n ov_i/i$.
+\end{lemma}
+Warto zauważyć, że nadsłowo powstałe przez złączenie ze sobą wszystkich ścieżek z $C'$ uzyskuje $ov(C') \geq ov(C)/2$, a więc daje nam to tak samo dobrą gwarancję kompresji jak algorytm zachłanny.
+\begin{lemma}[\cite{Blum-Jiang}]
+Niech $c_1,c_2 \in C$ oraz $s_1 \in c_1, s_2 \in c_2$.
+Wtedy $ov(s_1,s_2) \leq d(c_1)+d(c_2)$.
+\end{lemma}
+Dla słowa $s_i$ znajdującego się w cyklu $c \in C$ wprowadźmy oznaczenie $\langle s_i,c \rangle = \\ \langle s_i,s_{i+1},\dots,s_m,s_1,\dots,s_i \rangle$.
+Stwórzmy zbiór $R$ wybierając dowolne słowo z każdego cyklu z $C$.
+Niech $\alpha=\langle r_1,\dots,r_k \rangle$ będzie nadsłowem słów z $R$.
+Słowo $\overline{\alpha}=\langle \langle r_1,c_1 \rangle,\dots,\langle r_k,c_k \rangle \rangle$ będziemy nazywać rozszerzeniem słowa $\alpha$ - jest ono nadsłowem wszystkich słów z $S$.
+\begin{lemma}
+$|\overline{\alpha}|=|\alpha|+d(C)$.
+\end{lemma}
+
+\subsection{Kanoniczne pokrycie cyklowe}
+
+Dla cyklu $c = (s_1,s_2,\dots,s_m) \in C$ definiujemy $period(c)=pref(s_1,s_2)pref(s_2,s_3) \dots pref(s_m,s_1)$.
+Mówimy, że słowo $s$ pasuje do cyklu $c$ jeśli $s$ jest podsłowem $period(c)^k$ dla pewnego $k$.
+Oczywiście, jeśli $s$ należy do $c$, to $s$ pasuje do $c$. \\
+
+$s$ może jednak pasować do innych cykli.
+Niech $s$ należy do $c$ ale pasuje również do $c'$.
+Możemy wtedy ``przenieść'' $s$ do $c'$ nie zmieniając sumy wag wszystkich krawędzi w obu cyklach.
+Kanoniczne pokrycie cyklowe to takie pokrycie cyklowe, w którym każdy wierzchołek $s$ jest przyporządkowany cyklowi o najmniejszej wadze wśród wszystkich, do których $s$ pasuje.
+W pokryciu takim zachodzi następująca własność:
+\begin{lemma}
+Niech $c_1,c_2 \in C$, gdzie $C$ jest kanoniczne oraz $s_1 \in c_1, s_2 \in c_2$.
+Wtedy $ov(s_1,s_2)+ov(s_2,s_1) < max(|s_1|,|s_2|)+min(d(c_1),d(c_2))$.
+\end{lemma}
+
+\section{Greedy-Insert}
+
+Niech $C_2$ będzie zbiorem cykli 2-elementowych.
+Nadsłowo wszystkich słów należących do $C_2$ tworzymy używając algorytmu Greedy-Insert:
+\begin{enumerate}
+\item Podziel $C_2$ na zbiory $F$ i $G$. $F$ zawiera krótsze słowa z każdego cyklu, $G$ dłuższe.
+\item $(f_1,f_2,\dots,f_n)$ - słowa z $F$ w dowolnej kolejności, \\
+      $(g_1,g_2,\dots,g_n)$ - słowa z $G$ w kolejności w jakiej występują w nadsłowie $\eta$ otrzymanym standardowym algorytmem zachłannym.
+\item $q_O=\langle f_1,g_1,g_2,f_2,f_3,g_3,g_4,f_4,\dots \rangle$ \\
+      $q_E=\langle g_1,f_1,f_2,g_2,g_3,f_3,f_4,g_4,\dots \rangle$.
+\item Zwróć słowo $q$ - krótsze ze słów $q_O,q_E$.
+\end{enumerate}
+Zbiór sąsiadujących ze sobą słów w $q_O$ i $q_E$ jest nadzbiorem sąsiadujących ze sobą słów w $C_2$ i $\eta$.
+Wybierając lepsze ze słów $q_O,q_E$ otrzymujemy następujący lemat:
+\begin{lemma}
+$ov(q) \geq ov(C_2)/2 + ov(\eta)/2$.
+\end{lemma}
+Korzystając z własności algorytmu zachłannego ($ov(\eta) \geq (|G|-opt(G))/2$):
+\begin{lemma}
+$ov(q) \geq ov(C_2)/2 + (|G|-opt(G))/4$.
+\end{lemma}
+
+\section{Opis algorytmu}
+
+Algorytm w całości prezentuje się następująco: \\
+
+Wejście: $S=\{s_1,s_2,\dots,s_n\}$.
+\begin{enumerate}
+\item Znajdź optymalne pokrycie cyklowe $C$ w $S$ i przekształć je w pokrycie kanoniczne.
+\item Z każdego cyklu wybierz dowolne słowo tworząc zbiór $R$.
+\item Znajdź optymalne pokrycie cyklowe $CC$ dla zbioru $R$.
+\item Uruchom Greedy-Insert na wszystkich cyklach długości 2, otrzymując słowo $q$.
+\item We wszystkich pozostałych cyklach usuń krawędź z najmniejszym nakładaniem się słów i połącz wszystkie ścieżki w słowo $\alpha$.
+\item Zwróć $\overline{\alpha}$ - rozszerzenie słowa $\alpha$.
+\end{enumerate}
+
+\section{Analiza algorytmu}
+
+Wprowadźmy oznaczenie $d_2,d_3,d_4$ na sumę wag krawędzi dla wszystkich cykli długości odpowiednio $2,3$ oraz 4 lub większych.
+Analogicznie $ov_2,ov_3,ov_4$ na $\sum\,ov(C)$ dla cykli długości $2,3$ oraz 4 lub większych.
+
+Z lematu 2.5, sumując po wszystkich cyklach:
+\begin{lemma}
+$ov_2 \leq |G| + d_2/2$.
+\end{lemma}
+\begin{theorem}
+$|\alpha| \leq (1+8/9)opt(S)$.
+\end{theorem}
+\begin{proof}
+Z lematu 2.2 i 3.2:
+\[ov(\alpha) \geq ov_2/2+(|G|-opt(G))/4+2ov_3/3+3ov_4/4\]
+Z lematu 2.3 $ov_i \leq 2d_i$. Z lematu 2.1 wiemy też, że $|R| \leq opt(R)+ov(CC) \leq opt(S)+ov(CC)$.
+\begin{align*}
+    |\alpha| & = |R|-ov(\alpha) \\
+        & \leq opt(S)+ov(CC)-ov_2/2-2ov_3/3-3ov_4/4 \\
+        & = opt(S)+ov_2/2+ov_3/3+ov_4/4 \\
+        & \leq opt(S)+d_2+(2/3)d_3+d_4/2
+\end{align*}
+Możemy też inaczej ograniczyć od góry $|\alpha|$. Korzystamy m.in. z lematu 5.1.
+\begin{align*}
+    |\alpha| & = |R|-ov(\alpha) \\
+        & \leq |R|-ov_2/2-(|G|-opt(G))/4-2ov_3/3-3ov_4/4 \\
+        & \leq |R|-ov_2/2-(ov_2-d_2/2-opt(S))/4-2ov_3/3-3ov_4/4 \\
+        & = |R|-3ov_2/4-2ov_3/3-3ov_4/4+d_2/8+opt(S)/4 \\
+        & = 5opt(S)/4+ov_2/4+ov_3/3+ov_4/4+d_2/8 \\
+        & = 5opt(S)/4+ov(CC)/4+ov_3/12+d_2/8 \\
+        & = (2-1/4)opt(S)+d_3/6+d_2/8
+\end{align*}
+Analizę algorytmu kończymy rozważając dwa przypadki:
+\begin{enumerate}
+\item $d_2 \leq (2/3)d(C)$, wtedy z pierwszej nierówności:
+    \begin{align*}
+        |\alpha| & \leq opt(S)+(2/3)d(C)+(2/3)(1/3)d(C) \\
+            & \leq (1+8/9)opt(S)
+    \end{align*}
+\item $d_2 > (2/3)d(C)$, wtedy $d_3 \leq (1/3)d(C)$ i z drugiej nierówności:
+    \begin{align*}
+        |\alpha| & \leq (2-1/4)opt(S)+d_3/6+d_2/8 \\
+            & = (2-1/4)opt(S)+(d_2+d_3)/8+d_3/24 \\
+            & \leq (2-1/4)opt(S)+d(C)/8+d(C)/72 \\
+            & \leq (1+8/9)opt(S)
+    \end{align*}
+\end{enumerate}
+\end{proof}
+Z lematu 2.4. $|\overline{\alpha}| = |\alpha|+d(C) \leq (2+8/9)opt(S)$, co kończy dowód współczynnika aproksymacji.
+
+\begin{thebibliography}{3}
+    \bibitem{Teng-Yao}
+    S.-H. Teng, F.F. Yao.
+    \textit{Approximating shortest superstrings.}
+    SIAM J. Comput., 1997, Volume 26(2), pp. 410–417.
+
+    \bibitem{Blum-Jiang}
+    A. Blum, T. Jiang, M. Li, J. Tromp, M. Yannakakis.
+    \textit{Linear approximation of shortest superstrings.}
+    Proc. 23rd ACM Symposium on the Theory of Computing, ACM, New York, 1991, pp. 328–336.
+\end{thebibliography}
+
+\end{document}

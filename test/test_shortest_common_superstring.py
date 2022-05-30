@@ -6,7 +6,7 @@ import unittest
 import parameterized
 
 from generator import rand
-from shortest_common_superstring import shortest_common_superstring
+from shortest_common_superstring import shortest_common_superstring,teng_yao
 
 SHORTEST_COMMON_SUPERSTRING_ALGORITHMS = [
     [
@@ -28,6 +28,11 @@ SHORTEST_COMMON_SUPERSTRING_ALGORITHMS = [
         'greedy',
         shortest_common_superstring.greedy,
         lambda n: 2 * n,
+    ],
+    [
+        'teng_yao',
+        teng_yao.shortest_common_superstring,
+        lambda n: 2.89 * n,
     ]
 ]
 
