@@ -238,7 +238,7 @@ def hunt_szymanski(text_1, text_2, n_1, n_2, S):
   if n_2 == 0:
     return ""
   matchlist = _make_matchlists(text_1, text_2, n_1, n_2)
-  threshold = [0] + [n_2 + 1] * n_2 
+  threshold = [0] + [n_2 + 1] * n_2
   link = [None] * (n_2 + 1)
   for i in range(1, n_1 + 1):
     for j in matchlist[i]:
@@ -257,7 +257,7 @@ def hunt_szymanski(text_1, text_2, n_1, n_2, S):
 def _tree_parent(value):
   """Return the parent of node value"""
   return value // 2
-  
+
 def _tree_left(value):
   """Return the left son of node value"""
   return 2 * value
@@ -277,7 +277,7 @@ class _CTree:
 
   Attributes
   ----------
-  U : list of int
+  universum : list of int
       the universum
   inf : int
       the number to represent infinity
@@ -290,26 +290,26 @@ class _CTree:
     returns the smallest number u such that u >= v
   insert(v)
     inserts v into the list
-  delete(v)    
+  delete(v)
     deletes v from the list
   first()
     returns the smallest number in the list or inf if the list is empty
   """
-  
-  def __init__(self, U, inf, empty=False):
+
+  def __init__(self, universum, inf, empty=False):
     self.size = 2
-    while self.size <= len(U) + 1:
+    while self.size <= len(universum) + 1:
       self.size *= 2
     self.inf = inf
-    self.U = [0] + U + [inf] * (self.size - len(U) - 1)
-    self.first_inf = len(U) + 1
+    self.universum = [0] + universum + [inf] * (self.size - len(universum) - 1)
+    self.first_inf = len(universum) + 1
     self.left_max = [0] * (2 * self.size)
     self.right_max = [0] * (2 * self.size)
     self.count = [0] * (2 * self.size)
     self.prev = [None] * (self.size + 1)
     self.next = [None] * (self.size + 1)
     for i in range(self.size, 2 * self.size):
-      self.left_max[i] = self.right_max[i] = self.U[i-self.size]
+      self.left_max[i] = self.right_max[i] = self.universum[i-self.size]
       self.count[i] = 1 if not empty or i == self.size else 0
     for i in range(self.size-1, 0, -1):
       self.left_max[i] = self.right_max[_tree_left(i)]
@@ -318,7 +318,7 @@ class _CTree:
     self.next[0] = self.first_inf if empty else 1
     if not empty:
       self.prev[1] = 0
-      for i in range(1, len(U)+1):
+      for i in range(1, len(universum)+1):
         self.next[i] = i + 1
         self.prev[i+1] = i
     self.prev[self.first_inf] = 0 if empty else self.first_inf - 1
@@ -328,11 +328,11 @@ class _CTree:
   def _is_leaf(self, value):
     """Return true if node value is a leaf"""
     return value >= self.size
-  
+
   def _leaf_value(self, value):
     """Return the value at leaf v"""
-    return self.U[value - self.size]
-    
+    return self.universum[value - self.size]
+
   def _find_neigh(self, node, value):
     """
     Finds a leaf of a predecessor or successor of value in the tree.
@@ -350,7 +350,7 @@ class _CTree:
       else:
         node = right
     return node
-  
+
   def _find_exact(self, node, value):
     """
     Returns the leaf corresponding to value in the tree
@@ -359,16 +359,17 @@ class _CTree:
     while self.right_max[node] < value:
       node = _tree_parent(node)
     while not self._is_leaf(node):
-      node = _tree_left(node) if self.left_max[node] >= value else _tree_right(node)
+      node = _tree_left(node) if self.left_max[node] >= value \
+        else _tree_right(node)
     return node
-    
+
   def search(self, value):
     """
     Returns the smallest number u such that u >= value
     """
     if value == self.inf:
       return self.inf
-    if self.U[self.search_finger] > value:
+    if self.universum[self.search_finger] > value:
       self.search_finger = 0
     neigh = self._find_neigh(self.size + self.search_finger, value)
     if self._leaf_value(neigh) >= value:
@@ -376,20 +377,20 @@ class _CTree:
       return self._leaf_value(neigh)
     res = self.next[neigh - self.size]
     self.search_finger = res
-    return self.U[res]
-    
+    return self.universum[res]
+
   def insert(self, value):
     """
     Inserts value into the list
     """
     if value == self.inf:
       return
-    if self.U[self.change_finger] > value:
+    if self.universum[self.change_finger] > value:
       self.change_finger = 0
-      
+
     exact = self._find_exact(self.size + self.change_finger, value)
     pred = self._find_neigh(self.size + self.change_finger, value) - self.size
-    if self.U[pred] > value:
+    if self.universum[pred] > value:
       pred = self.prev[pred]
     succ, leaf = self.next[pred], exact - self.size
     self.next[pred], self.next[leaf] = leaf, succ
@@ -399,14 +400,14 @@ class _CTree:
       self.count[node], node = 1, _tree_parent(node)
 
   def delete(self, value):
-    """   
+    """
     Deletes value from the list
     """
     if value == self.inf:
       return
-    if self.U[self.change_finger] > value:
+    if self.universum[self.change_finger] > value:
       self.change_finger = 0
-      
+
     exact = self._find_exact(self.size + self.change_finger, value)
     pred, succ = self.prev[exact-self.size], self.next[exact-self.size]
     self.next[pred], self.prev[succ] = succ, pred
@@ -415,21 +416,21 @@ class _CTree:
     while self.count[node] == 1 and self.count[_tree_left(node)] == 0 \
         and self.count[_tree_right(node)] == 0:
       self.count[node], node = 0, _tree_parent(node)
-    
+
   def first(self):
     """
     Returns the smallest number in the list or inf if the list is empty
     """
-    return self.U[self.next[0]]
-  
+    return self.universum[self.next[0]]
+
   def __repr__(self):
     res = []
     i = self.next[0]
     while i < self.first_inf:
-      res.append(self.U[i])
+      res.append(self.universum[i])
       i = self.next[i]
     return f'[{", ".join(map(str, res))}]'
-		
+
 def _make_amatchlists(text_2, n_2):
   amatchlists = collections.defaultdict(list)
   for i in range(1, n_2+1):
@@ -477,7 +478,6 @@ def hunt_szymanski1(text_1, text_2, n_1, n_2, S):
       # Remove j from the list of active matches
       amatchlist[sigma_1].delete(j)
       j = amatchlist[sigma_1].search(T)
-      k = rank[j]
       # Return T to the list of active matches
       if T != n_2 + 1:
         amatchlist[text_2[T]].insert(T)
