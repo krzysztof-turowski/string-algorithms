@@ -1,10 +1,12 @@
+import collections
 import enum
 import itertools
 
 import networkx
 
 from common import prefix
-from shortest_common_superstring.shortest_common_superstring import naive
+from shortest_common_superstring.shortest_common_superstring \
+  import naive, _remove_subwords
 from shortest_common_superstring.teng_yao import cycle_cover
 
 VertexType = enum.IntEnum('VertexType', 'IN OUT HEAD TAIL JOIN')
@@ -62,10 +64,8 @@ def max_cycle_cover_with_half_edges(matrix):
 def _get_cycles(cover):
   """Iterate over weakly connected components of the cover,
   which are cycles if we ignore the edge direction."""
-  neighbours, visited = {}, set()
+  neighbours, visited = collections.defaultdict(set), set()
   for i, j in cover:
-    neighbours.setdefault(i, set())
-    neighbours.setdefault(j, set())
     neighbours[i].add(j)
     neighbours[j].add(i)
 
@@ -112,13 +112,13 @@ def _build_path_sets(cover, cycle):
     A.remove(undirected_edge)
     C.append(undirected_edge)
 
-  return (A, B, C)
+  return A, B, C
 
 def _concatenate_path_set(edges, vertex_count):
   """Given a set of edges that form a node-disjoint path set,
   build ATSP path that contains all of them."""
   successors = dict(edges)
-  vertices_with_predecessors = set(v for u, v in edges)
+  vertices_with_predecessors = set(v for _, v in edges)
   tour = []
   for v in successors:
     if v not in vertices_with_predecessors:
@@ -147,6 +147,7 @@ def approximate_max_atsp(matrix):
 
 def shortest_common_superstring(T):
   """5/2-approximation of shortest common superstring via reduction to ATSP."""
+  T = list(_remove_subwords(T))
   representatives = []
   for cycle in cycle_cover(T):
     best = min((naive(cycle[i:] + cycle[:i]) for i in range(len(cycle))),
