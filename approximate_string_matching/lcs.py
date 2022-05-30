@@ -267,6 +267,7 @@ def _tree_right(value):
   return 2 * value + 1
 
 class _CTree:
+  # pylint: disable-msg=too-many-instance-attributes
   """
   Implementation of Characteristic Trees as described in
   Apostolico, Guerra - The longest common subsequence problem revisited.
@@ -436,7 +437,9 @@ def _make_amatchlists(text_2, n_2):
   for i in range(1, n_2+1):
     amatchlists[text_2[i]].append(i)
   return {k: _CTree(v, n_2+1) for k, v in amatchlists.items()}
+
 def hunt_szymanski1(text_1, text_2, n_1, n_2, S):
+  # pylint: disable-msg=too-many-locals
   """
   Calculates the longest common subsequence of text_1 and text_2
   using an improved version of the Hunt-Szymanski algorithm.
