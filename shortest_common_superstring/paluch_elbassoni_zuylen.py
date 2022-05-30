@@ -12,8 +12,8 @@ VertexType = enum.IntEnum('VertexType', 'IN OUT HEAD TAIL JOIN')
 def _cycle_edges(cycle):
   return zip(cycle, cycle[1:] + cycle[:1])
 
-def _cycle_weight(matrix, cycle):
-  return sum(matrix[i][j] for i, j in _cycle_edges(cycle))
+def _path_weight(matrix, cycle):
+  return sum(matrix[i][j] for i, j in zip(cycle, cycle[1:]))
 
 def max_weight_perfect_matching(edges):
   """Find maximum weight perfect matching.
@@ -114,9 +114,9 @@ def _build_path_sets(cover, cycle):
 
   return (A, B, C)
 
-def _path_set_to_tour(edges, vertex_count):
+def _concatenate_path_set(edges, vertex_count):
   """Given a set of edges that form a node-disjoint path set,
-  build ATSP tour that contains all of them."""
+  build ATSP path that contains all of them."""
   successors = dict(edges)
   vertices_with_predecessors = set(v for u, v in edges)
   tour = []
@@ -130,11 +130,11 @@ def _path_set_to_tour(edges, vertex_count):
   return tour
 
 def _exact_max_atsp(matrix):
-  return list(max(itertools.permutations(range(1, len(matrix))),
-              key = lambda p: _cycle_weight(matrix, list(p) + [0]))) + [0]
+  return list(max(itertools.permutations(range(len(matrix))),
+              key = lambda p: _path_weight(matrix, list(p))))
 
 def approximate_max_atsp(matrix):
-  """2/3-approximation of maximum weight ATSP."""
+  """2/3-approximation of maximum weight ATSP path."""
   if len(matrix) < 3:
     return _exact_max_atsp(matrix)
   cover = max_cycle_cover_with_half_edges(matrix)
@@ -142,8 +142,8 @@ def approximate_max_atsp(matrix):
   for cycle in _get_cycles(cover):
     for path_set, to_add in zip(path_sets, _build_path_sets(cover, cycle)):
       path_set.extend(to_add)
-  tours = (_path_set_to_tour(p, len(matrix)) for p in path_sets)
-  return max(tours, key = lambda p: _cycle_weight(matrix, p))
+  candidates = (_concatenate_path_set(p, len(matrix)) for p in path_sets)
+  return max(candidates, key = lambda p: _path_weight(matrix, p))
 
 def shortest_common_superstring(T):
   """5/2-approximation of shortest common superstring via reduction to ATSP."""
