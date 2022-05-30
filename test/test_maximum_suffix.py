@@ -16,6 +16,7 @@ MAXIMUM_SUFFIX_ALGORITHMS = [
         lambda t, n: maximum_suffix.from_suffix_array(
             suffix_array.naive(t, n), t, n)
     ],
+    [ 'adamczyk rytter', maximum_suffix.adamczyk_rytter ]
 ]
 
 class TestMaximumSuffix(unittest.TestCase):
@@ -36,6 +37,7 @@ class TestMaximumSuffix(unittest.TestCase):
     self.check_maximum_suffix('#yabbadabbado', 12, (1, 12), algorithm)
     self.check_maximum_suffix('#aabaabaabba', 11, (9, 3), algorithm)
     self.check_maximum_suffix('#eembambmaaa', 11, (6, 6), algorithm)
+    self.check_maximum_suffix('#abcd', 4, (4, 1), algorithm)
 
   @parameterized.parameterized.expand(MAXIMUM_SUFFIX_ALGORITHMS)
   @run_large
