@@ -27,13 +27,25 @@ $w_1 \geq w_2 \geq \cdots \geq w_k$. Taka faktoryzacja zawsze istnieje i jest un
 
 Algorytm Duval'a konstruuje faktoryzację Lyndona w czasie liniowym i stałej dodatkowej pamięci.
 
-
-
 \section{Własności faktoryzacji Lyndona}
 
 \begin{observation}
-    Słowo $s$ jest \textit{proste} wtedy i tylko wtedy, gdy jest ściśle mniejsze niż wszystkie swoje nietrywialne sufiksy 
+    Słowo $w$ jest \textit{proste} wtedy i tylko wtedy, gdy jest ściśle mniejsze niż wszystkie swoje nietrywialne sufiksy 
 \end{observation}
+
+\begin{proof}
+    Załóżmy, że słowo $w$ jest ściśle mniejsze niż wszystkie swoje nietrywialne sufiksy oraz, że nie jest \textit{proste}.
+    Wtedy mamy takie dwa słowa $u, v$, że $w = uv$, $vu \leq uv$ ($vu$ jest świadkiem dla faktu, że $w$ nie jest \textit{proste}) oraz $uv < v$ 
+    ($uv$ jest ściśle mniejsze niż wszystkie inne sufiksy). Ale z $uv < v$ możemy wywnioskować $uv < vu$, czyli mamy sprzeczność.
+
+    W drugą stronę załóżmy, że słowo $w$ jest \textit{proste} oraz, że nie jest ściśle mniejsze od wszystkich swoich nietrywialnych sufiksów.
+    Wtedy mamy takie słowa $u, v$, że $w = uv$, $uv < vu$ ($w$ jest słowem \textit{prostym}) oraz $v \leq uv$. Rozważmy dwa przypadki:
+    \begin{itemize}
+        \item $v$ nie jest prefiksem $uv$ -- wtedy $vu < uv$, czyli sprzeczność
+        \item $v$ jest prefiksem $uv$ -- tutaj zauważamy, że $u$ jest najmniejsze leksykograficznie spośród prefiksów długości $|u|$ przesunięć cyklicznych słowa $w$.
+        Zatem $vu \leq uv$, czyli sprzeczność.
+    \end{itemize} 
+\end{proof}
 
 \begin{observation}
     Dla faktoryzacji Lyndona $w = w_1w_2\ldots w_k$ słowo $w_k$ jest minimalnym sufiksem słowa $w$. 
@@ -69,7 +81,8 @@ Algorytm Duval'a będzie utrzymywał podział słowa wejściowego $w$ na $3$ sł
 a fragment $v_2$ jest słowem \textit{prawie prostym}. 
 
 Algorytm będzie utrzymywał ten podział za pomocą dwóch zmiennych $i, j$. Zmienna $i$ będzie wskazywała na początek słowa $v_2$, a zmienna $j$ będzie wskazywała na początek słowa $v_3$. 
-W każdym kroku algorytmu będziemy próbowali doczepić literę $w[j]$ to słowa $v_2$. W tym celu będziemy porównywali ją z literą słowa $v_2$ wyznaczoną przez zmienną $k$. 
+W każdym kroku algorytmu będziemy próbowali doczepić literę $w[j]$ do słowa $v_2$. W tym celu będziemy porównywali ją z literą słowa $v_2$ wyznaczoną przez zmienną $k$ (taką, że $j - k$ 
+to długość słowa $u$ występującego w \textit{prawie prostym} słowie $v_2 = u^t\bar{u}$). 
 Dokładniej będziemy mieli trzy przypadki:
 \begin{itemize}
     \item $w[j] = w[k]$: dodanie $w[j]$ do $v_2$ nie narusza założenia, że $v_2$ jest \textit{prawie proste}. Także w tym przypadku po prostu zwiększamy zmienne $j$ oraz $k$.
@@ -117,18 +130,17 @@ Dokładniej będziemy mieli trzy przypadki:
     Z tego wynika, że słowa, które później będą dodane do faktoryzacji zachowają warunek monotoniczności.
 \end{proof}
 
-\begin{proof}[Dowód złożoności]    
+\begin{proof}[Złożoność algorytmu]    
     Pierwsza wewnętrzna pętla w każdym kroku zwiększa zmienną $j$. Zmienna ta
-    może być jednak zmniejszana w wyniku trzeciego przypadku. Zauważmy jednak, 
+    może być jednak zmniejszana w wyniku trzeciego przypadku. Zauważmy jednak że, 
     to o ile cofniemy tą zmienną wynosi co najwyżej tyle, jak długie jest poprzednio dodane słowo Lyndona. 
     Dodatkowo za każdym razem kiedy cofamy zmienną $j$, ostatnie słowo w faktoryzacji jest inne, zatem
     możemy oszacować sumę cofnięć przez $O(n)$. Otrzymujemy więc, że ta pętla działa w czasie $O(n)$.
     
-    
     Druga wewnętrzna pętla w algorytmie działa sumarycznie w czasie $O(n)$, bo wypisuje faktoryzację.
 
     Ponadto zewnętrzna pętla algorytmu nie przekroczy $n$ iteracji, 
-    bo jej każda iteracja zwiększa zmienną $i$, co kończy dowód złożoności.
+    bo jej każda iteracja zwiększa zmienną $i$, co pokazuje, że cały algorytm działa w czasie $O(n)$.
 \end{proof}
 
 \end{document}
