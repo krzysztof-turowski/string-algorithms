@@ -86,15 +86,16 @@ Rozważmy iterację, w której $i$ jest zmienione po raz pierwszy. Pokażemy, ż
 
 Rozważamy zatem przejście $(i=1, j) \rightarrow (i=1, j' = j + k + 1)$, gdzie niezmienniki zachodzą dla słowa $u = w[i \ldots j-1]$.
 
-Wtedy $u' := w[i\ldots j + k] = u^tva$, gdzie $v$ jest ścisłym prefiksem $u$ (być może pustym), a $a$ jest literką taką, że $va < u$.
+Wtedy niech $u' := w[i\ldots j + k] = u^tva$, gdzie $v$ jest ścisłym prefiksem $u$ (być może pustym), a $a$ jest literką taką, że $va < u$.
 
-Z \textit{samo-maksymalności} słowa $u$ możemy wywnioskować, że słowo $u'$ również jest \textit{samo-maksymalne}. 
+Z \textit{samo-maksymalności} słowa $u$ oraz faktu, że $va < u$ możemy wywnioskować, że słowo $u'$ również jest \textit{samo-maksymalne}.
+Podobnie możemy też wywnioskować, że słowo $u^tv$ jest \textit{samo-maksymalne} (skorzystamy z tego później). 
 
-Aby udowodnić, że $period(u') = u'$ pokażemy, że $u'$ nie ma żadneo właściwego prefikso-sufiksu. 
+Aby udowodnić, że $period(u') = u'$ pokażemy, że $u'$ nie ma żadnego właściwego prefikso-sufiksu. 
 Każdy prefikso-sufiks $u'$ musi być przedłużeniem prefikso-sufiksu $w[i\ldots j+k-1]$. 
-Najdłuższy prefikso-sufiks słowa $w[i\ldots j+k-1]$ to prefiks $p = w[i\ldots i+k-1]$ (odpowiada mu sufiks $s = w[j\ldots j+k-1]$).
+Najdłuższy prefikso-sufiks słowa $w[i\ldots j+k-1]$ to prefiks $p = w[i\ldots i+k-1]$ (odpowiada mu sufiks $s = w[j\ldots j+k-1] = u^{t-1}v$).
 Z działania algorytmu wynika, że po prefiksie $p$ występuje litera $b$ taka, że $b > a$. 
-Zauważmy dodatkowo, że wszystkie literki występujące po prefikso-sufiksach słowa $p$ są większe bądź równe $b$ (wpp. mielibyśmy sprzeczność z \textit{samo-maksymalnością $u$)}.
+Zauważmy dodatkowo, że wszystkie literki występujące po prefikso-sufiksach słowa $p$ są większe bądź równe $b$ (wpp. mielibyśmy sprzeczność z \textit{samo-maksymalnością $u^tv$)}.
 Zatem nie istnieje prefikso-sufiks słowa $w[i\ldots j+k-1]$, którego dałoby się rozszerzyć do prefikso-sufiksu słowa $u'$, czyli $period(u') = u'$.
 
 \vspace{5pt}
@@ -104,10 +105,10 @@ Zatem nie istnieje prefikso-sufiks słowa $w[i\ldots j+k-1]$, którego dałoby s
 Wtedy $w[i\ldots j+k] = u^t vb$, gdzie $v$ jest ścisłym prefiksem $u$ oraz $u < vb$.\\
 Niech $m$ będzie pierwszą pozycją za $u^t$. Pokażemy, że (częściowa) historia algorytmu wygląda jak poniżej:
 \begin{align*}
-    (i, j) \rightarrow (i', j) \rightarrow^{*} (m, j) \rightarrow^(m, m+1)
+    (i, j) \rightarrow (i', j) \rightarrow^{*} (m, j) \rightarrow^{*}(m, m+1)
 \end{align*}
 
-Z niezmiennika dla słowa $u$ możemy wywnioskować, że $u$ jest najmniejszym okresem słowa $u^tv$ ($u$ oczywiście jest okresem, a gdyby istniał jakiś mniejszy, to byłby on też okresem $u$) 
+Z niezmienników dla słowa $u$ możemy wywnioskować, że $u$ jest najmniejszym okresem słowa $u^tv$ ($u$ oczywiście jest okresem, a gdyby istniał jakiś mniejszy, to byłby on też okresem $u$) 
 oraz to, że słowo $u^tv$ jest \textit{samo-maksymalne}. 
 
 Zauważmy, że jeśli zmienna $i$ zostanie przeniesiona na dowolną pozycję z zakresu $[i', m-1]$, to następna pozycja dla $i$ nie może być większa niż $m$.
@@ -125,8 +126,8 @@ Ostatecznie dowód poprawności niezmiennika otrzymujemy z poprawności niezmien
 \end{proof}
 
 \begin{proof}[\textbf{Dowód poprawności algorytmu}]
-Rozważmy ostatnią wartość zmiennej $i$\\ oraz przedostatnią wartość zmiennej $j$.
-Zgodnie z niezmiennikiem otrzymujemy, że słowo $u = w[i..j-1]$ jest \textit{samo-maksymalne}.
+Rozważmy teraz ostatnią wartość zmiennej $i$ oraz przedostatnią wartość zmiennej $j$.
+Zgodnie z niezmiennikiem otrzymujemy, że słowo $u = w[i\ldots j-1]$ jest \textit{samo-maksymalne}.
 Dodatkowo sufiks $w[i\ldots n]$ jest postaci $u^tva$, gdzie $v$ jest prefiksem $u$, a $a$ jest taką literką, że $va \leq u$. 
 Z tej postaci sufiksu możemy już łatwo wywnioskować, że $w[i\ldots n]$  jest maksymalnym sufiksem, co kończy dowód poprawności algorytmu.
 
