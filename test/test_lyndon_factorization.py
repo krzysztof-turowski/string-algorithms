@@ -10,7 +10,7 @@ class TestLyndonFactorization(unittest.TestCase):
     os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def compare_lyndon_factorization_with_reference(self, text, n, reference):
-    factorization = lyndon_factorization.duval(text, n)
+    factorization = list(lyndon_factorization.duval(text, n))
     lyndon_words = [text[begin:end] for (begin, end) in factorization]
     self.assertEqual(factorization, reference,
       f"Incorrect factorization {lyndon_words} for word: {text}")
