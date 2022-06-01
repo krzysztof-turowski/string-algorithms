@@ -1,9 +1,8 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 
-\title{Wee LCP description}
-\author{krzysztof.michalik }
-\date{May 2022}
+\title{Wee LCP}
+\date{}
 
 \usepackage[T1]{fontenc}
 \usepackage[polish]{babel}
@@ -27,19 +26,19 @@ Autor zakłada dodatkowo, że:
 \begin{enumerate}
     \item Dostępna jest tablica sufiksowa dla słowa $T$ oraz samo to słowo.
     \item Dostęp do $i$-tej litery słowa $T$ zajmuje czas $O(1)$.
-    \item Dostęp do tablicy sufiksowej jest w czasie $t_A = \Omega(\log{n}^{\epsilon})$, gdzie $\epsilon$ jest pewną stałą.
+    \item Dostęp do tablicy sufiksowej jest w czasie $t_A = \Omega(\log^{\epsilon}{n})$, gdzie $\epsilon$ jest pewną stałą.
 \end{enumerate}
-Ostatnie założenie bierze się stąd, że autor powołuje się na nie zwykłe tablice sufiksowe, które zajmują $n \lceil \log{n} \rceil$ bitów, lecz na ich skompresowaną wersję. [Nie jest podana dokładna liczba bitów zajmowana przez taką reprezentację.]
+Ostatnie założenie bierze się stąd, że autor powołuje się na nie zwykłe tablice sufiksowe, które zajmują $n \lceil \log{n} \rceil$ bitów, lecz na ich skompresowaną wersję. (Nie jest podana dokładna liczba bitów zajmowana przez taką reprezentację.)
 
 Autor przedstawia dwa główne wyniki:
 \begin{enumerate}
     \item Dostęp do LCP jest w czasie $O(t_A)$, podczas gdy sama struktura zajmuje $2n + O(\frac{n \log\log{n}}{\log{n}})$ bitów w pamięci.
-    \item Dostęp do LCP jest w czasie $O(t_A + \log(n)^{\delta})$, podczas gdy sama struktura zajmuje $o(n) = O(\frac{n}{\log{\log{n}}})$ bitów w pamięci.
+    \item Dostęp do LCP jest w czasie $O(t_A + \log^{\delta}{n})$, podczas gdy sama struktura zajmuje $o(n) = O(\frac{n}{\log{\log{n}}})$ bitów w pamięci.
 \end{enumerate}
 
 W obu przypadkach osobno dostępny jest tekst $T$ oraz tablica sufiksowa $SUF$, a ograniczenia na pamięć dotyczą wyłącznie samego sposobu reprezentowania tablicy LCP.
 
-Warto zwrócić uwagę, że mimo zwiększonego czasu odpowiedzi na zapytanie w drugim z przedstawionych wyników, jest on w pewnym sensie podobny do czasu $t_A$ - oba są postaci $\log{n}^x$, gdzie w jedym przypadku $x = \epsilon$, a w drugim $x = \delta$. Oznacza to, że odpowiedni dobór $\delta$ asymptotycznie doprowadzi do tego samego czasu odpowiedzi na zapytanie do LCP.
+Warto zwrócić uwagę, że mimo zwiększonego czasu odpowiedzi na zapytanie w drugim z przedstawionych wyników, jest on w pewnym sensie podobny do czasu $t_A$ - oba są postaci $\log^x{n}$, gdzie w jednym przypadku $x = \epsilon$, a w drugim $x = \delta$. Oznacza to, że odpowiedni dobór $\delta$ asymptotycznie doprowadzi do tego samego czasu odpowiedzi na zapytanie do LCP.
 
 \section{Oznaczenia}
 
@@ -53,23 +52,23 @@ $S_A$ będzie tablicą sufiksową, a dokładniej $S_A[i] = j$ będzie oznaczało
 
 Tablica $S_A^{-1}$ będzie odwrotnością tablicy sufiksowej $S_A$. Tablica $S_A$ na pozycji $i$-tej trzymała indeks $i$-tego leksykograficznie sufiksu $T[j:]$. Zatem tablica $S_A^{-1}$ będzie trzymała na pozycji $j$-tej informację który leksykograficznie jest prefiks $T[j:]$.
 
-Tablica $LCP$ oznacza najdłuższy wspólny prefiks (Longest Common Prefix) sufiksów, które znajdują się obok siebie w porządku leksykograficznym. Dokładniej $LCP[i] = max_k(T[S_A[i]:S_A[i]+k] == T[S_A[i-1]:S_A[i-1]+k])$. $LCP[0] = 0$, ponieważ pierwszy leksykograficznie sufiks ma zero znaków wspólnych ze słowem pustym.
+Tablica $LCP$ oznacza najdłuższy wspólny prefiks (Longest Common Prefix) sufiksów, które znajdują się obok siebie w porządku leksykograficznym. Dokładniej $LCP[i] = max_k(T[S_A[i]:S_A[i]+k] == T[S_A[i-1]:S_A[i-1]+k])$. $LCP[1] = 0$, ponieważ pierwszy leksykograficznie sufiks ma zero znaków wspólnych ze słowem pustym.
 
 \section{Preprocessing}
 
 Zanim osiągniemy skompresowaną wersję tablicy LCP, będziemy musieli skorzystać z kilku innych rezultatów przedstawionych w różnych pracach, aby dostać potrzebne do kompresji dane. Potrzebujemy:
 
 \begin{enumerate}
-    \item Policzyć tablicę sufiksową SUF.
-    \item Policzyć odwrotność tablicy sufiksowej $SUF^{-1}$.
+    \item Policzyć tablicę sufiksową $S_A$.
+    \item Policzyć odwrotność tablicy sufiksowej $S_A^{-1}$.
     \item Policzyć tablicę LCP w postaci nieskompresowanej. Autor powołuje się na algorytm Kasaia, który podał algorytm na obliczanie tablicy LCP w czasie $O(n)$, z adaptacją Manziniego, która pozwala na obliczaniu LCP in-place.
 \end{enumerate}
 
-Po otrzymaniu skompresowanej wersji tablicy LCP powyższe struktury można zapomnieć (poza tablicą $SUF$, która jest nadal wykorzystywana przy odpowiedziach na zapytania zgodnie z założeniami autora.)
+Po otrzymaniu skompresowanej wersji tablicy LCP powyższe struktury można zapomnieć (poza tablicą $S_A$, która jest nadal wykorzystywana przy odpowiedziach na zapytania zgodnie z założeniami autora.)
 
 \section{Kompresja LCP do pamięci $2n + O(\frac{n \log\log{n}}{\log{n}})$}
 
-Generalna idea polega na tym aby reprezentować LCP jako ciąg zer i jedynek. Liczba wystąpień każdego typu bitu będzie ograniczona przez $n$, co da składnik $2n$. Dodatkowo będziemy potrzebowali umieć odpowiadać na zapytania postaci $select_1(S, i)$, które zwraca indeks $i$-tej jedynki w tekście $S$. Tutaj autor powołuje się na strukturę przedstawioną przez Navarro i M\:akinena. Pozwala ona odpowiadac na takie zapytania i używa $O(\frac{n \log\log{n}}{\log{n}})$ bitów. Razem potrzebujemy $2n +  O(\frac{n \log\log{n}}{\log{n}})$ bitów.
+Generalna idea polega na tym aby reprezentować LCP jako ciąg zer i jedynek. Liczba wystąpień każdego typu bitu będzie ograniczona przez $n$, co da składnik $2n$. Dodatkowo będziemy potrzebowali umieć odpowiadać na zapytania postaci $select_1(S, i)$, które zwraca indeks $i$-tej jedynki w tekście $S$. Tutaj autor powołuje się na strukturę przedstawioną przez Navarro i M\"akinena. Pozwala ona odpowiadać na takie zapytania i używa $O(\frac{n \log\log{n}}{\log{n}})$ bitów. Razem potrzebujemy $2n +  O(\frac{n \log\log{n}}{\log{n}})$ bitów.
 
 Zanim przejdziemy do tego jak wygląda taka reprezentacja LCP, przejdziemy krok po kroku przez jej konstrukcję do której będziemy potrzebowali tablicy $S_A^{-1}$ oraz tablicy $LCP$. 
 
@@ -83,7 +82,7 @@ Intuicyjnie oznacza to, że dwa sufiksy, które zaczynają się na sąsiednich p
 
 Teraz rozważmy ciąg $a_i = LCP[S_A^{-1}[i]] + i$. Z powyższego twierdzenia wiemy, że $a_i - a_{i-1} \ge i - (i-1) - 1 = 0$, co pokazuje, że ten ciąg jest rosnący. Jego pierwszy element nie może być mniejszy niż $1$, ponieważ wartości w tablicy LCP są nieujemne. Możemy też zaobserwować, że $LCP[S_A^{-1}[i]] \le |T[i:]| \le n-i+1$. Co więcej $LCP[S_A^{-1}[n]] = 0$, ponieważ jest pojedynczym znakiem i będzie wcześniej alfabetycznie od wszystkich sufiksów zaczynających się na tę samą literę. Z tego możemy wywnioskować, że ciąg $(a_i)$ jest ciągiem rosnącym w przedziale $[1,n]$.
 
-Tego typu struktury można łatwo opisać za pomocą różnicy pomiędzy kolejnymi elementami. Dlatego wyznaczymy tablicę $DIFF[i] = a_i - a_{i-1} = LCP[S_A^{-1}[i]] - LCP[S_A^{-1}[i]] + 1$. Istotna jest następująca obserwacja - jeśli $DIFF[i] = x$, to możemy zapisać $DIFF[i]$ w następujący sposób: $0^x1$, gdzie $0^x$ oznacza konkatenację $x$ zer. Jeśli $DIFF[i] = x$, to przez $DIFF_S[i]$ będziemy oznaczać zapis $0^x1$. Teraz rozważmy string bitowy postaci $S = \sum_{i=1}^n DIFF_S[i]$ (konkatenacja kolejnych stringów $DIFF_S[i]$).
+Tego typu struktury można łatwo opisać za pomocą różnicy pomiędzy kolejnymi elementami. Dlatego wyznaczymy tablicę $DIFF[i] = a_i - a_{i-1} = LCP[S_A^{-1}[i]] - LCP[S_A^{-1}[i]] + 1$. Istotna jest następująca obserwacja - jeśli $DIFF[i] = x$, to możemy zapisać $DIFF[i]$ unarnie: $0^x1$, gdzie $0^x$ oznacza konkatenację $x$ zer. Jeśli $DIFF[i] = x$, to przez $DIFF_S[i]$ będziemy oznaczać zapis unarny $0^x1$. Teraz rozważmy string bitowy postaci $S = \sum_{i=1}^n DIFF_S[i]$ (konkatenacja kolejnych stringów $DIFF_S[i]$).
 
 Teraz możemy poczynić następujące obserwacje na temat $S$:
 \begin{enumerate}
@@ -102,23 +101,16 @@ W tym momencie autor powołuje się na rezultat z innej pracy - strukturę, któ
 
 Struktura z której korzystają wykorzystuje $O(\frac{n \log{\log{n}}}{\log{n}})$ bitów i pozwala odpowiadać na powyższe zapytania w $O(1)$. Oznacza to, że w całości potrzebujemy $2n + O(\frac{n \log{\log{n}}}{\log{n}})$ bitów, aby pomieścić string $S$ oraz tę strukturę. Jest to dokładnie pamięć o jaką nam chodziło.
 
-Pozostaje pokazać jak wyliczamy $LCP[i]$ korzystając z $S$, $S_A$ i $T$. Niech $SUF[j] = i$. Wzory na to są następujące:
-
-%Pokażemy, że $LCP[i] = rank_0(S, select_1(S, SUF[i])) - SUF[i] \leftrightarrow LCP[i] + SUF[i] = %rank_0(S, select_1(S, SUF[i])) \leftrightarrow LCP[i] + SUF^{-1}[j] = rank_0(S, select_1(S, SUF[i]))$
-%W tym celu zaobserwujemy następujące fakty:
+Pozostaje pokazać jak wyliczamy $LCP[i]$ korzystając z $S$, $S_A$ i $T$. Wzory na to są następujące:
 
 \begin{enumerate}
-    \item $LCP[i] = rank_0(S, select_1(S, A[i])) - A[i]$
-    \item $LCP[i] = select_1(S, A[i]) - 2A[i]$
+    \item $LCP[i] = rank_0(S, select_1(S, S_A[i])) - S_A[i]$
+    \item $LCP[i] = select_1(S, S_A[i]) - 2S_A[i]$
 \end{enumerate}
 
-%This is because the select1-statement gives the position where the encoding for H[A[i]] ends in H,
-%and the rank0-statement counts the sum of the I[j]’s for 1 ≤ j ≤ A[i]. So subtracting the value
-%A[i], which has been “artificially” added to the LCP-array, yields the correct value.
+Pierwszy wzór jest poprawny, ponieważ $select_1(S, S_A[i])$ zwraca pozycję, gdzie kończy się kodowanie $LCP[S_A[i]]$ w $S$. Wtedy $rank_0(S, select_1(S, S_A[i]))$ zlicza sumę $DIFF[j]$, dla $j \le A[i]$. Zatem odjęcie $S_A[i]$ (które było sztucznie dodane aby zagwarantować monotoniczność ciągu), zwróci rzeczywistą wartość $LCP[i]$.
 
-Pierwszy wzór jest poprawny, ponieważ $select_1(S, A[i])$ zwraca pozycję, gdzie kończy się kodowanie $LCP[S_A[i]]$ w $S$. Wtedy $rank_0()$ zlicza sumę $DIFF[j]$, dla $j \le A[i]$. Zatem odjęcie $A[i]$ (które było sztucznie dodane aby zagwarantować monotoniczność ciągu), zwróci rzeczywistą wartość $LCP[i]$.
-
-Drugi wzór jest uproszczeniem pierwszego, ponieważ wiemy ile dokładnie występuje biót '1' w tym podstringu, możemy więc policzyć bity '0' bez odwoływania się do zapytania $rank_0()$.
+Drugi wzór jest uproszczeniem pierwszego, ponieważ wiemy ile dokładnie występuje bitów '1' w tym podstringu - jest ich $S_A[i]$, możemy więc policzyć bity '0' bez odwoływania się do zapytania $rank_0(S, select_1(S, S_A[i]))$ - wystarczy odjąć od liczby wszystkich bitów ($select_1(S, S_A[i])$) liczbę bitów '1' ($S_A[i]$).
 
 \section{Kompresja LCP do pamięci $O(\frac{n}{\log{\log{n}}}) = o(n)$}
 
@@ -131,7 +123,7 @@ Rozważmy podział $S$ z poprzedniej sekcji na takie przedziały, że ostatnim e
 Teraz będziemy chcieli zapamiętać 2 wartości dla każdego przedziału:
 \begin{enumerate}
     \item $N[i] = select_1(S, i\kappa)$.
-    \item Jeśli przedział jest dłuższy niż $\kappa^2$, czyli $\kappa^2 > N[i] - N[i-1]$, to zhadrcodujemy odpowiedzi na wszystkie możliwe zapytania $select_1()$ na tym przedziale w tablicy $P$ i zapiszemy wskaźnik do niej.
+    \item Jeśli przedział jest dłuższy niż $\kappa^2$, czyli $\kappa^2 < N[i] - N[i-1]$, to zakodujemy jako stałe odpowiedzi na wszystkie możliwe zapytania $select_1(S, i)$ na tym przedziale w tablicy $P$ i zapiszemy wskaźnik do niej.
     \item Jeśli przedział jest krótszy niż $\kappa^2$, to podamy wskaźnik do tablicy $N'$ dla niego, której opis będzie opisany w kolejnym kroku.
 \end{enumerate}
 
@@ -140,36 +132,28 @@ Rozważmy analogiczny podział każdego 'krótkiego' ($< \kappa^2$) przedziału 
 Analogicznie będziemy chcieli zapamiętać co najwyżej 2 wartości dla każdego miniprzedziału zawierającego się w przedziale $P$:
 \begin{enumerate}
     \item $N'[i] = select_1(P, i\lambda)$.
-    \item Jeśli miniprzedział jest dłuższy niż $\log{n}^{\delta}$, czyli $\log{n}^{\delta} > N'[i] - N'[i-1]$, to zhadrcodujemy odpowiedzi na wszystkie możliwe zapytania $select_1()$ na tym miniprzedziale w tablicy $P'$ i zapiszemy wskaźnik do niej.
-    \item Jeśli przedział jest krótszy niż $\log{n}^{\delta}$, to nie musimy nic zapisywać.
+    \item Jeśli miniprzedział jest dłuższy niż $\log^{\delta}{n}$, czyli $\log^{\delta} < N'[i] - N'[i-1]$, to zakodujemy jako stałe odpowiedzi na wszystkie możliwe zapytania $select_1(P, i)$ na tym miniprzedziale w tablicy $P'$ i zapiszemy wskaźnik do niej.
+    \item Jeśli przedział jest krótszy niż $\log^{\delta}{n}$, to nie musimy nic zapisywać.
 \end{enumerate}
-
-%Teraz zhardcodujemy odpowiedzi na pytania $select_1(S, i\kappa)$ dla przedziałów długości $\kappa ^2$. Zapisane wartości będą rzędu $O(\log{n})$ dla każdego z długich przedziałów. Sprawia to, że zhardcodowane wartości zajmą $O(\frac{n\log{n}}{\kappa}) = O(\frac{n}{\log{n}})$ miejsca.
-
-%W dalszej kolejności zhardcodujemy jeszcze kilka tablic, każda asymptotycznie nie zajmująca więcej miejsca od powyższej.
-
-%Analogicznie postąpimy dla 'krótkich' przedziałów, dalej nazywanych miniblokami. Mowa tu o przedziałach które są mniejsze niż $\kappa^2$.
-
-%Niech $\lambda = \lfloor \log{\kappa}^2 \rfloor = \Theta(\log^2{\log{n}})$. Jak wyżej dzieliliśmy bloki na długie i krótkie, teraz dzielimy tak minibloki. Każdy miniblok będzie zawierał $\lambda$ bitów '1'. Następnie dla każdego bloku $>\log{n}^{\delta}$ hadrcodujemy odpowiedzi na zapytania.
 
 Teraz zastanówmy się jak możemy odpowiadać na zapytania typu $select_1(S, i)$. Mamy kilka dość intuicyjnych przypadków:
 
 \begin{enumerate}
-    \item Długość przedziału w którym jest $i$-ta jedynka ($N[\lfloor \frac{i}{\kappa} \rfloor + 1] - N[\lfloor \frac{i}{\kappa} \rfloor]$) jest dłuższa niż $\kappa^2$ - wtedy nasza odpowiedź jest zhadrcodowana i wystarczy ją odczytać w czasie $O(1)$.
-    \item Długość przedziału jest mniejsza niż $\kappa^2$, ale długość miniprzedziału jest większa od $\log{n}^{\delta}$. Wtedy odpowiedź również jest zhardcodowana, jako suma dwóch wartości. Odczytujemy je również w czasie $O(1)$.
-    \item Długość miniprzedziału jest mniejsza niż $\log{n}^{\delta}$. Wtedy nasza wartość nie jest zhardcodowana, ale możemy popatrzyć się na początek miniprzedziału i podać wartość dla niego jako naszą wstępną odpowiedź (wiemy, że aktualna odpowiedź na zapytanie $select_1()$ będzie nie mniejsza). Dokładną wartość poznajemy porównując w czasie $O(\log{n}^{\delta})$ fragmenty $T$.
+    \item Długość przedziału w którym jest $i$-ta jedynka ($N[\lfloor \frac{i}{\kappa} \rfloor + 1] - N[\lfloor \frac{i}{\kappa} \rfloor]$) jest dłuższa niż $\kappa^2$ - wtedy nasza odpowiedź jest zakodowana jako stała i wystarczy ją odczytać w czasie $O(1)$.
+    \item Długość przedziału jest mniejsza niż $\kappa^2$, ale długość miniprzedziału jest większa od $\log^{\delta}{n}$. Wtedy odpowiedź również jest zakodowana, tym razem jako suma dwóch wartości. Odczytujemy je również w czasie $O(1)$.
+    \item Długość miniprzedziału jest mniejsza niż $\log^{\delta}{n}$. Wtedy nasza wartość nie jest zakodowana, ale możemy popatrzyć się na początek miniprzedziału i podać wartość dla niego jako naszą wstępną odpowiedź (wiemy, że aktualna odpowiedź na zapytanie $select_1(S, i)$ będzie nie mniejsza). Z racji, że miniprzedział jest krótszy niż $\log^{\delta}{n}$, to dokładną wartość poznajemy porównując w czasie $O(\log^{\delta}{n})$ znaki z $T$.
 \end{enumerate}
 
-Warto jeszcze odpowiedzieć jak używamy tekstu $T$ do dokładnego policzenia $LCP[i]$ z podpunktu nr 3 powyżej. Niech $j = A[i-1]$. Z racji, że $LCP[i] \ge$ wartość zapisana na początku minibloku i wiemy, że nie może wzrosnąć o ponad $\log{n}^{\delta}$. Porównujemy zatem sufiksy $T[i+m:]$ oraz $T[j+m:]$ i po co najwyżej $\log{n}^{\delta}$ krokach pewien znak nie będzie się zgadzał. Powiedzmy, że pomyłka były przy $y+1$-szym porównaniu. Teraz możemy zakończyć obliczanie wartości i po prostu zwrócić ją $y+m$.
+Warto jeszcze odpowiedzieć jak używamy tekstu $T$ do dokładnego policzenia $LCP[i]$ z podpunktu nr 3 powyżej. Załóżmy, że wstępną odpowiedzią jest $a$. Wiemy zatem, że $LCP[i] \ge a - 2S_A[i]$. Może się zdarzyć, że $a - 2S_A[i] < 0$, ale wiemy, ze musiało to wynikać z tego, że zwróciliśmy przybliżoną wartość. Wiemy, że $LCP[i] \ge 0$. Dlatego ustalamy $m = max(a - 2S_A[i], 0)$. Niech $S_A[i] = j$ oraz $S_A[i - 1] = j'$ Aby ustalić dokładną wartość $LCP[i]$, będziemy liniowo porównywać sufiksy $T[j+m:]$ oraz $T[j'+m:]$ (wiemy już, że pierwsze $m$ pozycji się zgadza dzięki naszemu zapytaniu) i po co najwyżej $\log^{\delta}{n}$ krokach pewien znak nie będzie się zgadzał. Powiedzmy, że pomyłka były przy $y+1$-szym porównaniu. Teraz możemy zakończyć obliczanie wartości i zwrócić $y+m$.
 
 Pozostało pokazać, że pamięć z której korzystamy wynosi $o(n)$.
 
 Policzmy ile miejsca zajmują kolejne tablice, które tworzyliśmy:
 \begin{enumerate}
     \item Pamięć zajmowana przez $N$ to po prostu $O(\frac{n}{\kappa}\log{n}) = O(\frac{n}{\log{n}}) = o(n)$, ponieważ zapamiętujemy wartości dla każdego przedziału i każda wartość zapamiętana zajmuje $\log{n}$ bitów.
-    \item Pamięć zajmowana przez $P = O(\frac{n}{\kappa^2}*\kappa * \log{n}) = O(\frac{n}{log{n}}) = o(n)$, ponieważ długich przedziałów może być nie więcej niż $\frac{n}{\kappa^2}$, w każdym hardcodujemy $\kappa$ wartości, każda długości $\log{n}$.
+    \item Pamięć zajmowana przez $P = O(\frac{n}{\kappa^2} \cdot \kappa \cdot \log{n}) = O(\frac{n}{\log{n}}) = o(n)$, ponieważ długich przedziałów może być nie więcej niż $\frac{n}{\kappa^2}$, w każdym jako stałe zapisaliśmy $\kappa$ wartości, każda długości $\log{n}$.
     \item Pamięć zajmowana przez wszystkie tablice $N'$ to $O(\frac{n}{\lambda}\log{\kappa}) = O(\frac{n}{\log{\log{n}}}) = o(n)$, ponieważ zapamiętujemy wartości dla każdego przedziału i każda wartość zapamiętana zajmuje $\log{\kappa}$ bitów.
-    \item Pamięć zajmowana przez wszystkie tablice $P' = O(\frac{n}{\log{n}^{\delta}}*\lambda * \log{\kappa}) = O(\frac{n \log^3{\log{n}}}{log{n}}) = o(n)$, ponieważ długich miniprzedziałów może być nie więcej niż $\frac{n}{\log{n}^{\delta}}$, w każdym hardcodujemy $\lambda$ wartości, każda długości $\log{\kappa}$.
+    \item Pamięć zajmowana przez wszystkie tablice $P' = O(\frac{n}{\log^{\delta}{n}} \cdot \lambda \cdot \log{\kappa}) = O(\frac{n \log^3{\log{n}}}{\log{n}}) = o(n)$, ponieważ długich miniprzedziałów może być nie więcej niż $\frac{n}{\log^{\delta}{n}}$, w każdym trzymamy jako stałe $\lambda$ wartości, każda długości $\log{\kappa}$.
 \end{enumerate}
 
 Każda z tablic zajmuje nie więcej niż $O(\frac{n}{\log{\log{n}}}) = o(n)$ miejsca, zatem wszystkie razem również zajmują $O(\frac{n}{\log{\log{n}}}) = o(n)$ miejsca.
