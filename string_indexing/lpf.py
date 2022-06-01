@@ -62,11 +62,11 @@ def _compute_cis_lpf_no_stack(SA, LCP, n):
       return i
     return None
 
-  def rec(i, t):
-    return update(i, t) or rec(rec(i + 1, i), t)
+  def recurse(i, t):
+    return update(i, t) or recurse(recurse(i + 1, i), t)
 
   c = 1
   while c <= n:
-    c = rec(c + 1, c)
+    c = recurse(c + 1, c)
 
   return LPF

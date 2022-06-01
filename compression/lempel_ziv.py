@@ -30,7 +30,7 @@ def naive_factorization(w, n):
   LZ = []
   i = 1
   while i <= n:
-    matched = [w[i:(i + k)]
+    matched = [w[i:i + k]
            for k in range(1, n) if w.index(w[i:(i + k)]) < i]
     longest = matched[-1] if matched else ''
     LZ.append((i, len(longest), w[i]))

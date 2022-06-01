@@ -14,6 +14,7 @@
 \DeclareMathOperator{\SA}{SA}
 \DeclareMathOperator{\LCP}{LCP}
 \DeclareMathOperator{\LPF}{LPF}
+\DeclareMathOperator*{\argmax}{arg\,max}
 
 \title{A simple algorithm for Lempel-Ziv factorization}
 \author{VM}
@@ -78,7 +79,7 @@ Wartości tablicy LPF są największymi wpsólnymi prefiksami między elementami
 Niech $w$ będzie słowem i $\SA_{i}$ będą kolejnymi tablicami prefiksów słowa $w$, uzupełnione o -1 na końcu.
 Czyli $\SA_{i} = [ \SA[k] : \SA[k] \leq i ] \cup [-1]$.
 Weźmy dowolne $i$, oraz indeks $x$ którego wartość jest maksymalna w tablicy $\SA_{i}$,
- czyli $x$ = $\max\limits_{y} \{ x : \SA_{i}[x] = y \}$.
+ czyli $x$ = $\argmax\limits_{x} \, \SA_{i}[x]$.
 Zauważmy, że dla takiego sufiksu $w[x .. n]$, odpowiedni najdłuższy czynnik poprzedni (w sensie definicji LPF)
  jest największym wspólnym prefiksem tego sufiksu z poprzednim lub z kolejnym sufiksem w tablicy SA.
 Jest tak dlatego, że to te sufiksy są najbliżej sufiksu $w[x .. n]$, zatem mają najdłuższy wspólny z nim prefix.
@@ -95,7 +96,8 @@ Tablica LPF jest permutacją tablicy LCP.
 Ponieważ największe wspólne prefiksy pomiędzy sufiksami $\SA_{n}$ to jest po prostu tablica LCP,
  wystarczy pokazać, że przejście od $\SA_{i}$ do $\SA_{i - 1}$ zawiera równoważne przejście w tablicy LCP.
 Czyli, gdy $\SA_{i}$ jest nadzbiorem $\SA_{i - 1}$, to $\LCP_{i}$ też jest nadzbiorem $\LCP_{i - 1}$.
-Zauważmy, że najdłuższy wspólny prefiks między elementem $i$-tym i $(i + 2)$-ym jest mniejszy prefiks między $i$-tym i $(i + 1)$-ym a $(i + 1)$-ym i $(i + 2)$-im.
+Zauważmy, że najdłuższy wspólny prefiks między elementem $i$-tym i $(i + 2)$-ym
+ jest mniejszym z najdłuższych wspólnych prefiksów między $i$-tym i $(i + 1)$-ym a $(i + 1)$-ym i $(i + 2)$-im.
 Zatem przejście definiujemy tak, że dla największego elementu w $\SA_{i}$, odpowiednie wartości $\LCP$ dla jego następnika
  to minimum wartości następnika i poprzednika maksymalnego elementu w $\LCP$, natomiast wszystkie inne wartości pozostają bez zmian.
 
@@ -114,8 +116,6 @@ Aby zobaczyć jak dokładnie bedzie zmieniać się tablica sufiksów i tablica n
   \caption{Graf ilustrujący zmieniający się stan w algorytmie LPF gdy słowo $abbaabbbaaabab$ jest na wejściu.}
 \end{figure}
 
-\pagebreak
-
 Rysunek 1 należy odczytywać w następujący sposób:
 \begin{itemize}
 \item wartości w wieszchołkach to są kolejne wartości z tablicy $\SA$,
@@ -123,20 +123,28 @@ Rysunek 1 należy odczytywać w następujący sposób:
 \item wartości przy krawędziach przerywanych to są wartości tablic $\LCP_{i}$.
 \end{itemize}
 
-Algorytm obliczający LPF będzie iterować tablicę $\SA$ od lewej do prawej.
-Trzy przypadki są do rozważenia:
+Algorytm obliczający LPF będzie iterować tablicę $\SA$ od lewej do prawej,
+ i będzie rozważam takie dwa przypadki:
 
 \begin{enumerate}
 \item[(1)] $\SA[i - 1] < \SA[i] > \SA[i + 1]$, czyli przypadek lokalnego maksimum.
   Ustawiamy $\LPF[\SA[i]] = \max(\LCP[i], \LCP[i + 1])$, oraz
   tworzymy nową krawędź zastępującą $\LCP[i], \LCP[i + 1]$ o wadze $\min(\LCP[i], \LCP[i + 1])$.
+  Jeśli $i = 3$, to na przykładzie z rysunku 1
+  wartość $\LPF[\SA[3]]$ zostaje ustawiona na $\max(\LCP[3], \LCP[4]) = \max(1, 2) = 2$,
+  wierzchołek o etykiecie $12$ zostaje usunięty,
+  i wartość $\LCP[i]$ zostaje ustawiona na $\min(\LCP[3], \LCP[4]) = \min(1, 2) = 1$.
 \item[(2)] $\SA[i - 1] < \SA[i] < \SA[i + 1] \land \LCP[i] \geq \LCP[i + 1]$.
-  Analogicznie do przypadku (1).
-\item[(3)] $\SA[i - 1] > \SA[i] > \SA[i + 1] \land \LCP[i] \leq \LCP[i + 1]$.
-  Ponieważ my idziemy od lewej do prawej, to przypadek (1) zapobiega występowaniu takiego scenariusza.
+  Wykonujemy kroki analogicznie jak w pierwszym przypadku.
+  Jeśli $i = 6$, to na przykładzie z rysunku 1
+  wartość $\LPF[\SA[6]]$ zostaje ustawiona na $\LCP[6] = 3$,
+  wierzchołek o etykiecie $4$ zostaje usunięty,
+  i wartość $\LCP[6]$ zostaje ustawiona na $\LCP[7] = 0$.
 \end{enumerate}
 
-Algorytm będzie próbował stosować reguły (1) i (2) na każdym kroku iteracji.
+Algorytm będzie próbował stosować reguły (1) i (2) na każdym wierzchołku.
+Gdy nie jest to możliwe, będzie on próbował zastosować je na kolejnych wierzchołkach,
+ aż sytuacja się nie zmieni.
 Aby zachować odpowiednią kolejność i uniknąć faktycznego tworzenia grafu,
  utrzymywany będzie stos indeksów do tablic $\SA$ i $\LCP$.
 Kod algorytmu jest przedstawiony niżej.
@@ -154,7 +162,7 @@ Kod algorytmu jest przedstawiony niżej.
        \qquad (SA[i] $<$ SA[TOP(L)] $\lor$ \\
        \qquad (SA[i] $>$ SA[TOP(L)] $\land$ LCP[i] $\leq$ LCP[TOP(L)]))}
 
-\IF{$SA[i] < SA[TOP(L)]$}
+\IF{SA[i] $<$ SA[TOP(L)]}
 \STATE LPF[SA[TOP(L)]] $\gets$ max(LCP[TOP(L)], LCP[i])
 \STATE LCP[i] $\gets$ min(LCP[TOP(L)], LCP[i])
 \ELSE
@@ -178,29 +186,39 @@ Pozostaje pokazanie złożoności pamięciowej algorytmu.
 
 \begin{proof}
 
-Zauważmy, że w każdym momencie, pozycje na stosie są uporządkowane od największej na jego szczycie.
+Zauważmy, że w każdym momencie pozycje na stosie są uporządkowane od największej na jego szczycie.
 Dodatkowo, odpowiednie wartości $\SA$ i $\LCP$ też są w takim porządku.
 Czyli, jeśli wartości na stosie to $i_1 < i_2 < ... < i_k$, to z tego wynika,
  że $\SA[i_1] < \SA[i_2] < ... < \SA[i_k]$ i $\LCP[i_1] < \LCP[i_2] < ... < \LCP[i_k]$.
 Rozważmy dowolne $\LCP[i_j]$. Zawiera ono najdłuższy wspólny prefiks sufiksów $i_{j-1}$-go i $i_{j}$-go.
 
 Pokażemy teraz, że $i_{j + 2} - i_{j} \geq LCP[i_{j + 1}]$.
-Załóżmy, że tak nie jest.
-Wtedy czynnik $w[i_j ... i_{j + 1} + \LCP[i_{j + 1} - 1]$ ma okres o długości $i_{j + 1} - i_{j}$
+Od tego momentu argumentacja będzie polegać na znanych własnościach napisów w tzw. kombinatoryce napisów,
+ która jest zbyt głęboka, aby powtarzać w tym miejscu.
+Dla odniesienia, kombinatoryka napisów została wprowadzona w ``Algebraic Combinatorics on Words'' (2002).
+Załóżmy, że teza jest falszywa.
+Wtedy czynnik $w[i_j ... i_{j + 1} + \LCP[i_{j + 1} - 1]]$ ma okres o długości $i_{j + 1} - i_{j}$
  (dzięki temu, że występuje nakładanie się czynników $w[i_{j} ... i_{j} + LCP[i_{j + 1}] - 1]$
   i $w[i_{j + 1} ... i_{j + 1} + LCP[i_{j + 1}] - 1]$).
 Ponieważ $LCP[i_{j + 2}] > LCP[i_{j + 1}]$ i $w[i_{j} ... i_{j} + LCP[i_{j + 1}] - 1]$
- ma wspólne podsłowo z $w[i_{j + 1} ... i_{j + 1} + LCP[i_{j + 1}] - 1]$
+ mają wspólne podsłowo z $w[i_{j + 1} ... i_{j + 1} + LCP[i_{j + 1}] - 1]$
  o długości co najmniej $i_{j + 1} - i_{j}$,
  to pierwiaski pierwotne dwóch okresów powinne się synchronizować.
 W takim razie, okres $i_{j + 1} - i_{j}$ kończy się dalej niż $i_{j + 1} + LCP[i_{j + 1}] - 1$ w słowie $w$.
-Czyli, $LCP[i_{j + 1}$ jest ściśle mniejszy od prawdziwych długości najdłuższych wspólnych prefiksów.
+Czyli, $LCP[i_{j + 1}]$ jest ściśle mniejszy od prawdziwych długości najdłuższych wspólnych prefiksów.
 
-Ponieważ $i_{j + 2} - i_{j} \geq \LCP[i_{j + 1}]$ i $\LCP[i_{j + 1}]$, to implikuje,
+Ponieważ $i_{j + 2} - i_{j} \geq \LCP[i_{j + 1}]$ i $\LCP[i_{j + 1}] > \LCP[i_{j}]$, to implikuje,
  że rozmiar stosu, czyli $k$, jest w obrębie $O(\sqrt{n})$.
 A to znaczy, że maksymalny rozmiar stosu miejści się w $o(n)$.
 
 \end{proof}
 \end{lemma}
+
+Proszę zwrócić uwagę na to, że algorytm liczy jedynie faktoryzację.
+Aby dokonać właściwej kompresji należałoby odzyskać indeksy początków kolejnych czynników.
+Do tego można spróbować wyznaczyć jawnie permutację między LPF a LCP,
+ natomiast nie jest to łatwo zrobić z uwagi na konstrukcję algorytmu,
+ bo tablica LCP zmienia się w taki sposób, że wartości w niej nie koniecznie odnoszą się
+ do sąsiednich elementów w tablicy SA.
 
 \end{document}
