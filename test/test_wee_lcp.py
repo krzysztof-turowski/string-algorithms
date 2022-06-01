@@ -23,7 +23,7 @@ class TestWeeLCP(unittest.TestCase):
 
   def random_test(self):
     alphabet = ['A', 'B']
-    size = 10000
+    size = 1000
     word = "#"
     while len(word) < size:
       word += alphabet[random.randint(0, 1)]
