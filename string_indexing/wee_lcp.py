@@ -35,6 +35,7 @@ def brutal_select_one(bit_string, i):
   # For simplicity we use naive one
   # Used as substitute in 2n version
   # Used only while compressing for o(n) version
+  st = i
   if i == 0:
     return 0
   for idx, bit_string_i in enumerate(bit_string):
@@ -42,6 +43,8 @@ def brutal_select_one(bit_string, i):
       i -= 1
       if i == 0:
         return idx+1 # +1 since we index from 0
+  print(bit_string)
+  print(st)
   raise Exception("Not enough 1s in bit-string")
 
 def hardcode_interval(bit_string, begin, end):
@@ -57,6 +60,8 @@ class CompressedLCP2n:
     self.bit_string = bit_string
 
   def lcp(self, i):
+    if i == 0:
+      return -1
     result = brutal_select_one(self.bit_string, self.suf_array[i])
     return result - 2 * self.suf_array[i]
 
@@ -138,6 +143,8 @@ class CompressedLCPon:
     return a + b # linear check will be performed
 
   def lcp(self, i):
+    if i == 0:
+      return -1
     if i < 2:
       return 0
     approx = max(0, self.select_one(self.suf_array[i]) - 2 * self.suf_array[i])
