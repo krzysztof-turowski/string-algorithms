@@ -23,14 +23,18 @@
 
 \maketitle
 
-Faktoryzacja Lempel-Ziv'a dla słowa $w$ jest takim rozkładem $u_0 u_1 ... u_k = w$,
+Rozważamy pewną faktoryzacje dla słowa $w$, która jest takim rozkładem $u_0 u_1 ... u_k = w$,
  że każde $u_i$, za wyjątkiem możliwie ostatniego,
- jest albo najdłużsym prefiksem $u_i u_{i + 1} ... u_k$ i występuje jako podsłowo w $u_0 u_1 ... u_i$,
+ jest albo najdłużsym prefiksem $u_i u_{i + 1} ... u_k$, który występuje jako podsłowo w $u_0 u_1 ... u_i$,
  ale nie tylko jako sufiks,
  albo jest pojedynczym symbolem, gdy takiego prefiksu nie ma.
+Od oryginalnej faktoryzacji Lempel-Ziv'a, ta różni się tym, 
+ że w szczególności nie zawiera indeksów początków czynników,
+ niezbędnej do odtworzenia oryginalnego słowa.
+Tym niemniej, autorzy odnoszą się do tej faktoryzacji pod nazwą faktoryzacji Lempel-Ziv'a.
 
 Authorzy proponują algorytm pozwalający obliczać faktoryzację w czasie liniowym i pamięci $o(n)$.
-Jeszcze poprzedni wynik tych samych autorów osiągał liniowy czas i pamięć,
+Jeszcze poprzedni wynik tych samych autorów\footnote{Praca ``Computing Longest Previous Factor in linear time and applications'', 2013} osiągał liniowy czas i pamięć,
  natomiast różnica pomiędzy dużym $O(n)$ tamtego algorytmu, i małym $o(n)$ dzisiejszego, jest na tyle istotna,
  że nowy algorytm został opublikowany.
 
@@ -80,7 +84,7 @@ Niech $w$ będzie słowem i $\SA_{i}$ będą kolejnymi tablicami prefiksów sło
 Czyli $\SA_{i} = [ \SA[k] : \SA[k] \leq i ] \cup [-1]$.
 Weźmy dowolne $i$, oraz indeks $x$ którego wartość jest maksymalna w tablicy $\SA_{i}$,
  czyli $x$ = $\argmax\limits_{x} \, \SA_{i}[x]$.
-Zauważmy, że dla takiego sufiksu $w[x .. n]$, odpowiedni najdłuższy czynnik poprzedni (w sensie definicji LPF)
+Zauważmy, że dla takiego sufiksu $w[x .. n]$, odpowiedni najdłuższy czynnik poprzedni (taki, którego indeks występuje w tablicy LPF)
  jest największym wspólnym prefiksem tego sufiksu z poprzednim lub z kolejnym sufiksem w tablicy SA.
 Jest tak dlatego, że to te sufiksy są najbliżej sufiksu $w[x .. n]$, zatem mają najdłuższy wspólny z nim prefix.
 
