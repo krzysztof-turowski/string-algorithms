@@ -13,7 +13,7 @@ LCS_ALGORITHMS = [
     [ 'Kumar-Rangan', lcs.kumar_rangan ],
     [ 'Myers', lcs.myers ],
     [ 'Hunt-Szymanski', lcs.hunt_szymanski ],
-    [ 'Hunt-Szymanski1', lcs.hunt_szymanski1 ],
+    [ 'Hunt-Szymanski-Apostolico', lcs.hunt_szymanski_apostolico ],
 ]
 FOUR_RUSSIANS = [[ 'four Russians', four_russians.four_russians_lcs ]]
 
