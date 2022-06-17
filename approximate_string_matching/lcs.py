@@ -5,7 +5,7 @@ import bisect
 from approximate_string_matching import distance
 
 def needleman_wunsch(text_1, text_2, n_1, n_2, S):
-  Data = collections.namedtuple('Data', 'distance previousious letter')
+  Data = collections.namedtuple('Data', 'distance previous letter')
   d = { (0, 0): Data(0, None, '') }
   for i, ci in enumerate(text_1[1:]):
     d[(i + 1, 0)] = Data(i + 1, (i, 0), ci)
@@ -24,9 +24,9 @@ def needleman_wunsch(text_1, text_2, n_1, n_2, S):
           substitution, key = lambda v: v.distance)
   text, p = '', (n_1, n_2)
   while p != (0, 0):
-    if p[0] - d[p].previousious[0] == 1 and p[1] - d[p].previousious[1] == 1:
+    if p[0] - d[p].previous[0] == 1 and p[1] - d[p].previous[1] == 1:
       text = d[p].letter + text
-    p = d[p].previousious
+    p = d[p].previous
   return text
 
 def hirschberg(text_1, text_2, n_1, n_2, S):
@@ -37,20 +37,20 @@ def hirschberg(text_1, text_2, n_1, n_2, S):
   if n_2 == 1:
     return needleman_wunsch(text_1, text_2, n_1, n_2, S)
   split_1 = n_1 // 2
-  distance_previousious = distance.distance_row(
+  distance_previous = distance.distance_row(
       text_1[:split_1 + 1], text_2, split_1, n_2, S)
   distance_next = distance.distance_row(
       text_1[0] + text_1[n_1:split_1:-1], text_2[0] + text_2[n_2:0:-1],
       n_1 - split_1, n_2, S)[::-1]
   distance_sum = [d_1 + d_2 for d_1, d_2 in zip(
-      distance_previousious, distance_next)]
+      distance_previous, distance_next)]
   split_2 = distance_sum.index(min(distance_sum))
-  out_previousious = hirschberg(
+  out_previous = hirschberg(
       text_1[:split_1 + 1], text_2[:split_2 + 1], split_1, split_2, S)
   out_next = hirschberg(
       text_1[0] + text_1[split_1 + 1::], text_2[0] + text_2[split_2 + 1:],
       n_1 - split_1, n_2 - split_2, S)
-  return out_previousious + out_next
+  return out_previous + out_next
 
 def _fill_one_row(text_1, text_2, n_2, R1, R2, r, s):
   i, j = s, 1
@@ -221,7 +221,7 @@ def _make_matchlists(text_1, text_2, n_1, n_2):
   matchlists = collections.defaultdict(list)
   for j in range(n_2, 0, -1):
     matchlists[text_2[j]].append(j)
-  return [None] + [matchlists[text_1[i]] for i in range(1, n_1 + 1)]
+  return [None] + [matchlists[v] for v in text_1[1:n_1+1]]
 
 def hunt_szymanski(text_1, text_2, n_1, n_2, S):
   """
@@ -473,7 +473,7 @@ def hunt_szymanski_apostolico(text_1, text_2, n_1, n_2, S):
       threshold.insert(j)
       threshold.delete(T)
       if j != n_2 + 1:
-        # Delay linking to only access values from the previousious row
+        # Delay linking to only access values from the previous row
         links.append((j, k))
         max_k = max(max_k, k)
         rank[j], rank[n_2+1] = k, max_k + 1
@@ -484,7 +484,7 @@ def hunt_szymanski_apostolico(text_1, text_2, n_1, n_2, S):
       if T != n_2 + 1:
         amatchlist[text_2[T]].insert(T)
     # Update links in the decresing order to only reference
-    # links from the previousious row
+    # links from the previous row
     for j, k in links[::-1]:
       link[k] = (j, link[k-1])
   # Retrieve the result in the reverse order
