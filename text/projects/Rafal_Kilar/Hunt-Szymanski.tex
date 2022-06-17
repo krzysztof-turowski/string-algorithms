@@ -22,14 +22,14 @@
 
 \section*{Wstęp}
 
-Rozważamy problem najdłuższego wspólnego podciągu. Mamy dane dwa słowa $A[1..m]$ i $B[1..n]$. Przedstawimy algorytm Hunta-Szymanskiego działający w czasie $O((r+m) log\ n + n)$ dla słów z $r$ dopasowaniami i $d$ dominującymi dopasowaniami. Następnie przedstawimy jego usprawnioną wersję działającą w czasie $O(m\ log\ n + d\ log(2mn/d) + n)$.
+Rozważamy problem najdłuższego wspólnego podciągu. Mamy dane dwa słowa $A[1..m]$ i $B[1..n]$. Przedstawimy algorytm Hunta-Szymanskiego działający w czasie $O((r+n) \log{n} + n)$ dla słów z $r$ dopasowaniami i zakładając $m = n$. Następnie przedstawimy jego usprawnioną wersję działającą w czasie $O(m\log{n} + d \log{(2mn/d)} + n)$ dla słów z $d$ dominującymi dopasowaniami.
 
 \section*{Algorytm Hunta-Szymanskiego}
 
 Algorytm i omówienie na podstawie pracy \cite{hunt1977fast}.
 
 Definiujemy wartości progowe $T_{i,k}$ jako 
-$$T_{i,k} = \text{ najmniejsze $j$ takie że $A[i..i]$ i $B[1..j]$ posiadają podciąg długości $k$}$$
+$$T_{i,k} =  min\{j\colon \text{$A[i..i]$ i $B[1..j]$ posiadają wspólny podciąg długości $k$}\}$$
 Możemy udowodnić kilka prostych faktów o wartościach progowych:
 
 \textbf{Lemat 1.} \textit{Jeśli $T_{i,1}, \dots, T_{i, k}$ są zdefiniowane, to $T_{i,1} < \dots < T_{i,k}$.}
@@ -40,29 +40,29 @@ Lemat ten przyda nam się w konstrukcji algorytmu.
 
 \textbf{Lemat 2.} $T_{i,k-1} < T_{i+1, k} \le T_{i,k}$
 
-\textit{Dowód.} Ponieważ $A[1..i]$ i $B[1..T_{i,k}]$ mają wspólny podciąg długości $k$, to mają je także $A[1..i+1]$ i $B[1..T_{i,l}]$, więc $T_{i+1, k} \le T_{i,k}$. $A[1..i+1]$ i $B[1..T_{i+1,k}]$ mają wspólny podciąg długości $k$. Usunięcie końcowych znaków z tych słów zmniejsza długość najdłuższego wspólnego podciągu o co najwyżej $1$, więc $A[1..i]$ i $B[1..T_{i+1,k}-1]$ mają wspólny podciąg długości $k-1$, czyli $T_{i,k-1} \le T_{i+1,k} - 1$.
+\textit{Dowód.} Ponieważ $A[1..i]$ i $B[1..T_{i,k}]$ mają wspólny podciąg długości $k$, to mają je także $A[1..i+1]$ i $B[1..T_{i,k}]$, więc $T_{i+1, k} \le T_{i,k}$. $A[1..i+1]$ i $B[1..T_{i+1,k}]$ mają wspólny podciąg długości $k$. Usunięcie końcowych znaków z tych słów zmniejsza długość najdłuższego wspólnego podciągu o co najwyżej $1$, więc $A[1..i]$ i $B[1..T_{i+1,k}-1]$ mają wspólny podciąg długości $k-1$, czyli $T_{i,k-1} \le T_{i+1,k} - 1$.
 
-Używając tego lematu możemy wyznaczyć wartości $T_{i,k}$
+Używając tego lematu możemy wyznaczyć wartości $T_{i,k}$.
 
 \textbf{Lemat 3.}
 
 $$T_{i+1,k} = \begin{cases}
-    \text{najmniejsze $j$ takie że $A[i+1] = B[j]$ i $T_{i, k-1} < j \le T_{i,k}$} \\
-    T_{i, k} \text{ jeśli takie $j$ nie istnieje}
+    \min\{j\colon A[i+1] = B[j] \land T_{i, k-1} < j \le T_{i,k}\} & \text{jeśli takie $j$ istnieje} \\
+    T_{i, k} & \text{wpp.} 
 \end{cases}$$
 
-\textit{Dowód.} Rozważamy przypadek, że takie $j$ nie istnieje. Z minimalności $T_{i+1,k}$, każde maksymalne wspólny podciąg $A[1..i+1]$ i $B[1..T_{i+1,k}]$ kończy się w $B[T_{i+1,k}]$. Z lematu 2. i założenia o $j$, $B[T_{i+1,k}] \neq A[i+1]$, więc rozważane podciąg jest także podciągiem $A[1..i]$ i $B[1..T_{i+1,k}]$, więc $T_{i,k} \le T_{i+1,k}$ i z lematu 2. $T_{i,k} = T{i+1,k}$.
+\textit{Dowód.} Rozważamy przypadek, że takie $j$ nie istnieje. Z minimalności $T_{i+1,k}$, każdy maksymalny wspólny podciąg $A[1..i+1]$ i $B[1..T_{i+1,k}]$ kończy się w $B[T_{i+1,k}]$. Z założenia, że szukane $j$ nie istnieje, wiemy że $A[i + 1] \neq B[j]$ dla każdego $T_{i, k-1} < j \le T_{i,k}$. Z lematu 2. mamy natomiast $T_{i+1,k} \le T_{i,k}$, więc $B[T_{i+1,k}] \neq A[i+1]$, czyli rozważany podciąg jest także podciągiem $A[1..i]$ i $B[1..T_{i+1,k}]$, więc $T_{i,k} \le T_{i+1,k}$ i z lematu 2. $T_{i,k} = T_{i+1,k}$.
 
 Załóżmy teraz, że takie minimalne $j$ istnieje. $A[1..i+1]$ i $B[1..j]$ mają wspólny podciąg długości $k$ - wspólne podciąg długości $k-1$ $A[1..i]$ i $B[1..T_{i,k-1}]$ powiększone o $A[i+1]$ i $B[j]$, więc $T_{i+1,k} \le j$. 
 
-Załóżmy niewprost, że $T_{i+1,k} < j$. Z lematu 2. mamy $T_{i,k-1} < T_{i+1,k}$, więc ostatni znak wspólnego podciągu $A[1..i+1]$ i $B[1..T_{i+1,k}]$ długości $k$ nie jest równy $A[i+1]$. $A[1..i]$ i $B[1..T_{i+1,k}]$ muszą również mieć podciąg długości $k$, więc $T_{i,k} \le T_{i+1,k}$. Z lematu 2. mamy więc równość $T_{i, k} = T_{i+1,k}$. Z założenia niewprost i wymogu $T_{i+1,k} < j \le T_{i,k}$ mamy $T_{i,k} \neq T_{i+1,k}$, co daje nam sprzeczność i kończy dowód.
+Załóżmy niewprost, że $T_{i+1,k} < j$. Z lematu 2. mamy $T_{i,k-1} < T_{i+1,k}$. Z definicji $j$ zachodzi $A[i+1] \neq B[l]$ dla każdego $T_{i,k-1} < k < j$, w szczególności $B[T_{i+1,k}] \neq A[i+1]$. Otrzymujemy więc, że ostatni znak najdłuższego wspólnego podciągu $A[1..i+1]$ i $B[1..T_{i+1,k}]$ długości $k$ nie jest równy $A[i+1]$. $A[1..i]$ i $B[1..T_{i+1,k}]$ muszą również mieć podciąg długości $k$, więc $T_{i,k} \le T_{i+1,k}$. Z lematu 2. mamy więc równość $T_{i, k} = T_{i+1,k}$. Z założenia niewprost i wymogu $T_{i+1,k} < j \le T_{i,k}$ mamy $T_{i,k} \neq T_{i+1,k}$, co daje nam sprzeczność i kończy dowód.
 
 \begin{algorithm}
 \caption{Algorytm HS}\label{alg:hs}
 \begin{algorithmic}
 \For{$i = 1 .. m$}
     \State $MATCHLIST[i] = \{j_1, j_2, \dots, j_p\} \text{ such that $j_1 > \dots > j_p$ and $A[i] = B[j_k]$}$
-    \State $THRESH[i] = n + 1$
+    \State $THRESH[i] = m + 1$
 \EndFor
 \State $THRESH[0] = 0$
 \State $LINK[0] = 0$
@@ -71,7 +71,7 @@ Załóżmy niewprost, że $T_{i+1,k} < j$. Z lematu 2. mamy $T_{i,k-1} < T_{i+1,
         \State $\text{find $k$ such that} THRESH[k-1] < j < THRESH[k]$
         \If{$j < THRESH[k]$}
             \State $THRESH[k] = j$
-            \State $LINK[k] = newnode(i, j, LINK[k-1]$
+            \State $LINK[k] = newnode(i, j, LINK[k-1])$
         \EndIf
     \EndFor
 \EndFor
@@ -85,15 +85,15 @@ Algorytm będzie iterował się po kolejnych znakach $A$. Na początku każdej i
 
 Załóżmy, że dla w iteracji $i$ algorytm rozważa dopasowania $A[i]$ do $B[j_1], \dots, B[j_p]$ pomiędzy wartościami progowymi, to jest $THRESH[k-1] = T_{i-1,k-1} < j_1 < \dots < j_p \le T_{i-1, k} = THRESH[k]$. Z lematu 3. $T_{i,k} = j_1$. Ponieważ rozważamy indeksy w malejącej kolejności, poprawimy wartość $THRESH[k]$ na kolejne $j_p, j_{p-1}, \dots$ aż skończymy na $j_1$.
 
-Ponieważ lemat 1 mówi nam, że wartości w $THRESH$ są w kolejności rosnącej, możemy wyszukiwać $k$ używając wyszukiwania binarnego w czasie $O(log\ n)$. Jeśli oznaczymy ilość wszystkich dopasowań pomiędzy $A$ i $B$, to wykonanie głównej pętli zajmuje $O(r\ log\ n)$. Wyznaczenie list $MATCHLIST$ możemy wykonać sortując $A$ i $B$ pamiętając indeksy i wykonać merge na tych ciągach w łącznym czasie $O(n\ log\ n)$. Potrzebujemy $O(n)$ pamięci na wykorzystywane listy i tablice oraz $O(r)$ pamięci na linki. 
+Dla prostoty zapisu załóżmy $n=m$. Ponieważ lemat 1 mówi nam, że wartości w $THRESH$ są w kolejności rosnącej, możemy wyszukiwać $k$ używając wyszukiwania binarnego w czasie $O(\log{n})$. Jeśli oznaczymy ilość wszystkich dopasowań pomiędzy $A$ i $B$ przez $r$, to wykonanie głównej pętli zajmuje $O(r\log{n} + n)$. Wyznaczenie list $MATCHLIST$ możemy wykonać na przykład przez posortowanie par znaków i indeksów z $A$ i $B$ i równoległe przejście po tak posortowanych tablicach - wyznaczamy listy indeksów dla rosnących znaków z $B$ i przypisujemy je do każdego odpowiadającemu im indeksowi z $A$. Taka implementacja działa w czasie $O(n\log{n})$. Potrzebujemy $O(n)$ pamięci na wykorzystywane listy i tablice oraz $O(r)$ pamięci na linki. 
 
-Łączna złożoność czasowa to $O((r+n)log\ n)$ i pamięciowa $O(r + n)$.
+Łączna złożoność czasowa to $O((r+n)\log{n})$ i pamięciowa $O(r + n)$.
 
 \clearpage
 
 \section*{Usprawniony algorytm}
 
-Przedstawimy teraz usprawnioną wersję powyższego algorytmu zaproponowaną w \cite{apostolico1986improving}. Zanim to zrobimy wprowadzimy kilka pojęć. Powiemy, że dopasowanie $[i,j]$ (para taka, że $A[i] = B[j]$) ma rank $k$ jeśli $A[1..i]$ i $B[1..j]$ mają najdłuższy wspólny podciąg długości $k$. Dopasowanie $[i, j]$ nazwiemy $k$-dominującym jeśli $[i, j]$ ma rank $k$ i dla każdego dopasowania $[i', j']$ o ranku $k$ zachodzi albo $i' > i \land j' \le j$ albo $i' \le i \land j' > j$. Liczbę wszystkich dominujących dopasowań oznaczymy przez $d$. Na poniższym rysunku dominujące dopasowania oznaczone są czerwonymi okręgami.
+Przedstawimy teraz usprawnioną wersję powyższego algorytmu zaproponowaną w \cite{apostolico1986improving}. Zanim to zrobimy wprowadzimy kilka pojęć. Powiemy, że dopasowanie $[i,j]$ (para taka, że $A[i] = B[j]$) ma rząd $k$ jeśli $A[1..i]$ i $B[1..j]$ mają najdłuższy wspólny podciąg długości $k$. Dopasowanie $[i, j]$ nazwiemy $k$-dominującym jeśli $[i, j]$ ma rząd $k$ i dla każdego dopasowania $[i', j']$ o rzędzie $k$ zachodzi albo $i' > i \land j' \le j$ albo $i' \le i \land j' > j$. Liczbę wszystkich dominujących dopasowań oznaczymy przez $d$. Na poniższym rysunku dominujące dopasowania oznaczone są czerwonymi okręgami.
 
 \begin{center}
     \includegraphics[width=0.45\textwidth]{Lmat.png}
@@ -133,22 +133,22 @@ W wewnętrznej pętli zachowujemy następujący niezmiennik: jeśli $j \ne n + 1
         \State $DELETE(T, THRESH)$
         \State $LINK[k]=  newnode(i, j, LINK[k-1])$
         \State $\sigma' = B[T]$
-        \State $DELETE(j, AMATCHLIST[\sigma]$
+        \State $DELETE(j, AMATCHLIST[\sigma])$
         \State $j = SEARCH(T, AMATCHLIST[\sigma])$
-        \State $INSERT(T, AMATCHLIST[\sigma']$
+        \State $INSERT(T, AMATCHLIST[\sigma'])$
     \EndWhile
 \EndFor
 \State recover LCS in reverse using the $LINK$ array
 \end{algorithmic}
 \end{algorithm}
 
-Czas działania zależy od implementacji list $THRESH$ i $MATCHLIST[\sigma]$. Skorzystamy ze struktury danych nazwanej C-drzewo opisanej w pracy \cite{apostolico1987longest}. Reprezentuje ona uporządkowaną listę elementów z ustalonego uniwersum $U$ jako statyczne drzewo binarne. Kolejne liście odpowiadają kolejnym wartością z $U$. Dodatkowo utrzymujemy wskaźniki na niedawno odwiedzone liście. Pozwala to na szybsze wyszukiwanie kolejnych wartości - możemy zacząć od zapamiętanego liścia i przejść najpierw w górę i później w dół po najkrótszej ścieżce do szukanego liścia. Po zakończeniu operacji przestawiamy ten wskaźnik.
+Czas działania zależy od implementacji list $THRESH$ i $MATCHLIST[\sigma]$. Skorzystamy ze struktury danych nazwanej C-drzewo opisanej w pracy \cite{apostolico1987longest}. Reprezentuje ona uporządkowaną listę elementów z ustalonego uniwersum $U$ jako statyczne drzewo binarne. Kolejne liście odpowiadają kolejnym wartościom z $U$. Dodatkowo utrzymujemy wskaźniki na niedawno odwiedzone liście. Pozwala to na szybsze wyszukiwanie kolejnych wartości - możemy zacząć od zapamiętanego liścia i przejść najpierw w górę i później w dół po najkrótszej ścieżce do szukanego liścia. Po zakończeniu operacji przestawiamy ten wskaźnik.
 
-Możemy pokazać, że jeśli wykonujemy operacje na liściach $i_0 < i_1 < \dots < i_k$, gdzie $b_j = i_j - i_{j-1}$ operacje te wymagają czasu $O(log\ m + \sum_{j=1}^k log\ b_j)$. Pierwsza operacja działa w czasie $O(log\ m)$, gdyż wskaźnik może wskazywać na późniejszy liść. Musimy wtedy przestawić wskaźnik na pierwszy liść. Następne operacje przechodzą po najkrótszej ścieżce między liśćmi, mają one długość $O(log\ b_j)$. 
+Możemy pokazać, że jeśli wykonujemy operacje na liściach $i_0 < i_1 < \dots < i_k$, gdzie $b_j = i_j - i_{j-1}$ operacje te wymagają czasu $O(\log{m} + \sum_{j=1}^k \log{b_j})$. Pierwsza operacja działa w czasie $O(\log{m})$, gdyż wskaźnik może wskazywać na późniejszy liść. Musimy wtedy przestawić wskaźnik na pierwszy liść. Następne operacje przechodzą po najkrótszej ścieżce między liśćmi, mają one długość $O(\log{b_j})$. 
 
-W $i$-tej iteracji zewnętrznej pętli znajdujemy $d_i$ dominujących dopasowań. Operacja na określonej liście zajmują $O(log\ n + \sum_{j=1}^{d_i} log\ b_j)$ czasu. Ponieważ rozmiar list to co najwyżej $n$, to $\sum_{j=1}^{d_i} b_j \le 2n$. We wszystkich iteracjach wykorzystywany czas wynosi $O(m\ log\ n + \sum_{j=1}^d b_j)$, gdzie $\sum_{j=1}^d b_j \le 2nm$. Czas jest maksymalizowany gdy $b_j = 2nm/d$. 
+W $i$-tej iteracji zewnętrznej pętli znajdujemy $d_i$ dominujących dopasowań. Operacja na określonej liście zajmują $O(\log{n} + \sum_{j=1}^{d_i} \log{b_j})$ czasu. Ponieważ rozmiar list to co najwyżej $n$, to $\sum_{j=1}^{d_i} b_j \le 2n$. We wszystkich iteracjach wykorzystywany czas wynosi $O(m\log{n} + \sum_{j=1}^d b_j)$, gdzie $\sum_{j=1}^d b_j \le 2nm$. Czas jest maksymalizowany gdy $b_j = 2nm/d$. 
 
-Czas działania algorytmu wynosi więc $O(m\ log\ n + d\ log(2nm/d) + n)$ gdy uwzględnimy liniowy czas potrzebny na inicjalizację. 
+Czas działania algorytmu wynosi więc $O(m\log{n} + d\log{(2nm/d)} + n)$ gdy uwzględnimy liniowy czas potrzebny na inicjalizację. 
 
 \bibliographystyle{alpha}
 \bibliography{sample}
