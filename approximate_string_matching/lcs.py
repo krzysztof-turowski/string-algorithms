@@ -387,7 +387,8 @@ class _CTree:
       self.change_finger = 0
 
     exact = self._find_exact(self.size + self.change_finger, value)
-    predecessor = self._find_neighbor(self.size + self.change_finger, value) - self.size
+    predecessor = self._find_neighbor(self.size + self.change_finger, value)\
+                     - self.size
     if self.universum[predecessor] > value:
       predecessor = self.previous[predecessor]
     successor, leaf = self.next[predecessor], exact - self.size
@@ -407,7 +408,8 @@ class _CTree:
       self.change_finger = 0
 
     exact = self._find_exact(self.size + self.change_finger, value)
-    predecessor, successor = self.previous[exact-self.size], self.next[exact-self.size]
+    predecessor = self.previous[exact-self.size]
+    successor = self.next[exact-self.size]
     self.next[predecessor], self.previous[successor] = successor, predecessor
     self.change_finger = exact - self.size
     self.count[exact], node = 0, _tree_parent(exact)
