@@ -25,7 +25,7 @@ Słowo będziemy nazywać \textit{prostym} (lub słowem Lyndona) jeśli jest śc
 \textbf{Faktoryzacją Lyndona} słowa $w$ nazwiemy podział słowa $w = w_1w_2\ldots w_k$ taki, że wszystkie słowa $w_i$ są proste oraz zachodzi
 $w_1 \geq w_2 \geq \cdots \geq w_k$. Taka faktoryzacja zawsze istnieje i jest unikalna.
 
-Algorytm Duval'a konstruuje faktoryzację Lyndona w czasie liniowym i stałej dodatkowej pamięci.
+Algorytm Duvala konstruuje faktoryzację Lyndona w czasie liniowym i stałej dodatkowej pamięci.
 
 \section{Własności faktoryzacji Lyndona}
 
@@ -72,12 +72,12 @@ Algorytm Duval'a konstruuje faktoryzację Lyndona w czasie liniowym i stałej do
     Możemy zatem odciąć minimalny sufiks słowa $w$ i wywołać się indukcyjnie na krótszym słowie.
 \end{proof}
 
-\section{Algorytm Duval'a}
+\section{Algorytm Duvala}
 
 Zacznijmy od wprowadzenia dodatkowej definicji. Słowo nazwiemy \textit{prawie prostym} jeśli jest postaci $w = u^t\bar{u}$, gdzie 
 $\bar{u}$ jest prefiksem słowa $u$ (być może pustym).
 
-Algorytm Duval'a będzie utrzymywał podział słowa wejściowego $w$ na $3$ słowa $w=v_1v_2v_3$ takie, że dla fragmentu $v_1$ faktoryzacja Lyndona jest już znana, 
+Algorytm Duvala będzie utrzymywał podział słowa wejściowego $w$ na $3$ słowa $w=v_1v_2v_3$ takie, że dla fragmentu $v_1$ faktoryzacja Lyndona jest już znana, 
 a fragment $v_2$ jest słowem \textit{prawie prostym}. 
 
 Algorytm będzie utrzymywał ten podział za pomocą dwóch zmiennych $i, j$. Zmienna $i$ będzie wskazywała na początek słowa $v_2$, a zmienna $j$ będzie wskazywała na początek słowa $v_3$. 
@@ -120,7 +120,7 @@ Dokładniej będziemy mieli trzy przypadki:
 \end{algorithm}
 
 \begin{proof}[Dowód poprawności]
-    Z powyższych przypadków możemy od razu wywnioskować, że algorytm Duval'a rozkłada słowo $w$ na 
+    Z powyższych przypadków możemy od razu wywnioskować, że algorytm Duvala rozkłada słowo $w$ na 
     $w = w_1w_2\ldots w_k$ takie, że wszystkie $w_i$ są słowami \textit{prostymi}.
     Pozostało pokazać, że $w_1 \geq w_2 \geq \cdots \geq w_k$. 
     W tym celu zastanówmy się co dzieje się w trakcie kroku z trzeciego przypadku. Niech $a := w[j]$. 
