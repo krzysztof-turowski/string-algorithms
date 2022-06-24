@@ -48,6 +48,10 @@ Algorytm Duvala konstruuje faktoryzację Lyndona w czasie liniowym i stałej dod
 \end{proof}
 
 \begin{observation}
+    Słowa \textit{proste} nie posiadają właściwych prefikso-sufiksów.
+\end{observation}
+
+\begin{observation}
     Dla faktoryzacji Lyndona $w = w_1w_2\ldots w_k$ słowo $w_k$ jest minimalnym sufiksem słowa $w$. 
 \end{observation}
 
@@ -75,7 +79,12 @@ Algorytm Duvala konstruuje faktoryzację Lyndona w czasie liniowym i stałej dod
 \section{Algorytm Duvala}
 
 Zacznijmy od wprowadzenia dodatkowej definicji. Słowo nazwiemy \textit{prawie prostym} jeśli jest postaci $w = u^t\bar{u}$, gdzie 
-$\bar{u}$ jest prefiksem słowa $u$ (być może pustym).
+$\bar{u}$ jest prefiksem słowa $u$ (być może pustym). 
+
+Dodatkowo udowodnimy teraz, że słowo \textit{prawie proste}
+ma tylko jeden okres $u$, który jest słowem \textit{prostym}. W przeciwnym wypadku mielibyśmy dwa \textit{proste} okresy $u_1, u_2$.
+Załóżmy, że $|u_1| < |u_2|$. Wtedy $u_1$ jest okresem $u_2$. Ale z tego wynikałoby, że $u_2$ ma właściwy prefikso-sufiks, 
+co jest sprzeczne z tym, że $u_2$ jest słowem \textit{prostym}. 
 
 Algorytm Duvala będzie utrzymywał podział słowa wejściowego $w$ na $3$ słowa $w=v_1v_2v_3$ takie, że dla fragmentu $v_1$ faktoryzacja Lyndona jest już znana, 
 a fragment $v_2$ jest słowem \textit{prawie prostym}. 
@@ -85,9 +94,24 @@ W każdym kroku algorytmu będziemy próbowali doczepić literę $w[j]$ do słow
 to długość słowa $u$ występującego w \textit{prawie prostym} słowie $v_2 = u^t\bar{u}$). 
 Dokładniej będziemy mieli trzy przypadki:
 \begin{itemize}
-    \item $w[j] = w[k]$: dodanie $w[j]$ do $v_2$ nie narusza założenia, że $v_2$ jest \textit{prawie proste}. Także w tym przypadku po prostu zwiększamy zmienne $j$ oraz $k$.
-    \item $w[j] > w[k]$: słowo $v_2 + w[j]$ staje się proste. W tym przypadku zwiększamy $j$ i ustawiamy $k$ na początek słowa $v_2$.
-    \item $w[j] < w[k]$: słowo $v_2 + w[j]$ przestaje być \textit{prawie proste}. W tym przypadku dla naszego słowa $v_2 = u^t\bar{u}$ dzielimy $u^t$ na $t$ słów \textit{prostych},
+    \item $w[j] = w[k]$: dodanie $w[j]$ do $v_2$ nie narusza założenia, że $v_2$ jest \textit{prawie proste}. 
+    
+    W tym przypadku zwiększamy zmienne $j$ oraz $k$.
+    \item $w[j] > w[k]$: słowo $v_2 + w[j]$ staje się proste. 
+    Aby to udowodnić zauważmy, że minimalny sufiks słowa $u^t\bar{u}w[j]$ musi zacząć się w pierwszym słowie $u$. 
+    W przeciwnym przypadku moglibyśmy rozszerczyć go o długość $|u|$ i z faktu, że $w[j] > w[k]$ otrzymalibyśmy, że ten
+    dłuższy sufiks jest mniejszy. Wiemy zatem, że minimalny sufiks zaczyna się w pierwszym fragmencie $u$, 
+    natomiast z faktu, że $u$ jest proste otrzymujemy, że minimalny sufiks musi zacząć się od pierwszej litery $u$, 
+    czyli słowo $v_2 + w[j]$ staje się proste.
+
+    W tym przypadku zwiększamy $j$ i ustawiamy $k$ na początek słowa $v_2$.
+    \item $w[j] < w[k]$: słowo $v_2 + w[j]$ przestaje być \textit{prawie proste}.
+    Aby to udowodnić załóżmy, że słowo $v_2 + w[j]$ pozostaje \textit{prawie proste}. 
+    Wtedy $v_2 + w[j] = s^t\bar{s}$ dla jakiegoś słowa prostego $s$. Oczywiście $s \neq u$.
+    Ponadto $s$ jest okresem słowa $v_2$, co daje nam sprzeczność z tym, że \textit{prawie proste}
+    słowo ma tylko jeden \textit{prosty} okres.
+    
+    W tym przypadku dla naszego słowa $v_2 = u^t\bar{u}$ dzielimy $u^t$ na $t$ słów \textit{prostych},
     dodajemy je do $v_1$ (czyli wynikowej faktoryzacji Lyndona), ustawiamy zmienne $i$ oraz $k$ na początek pozostałej części słowa $v_2$ ($\bar{u}$), a zmienną $j$ na jedną pozycję dalej.
 \end{itemize}
 
