@@ -1,29 +1,16 @@
-import numpy as np
+import numpy
 
 def compute_inversed_suffix_array(suf_array):
   inv_suf_array = [0] * len(suf_array)
-  for i, suf_i in enumerate(suf_array):
-    if i > 0:
-      inv_suf_array[suf_i] = i
+  for i, suf_i in enumerate(suf_array[1:], start = 1):
+    inv_suf_array[suf_i] = i
   return inv_suf_array
 
 def compute_seqence_diff(inv_suf_array, lcp_array):
-  diff = [0] * len(inv_suf_array)
-  for i, inv_suf_i in enumerate(inv_suf_array):
-    if i > 0:
-      diff[i] = lcp_array[inv_suf_i] + i
-  return diff
+  return [0] + [lcp_array[val] + i for i, val in enumerate(inv_suf_array[1:], start=1)]
 
 def compute_bit_string(diff):
-  bit_stirng = ""
-  for i, diff_i in enumerate(diff):
-    if i > 0:
-      zeros = diff[i] - diff[i-1]
-      if i == 1:
-        zeros = diff_i
-      bit_stirng += '0' * zeros
-      bit_stirng += '1'
-  return bit_stirng
+  return "1".join('0' * (i - j) for i, j in zip(diff[1:], diff)) + '1'
 
 def compress_lcp_to_bit_string(lcp_array, suf_array):
   inv_suf_array = compute_inversed_suffix_array(suf_array)
@@ -35,17 +22,10 @@ def brutal_select_one(bit_string, i):
   # For simplicity we use naive one
   # Used as substitute in 2n version
   # Used only while compressing for o(n) version
-  st = i
-  if i == 0:
-    return 0
-  for idx, bit_string_i in enumerate(bit_string):
-    if bit_string_i == '1':
-      i -= 1
-      if i == 0:
-        return idx+1 # +1 since we index from 0
-  print(bit_string)
-  print(st)
-  raise Exception("Not enough 1s in bit-string")
+  idx = 0
+  for _ in range(i):
+    idx = bit_string.find('1', idx) + 1
+  return idx
 
 def hardcode_interval(bit_string, begin, end):
   # begin and end are inclusive
@@ -74,12 +54,12 @@ class CompressedLCPon:
     self.text = text
     self.suf_array = suf_array
 
-    self.kappa = int(np.log2(len(text))**2)
-    self.lambd = int(np.log2(self.kappa )**2)
-    self.limit = int(np.log2(len(text))**delta)
+    self.kappa = int(numpy.log2(len(text))**2)
+    self.lambd = int(numpy.log2(self.kappa )**2)
+    self.limit = int(numpy.log2(len(text))**delta)
 
-    self.net = [0 for _ in range(int((len(text) - 1) / self.kappa) + 2)]
-    self.hel = [0 for _ in range(int((len(text) - 1) / self.kappa) + 2)]
+    self.net = [0] * (int((len(text) - 1) / self.kappa) + 2)
+    self.hel = [0] * (int((len(text) - 1) / self.kappa) + 2)
 
     self.compress_bit_string(bit_string)
 
@@ -87,35 +67,36 @@ class CompressedLCPon:
     for i in range(1, len(self.net)):
       if self.kappa * i > len(self.text): # last interval
         self.net[i] = brutal_select_one(bit_string, len(self.text))
-        self.hel[i] = hardcode_interval(bit_string,
-                                           self.kappa * (i - 1) + 1,
-                                           len(self.text)) # inclusive
+        self.hel[i] = hardcode_interval(
+                        bit_string,
+                        self.kappa * (i - 1) + 1,
+                        len(self.text)) # inclusive
       else:
         self.net[i] = brutal_select_one(bit_string, self.kappa * i)
         interval_size = self.net[i] - self.net[i - 1]
         if interval_size > self.kappa**2:
-          self.hel[i] = hardcode_interval(bit_string,
-                                             self.kappa * (i - 1) + 1,
-                                             self.kappa) # inclusive
+          self.hel[i] = hardcode_interval(
+                          bit_string,
+                          self.kappa * (i - 1) + 1,
+                          self.kappa) # inclusive
         else:
           interval = bit_string[self.net[i - 1] : self.net[i]]
           self.hel[i] = self.compress_interval(interval)
 
   def compress_interval(self, I):
     N_prime_size = int((self.kappa - 1) / self.lambd) + 2
-    N_prime = [0 for _ in range(N_prime_size)]
-    H_prime = [0 for _ in range(N_prime_size)]
+    N_prime, H_prime = [0] * N_prime_size, [0] * N_prime_size
     for i in range(1, len(N_prime)):
       if self.lambd * i > self.kappa:
         N_prime[i] = brutal_select_one(I, self.kappa) # last interval
-        H_prime[i] = hardcode_interval(I, self.lambd * (i - 1) + 1,
-                                            self.kappa) # inclusive
+        H_prime[i] = hardcode_interval(
+                       I, self.lambd * (i - 1) + 1, self.kappa) # inclusive
       else:
         N_prime[i] = brutal_select_one(I, self.lambd * i) # last interval
         mini_interval_size = N_prime[i] - N_prime[i - 1]
         if mini_interval_size > self.limit:
-          H_prime[i] = hardcode_interval(I, self.lambd * (i - 1) + 1,
-                                              self.lambd * i) # inclusive
+          H_prime[i] = hardcode_interval(
+                         I, self.lambd * (i - 1) + 1, self.lambd * i) # inclusive
         else:
           pass # this case needs iteration through text
     return (N_prime, H_prime)
@@ -143,10 +124,8 @@ class CompressedLCPon:
     return a + b # linear check will be performed
 
   def lcp(self, i):
-    if i == 0:
-      return -1
     if i < 2:
-      return 0
+      return i - 1
     approx = max(0, self.select_one(self.suf_array[i]) - 2 * self.suf_array[i])
     idx_i = self.suf_array[i] + approx
     idx_j = self.suf_array[i - 1] + approx

@@ -167,14 +167,11 @@ def from_wee_lcp_2n(text, n):
   LCP = kasai(SA, text, n)
   bit_string = wee_lcp.compress_lcp_to_bit_string(LCP, SA)
   wee_lcp_2n = wee_lcp.CompressedLCP2n(bit_string, SA)
-  result = [wee_lcp_2n.lcp(i) for i in range(n + 1)]
-  return result
+  return [wee_lcp_2n.lcp(i) for i in range(n + 1)]
 
 def from_wee_lcp_o_n(text, n):
   SA = suffix_array.naive(text, len(text))
   LCP = kasai(SA, text, len(text))
   bit_string = wee_lcp.compress_lcp_to_bit_string(LCP, SA)
   wee_lcp_on = wee_lcp.CompressedLCPon(bit_string, text, SA, 0.5)
-  result = [wee_lcp_on.lcp(i) for i in range(1, n + 2)]
-  result[0] = -1
-  return result
+  return [-1] + [wee_lcp_on.lcp(i) for i in range(2, n + 2)]

@@ -14,6 +14,8 @@
 \usetikzlibrary{positioning}
 \usepackage{geometry}
 
+\newtheorem{theorem}{Theorem}
+
 \begin{document}
 
 \maketitle
@@ -74,7 +76,9 @@ Zanim przejdziemy do tego jak wygląda taka reprezentacja LCP, przejdziemy krok 
 
 Autor powołuje się na następujące twierdzenie:
 
+\begin{theorem}
 $LCP[S_A^{-1}[i]] \ge LCP[S_A^{-1}[i - 1]] - 1$, dla każdego $ i > 1$.
+\end{theorem}
 
 Można to tez zapisać jako $LCP[S_A^{-1}[i]] - LCP[S_A^{-1}[i - 1]] \ge - 1$, dla każdego $ i > 1$.
 
