@@ -6,12 +6,11 @@ import unittest
 import parameterized
 
 from generator import rand
-from shortest_common_superstring \
-	import shortest_common_superstring, teng_yao, paluch_elbassoni_zuylen
+from shortest_common_superstring import shortest_common_superstring, teng_yao, paluch_elbassoni_zuylen
 
 SHORTEST_COMMON_SUPERSTRING_ALGORITHMS = [
     [
-        'group_merge',
+        'group merge',
         shortest_common_superstring.group_merge,
         lambda n: 2 * math.ceil(math.log(n) + 1) * n
     ],
@@ -31,15 +30,15 @@ SHORTEST_COMMON_SUPERSTRING_ALGORITHMS = [
         lambda n: 2 * n,
     ],
     [
-        'teng_yao',
+        'Teng-Yao',
         teng_yao.shortest_common_superstring,
         lambda n: 2.89 * n,
     ],
     [
-        'paluch_elbassoni_zuylen',
+        'Paluch-Elbassoni-Zuylen',
         paluch_elbassoni_zuylen.shortest_common_superstring,
         lambda n: 2.5 * n,
-    ]
+    ],
 ]
 
 class TestShortestCommonSuperstring(unittest.TestCase):

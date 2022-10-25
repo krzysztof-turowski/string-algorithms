@@ -22,28 +22,16 @@ class TestLempelZiv77(unittest.TestCase):
                              lempel_ziv.crochemore_ilie_smyth)
 
   def test_lz_factorization_corners(self):
-    # Example from
-    #   "Linear time Lempel-Ziv Factorization: Simple, Fast, Small"
-    #    page 3
-    self.check_all_factorizations('zzzzzipzip',
-                                  [(1, 0, 'z'),
-                                   (2, 4, 'z'),
-                                   (6, 0, 'i'),
-                                   (7, 0, 'p'),
-                                   (8, 3, 'z')])
+    # Example from "Linear time Lempel-Ziv Factorization: Simple, Fast, Small", page 3
+    self.check_all_factorizations(
+        'zzzzzipzip',
+        [(1, 0, 'z'), (2, 4, 'z'), (6, 0, 'i'), (7, 0, 'p'), (8, 3, 'z')])
 
-    # Example from
-    #  "A simple algorithm for computing the Lempel-Ziv factorization"
-    #  page 1
-    self.check_all_factorizations('abbaabbbaaabab',
-                                  [(1, 0, 'a'),
-                                   (2, 0, 'b'),
-                                   (3, 1, 'b'),
-                                   (4, 1, 'a'),
-                                   (5, 3, 'a'),
-                                   (8, 3, 'b'),
-                                   (11, 2, 'a'),
-                                   (13, 2, 'a')])
+    # Example from "A simple algorithm for computing the Lempel-Ziv factorization", page 1
+    self.check_all_factorizations(
+        'abbaabbbaaabab',
+        [(1, 0, 'a'), (2, 0, 'b'), (3, 1, 'b'), (4, 1, 'a'), (5, 3, 'a'), (8, 3, 'b'),
+         (11, 2, 'a'), (13, 2, 'a')])
 
     self.check_all_factorizations('', [])
     self.check_all_factorizations('a', [(1, 0, 'a')])
