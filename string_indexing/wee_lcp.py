@@ -27,12 +27,8 @@ def brutal_select_one(bit_string, i):
     idx = bit_string.find('1', idx) + 1
   return idx
 
-def hardcode_interval(bit_string, begin, end):
-  # begin and end are inclusive
-  hardcoded = []
-  for i in range(begin, end + 1):
-    hardcoded.append(brutal_select_one(bit_string, i))
-  return hardcoded
+def hardcode_interval(bit_string, begin, end):  # begin and end are inclusive
+  return [brutal_select_one(bit_string, i) for i in range(begin, end + 1)]
 
 class CompressedLCP2n:
   def __init__(self, bit_string, suf_array):
