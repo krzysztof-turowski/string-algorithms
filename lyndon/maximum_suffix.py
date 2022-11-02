@@ -42,3 +42,19 @@ def constant_space(text, n, less = operator.__lt__):
 def from_suffix_array(SA, t, n):
   index = SA[-1]
   return index, prefix.period('#' + t[index:], n - index + 1)
+
+def adamczyk_rytter(text, n, less = operator.__lt__):
+  def equal(a, b):
+    return not less(a, b) and not less(b, a)
+  i, j = 1, 2
+  while j <= n:
+    k = 0
+    while j + k < n and equal(text[i + k], text[j + k]):
+      k += 1
+    if less(text[i + k], text[j + k]):
+      i += k + 1
+    else:
+      j += k + 1
+    if i == j:
+      j += 1
+  return i, prefix.period("#" + text[i:], n + 1 - i)
