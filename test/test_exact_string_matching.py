@@ -16,6 +16,7 @@ def lcp_lr_contains(t, w, n, m):
 EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Morris-Pratt', forward.morris_pratt ],
     [ 'Knuth-Morris-Pratt', forward.knuth_morris_pratt ],
+    [ 'Crochemore', forward.crochemore ],
     [ 'Boyer-Moore', backward.boyer_moore ],
     [ 'Boyer-Moore with bad shifts', backward.boyer_moore_bad_shift ],
     [ 'Boyer-Moore-Galil', backward.boyer_moore_galil ],

@@ -56,6 +56,7 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 #### Approximate string matching with Hamming distance
 1. Landau-Vishkin algorithm
 2. Bitap Shift-Add (Baeza-Yates-Gonnet) algorithm
+3. Grossi-Luccio algorithm
 
 #### Approximate string matching with edit distance
 1. Approximate Boyer-Moore (Tarhio-Ukkonen) algorithm
@@ -81,6 +82,7 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 #### Lempel-Ziv 77 factorization
 
 ### Other problems
+1. Approximate matching of string permutation (Grossi, Luccio)
 
 ### Lyndon factorization
 1. Maximum suffix algorithm based on prefix-suffix array

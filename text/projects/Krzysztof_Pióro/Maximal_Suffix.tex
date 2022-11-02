@@ -1,0 +1,152 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+
+\algrenewcommand\textproc{}
+\renewcommand{\thealgorithm}{}
+
+
+\title{Proste wyznaczenie maksymalnego sufiksu słowa\\ \large Na podstawie ''A note on a simple computation of the maximal suffix
+of a string'' -- Adamczyk, Rytter}
+\author{Krzysztof Pióro}
+\date{Maj 2022}
+
+\begin{document}
+
+\maketitle
+
+\section{Wstęp}
+
+Autorzy pracy pokazują prosty w opisie algorytm wyznaczający maksymalny sufiks słowa działający w czasie liniowym i stałej dodatkowej pamięci.
+
+\section{Definicje}
+
+Będziemy rozważać słowo $w$ długości $n$ indeksowane od $1$ do $n$. Dodatkowo definiujemy:
+
+\begin{itemize}
+    \item MaxSuf$(w)$ -- maksymalny sufiks słowa $w$
+    \item period$(w)$ -- najkrótszy okres słowa $w$
+    \item słowo nazywamy \textit{samo-maksymalnym} $\iff$ MaxSuf$(w) = w$.
+    \item MaxSufPos$(w)$ -- pozycja od której zaczyna się maksymalny sufiks słowa $w$
+    \item $w_1 < w_2$ -- $w_1$ jest mniejsze leksykograficznie od $w_2$
+\end{itemize}
+
+
+
+\section{Algorytm}
+
+\begin{algorithm}[H]
+    \caption{\textbf{Compute-MaxSufPos$(w)$}}
+    \begin{algorithmic}
+        \State $i := 1$; $j := 2$;
+        \While {$j \leq n$}
+            \State $k := 0$
+            \While {$j + k < n$ \textbf{and} $w[i+k] = w[j+k]$}
+                \State $k := k + 1$;
+            \EndWhile
+            \If{$w[i+k] < w[j+k]$}
+                \State $i := i + k + 1$;
+            \Else
+                \State $j := j + k + 1$;
+            \EndIf
+            \If {$i = j}$
+                \State $j := j + 1$;
+            \EndIf
+        \EndWhile
+        \State \Return $i$
+    \end{algorithmic}
+\end{algorithm}
+
+
+Algorytm oczywiście działa w stałej (dodatkowej) pamięci i w liniowej liczbie operacji.
+
+\section{Dowód poprawności}
+
+Niech $(i, j) \rightarrow (i', j')$ oznacza, że z konfiguracji $(i, j)$  w jednej iteracji przechodzimy do $(i', j')$ i niech $\rightarrow^{*}$ będzie
+domknięciem przechodnim relacji $\rightarrow$. 
+
+Pokażemy, że po każdej głównej iteracji będą zachodziły poniższe \textbf{niezmienniki} (gdzie oznaczamy $u := w[i\ldots j-1]$):
+\begin{enumerate}
+    \item $(i < j < n) \Rightarrow u$ jest \textit{samo-maksymalne} oraz $period(u) = u$
+    \item maksymalny sufiks słowa $w$ nie zaczyna się przed $i$
+\end{enumerate}
+
+
+
+\begin{proof}[\textbf{Dowód niezmienników}]
+Początkowo $i = 1, j = 2$ i niezmiennik jest spełniony
+
+Rozważmy iterację, w której $i$ jest zmienione po raz pierwszy. Pokażemy, że niezmienniki są spełnione przed tą iteracją 
+(autorzy pracy piszą tutaj tylko, że jest to "easy to see", ale my to uzasadnimy). Oczywiście drugi niezmiennik jest spełniony, zatem skupimy się na pierwszym.
+
+Rozważamy zatem przejście $(i=1, j) \rightarrow (i=1, j' = j + k + 1)$, gdzie niezmienniki zachodzą dla słowa $u = w[i \ldots j-1]$.
+
+Wtedy niech $u' := w[i\ldots j + k] = u^tva$, gdzie $v$ jest ścisłym prefiksem $u$ (być może pustym), a $a$ jest literką taką, że $va < u$.
+
+Zaczniemy od pokazania, że słowo $u' = u^tva$ jest \textit{samo-maksymalne}. Słowo $u$ jest \textit{samo-maksymalne}, 
+zatem jest większe od wszystkich swoich właściwych sufiksów. Dodatkowo $period(u) = u$, czyli słowo $u$ nie tylko jest większe od wszystkich swoich sufiksów, 
+ale również żaden z nich nie jest prefiksem słowa $u$. 
+Z tego otrzymujemy, że maksymalny sufiks słowa $u^tva$ nie może zaczynać się w środku któregoś słowa $u$ (przez środek mamy tu na myśli inną pozycję niż pierwsza). 
+Dodatkowo z faktu, że $va < u$ możemy zauważyć, że maksymalny sufiks słowa $u^tva$ nie może zaczynać się
+później niż w pierwszym fragmencie $u$. W przeciwnym przypadku moglibyśmy rozszerzyć sufiks o długość $|u|$ i otrzymalibyśmy 
+większy sufiks. Wynika to z tego, że porównując te dwa sufiksy iterujemy się po tych samych pozycjach po których 
+iteruje się algorytm, czyli na pierwszych pozycjach będziemy mieli równość, aż dojedziemy w krótszym z nich
+do litery $a$, która będzie porównana z jakąś większą literą $b$. 
+Otrzymujemy zatem, że słowo $u'$ jest \textit{samo-maksymalne}.
+
+Analogicznie możemy pokazać, że słowo $u^tv$ jest \textit{samo-maksymalne} (skorzystamy z tego później). 
+
+Aby udowodnić, że $period(u') = u'$ pokażemy, że $u'$ nie ma żadnego właściwego prefikso-sufiksu. 
+Każdy prefikso-sufiks $u'$ musi być przedłużeniem prefikso-sufiksu $w[i\ldots j+k-1]$. 
+Najdłuższy prefikso-sufiks słowa $w[i\ldots j+k-1]$ to prefiks $p = w[i\ldots i+k-1]$ (odpowiada mu sufiks $s = w[j\ldots j+k-1] = u^{t-1}v$).
+Z działania algorytmu wynika, że po prefiksie $p$ występuje litera $b$ taka, że $b > a$. 
+Zauważmy dodatkowo, że wszystkie literki występujące po prefikso-sufiksach słowa $p$ są większe bądź równe $b$. 
+Załóżmy bowiem, że po jakimś prefikso-sufiksie $p'$ słowa $p$ występuje literka $b' < b$. 
+Wtedy słowo $u^tva$ zaczyna się od prefiksu $p'b'$. W środku tego słowa występuje natomiast podsłowo $p'b$ 
+i sufiks zaczynający się od tego podsłowa oczywiście jest większy od $u^tva$, 
+co daje nam sprzeczność z \textit{samo-maksymalnością} $u^tv$. 
+Zatem nie istnieje prefikso-sufiks słowa $w[i\ldots j+k-1]$, którego dałoby się rozszerzyć do prefikso-sufiksu słowa $u'$, czyli $period(u') = u'$.
+
+\vspace{5pt}
+
+\textbf{Pierwsza modyfikacja zmiennej i:} Rozpatrzmy zatem pierwszą zmianę zmiennej $i$ z $i=1$ na $i' = i + k + 1$. 
+
+Wtedy $w[i\ldots j+k] = u^t vb$, gdzie $v$ jest ścisłym prefiksem $u$ oraz $u < vb$.\\
+Niech $m$ będzie pierwszą pozycją za $u^t$. Pokażemy, że (częściowa) historia algorytmu wygląda jak poniżej:
+\begin{align*}
+    (i, j) \rightarrow (i', j) \rightarrow^{*} (m, j) \rightarrow^{*}(m, m+1)
+\end{align*}
+
+Z niezmienników dla słowa $u$ możemy wywnioskować, że $u$ jest najmniejszym okresem słowa $u^tv$ ($u$ oczywiście jest okresem, a gdyby istniał jakiś mniejszy, to byłby on też okresem $u$) 
+oraz to, że słowo $u^tv$ jest \textit{samo-maksymalne}. 
+
+Zauważmy, że jeśli zmienna $i$ zostanie przeniesiona na dowolną pozycję z zakresu $[i', m-1]$, to następna pozycja dla $i$ nie może być większa niż $m$.
+Wynika to z tego, że w takim przypadku znalezlibyśmy prefikso-sufiks słowa $u$, co byłoby sprzeczne z
+$period(u) = u$. Z \textit{samo-maksymalności} słowa $u$ możemy dodatkowo wywnioskować, że dla takiej zmiennej $i$
+następna iteracja zwiększy tą zmienną $i$. Zatem wartość zmiennej $i$ będzie zwiększana z $i'$, aż osiągnie $m$.
+
+Następnie zwiększana będzie wartość zmiennej $j$, aż do momentu, gdy osiągnie ona wartość $m+1$ (możemy to 
+uzasadnić podobnymi argmentami jak dla zmiennej $i$). 
+
+Prześliśmy więc z $(i, j)$ do $(m, m+1)$. Z faktu, że $u < vb$, wiemy, że maksymalny sufiks 
+nie może zacząć się przed pozycją $m$. Zatem 
+możemy odciąć prefiks $u^t$ słowa $w$ i rozpocząć całe obliczenia od nowa dla mniejszego słowa(traktujemy $m$ jako $1$).
+Ostatecznie dowód poprawności niezmiennika otrzymujemy z poprawności niezmiennika dla mniejszych słów.
+\end{proof}
+
+\begin{proof}[\textbf{Dowód poprawności algorytmu}]
+Rozważmy teraz ostatnią wartość zmiennej $i$ oraz przedostatnią wartość zmiennej $j$.
+Zgodnie z niezmiennikiem otrzymujemy, że słowo $u = w[i\ldots j-1]$ jest \textit{samo-maksymalne}.
+Dodatkowo sufiks $w[i\ldots n]$ jest postaci $u^tva$, gdzie $v$ jest prefiksem $u$, a $a$ jest taką literką, że $va \leq u$. 
+Z tej postaci sufiksu możemy już łatwo wywnioskować, że $w[i\ldots n]$  jest maksymalnym sufiksem, co kończy dowód poprawności algorytmu.
+
+Warto tutaj zwrócić uwagę, że autorzy błędnie stwierdzili, że $u$ jest okresem sufiksu $w[i\ldots n]$. Możemy mieć bowiem
+taką ostatnią literkę $a$, że $va < u'$, gdzie $u'$ to prefiks $u$ długości $|va|$ (ostatnie porównanie w algorytmie zwraca, że ostatnia litera jest mniejsza od tej, z którą ją porównywaliśmy).
+\end{proof}
+
+\end{document}
