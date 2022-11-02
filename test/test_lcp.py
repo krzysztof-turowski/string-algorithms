@@ -49,6 +49,14 @@ LCP_ARRAY_ALGORITHMS = [
         lambda t, n: lcp.convert_plcp_to_lcp(
             lcp.build_plcp_b(suffix_array.prefix_doubling(t, n), t, n, q = 2),
             suffix_array.prefix_doubling(t, n), t, q = 2),
+    ],
+    [
+        'from Wee LCP 2*n',
+        lcp.from_wee_lcp_2n,
+    ],
+    [
+        'from Wee LCP o(n)',
+        lcp.from_wee_lcp_o_n,
     ]
 ]
 
