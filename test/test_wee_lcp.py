@@ -5,7 +5,8 @@ import random
 from string_indexing import lcp, suffix_array, wee_lcp
 
 class TestWeeLCP(unittest.TestCase):
-  run_large = unittest.skipUnless(os.environ.get('LARGE', False), 'Skip test in small runs')
+  run_large = unittest.skipUnless(
+      os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_wee_lcp(self, text, delta):
     suf_array = suffix_array.naive(text, len(text))
