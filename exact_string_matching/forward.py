@@ -44,6 +44,7 @@ def _preprocess_first_hrps(w, m, k, limit = 2):
   A prefix is k-HRP if it is basic period with at least k periods.
   '''
   period, j = 1, 0
+  # TODO(krzysztof-turowski): migrate to yield
   hrps: List[_Hrp] = []
   while period + j < m:
     while period + j < m and w[j + 1] == w[period + j + 1]:
@@ -57,11 +58,9 @@ def _preprocess_first_hrps(w, m, k, limit = 2):
 
     hrp = next((h for h in hrps if 2 * h.scope[0] <= j <= h.scope[1]), None)
     if hrp is not None:
-      period += hrp.period
-      j -= hrp.period
+      period, j = period + hrp.period, j - hrp.period
     else:
-      period += (j // k) + 1
-      j = 0
+      period, j = period + (j // k) + 1, 0
   return hrps
 
 def _get_hrp1(w, m, k):
@@ -93,20 +92,18 @@ def _simple_text_search(t, v, n, m, hrp1: _Hrp, k):
 
   Assumes v has only one k-HRP hrp1.
   '''
-  pos, j = 0, 0
-  while pos + m <= n:
-    while j < m and v[j+1] == t[pos + j + 1]:
+  position, j = 0, 0
+  while position + m <= n:
+    while j < m and v[j+1] == t[position + j + 1]:
       j += 1
 
     if j == m:
-      yield pos + 1
+      yield position + 1
 
     if hrp1 and 2 * hrp1.scope[0] <= j <= hrp1.scope[1]:
-      pos = pos + hrp1.period
-      j = j - hrp1.period
+      position, j = position + hrp1.period, j - hrp1.period
     else:
-      pos += (j // k) + 1
-      j = 0
+      position, j = position + (j // k) + 1, 0
 
 def galil_seifaras(t, w, n, m):
   k = 4

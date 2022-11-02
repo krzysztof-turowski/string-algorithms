@@ -17,6 +17,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Morris-Pratt', forward.morris_pratt ],
     [ 'Knuth-Morris-Pratt', forward.knuth_morris_pratt ],
     [ 'Crochemore', forward.crochemore ],
+    [ 'Galil-Seiferas', forward.galil_seifaras ],
     [ 'Boyer-Moore', backward.boyer_moore ],
     [ 'Boyer-Moore with bad shifts', backward.boyer_moore_bad_shift ],
     [ 'Boyer-Moore-Galil', backward.boyer_moore_galil ],
@@ -28,6 +29,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
         backward.boyer_moore_apostolico_giancarlo
     ],
     [ 'Horspool', backward.horspool ],
+    [ 'bitap-shift-add', backward.bitap_shift_add ],
     [ 'Karp-Rabin', other.karp_rabin ],
     [ 'fast-on-average', other.fast_on_average ],
     [ 'two-way constant space', other.two_way ],
@@ -43,8 +45,6 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
             suffix_array.prefix_doubling(t, n), t, w, n, m),
     ],
     [ 'lcp-lr array', lcp_lr_contains ],
-    [ 'bitap-shift-add', backward.bitap_shift_add ],
-    [ 'Galil-Seifaras', forward.galil_seifaras]
 ]
 
 class TestExactStringMatching(unittest.TestCase):

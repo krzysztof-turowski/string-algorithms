@@ -30,12 +30,12 @@ Znane są algorytmy rozwiązujące problem wyszukiwania wzorca w czasie liniowym
 
 
 W pracy ,,Time-Space-Optimal String Matching'' Z. Galil i J. Seiferas jako pierwsi przedstawili algorytm do wyszukiwania wzorca działający w czasie liniowym i stałej pamięci.
-Niniejszy tekst jest oparty na późniejszej pracy M. Crochemore i W. Rytter ,,Squares, Cubes, and Time-Space Efficient StringS earching'', która zawiera uproszczony opis i dowód oryginalnego algorytmu Galil-Seiferas.
+Niniejszy tekst jest oparty na późniejszej pracy M. Crochemore i W. Rytter ,,Squares, Cubes, and Time-Space Efficient StringS earching'', która zawiera uproszczony opis i dowód oryginalnego algorytmu Galila-Seiferasa.
 
 \section{Algorytm}
 
 \subsection{Idea algorytmu}
-Idea algorytmu Galil-Seiferas polega na zmodyfikowaniu działania algorytmu Morris–Pratta tak aby oszczędzić trzymania w pamięci całej tablicy prefikso-sufiksów.
+Idea algorytmu Galila-Seiferasa polega na zmodyfikowaniu działania algorytmu Morris–Pratta tak aby oszczędzić trzymania w pamięci całej tablicy prefikso-sufiksów.
 Dokonuje się tego poprzez dekompozycje wzorca $w$ na słowa $u,v$, takie że $w = u v$, $u$ jest stosunkowo krótkim słowem a $v$ nie zawiera dużych prefiksów.
 W słowie $t$ szukając wystąpień wzorca $w$ będziemy znajdować wystąpienia $v$ i dla każdego wystąpienia naiwnie sprawdzać czy bezpośrednio przed $v$ występuje $u$.
 Okazuję się, że da się to zrobić tak, żeby cały algorytm dalej działał w czasie liniowym od $|t| + |w|$.
@@ -72,7 +72,7 @@ $$\begin{array}{rl}
 \end{array}$$
 \end{lemma}
 \begin{proof}
-Jeśli $|u|$ nie należy do żadnego przedziału $[L_i, R_i]$ to każdy okres $u$ musi być większy od $|u|/k$. 
+Jeśli $|u|$ nie należy do żadnego przedziału $[L_i, R_i]$ to każdy okres $u$ musi być większy od $|u|/k$, ponieważ w przeciwnym razie istniałoby pewne $k$-HRP słowa $w$.
 Jeśli $|u| \in [L_i, R_i]$ to $u$ musi być prefiksem $v_i^e$, dla $e \geq 2$. Z pierwotności $v_i$ najkrótszy okres $u$ to $|v_i| = L_i / 2$.
 \end{proof}
 
@@ -280,14 +280,14 @@ Taka analiza prowadzi do następującego algorytmu.
 \caption{PREPROCESS}
 \label{preprocess}
 \begin{algorithmic} 
-\STATE $\textit{spcopes} \gets \texttt{empty list}$
+\STATE $\textit{scopes} \gets \texttt{empty list}$
 \STATE $pos \gets 1, j \gets 0$
 \WHILE{$pos + m < n$}
     \WHILE{$pos + j < m \land w[j + 1] = w[pos + j + 1] $}
         \STATE $j \gets j + 1$
     \ENDWHILE
     \IF{$k \cdot pos \leq pos + j$}
-        \STATE Append $[2 \cdot pos, pos + j]$ to list \textit{spcopes}.
+        \STATE Append $[2 \cdot pos, pos + j]$ to list \textit{scopes}.
     \ENDIF
     \IF{$j \in [L_i, R_i]$ for some $[L_i, R_i]$ in \textit{scopes}}
         \STATE $pos \gets pos + L_i / 2$
@@ -304,5 +304,5 @@ Taka analiza prowadzi do następującego algorytmu.
 Podobnie jak w przypadku algorytmu \ref{simple-text-search} podany algorytm jest liniowy ponieważ cały czas rośnie wartość $k \cdot pos + j$.
 
 Zauważmy, że jeśli zatrzymamy algorytm gdy znajdziemy $\HRP1$ i $\HRP2$ to dostaniemy algorytm obliczający pierwsze dwa $\HRP$ w stałej pamięci i liniowy od długości $\HRP2$.
-To kończy opis działania algorytmu Galil-Seiferas w wersji Crochemore-Rytter.
+To kończy opis działania algorytmu Galila-Seiferasa w wersji Crochemore'a-Ryttera.
 \end{document}
