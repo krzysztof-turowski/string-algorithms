@@ -16,7 +16,7 @@ MAXIMUM_SUFFIX_ALGORITHMS = [
         lambda t, n: maximum_suffix.from_suffix_array(
             suffix_array.naive(t, n), t, n)
     ],
-    [ 'adamczyk rytter', maximum_suffix.adamczyk_rytter ]
+    [ 'Adamczyk-Rytter', maximum_suffix.adamczyk_rytter ],
 ]
 
 class TestMaximumSuffix(unittest.TestCase):
