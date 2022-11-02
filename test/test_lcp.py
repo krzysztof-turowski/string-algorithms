@@ -51,11 +51,11 @@ LCP_ARRAY_ALGORITHMS = [
             suffix_array.prefix_doubling(t, n), t, q = 2),
     ],
     [
-        'from wee_lcp 2n',
+        'from Wee LCP 2*n',
         lcp.from_wee_lcp_2n,
     ],
     [
-        'from wee_lcp on',
+        'from Wee LCP o(n)',
         lcp.from_wee_lcp_o_n,
     ]
 ]
