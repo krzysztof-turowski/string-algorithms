@@ -1,5 +1,5 @@
 # string-algorithms
-Collection of algorithms for _String Algorithms_ course (summer semester 2019/20) at [Jagiellonian University](https://uj.edu.pl), [Theoretical Computer Science Department](https://tcs.uj.edu.pl).
+Collection of algorithms for _String Algorithms_ course (summer semesters 2019/20, 2021/22) at [Jagiellonian University](https://uj.edu.pl), [Theoretical Computer Science Department](https://tcs.uj.edu.pl).
 
 ## Algorithms
 
@@ -7,11 +7,13 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 1. Morris-Pratt and Knuth-Morris-Pratt algorithms
 2. Boyer-Moore algorithm with many variants
 3. Boyer-Moore-Apostolico-Giancarlo algorithm
-4. Constant space two-way (Crochemore-Perrin) algorithm
-5. _fast-on-average_ (Crochemore et al.) algorithm
-6. Turbo Boyer-Moore (Crochemore et al.) algorithm
-7. Bitap Shift-Add (Baeza-Yates-Gonnet) algorithm
-8. Hashing-based (Karp-Rabin) algorithm
+4. Galil-Seiferas algorithm
+5. Constant space two-way (Crochemore-Perrin) algorithm
+6. _fast-on-average_ (Crochemore et al.) algorithm
+7. Turbo Boyer-Moore (Crochemore et al.) algorithm
+8. Bitap Shift-Add (Baeza-Yates-Gonnet) algorithm
+9. Hashing-based (Karp-Rabin) algorithm
+10. Crochemore algorithm for ordered alphabets
 
 ### String indexing
 
@@ -36,6 +38,7 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 1. Kasai et al. algorithm
 2. $\phi$ array-based (Kärkkäinen-Manzini-Puglisi) algorithm
 3. Irreducible LCPs-based (Kärkkäinen-Manzini-Puglisi) algorithm
+4. Wee LCP (Fischer) algorithm
 
 #### Longest previous factor
 
@@ -52,6 +55,8 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 3. Four Russians (Masek-Paterson) algorithm
 4. Myers algorithm
 5. Kumar-Rangan algorithm
+6. Hunt-Szymanski algorithm
+7. Hunt-Szymanski-Apostolico algorithm
 
 #### Approximate string matching with Hamming distance
 1. Landau-Vishkin algorithm
@@ -74,6 +79,8 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 1. $\log{n}$-approximation (Li-Jiang) algorithm
 2. $4$- and $3$-approximation (Blum et al.) algorithms based on overlaps
 3. Greedy overlap algorithm
+4. Teng-Yao algorithm
+5. Paluch-Elbassioni-van Zuylen algorithm
 
 ### Compression
 
@@ -81,12 +88,17 @@ Collection of algorithms for _String Algorithms_ course (summer semester 2019/20
 
 #### Lempel-Ziv 77 factorization
 
+1. Crochemore-Ilie-Smyth incomplete factorization algorithm
+
 ### Other problems
-1. Approximate matching of string permutation (Grossi, Luccio)
+1. Approximate matching of string permutation algorithm (Grossi, Luccio)
+2. Longest previous factor algorithm (Crochemore, Ilie, Smyth)
 
 ### Lyndon factorization
-1. Maximum suffix algorithm based on prefix-suffix array
-2. Maximum suffix algorithm in constant space, based on critical factorization
+1. Duval algorithm
+2. Maximum suffix algorithm based on prefix-suffix array
+3. Maximum suffix algorithm in constant space, based on critical factorization
+4. Adamczyk-Rytter maximum suffix algorithm
 
 ## Testing
 
