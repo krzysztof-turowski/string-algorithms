@@ -156,8 +156,7 @@ class TestApproximateStringPermutationMatching(
       c_t[c] = c_t.get(c, 0) + 1
     for c in w[1:]:
       c_w[c] = c_w.get(c, 0) + 1
-    return sum(
-        [max(count - c_t.get(c, 0), 0) for (c, count) in c_w.items()]) <= k
+    return sum(max(count - c_t.get(c, 0), 0) for c, count in c_w.items()) <= k
 
   @parameterized.parameterized.expand(
       APPROXIMATE_STRING_PERMUTATION_MATCHING_ALGORITHMS)
