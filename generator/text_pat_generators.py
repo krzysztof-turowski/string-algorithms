@@ -1,55 +1,53 @@
 import random
 import string
-from scipy.stats import geom
+import scipy.stats
 
 class uniform_generator:
-    def generate(text_len, pat_len, alph = string.ascii_lowercase):
-        text = ''.join(random.choice(alph) for i in range(text_len))
-        pat = ''.join(random.choice(alph) for i in range(pat_len))
-        return (text, pat)
+    def generate(n, m, *, A = string.ascii_lowercase):
+        t = ''.join(random.choice(A) for i in range(n))
+        w = ''.join(random.choice(A) for i in range(m))
+        return (t, w)
 
 class geometric_generator:
-    def generate(text_len, pat_len, alph = string.ascii_lowercase, p = 0.5):
-        choice = []
-        for i, val in enumerate(alph):
-            choice += [val for j in range(int(1000*geom.pmf(i+1,p)))]
-        text = ''.join(random.choice(choice) for i in range(text_len))
-        pat = ''.join(random.choice(choice) for i in range(pat_len))
-        return (text, pat)
+    def generate(n, m, *, A = string.ascii_lowercase, p = 0.5):
+        choice = [v for i, v in enumerate(A) for _ in range(int(1000*scipy.stats.geom.pmf(i+1, p)))]
+        print(choice)
+        t = ''.join(random.choice(choice) for i in range(n))
+        w = ''.join(random.choice(choice) for i in range(m))
+        return (t, w)
 
 class natural_generator:
-    data = ""
-    with open('pantadeusz.txt', 'r') as file:
-        data = file.read().replace('\n', ' ')
-        data = ' '.join(data.split())
-        data = data.lower()
-        data = ''.join(e for e in data if e.isalnum() or e == ' ')
-        data = data[1000:11000]
+    def __init__(self, filename):
+        with open(filename, 'r') as file:
+            data = file.read().replace('\n', ' ')
+            data = ' '.join(data.split())
+            data = data.lower()
+            data = ''.join(e for e in data if e.isalnum() or e == ' ')
+            self.data = data
     
-    @classmethod
-    def generate(cls, text_len, pat_len):
-        text_ind = random.randint(0, len(cls.data)-text_len-1)
-        text = cls.data[text_ind:text_ind+text_len+1]
-        pat_ind = random.randint(0, len(text)-pat_len-1)
-        pat = text[pat_ind:pat_ind+pat_len]
-        return (text, pat)
+    def generate(self, n, m):
+        t_ind = random.randint(0, len(self.data)-n-1)
+        t = self.data[t_ind:t_ind+n+1]
+        w_ind = random.randint(0, len(t)-m-1)
+        w = t[w_ind:w_ind+m]
+        return (t, w)
 
 class bf_hard_generator:
-    def generate(text_len):
-        text = 'a' * text_len + 'b'
-        pat = 'a' * (text_len // 2) + 'b'
-        return (text, pat)
+    def generate(n):
+        t = 'a' * n + 'b'
+        w = 'a' * (n//2) + 'b'
+        return (t, w)
 
 class bm_hard_generator:
-    def generate(text_len, pat_len):
-        text = 'a' * text_len
-        pat = 'a' * pat_len
-        return (text, pat)
+    def generate(n, m):
+        t = 'a' * n
+        w = 'a' * m
+        return (t, w)
 
 class ag_hard_generator:
-    def generate(text_len, pat_len):
-        m = (pat_len - 2) // 2
-        e = text_len // pat_len
-        pat = 'a' * (m - 1) + 'b' + 'a' * (m) + 'b'
-        text = pat * e
-        return (text, pat)
+    def generate(n, m):
+        x = (m-2)//2
+        e = n//m
+        w = 'a' * (x-1) + 'b' + 'a' * x + 'b'
+        t = w * e
+        return (t, w)

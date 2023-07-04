@@ -28,6 +28,11 @@ class benchar:
             obj = benchar.count_str(obj, self._parent_benchar)
             return obj
         
+        def __radd__(self, other):
+            obj = str.__add__(other, self)
+            obj = benchar.count_str(obj, self._parent_benchar)
+            return obj
+        
         def __iter__(self):
             obj = str.__iter__(self)
             obj = benchar.count_str_iterator(obj, self._parent_benchar)
@@ -67,6 +72,12 @@ class benchar:
             res = str.endswith(self, other)
             if(len(self) >= len(other)):
                 self._parent_benchar.cmp_count += benchar._first_diff(self[-len(other):], other)
+            return res
+
+        def startswith(self, other):
+            res = str.startswith(self, other)
+            if(len(self) >= len(other)):
+                self._parent_benchar.cmp_count += benchar._first_diff(self[:len(other)], other)
             return res
         
         def __hash__(self):
