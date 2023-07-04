@@ -117,11 +117,10 @@ def turbo_boyer_moore(t, w, n, m):
       i = i + shift
       memory = min(m - shift, match)
 
-
 def boyer_moore_apostolico_giancarlo(t, w, n, m):
-  max_suf = [max(i,0) for i in suffix.maximum_suffixes(w[:-1], m-1)]
+  maximum_suffix = [max(i, 0) for i in suffix.maximum_suffixes(w[:-1], m - 1)]
   def check_ends(i, k):
-    return max_suf[i-1] >= min(k, i) - 1
+    return maximum_suffix[i - 1] >= min(k, i) - 1
   BM = suffix.boyer_moore_shift(w, m)
   skip = [0] * (n + 1)
   i = 1
@@ -139,9 +138,9 @@ def boyer_moore_apostolico_giancarlo(t, w, n, m):
     i = i + BM[j]
 
 def boyer_moore_apostolico_giancarlo_bad_shift(t, w, n, m):
-  max_suf = [max(i,0) for i in suffix.maximum_suffixes(w[:-1], m-1)]
+  maximum_suffix = [max(i, 0) for i in suffix.maximum_suffixes(w[:-1], m - 1)]
   def check_ends(i, k):
-    return max_suf[i-1] >= min(k, i) - 1
+    return maximum_suffix[i - 1] >= min(k, i) - 1
   BM = suffix.boyer_moore_shift(w, m)
   LAST = suffix.last_occurrence(w[:-1])
   skip = [0] * (n + 1)
