@@ -1,0 +1,9 @@
+Podczas analizy algorytmów znaleziono błąd w implementacji algorytmu AG zawartej w użytym repozytorium. Implementacja ta w swojej części będącej odpowiednikiem funkcji $Q$ sprawdzała równość pewnego podsłowa wzorca z pewnym jego sufiksem w sposób naiwny -- a więc w pesymistycznym przypadku w czasie liniowym od długości wzorca. Powodowało to utratę zalety algorytmu AG względem algorytmu BM -- czyli gwarancji liczby porównań rzędu $O(len(text)+len(pat))$. Implementację poprawiono kosztem dodatkowego preprocessingu w czasie $O(len(pat))$. Zyskano natomiast to, że powyższe zapytania są wykonywane w czasie stałym. Poniżej przedstawiono różnicę w wydajności dla $text = a^{e}$ i $pat = a^{\frac{e}{2}}$.
+
+\begin{figure}[h]
+    \centering
+    \includesvg[width=0.49\textwidth]{result_bm_hard_pat_len(text)2_plot_broken_fixed_AG}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$}
+    \label{fig:result_bm_hard_pat_len(text)2_plot_broken_fixed_AG}
+\end{figure}

@@ -1,0 +1,488 @@
+\section{Algorytm naiwny (BF)}
+Zacznijmy od przedstawienia naiwnego podejścia do wyszukania wzorca w tekście. Zapoznanie się z nim pozwala na łatwiejsze zrozumienie zasad działania opisywanych później algorytmów. Ponadto, porównanie jego wydajności działania z bardziej wysublimowanymi programami pozwala na ocenę, czy podejścia te warto stosować w praktyce.
+
+\subsection{Opis algorytmu}
+Algorytm ten działa w następujący sposób. Dla każdej pozycji $1 \leq i \leq len(text)-len(pat)$ w tekście sprawdza równość $text[i:i+len(pat)-1]$ z $pat$ porównując je znak po znaku. Sprawdzanie zgodności dla danego $i$ jest przerywane w momencie wystąpienia nierówności znaków lub stwierdzenia równości z całym wzorcem -- w tym przypadku $i$ jest zwrócone jako pozycja wystąpienia wzorca w tekście. 
+\newpage
+\noindent
+Algorytm ten przedstawiony w pseudokodzie wygląda następująco:
+\begin{algorithm}
+\caption{Algorytm naiwny}\label{alg:nai}
+\begin{algorithmic}[1]
+\State $i \gets 1$
+\While{$i \leq len(text) - len(pat) + 1$}
+    \State $j \gets 0$
+    \While{$j < len(pat)$ \textbf{and} $text[i + j] = pat[j + 1]$}
+        \State $j \gets j + 1$
+    \EndWhile
+    \If{$j = len(pat)$}
+        \State \Return $i$
+    \EndIf
+    \State $i \gets i + 1$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Poprawność}
+Łatwo zauważyć, że algorytm ten poprawnie zwraca wystąpienia wzorca w tekście. Weryfikuje on równość wzorca z każdym podsłowem tekstu długości $len(pat)$ (więc sprawdza wszystkie potencjalne sposoby dopasowania) i zwraca informację od dopasowaniu jedynie po stwierdzeniu równości danego podsłowa tekstu z wzorcem.
+
+\subsection{Złożoność}
+Algorytm ten ma złożoność pesymistyczną $O(len(pat) \cdot len(text))$ porównań znaków, gdzie $len(pat)$ jest długością wzorca, a $len(text)$ długością teksu. Górne ograniczenie wynika bezpośrednio z liczby możliwych wykonań pętli $while$ z 2. linii (rzędu $O(len(text))$) przemnożonych przez wykonania pętli $while$ z 4. linii (rzędu $O(len(pat))$). Na przykład liczba porównań tego rzędu wystąpi dla wzorca równego $a^nb$ i tekstu $a^{2n}b$ (algorytm wykona wtedy dokładnie $(n+1)^2$ porównań znaków).
+
+\newpage
+\section{Algorytm Knutha, Morrisa i Pratta (KMP)}
+Donald E. Knuth, James H. Morris i Vaughan R. Pratt zaproponowali algorytm, który ulepsza podejście naiwne, korzystając z obserwacji, że w przypadku wystąpienia niezgodności podczas porównywania wzorca z tekstem możliwe jest pominięcie części porównań \cite{KMP}. Możliwy przeskok jest określany na podstawie obliczonej początkowo dla danego wzorca tablicy, która uzależnia go od pozycji we wzorcu, na której wystąpiła nierówność znaków.
+
+\subsection{Opis algorytmu}
+Ogólna zasada działania tego algorytmu jest podobna do podejścia naiwnego, jednak w przypadku niedopasowania zaczyna on sprawdzać nie kolejny znak, ale pierwszy od którego jeszcze jest możliwe dopasowanie wzorca. W tym celu wykorzystywana jest tablica (nazwijmy ją $next$) informująca, od którego znaku należy kontynuować porównywanie.
+
+\noindent
+Powyższy algorytm w pseudokodzie, przy założeniu że mamy już dostęp do tablicy $next$, wygląda następująco:
+\begin{algorithm}
+\caption{Algorytm KMP}\label{alg:kmp}
+\begin{algorithmic}[1]
+\State $j \gets 1$
+\State $k \gets 1$
+\While{$j \leq len(pat)$ \textbf{and} $k \leq len(text)$}
+    \While{$j > 0$ \textbf{and} $text[k] \neq pat[j]$}
+        \State $j \gets next[j]$
+    \EndWhile
+    \State $k \gets k + 1$
+    \State $j \gets j + 1$
+    \If{$j > len(pat)$}
+        \State \Return $k - len(pat)$
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+Teraz przedstawmy dwie możliwe wersje tablicy $next$: tablicę słabych prefikso-sufiksów ($wps$) i tablicę mocnych prefikso-sufiksów ($sps$). Obie można wykorzystać bezpośrednio w powyższym algorytmie, ale ich zastosowanie potencjalnie prowadzi do innej liczby wykonywanych porównań. Algorytm korzystający z tablicy $wps$ będziemy nazywać MP, a korzystający z tablicy $sps$ -- KMP.
+
+\subsection*{Tablica słabych prefikso-sufiksów}
+Zdefiniujmy tablicę słabych prefikso-sufiksów (nazywaną dalej $wps$) dla zadanego wzorca (nazywanego dalej $pat$). Niech $wps[j]$ będzie największym $i$ takim, że $i < j$, $pat[1:i-1] = pat[j-i+1:j-1]$ oraz przyjmijmy $wps[1] \gets 0$.
+
+Zauważmy, że jeśli $pat[j] = pat[wps[j]]$ to $wps[j+1] = wps[j] + 1$, a jeśli nie, to użyjemy sposobu analogicznego do przedstawionego w algorytmie \ref{alg:kmp}, gdyż obliczanie $wps$ jest równoważne wyszukiwaniu wzorca w samym sobie.
+
+\noindent
+Powyższa metoda przedstawiona w pseudokodzie wygląda następująco: 
+\begin{algorithm}
+\caption{Algorytm liczenia słabych prefikso-sufiksów}\label{alg:wps}
+\begin{algorithmic}[1]
+\State $j \gets 1$
+\While{$j < len(pat)$}
+    \State $t \gets wps[j]$
+    \While{$t > 0$ \textbf{and} $pat[j] \neq pat[t]$}
+        \State $t \gets wps[t]$
+    \EndWhile
+    \State $wps[j + 1] \gets t + 1$
+    \State $j \gets j + 1$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\subsection*{Tablica silnych prefikso-sufiksów}
+Zdefiniujmy tablicę silnych prefikso-sufiksów (nazywaną dalej $sps$) dla zadanego wzorca. Niech $sps[j]$ będzie największym $i$ takim, że $i < j$, $pat[1:i-1] = pat[j-i+1:j-1]$, $pat[i] \neq pat[j]$ oraz przyjmijmy $sps[1] \gets 0$.
+
+Zauważmy, że jedyną różnicą między zadanymi definicjami jest dodatkowy wymóg $pat[i] \neq pat[j]$, więc:
+\[
+    sps[j]= 
+    \begin{cases}
+        wps[j],& \text{ dla } pat[j] \neq pat[wps[j]]\\
+        sps[wps[j]],& \text{ dla } pat[j] = pat[wps[j]]\\
+    \end{cases}
+\]
+
+\newpage
+\noindent
+Powyższy sposób przedstawiony w pseudokodzie wygląda następująco: 
+\begin{algorithm}
+\caption{Algorytm liczenia silnych prefikso-sufiksów}\label{alg:sps}
+\begin{algorithmic}[1]
+\State $j \gets 1$
+\State $t \gets 0$
+\State $sps[1] \gets 0$
+\While{$j < len(pat)$}
+    \While{$t > 0$ \textbf{and} $pat[j] \neq pat[t]$}
+        \State $t \gets sps[t]$
+    \EndWhile
+    \State $t \gets t + 1$
+    \State $j \gets j + 1$
+    % \State $weak\_prefsuf[j + 1] \gets t + 1$
+    % \State $j \gets j + 1$
+    \If{$pat[j] = pat[t]$}
+        \State $sps[j] \gets sps[t]$ 
+    \Else
+        \State $sps[j] \gets t$
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Poprawność}
+Aby udowodnić poprawność algorytmu \ref{alg:kmp} można użyć niezmiennika: „niech $p = k - j$ (więc $p$ to pozycja w tekście poprzedzająca pierwszy znak wzorca w danym ustawieniu). Wtedy $text[p+i] = pat[i]$ dla $1 \leq i < j$ (więc jest dopasowanych pierwszych $j - 1$ znaków wzorca, jeśli $j > 0$), ale dla $0 \leq t < p$ istnieje $text[t+i] \neq pat[i]$ dla pewnego $i$, gdzie $1 \leq i \leq m$ (więc nie ma możliwego dopasowania dla całego wzorca na lewo od $p$)”. Zauważmy, że program będzie poprawny, jeśli zadany niezmiennik będzie utrzymywany dla operacji $j \gets next[j]$. 
+
+Program ustawia $j \gets next[j]$ tylko wtedy, gdy $j > 0$ i ostatnie $j$ znaków z wejścia (wliczając $text[k]$) wynosiło: $pat[1:j-1]x$, gdzie $x \neq pat[j]$. Teraz chcemy znaleźć minimalne przesunięcie wzorca, takie że jego prefiks będzie pasował do odpowiednich znaków w tekście, czyli chcemy żeby $next[j]$ było największym $i$ takim, że $i < j$ i że ostatnie $i$ znaków z tekstu to: $pat[1:i-1]x$, gdzie $pat[i] \neq pat[j]$, a jeśli takie $i$ nie istnieje to $next[j] \gets 0$. Z przyjętej definicji $next[j]$ bezpośrednio wynika poprawność przyjętego niezmiennika. Zauważmy, że przyjęta definicja $next$ jest zgodna z definicją tablicy silnych prefikso-sufiksów, więc jeśli przyjmiemy ją za tablicę $next$, to algorytm będzie poprawny. 
+
+Skomentujmy jeszcze krótko poprawność przyjęcia tablicy słabych prefikso-sufiksów jako $next$. Skupmy się na pętli while znajdującej się w liniach 4. i 5. algorytmu \ref{alg:kmp}, gdyż tylko tam wystąpi różnica w działaniu programu. Jeśli $wps[j] = sps[j]$, to nie wystąpi różnica w działaniu algorytmu. W przeciwnym wypadku wiemy, że $pat[wps[j]] = pat[j]$, a ponieważ $text[k] \neq pat[j]$ (zgodnie z linią 4.), więc $text[k] \neq pat[wps[j]]$. Spowoduje to kolejne wykonanie pętli. Wynika z tego, że algorytm wykorzystujący tablicę słabych prefikso-sufiksów ma szansę opuścić tą pętlę jedynie w wykonaniach, w których $wps[j] = sps[j]$, więc pod względem zwróconego wyniku jest równoważny wersji wykorzystującej silne prefikso-sufiksy.
+
+
+\subsection{Złożoność}
+Rozważmy teraz złożoność algorytmu \ref{alg:kmp} (mierzoną liczbą porównań znaków) z pominięciem obliczania tablicy $next$. Zauważmy, że podczas całego działania programu $j$ jest inkrementowane tyle razy co $k$ (linie 7. i 8.), a $k$ jest inkrementowane co najwyżej $len(text)$ razy (linia 3.), więc $j$ też jest inkrementowane co najwyżej $len(text)$ razy. Jedyne porównanie znaków występuje w linii 4. i zawsze następuje po nim zmniejszenie $j$ (gdyż $next[j] < j$) w przypadku niezgodności znaków lub inkrementacja - w przypadku zgodności. Ponieważ $j$ jest zawsze nieujemne, a liczba inkrementacji jest ograniczona przez $len(text)$, więc liczba zmniejszeń jest także ograniczona przez $len(text)$. Wynika z tego, że liczba wszystkich wykonanych porównań jest ograniczona przez $2 \cdot len(text)$. Ograniczenie to jest prawdziwe zarówno dla przyjęcia słabych, jak i mocnych prefikso-sufiksów za tablicę $next$. Warto jednak zauważyć, że ponieważ dla każdego $j$, $sps[j] \leq wps[j]$, więc dla danego wzorca i tekstu liczba porównań wykonanych przez algorytm \ref{alg:kmp} korzystający z $sps$ będzie mniejsza lub równa liczbie porównań wykonanej przez algorytm korzystający z $wps$ (nie biorąc pod uwagę porównań wykonanych podczas obliczania samej tablicy $next$).
+
+Złożoność algorytmu \ref{alg:wps} jest całkowicie analogiczna -- w tym przypadku liczba porównań jest ograniczona przez $2 \cdot len(pat)$.
+
+W przypadku algorytmu \ref{alg:sps} ograniczenie wynosi $3 \cdot len(pat)$, z powodu dodatkowego porównania w linii 10., których liczba także jest ograniczona przez $len(pat)$.
+
+\newpage
+\section{Algorytm Boyera i Moore’a (BM)}
+Robert S. Boyer i J Strother Moore zaproponowali algorytm, który korzysta z obserwacji, że sprawdzanie dopasowania wzorca od prawej strony zamiast od lewej pozwala na zdobycie większej ilości informacji \cite{BM}. Pozwala to na wydajniejsze pomijanie porównań w przypadku znalezienia niezgodności między wzorcem i tekstem.  
+
+\subsection{Opis algorytmu}
+Algorytm sprawdza dopasowanie wzorca na danej pozycji, zaczynając od jego prawego znaku i kontynuując porównania kolejnych znaków na lewo aż do momentu wystąpienia niezgodności (lub dopasowania całego wzorca). W przypadku wystąpienia niezgodności korzysta on z dwóch obliczonych wcześniej tablic pomocniczych -- nazwijmy je przesunięciem nieodpowiedniego znaku (\textit{bad character shift} -- $bcs$) i przesunięciem dobrego sufiksu (\textit{good suffix shift} -- $gss$). 
+
+Niech tablica $bcs$ dla każdego znaku z rozważanego alfabetu utrzymuje odległość najbardziej wysuniętego na prawo wystąpienia tego znaku we wzorcu od prawego końca wzorca lub długość wzorca, jeśli znak ten we wzorcu nie występuje.
+
+Niech tablica $gss$ dla każdego indeksu $i$ od 1 do $len(pat)$ będzie odległością między $i$ oraz początkiem najbardziej wysuniętego na prawo dopasowania $x(pat[i+1:len(pat)])$, gdzie $x \neq pat[i]$, do $pat$ powiększoną o $len(pat) - i$.
+
+\noindent
+% Poniżej przedstawiono algorytm BM w pseudokodzie, przy założeniu że mamy dostęp do tablic $bcs$ i $gss$.
+Algorytm w pseudokodzie, przy założeniu że mamy dostęp do tablic $bcs$ i $gss$, wygląda następująco:
+\begin{algorithm}
+\caption{Algorytm BM}\label{alg:bm}
+\begin{algorithmic}[1]
+\State $i \gets len(pat)$
+\While{$i \leq len(text)$}
+    \State $j \gets len(pat)$
+    \While{$j > 0 \textbf{ and } text[i] = pat[j]$}
+        \State $j \gets j - 1$
+        \State $i \gets i - 1$
+    \EndWhile
+    \If{$j = 0$}
+        \State \Return $i + 1$
+    \EndIf
+    \State $i \gets i + \max(bcs[text[i]], gss[j])$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+W części praktycznej zostanie sprawdzona także prostsza wersja algorytmu, nazwijmy ją BMB (Boyer Moore Basic), która nie korzysta z tablicy $bcs$, więc od powyższego pseudokodu różni się tym, że 11. linia przyjmuje postać: $i \gets i + gss[j]$.
+
+\subsection{Poprawność}
+Zauważmy, że algorytm przesuwa wzorzec względem tekstu jedynie o odpowiednie wartości tablic $bcs$ i $gss$ (linia 11.). 
+
+Uzasadnijmy najpierw, że przesunięcie wzorca zgodnie z przesunięciem nieodpowiedniego znaku nie pominie żadnego dopasowania. Załóżmy, że podczas porównywania wzorca z tekstem znajdziemy w tekście dany znak $char$ na pozycji w tekście $k$, który jest różny od odpowiadającego mu znakowi we wzorcu. Wtedy najwcześniejsze możliwe dopasowanie wzorca to takie, w którym na pozycji $k$ znajdzie się najbardziej wysunięty na prawo znak $char$ we wzorcu lub ustawienie początku wzorca na pozycji $k+1$, gdy $char$ w ogóle nie występuje we wzorcu, co jest zgodne z definicją tablicy $bcs$. 
+
+Teraz uzasadnijmy, że przesunięcie wzorca zgodnie z przesunięciem dobrego sufiksu nie pominie żadnego dopasowania. Załóżmy, że podczas porównywania wzorca z tekstem znajdziemy na pozycji $k$ w tekście znak różniący się od znaku na pozycji $j$ we wzorcu (dla danego ułożenia wzorca względem tekstu). Ponieważ algorytm BM porównuje wzorzec z tekstem, zaczynając od prawej strony, więc oznacza to, że znaki tworzące sufiks wzorca od pozycji $j+1$ były zgodne z odpowiadającymi im znakami z tekstu. Na podstawie tej informacji wiemy, że prawidłowe dopasowanie nie może wystąpić wcześniej niż dla ustawienia wzorca w taki sposób, że na pozycjach w tekście od $k+1$ znajdzie się fragment wzorca odpowiadający sufiksowi od $j+1$, a dopasowany na pozycji $k$ znak będzie inny niż $j$-ty znak wzorca i będzie to takie dopasowanie wysunięte najbardziej na prawo. Na tej obserwacji jest z kolei oparta definicja tablicy $gss$.
+
+Ponieważ żadne z powyższych przesunięć nie może pominąć odpowiedniego dopasowania, więc algorytm działa poprawnie.
+
+\subsection{Złożoność}
+Analiza ilości porównań wykonywanych przez ten algorytm jest trudna, gdyż jest ona silnie uzależniona od wielkości alfabetu, długości wzorca i statystycznego rozkładu występowania poszczególnych znaków we wzorcu i tekście. Z tego powodu, praktyczne pomiary wydają się lepszym wyznacznikiem wydajności. Przytoczmy jednak kilka teoretycznych ograniczeń. 
+
+W oryginalnej pracy zauważono, że algorytm ten w optymistycznym przypadku wykonuje jedynie rzędu $len(text)/len(pat)$ porównań i wynik taki jest osiągany średnio dla alfabetu dużego względem długości wzorca.
+
+Donald E. Knuth udowodnił, że nawet wersja BMB wykonuje co najwyżej $6 \cdot len(text)$ porównań w przypadku braku wystąpienia wzorca w tekście \cite{KMP}. Ograniczenie to poprawił Richard Cole \cite{BM-Cole}, który dowiódł, że przy dodatkowym założeniu braku okresowości wzorca (tj. nie jest on postaci $wv^{k}$, gdzie $w$ jest sufiksem właściwym $v$), w przypadku niewystąpienia wzorca w tekście algorytm ten wykonuje co najwyżej $3 \cdot len(text)$ porównań.
+
+W przypadku wyszukiwania jedynie pierwszego wystąpienia wzorca i jego obecności w tekście ograniczenia te zwiększają się o $len(pat)$ porównań. Jednak w przypadku wyszukiwania wszystkich wystąpień liczba porównań jest już rzędu $O(len(text) \cdot len(pat))$, czego najlepszym przykładem jest wyszukiwanie wzorca postaci $a^{m}$ w tekście postaci $a^{n}$. 
+
+\newpage
+\section{Algorytm Apostolico i Giancarlo (AG)}
+Alberto Apostolico i Raffaele Giancarlo przedstawili algorytm, oparty na algorytmie Boyera i Moore’a, który usprawnia go poprzez przechowywanie informacji o dopasowanych wcześniej sufiksach wzorca do tekstu \cite{AG}. Pozwala to na zmniejszenie pesymistycznej liczby porównań do liniowej względem długości tekstu.
+
+\subsection{Opis algorytmu}
+Algorytm ten analogicznie do algorytmu BM sprawdza dopasowanie wzorca na danej pozycji, zaczynając od jego prawego znaku i kontynuując porównania kolejnych znaków na lewo aż do momentu wystąpienia niezgodności (lub dopasowania całego wzorca), a w przypadku wystąpienia niezgodności korzysta on z tablic przesunięcia nieodpowiedniego znaku ($bcs$) i przesunięcia dobrego sufiksu ($gss$) opisanych w części poświęconej algorytmowi BM. Korzysta on jednak dodatkowo z dwóch kolejnych struktur -- aktualizowanej podczas działania algorytmu tablicy $skip$ i możliwej do szybkiego obliczenia na podstawie odpowiedniego preprocessingu wzorca funkcji $Q(i,k)$.
+
+Opiszmy teraz, czym jest tablica $skip$. Przyjmijmy, że w danym momencie działania algorytm sprawdza dopasowanie wzorca dla ułożenia, w którym jego prawy koniec odpowiada $l$-temu znakowi tekstu. Zauważmy, że gdy algorytm przerywa dalsze porównywanie (z powodu wystąpienia niezgodności lub pełnego dopasowania) po porównaniu $k$ zgodnych znaków, to posiada on informację o tym, że $l-k+1$ do $l$ znaki tekstu są równe sufiksowi wzorca o długości $k$. Z pomocą tej informacji jest możliwe późniejsze pomijanie porównań ze znakami $l-k+1$ do $l$ tekstu. Niech więc tablica $skip$ o długości $len(text)$ będzie inicjalizowana zerami, a w czasie działania algorytmu odpowiednio uzupełniana wartościami takimi, że $skip[l] = k$ oznacza, że $text[l-k+1:l]=pat[len(pat)-k+1:len(pat)]$.
+
+Zdefiniujmy teraz funkcję boolowską $Q(i,k)$. Intuicyjnie, ma ona zwracać $false$, jeśli dopasowanie sufiksu wzorca o długości $k$ w taki sposób, że jego prawy koniec odpowiada $i$-temu znakowi wzorca, nie zawiera niezgodności. Formalnie funkcja ta jest zdefiniowana w następujący sposób:
+\[
+    Q(i,k)= 
+    \begin{cases}
+        true,& \text{ jeśli } (k \leq i \text{ and } pat[i-k+1:i] \neq pat[len(pat)-k+1:len(pat)])\\
+        & \text{ lub } (k > i \text{ and } pat[1:i] \neq pat[len(pat)-i+1:len(pat)])\\
+        false,& \text{ w p. p. }\\
+    \end{cases}
+\]
+Tablicę pomocniczą zawierającą długości najdłuższych sufiksów możliwych do dopasowania na danym indeksie wzorca umożliwiającą szybkie zwracanie wartości funkcji $Q(i,k)$ można obliczyć w czasie liniowym od długości wzorca, korzystając ze zmodyfikowanego algorytmu KMP.
+
+\noindent
+Algorytm AG w pseudokodzie, przy założeniu że mamy już dostęp do tablic $bcs$ i $gss$ oraz funkcji $Q$, jest przedstawiony poniżej:
+\begin{algorithm}
+\caption{Algorytm AG}\label{alg:ag}
+\begin{algorithmic}[1]
+\State $i \gets len(pat)$
+\While{$i \leq len(text)$}
+    \State $j \gets len(pat)$
+    \While{$j > 0$}
+        \If{$Q(j, skip[i-len(pat)+j])$}
+        \State \textbf{ break }
+        \ElsIf{$((skip[i-len(pat)+j]=0) \textbf{ and } (pat[j] \neq text[i-len(pat)+j]))$}
+        \State \textbf{ break }
+        \Else
+        \State $j \gets j - \max(1, skip[i-len(pat)+j])$
+        \EndIf
+    \EndWhile
+    \If{$j \leq 0$}
+        \State \Return $i-len(pat)+1$
+    \EndIf
+    \State $skip[i] \gets len(pat)-j$
+    \State $i \gets i + \max(bcs[text[i-len(pat)+j]], gss[j])$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\FloatBarrier
+W części praktycznej zostanie sprawdzona także prostsza wersja algorytmu, nazwijmy ją AGB (Apostolico Giancarlo Basic), która nie korzysta z tablicy $bcs$, więc od powyższego pseudokodu różni się tym, że 15. linia przyjmuje postać: $i \gets i + gss[j]$.
+
+\subsection{Poprawność}
+Poprawność tego algorytmu wynika z poprawności algorytmu BM, gdyż algorytm ten sprawdza wszystkie pozycje potencjalnych dopasowań, które sprawdziłby algorytm BM. Wykorzystana dodatkowo funkcja $Q$ oraz tablica $skip$ pozwalają na sprawdzanie w czasie stałym (co w algorytmie BM mogło zająć czas rzędu $O(len(pat)$) równości pewnych podsłów tekstu i wzorca, nie powodują więc one różnic w zwracanych wartościach. Poprawność działania $Q$ i $skip$ wynika bezpośrednio z ich definicji.
+
+\subsection{Złożoność}
+Rozważmy teraz złożoność algorytmu \ref{alg:ag} (mierzoną liczbą porównań znaków) z pominięciem obliczania tablic pomocniczych. Zacznijmy od obserwacji, że algorytm ten podobnie do algorytmu BM, którego jest usprawnieniem, w optymistycznym przypadku wykonuje rzędu $len(text)/len(pat)$ porównań. Rozważmy teraz jednak ograniczenie górne liczby porównań, które jest lepsze niż w przypadku algorytmu \ref{alg:bm}.
+
+Przedstawmy najpierw wraz z dowodem ograniczenie wskazane w oryginalnej pracy \cite{AG}. Przyjmijmy, że $and$ w 5. linii nie sprawdza drugiego warunku, jeśli pierwszy nie jest spełniony. Zauważmy, że każde porównanie znaków tekstu i wzorca prowadzi do dopasowania lub niedopasowania. Jeśli dojdzie do dopasowania, to dany znak zostanie uwzględniony w aktualizacji tablicy $skip$ w 16. linii i nie będzie później bezpośrednio porównywany. Wynika z tego, że każdy znak tekstu może być co najwyżej raz poddany porównaniu ze znakiem z wzorca kończącym się dopasowaniem, więc takich porównań jest łącznie co najwyżej $len(text)$. Teraz zauważmy, że każde niedopasowanie znaku prowadzi do zwiększenia zmiennej $i$, więc takich porównań może być co najwyżej $len(text) - len(pat) + 1$. Łącznie więc, wszystkich porównań jest nie więcej niż $2 \cdot len(text) - len(pat) + 1$.
+
+Ograniczenie to zostało poprawione przez Maxime'a Crochemore'a i Thierry'ego Lecroq'a, którzy dowiedli, że algorytm AG nie wykonuje więcej niż $\frac{3}{2} \cdot len(text)$ porównań i że ograniczenie to jest ścisłe, gdyż przykładowo dla wyszukiwania wzorca postaci $a^{m-1}ba^{m}b$ w tekście postaci $(a^{m-1}ba^{m}b)^{e}$, gdzie $m,e > 0$ i $len(text) = (2m+1)e$, algorytm wykona $2m+1+(3m+1)e$, czyli $\frac{3m+1}{2m+1}len(pat)-m$ porównań znaków \cite{AG-CrLc}.
+
+\newpage
+\section{Algorytm Crochemore'a (Cr)}
+Maxime Crochemore przedstawił algorytm oparty na pewnych własnościach kombinatorycznych słów nad uporządkowanym alfabetem, w szczególności związanych z długością cykli \cite{Cr-or}. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu, a jednocześnie wyróżnia się brakiem wstępnego przetwarzania wzorca i wymaganiem jedynie stałej dodatkowej pamięci.
+
+\subsection{Opis algorytmu}
+Algorytm ten sprawdza dopasowanie wzorca w danym miejscu tekstu przez porównywanie znaków począwszy od lewej strony (podobnie jak w algorytmie KMP). W przypadku wystąpienia niezgodności $i$-tego znaku tekstu z $j$-tym znakiem wzorca, algorytm liczy długość najkrótszego okresu słowa $pat[1:j-1]text[i]$ lub jego pewne ograniczenie dolne. W celu obliczenia tych wartości algorytm korzysta z rozkładu MS (Maximal Suffix). 
+
+\begin{definition}[Rozkład MS]
+Niech $x=uv$ oraz $v$ będzie największym leksykograficznie sufiksem słowa $x$. Niech $v=w^{e}w'$, gdzie $w$ jest najkrótszym okresem słowa $v$, a $w'$ jest właściwym prefiksem $w$. Wtedy rozkładem MS niepustego słowa $x$ nazywamy ciąg $(u, w, e, w')$.
+\end{definition}
+
+Z własności rozkładu MS wynikają dwa twierdzenia, z których bezpośrednio korzysta rozważany algorytm: 
+
+\begingroup
+\leftskip \parindent
+
+\noindent
+1.
+Niech $uw^{e}w'$ będzie rozkładem MS niepustego słowa $x$ i niech $v=w^{e}w'$ będzie największym leksykograficznie sufiksem $x$. Wtedy:
+
+\noindent
+Jeśli $u$ jest sufiksem $w$ to $per(x)=per(v)=len(w)$.
+
+\noindent
+W przeciwnym przypadku $per(x)>\max(len(u), min(len(v), len(uw^{e}))) \geq \frac{len(x)}{2}$.
+
+\noindent
+2.
+Niech $(u,w,e,w')$ będzie rozkładem MS niepustego słowa $x$. Załóżmy, że $per(x) = len(w)$ oraz $e > 1$. Wtedy:
+
+\noindent
+$(u,w,e-1,w')$ jest rozkładem MS słowa $x'=uw^{e-1}w'$. W szczególności, słowo $w^{e-1}w'$ jest maksymalnym sufiksem $x'$ i $per(w^{e-1})=len(w)$.
+
+\endgroup
+
+\noindent
+Algorytm w pseudokodzie wygląda następująco:
+\begin{algorithm}
+\caption{Algorytm Cr}\label{alg:co}
+\begin{algorithmic}[1]
+\Function{nextMaximalSuffix}{$x[1:n], (i,j,k,p)$}
+  \While{$j+k \leq n$}
+        \If{$(x[i+k]=x[j+k])$}
+            \If{$k=p$}
+                \State $j \gets j+p$; $k \gets 1$
+            \Else
+                \State $k \gets k+1$
+            \EndIf
+        \ElsIf{$x[i+k] > x[j+k]$}
+            \State $j \gets j+k$; $k \gets 1$; $p \gets j-i$
+        \Else
+            \State $i \gets j$; $j \gets i+1$; $k \gets 1$; $p \gets 1$
+        \EndIf
+  \EndWhile
+  \State \Return $(i,j,k,p)$
+\EndFunction
+\State $pos \gets 0$; $m \gets 1$; $(i,j,k,p) \gets (0,1,1,1)$
+\While{$pos+m \leq len(text)$}
+    \While{$pos+m \leq len(text) \textbf{ and } m \leq len(pat) \textbf{ and } text[pos+m]=pat[m]$}
+        \State $m \gets m+1$
+    \EndWhile
+    \If{$m = len(pat) + 1$}
+        \State \Return $pos$
+    \EndIf
+    \State $(i,j,k,p) \gets \textsc{nextMaximalSuffix}(pat[1:m-1]text[pos+m], (i,j,k,p))$
+    \State $y \gets pat[i+1:m-1]text[pos+m]$
+    \If{$pat[1:i] = y[p-i+1:p]$}
+        \State $pos \gets pos + p$; $m \gets m-p+1$;
+        \If{$j-i > p$}
+            \State $j \gets j-p$
+        \Else
+            \State $(i,j,k,p) \gets (0,1,1,1)$
+        \EndIf
+    \Else
+        \State $pos \gets pos + \max(i, min(m-i,j)) + 1$; $m \gets 1$; $(i,j,k,p) \gets (0,1,1,1)$
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+W ramach komentarza do powyższego pseudokodu warto przytoczyć interpretację zmiennych $i$, $j$, $k$ i $p$. Zachowując notację rozkładu MS jako $(u, w, e, w')$, wartości danych zmiennych wynoszą odpowiednio: $i=len(u)$; $j=len(uw^{e})$; $k=len(w')+1$; $p=len(w)=per(v)$. Przy interpretacji pseudokodu warto zwrócić uwagę, że warunek z linii 27. odpowiada wyżej przytoczonemu twierdzeniu 1., a warunek z linii 29. twierdzeniu 2.
+
+\subsection{Poprawność}
+Zacznijmy od obserwacji, że w przypadku niedopasowania $i$-tego znaku wzorca do $j$-tego znaku tekstu nie może istnieć dopasowanie zaczynające się wcześniej niż na $j-i+per(pat[1:i-1]text[j])$ pozycji tekstu. Wynika to z tego, że w przypadku istnienia dopasowania na pozycji $j-i+s$, gdzie $s < per(pat[1:i-1]text[j])$, prefiks długości $s$ byłby krótszym okresem, co prowadzi do sprzeczności.
+
+Zauważmy, że jeśli wzorzec występuje na pozycji $pos$ w tekście, to pętla z linii 19. zatrzyma się po dopasowaniu $len(pat)$ znaków, a następnie odpowiednia pozycja zostanie zwrócona w linii 23. 
+
+Należy jeszcze zwrócić uwagę na to, że nie wykona się zbyt dużego przesunięcia (czyli nie większego niż wskazana powyżej długość odpowiedniego okresu). Wynika to z tego, że przeskoki wykonywane w liniach 28. i 35. są bezpośrednimi odpowiednikami wniosków z 1. twierdzenia.
+
+\subsection{Złożoność}
+Autor oryginalnej pracy wskazał ograniczenie górne na liczbę porównań znaków wynoszące $6 \cdot len(text) + 5$, którego dowód jest oparty na dwóch obserwacjach \cite{Cr-or}. Po pierwsze, porównania w linii 27. (których jest $i$) zawsze prowadzą do zwiększenia $pos$ o więcej niż $i$ (a $pos$ nie jest nigdy zmniejszany), więc łączna ich liczba jest ograniczona przez $len(text)$. Po drugie, pozostałe porównania znaków zawsze prowadzą do zwiększenia wartości wyrażenia $5 \cdot pos + m + i + j + k$, którego początkowa wartość wynosi $3$, a końcowa jest ograniczona przez $5 \cdot len(text) + 8$. Łącznie więc liczba porównań jest ograniczona przez $6 \cdot len(text) + 5$.
+
+\newpage
+\section{Algorytm Galila i Seiferasa (GS)}
+Zvi Galil i Joel Seiferas zaproponowali algorytm korzystający z pewnego podziału wzorca na dwa podsłowa wykonywanego podczas preprocessingu \cite{GS}. Podczas właściwego wyszukiwania, najpierw porównuje się z tekstem jedno z nich, a dopiero w przypadku całkowitej zgodności -- drugie. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu oraz w głównej fazie działania wymaga jedynie stałej dodatkowej pamięci.
+
+\subsection{Opis algorytmu}
+Zdefiniujmy funkcję $reach(w,p) = max\{q \leq len(w) \colon w[1:p] \text{ jest okresem } w[1:q]\}$. Dla pewnej ustalonej liczby naturalnej $k>1$, którą w oryginalnej pracy zaproponowano jako 4 (udowodniono, że w tym algorytmie możliwe jest użycie $k \geq 3$ \cite{GS-CR}).
+
+\begin{definition}[Prefiks okresowy]
+Niech prefiks okresowy słowa $w$ to taki $w[1:p]$, że jest on słowem podstawowym i $reach(w,p) \geq k \cdot p$.
+\end{definition}
+
+Wykorzystywany podział wzorca na dwa podsłowa $pat_{l}$ i $pat_{r}$ spełnia: $pat = pat_{l}pat_{r}$, $pat_{r}$ ma co najwyżej jeden prefiks okresowy oraz $len(pat_{l}) \leq 2 \cdot per(pat_{r})$. Podział taki zawsze istnieje i można go obliczyć w $O(len(pat))$. W dalszej części zakładamy, że mamy dostęp do obliczonych wcześniej wartości $s=len(pat_{l})+1$ oraz jeśli $pat_{r}$ miało prefiks okresowy, to do $p_{1}$ będącego długością tego okresu i $q_{1}=reach(pat_{r}, p_{1})-p_{1}$. 
+
+Wzorzec jest więc postaci $pat_{l}pat_{r}$ oraz $pat_{r}$ jest postaci $x^{r}x'ax''$, gdzie $x$ jest słowem podstawowym, $len(x)=p_{1}$, $x'$ jest prefiksem $x$, $x'a$ nie jest prefiksem $x$ oraz $len(x^{r}x')=p_{1}+q_{1}$. Wtedy podczas wyszukiwania $pat_{r}$ w $text$, jeśli dopasowano $pat[s+1:s+p_{1}+q_{1}]$, to można wykonać przesunięcie długości $p_{1}$ i kontynuować porównania odpowiednio ze znakami wzorca od $pat[s+1+q_{1}]$. W przeciwnym przypadku, jeśli niedopasowanie wystąpi z $pat[s+q]$, gdzie $q \neq p_{1}+q_{1}+1$, to można wykonać przesunięcie długości $q/k+1$ i zacząć porównywanie z powrotem od $pat[1]$.
+
+\newpage
+\noindent
+Algorytm w pseudokodzie (z założeniem dostępu do $k$, $s$, $p_{1}$ i $q_{1}$) wygląda następująco:
+\begin{algorithm}
+\caption{Algorytm GS}\label{alg:gs}
+\begin{algorithmic}[1]
+\State $pos \gets 1$; $i \gets 1$
+\While{$pos \leq len(text) - len(pat)$}
+    \While{$s+i \leq len(pat) \textbf{ and }  pat[s+i] = text[pos+s+i]$}
+        \State $i \gets i + 1$
+    \EndWhile
+    \If{$i = len(pat) - s \textbf{ and } pat[1:s] = text[pos:pos+s-1]$}
+        \State \Return $pos$
+    \EndIf
+
+    \If{$i = p_{1} + q_{1}$}
+        \State $pos \gets pos + p_{1}$
+        \State $i \gets i - p_{1}$
+    \Else
+        \State $pos \gets pos + i/k + 1$
+        \State $i \gets 1$
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Poprawność}
+Nietrywialną częścią algorytmu jest wyszukiwanie wystąpień $pat_{r}$, gdyż wystąpienie $pat_{l}$ przed znalezionym $pat_{r}$ algorytm weryfikuje w sposób naiwny (linia 6.). Pokażmy teraz, że algorytm nie pominie żadnego wystąpienia $pat_{r}$. Zacznijmy od wprowadzenia funkcji $shift(w,q)$ dla słowa $w$ i jego indeksu $q$. Niech $shift(w,q)=min\{h>0 \colon w[h+1:q-1]=w[1:q-h-1]\}$. Łatwo zauważyć, że w przypadku próby dopasowania wzorca do $text[i:i+len(pat)]$ i wystąpienia nierówności $j$-tego znaku wzorca z $i+j$-tym znakiem tekstu, poprawne dopasowanie nie może wystąpić wcześniej niż dla $text[i+shift(pat,j):i+shift(pat,j)+len(pat)]$, więc przesunięcie wzorca względem tekstu o mniej niż odpowiednia wartość funkcji $shift$ nie może prowadzić do pominięcia poprawnego dopasowania. Wprowadźmy teraz dwa lematy:
+
+\begingroup
+\leftskip \parindent
+
+\noindent
+1.
+Jeśli $shift(w,q) \leq q/k$, to $w[1:shift(w,q)]$ jest prefiksem okresowym $w$.
+
+\noindent
+2.
+Jeśli $1:h$ jest prefiksem okresowym $w$, to 
+
+\noindent
+$h = shift(w,q) \leq q/k \leftrightarrow k \cdot h \leq q \leq reach(w,h)$.
+
+\endgroup
+
+Zauważmy, że jeśli $pat_{r}$ nie ma prefiksu okresowego, to z lematu 1. wynika, że $shift(pat_{r}, i) > i/k$, więc przesunięcie wzorca o $i/k + 1$ nie prowadzi do pominięcia dopasowania (jest to realizowane w linii 13.). Jeśli $pat_{r}$ ma jednak jeden prefiks okresowy (o długości $p_{1}$) to z 1. i 2. lematu wynika, że $shift(pat_{r}, i)$ może być mniejsze od $i/k$ tylko dla $k \cdot p_{1} \leq i \leq reach(pat, p_{1})$ i można wtedy przesunąć wzorzec o $p_{1}$ (linia 10.). Dla innych $i$ można przesunąć wzorzec o $i/k + 1$ (linia 13.).
+
+\subsection{Złożoność}
+Zauważmy, że porównania wykonuje się jedynie w liniach 3. i 6., gdzie w linii 3. porównuje się znaki tekstu z $pat_{r}$, a w 6. z $pat_{l}$. Liczba porównań wykonywana w linii 3. jest ograniczona przez $k \cdot len(text)$ (z tego powodu wybranie mniejszego $k$ ma znaczenie praktyczne), czego dowód opiera się na obserwacji, że każde wykonane w tej linii porównanie prowadzi do zwiększenia wyrażenia $k \cdot pos + i$. Liczba porównań wykonywanych w linii 6. jest z kolei ograniczona przez $2 \cdot len(text)$. Wynika to z tego, iż odległość pomiędzy kolejnymi wystąpieniami $pat_{r}$ wynosi co najmniej $per(pat_{r})$, a długość $pat_{l} \leq 2 \cdot per(pat_{r})$, więc każdy znak tekstu zostanie porównany ze znakiem z $pat_{l}$ co najwyżej 2 razy. Łącznie więc liczba porównań znaków jest ograniczona przez $(k+2) \cdot len(text)$, czyli dla minimalnego możliwego $k$ równego 3 jest to $5 \cdot len(text)$ \cite{GS-CR}.
+
+\newpage
+\section{Algorytm Two-Way (TW)}
+Maxime Crochemore i Dominique Perrin zaproponowali algorytm, będący kompromisem pomiędzy podejściem algorytmu KMP (dopasowywaniem wzorca od lewej strony) i algorytmu BM (dopasowywaniem wzorca od prawej strony) \cite{TW}. Na początku dzieli on wzorzec na pewne dwie części, a następnie sprawdza zgodność z tekstem, porównując jedną z nich od lewej strony, a drugą od prawej. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu oraz w głównej fazie działania wymaga jedynie stałej dodatkowej pamięci.
+
+\subsection{Opis algorytmu}
+\begin{definition}[Lokalny okres słowa]
+Lokalnym okresem słowa $w$ na pozycji $l$ określamy najmniejszą taką liczbę $r$, że $w[i]=w[i+r]$ dla $w$ takich, że $l-r+1 \leq i \leq l$. Będziemy oznaczać go przez przez $lper(w,l)$. 
+\end{definition}
+
+Algorytm korzysta z podziału wzorca na dwa podsłowa $pat_{l}$ i $pat_{r}$ takie, że $pat = pat_{l}pat_{r}$, $len(pat_{l}) < per(pat)$ oraz długość lokalnego okresu wzorca na pozycji $l = len(pat_{l})$ jest równa długości okresu wzorca, czyli $lper(pat, l) = per(pat)$. Podział taki zawsze istnieje i można go obliczyć w $O(len(pat))$. W dalszej części zakładamy, że mamy dostęp do obliczonych wcześniej wartości $l$ i $per(pat)$.
+
+Algorytm ten dopasowuje znaki wzorca do odpowiednich pozycji tekstu, porównując je w obu kierunkach. Początkowa pozycja porównań jest wyznaczona przez $l = len(pat_{l})$. W celu weryfikacji, czy na danej pozycji w tekście występuje wzorzec, algorytm wykonuje dwie fazy dopasowania. 
+
+W pierwszej porównuje, iterując się od lewej do prawej, $pat_{r}$ do odpowiednich pozycji w tekście. Jeśli wystąpiło niedopasowanie podczas tej fazy, to algorytm nie wykonuje drugiej fazy, a wzorzec jest przesunięty w prawo w taki sposób, żeby $l$-ty element wzorca odpowiadał kolejnemu znakowi tekstu, niż ten, na którym wystąpiła niezgodność.
+
+Jeśli w pierwszej fazie wszystkie porównania były zgodne, to algorytm przechodzi do drugiej fazy. W tej fazie porównywane jest $pat_{l}$ z tekstem. W tej fazie algorytm iteruje się od prawej do lewej. Jeśli całość została dopasowana, to algorytm odpowiednio zwraca informację o dopasowaniu wzorca na danej pozycji tekstu. Z kolei w przypadku wystąpienia niedopasowania algorytm przesuwa wzorzec w prawo o $per(pat)$ pozycji. Po takim przesunięciu wiemy, że pewien prefiks wzorca odpowiada danym znakom tekstu. Długość tego prefiksu jest zapamiętywana, żeby podczas kolejnego dopasowywania ograniczyć liczbę porównań.
+
+\noindent
+Algorytm w pseudokodzie (z założeniem dostępu do $l$ i $per(pat)$) wygląda następująco:
+\begin{algorithm}
+\caption{Algorytm Two-Way}\label{alg:tw}
+\begin{algorithmic}[1]
+\State $pos \gets 0$; $s \gets 0$
+\While{$pos+len(pat) \leq len(text)$}
+    \State $i \gets \max(l, s) + 1$
+    \While{$i \leq len(pat) \textbf{ and } pat[i]=text[pos+i]$}
+        \State $i \gets i + 1$
+    \EndWhile
+    \If{$i \leq len(pat)$}
+        \State $pos \gets pos + \max(i-l, s-per(pat)+1)$
+        \State $s \gets 0$
+    \Else
+        \State $j \gets l$
+        \While{$j > s \textbf{ and } pat[j]=text[pos+j]$}
+            \State $j \gets j-1$
+        \EndWhile
+        \If{$j \leq s$}
+            \State \Return $pos$
+        \EndIf
+        \State $pos \gets pos + per(pat)$
+        \State $s \gets len(pat) - per(pat)$
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\FloatBarrier
+\subsection{Poprawność}
+Zauważmy, że w przypadku dopasowania wzorca, wartość $pos$ zwiększa się o długość okresu wzorca (linia 18.), więc algorytm nie pominie wtedy poprawnego dopasowania. W przypadku wystąpienia niezgodności przedstawiony w oryginalnej pracy dowód poprawności algorytmu jest oparty na wykazaniu nie wprost, że w przypadku istnienia poprawnego dopasowania zaczynającego się pomiędzy kolejnymi wartościami $pos$ -- $pos_{i}$ i $pos_{i+1}$, dopasowanie to byłoby przesunięte o wielokrotność okresu wzorca względem $pos_{i}$ i powtórzyłoby tę samą niezgodność \cite{TW}.
+
+\subsection{Złożoność}
+Autorzy oryginalnej pracy wskazali ograniczenie górne na liczbę porównań znaków w głównej części algorytmu wynoszące $2 \cdot len(text)$ \cite{TW}. Zauważmy, że porównania znaków wykonuje się jedynie w 4. i 12. linii algorytmu. Wskażmy więc osobno ograniczenia liczby porównań wykonywanych w każdej z tych linii podczas całego działania algorytmu. 
+
+Pokażmy, że każde porównanie wykonane w linii 3. silnie zwiększa wartość wyrażenia $pos+i$ przed wystąpieniem kolejnego porównania w tej linii. Jest to trywialne, gdy $pat[i]=text[pos+i]$ i $i < len(pat)$, gdyż wtedy $i$ jest zwiększona w 5. linii, a $pos$ pozostaje bez zmian. Jeśli $pat[i]=text[pos+i]$ i $i = len(pat)$, czyli nie wystąpiła niezgodność przy porównywaniu $pat_{r}$, to analogicznie $i$ jest zwiększona o 1 w 5. linii. Następnie $pos$ jest zwiększona o $per(pat)$ w linii 18. i zmniejszona o co najwyżej $per(pat)$ w linii 3. Łącznie więc rozważane wyrażenie się zwiększyło. Jeśli $pat[i] \neq text[pos+i]$ dla pewnego $i = i'$, to $pos$ jest zwiększona o co najmniej $i'-l$ w 8. linii, a następnie $i$ jest zmniejszona o co najwyżej $i'-(l+1)$. W tym wypadku także $pos+i$ się zwiększyło. Ponieważ $pos+i$ ma na początku wartość $l+1$, a na końcu co najwyżej $len(text)$, więc łącznie w 3. linii zostanie wykonanych co najwyżej $len(text)$ porównań.
+
+Zliczmy teraz porównania w linii 12. Zauważmy, że pomiędzy kolejnymi wejściami do pętli $while$ w 12. linii zmienna $pos$ zostaje zwiększona o $per(pat)$ w 18. linii. Ponieważ z założeń $l<per(pat)$, $s \geq 0$, a wartość zmiennej $pos$ nie jest zmniejszana podczas działania algorytmu, więc porównania w 12. linii będą wykonywane dla parami różnych wartości $pos+j$. Wynika z tego, że każde porównanie będzie dotyczyło innego znaku tekstu, więc łącznie takich porównań będzie co najwyżej $len(text)$.
+
+Łącznie więc podczas całego działania algorytmu liczba porównań jest ograniczona przez $2 \cdot len(text)$.
+
+\newpage
+\section{Podsumowanie}
+Poniżej przedstawiono tabelę podsumowującą najważniejsze cechy opisanych algorytmów.
+
+\vspace{1cm}
+{
+\centering
+\settowidth\tymin{porównań}
+\begin{tabulary}{1.0\linewidth}{@{}JCCCC@{}}
+    \toprule
+    Algorytm & Kierunek porównań & Pesymistyczna liczba porównań w głównej części & Pesymistyczna liczba porównań w preprocessingu & Ilość wymaganej dodatkowej pamięci \\
+    \midrule
+    BF & w prawo & $len(text) \cdot len(pat)$ & --- & $O(1)$ \\
+    KMP & w prawo & $2 \cdot len(text)$ & $3 \cdot len(pat)$ & $O(len(pat))$ \\
+    MP & w prawo & $2 \cdot len(text)$ & $2 \cdot len(pat)$ & $O(len(pat))$ \\
+    BM & w lewo & $len(text) \cdot len(pat)$ & $O(len(pat))$ & $O(len(pat))$ \\
+    BMB & w lewo & $len(text) \cdot len(pat)$ & $O(len(pat))$ & $O(len(pat))$ \\
+    AG & w lewo & $\frac{3}{2} \cdot len(text)$ & $O(len(pat))$ & $O(len(pat))$ \\
+    AGB & w lewo & $\frac{3}{2} \cdot len(text)$ & $O(len(pat))$ & $O(len(pat))$ \\
+    Cr & w prawo & $6 \cdot len(text)$ & --- & $O(1)$\\
+    GS & w prawo & $5 \cdot len(text)$ & $O(len(pat))$ & $O(1)$ \\
+    TW & inny & $2 \cdot len(text)$ & $O(len(pat))$ & $O(1)$ \\
+    \bottomrule
+\end{tabulary}\par
+}

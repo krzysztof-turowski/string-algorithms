@@ -1,0 +1,485 @@
+Implementacje algorytmów wykorzystane do pomiarów zaprezentowanych w poniższym rozdziale pochodzą z repozytorium: \\
+\url{https://github.com/krzysztof-turowski/string-algorithms}. \\
+W repozytorium tym (w folderze $benchar$ - pull request: \url{https://github.com/krzysztof-turowski/string-algorithms/pull/46}) znajduje się także kod źródłowy autorskiej biblioteczki służącej do pomiaru liczby porównań.
+
+\section{Metodologia}
+Zacznijmy od opisu sposobu pomiarów liczby porównań wykonywanej przez poszczególne algorytmy. W celu przeprowadzenia pomiarów stworzono klasę $benchar$. Poniżej przedstawiono związane z nią obiekty:
+\begin{itemize}
+    \item Obiekt klasy $benchar$:
+    \begin{itemize}
+        \item działa jako fabryka obiektów $count\_str$
+        \item posiada pole $cmp\_count$, w którym znajduje się liczba porównań wykonanych przez obiekty $count\_str$ będące jego potomkami (tj. wytworzone przez dany obiekt klasy $benchar$ lub przez jego innych potomków)
+    \end{itemize}
+    \item Obiekt klasy $count\_str$:
+    \begin{itemize}
+        \item dziedziczy metody klasy $str$ (tj. standardowego łańcucha znaków w języku Python)
+        \item posiada referencję do rodzica (tj. obiektu $benchar$, który go stworzył lub był rodzicem obiektu $count\_str$ który go stworzył)
+        \item każda operacja porównująca znaki (m.in.: $==$, $!=$, $>$, $<$) odpowiednio zwiększa wartość pola $cmp\_count$ w rodzicu
+        \item wszystkie operacje tworzące nowe łańcuchy znaków (m.in.: $+$, $[:]$) tworzą nowy obiekt $count\_str$, który dziedziczy rodzica.
+    \end{itemize}
+\end{itemize}
+
+Przedstawione powyżej działanie klasy $benchar$ pozwala na skuteczne zliczanie porównań dla wykorzystanych implementacji algorytmów. Wynika to z tego, że wszystkie użyte implementacje działają, przyjmując tekst i wzorzec będące łańcuchami znaków (podczas pomiarów są to obiekty $count\_str$ wytworzone przez ten sam obiekt $benchar$) i podczas działania nie tworzą nowych łańcuchów znaków w inny sposób niż operacjami na samych łańcuchach (m.in.: $+$, $[:]$). Dzięki temu jest zagwarantowane, że wszystkie łańcuchy znaków wykorzystywane w danym uruchomieniu algorytmu będą odpowiednimi obiektami $count\_str$ i wszystkie wykonane porównania zostaną zliczone.
+
+\subsection{Porównywane algorytmy}
+W pomiarach liczby porównań znaków zostały sprawdzone następujące algorytmy:
+\begin{itemize}
+  \item BF -- algorytm naiwny
+  \item MP -- algorytm Morissa-Pratta, czyli KMP wykorzystujący tablicę słabych prefikso-sufiksów
+  \item KMP -- algorytm Knutha-Morissa-Pratta, czyli KMP wykorzystujący tablicę silnych prefikso-sufiksów
+  \item BMB -- algorytm Boyera i Moore’a korzystający jedynie z tablicy $gss$ (bez $bcs$)
+  \item BM -- algorytm Boyera i Moore’a korzystający z tablic $gss$ i $bcs$
+  \item AGB -- algorytm Apostolico–Giancarlo korzystający jedynie z tablicy $gss$ (bez $bcs$)
+  \item AG -- algorytm Apostolico–Giancarlo korzystający z tablic $gss$ i $bcs$
+  \item Cr -- algorytm Crochemore'a dla uporządkowanych alfabetów
+  \item GS -- algorytm Galila-Seiferasa
+  \item TW -- algorytm Two-Way.
+\end{itemize}
+
+\section{Przeprowadzone testy}
+W poniższym podrozdziale przedstawiono w formie wykresów wyniki pomiarów liczby porównań znaków wykonywanych przez dane algorytmy. Wykorzystane podczas pomiarów sposoby wyboru tekstu i wzorca można podzielić na dwie grupy. Pierwszą stanowią metody randomizowane (sekcje: rozkład jednostajny, rozkład geometryczny, język naturalny), dla których wspólną cechą w metodyce pomiarów było generowanie dla danych parametrów 100 par tekst-wzorzec i przedstawianie na wykresach średniej oraz maksymalnej liczby wykonanych porównań w tej próbce. Drugą grupę stanowią trudne przypadki świadczące o pesymistycznej liczbie porównań wykonywanej przez część algorytmów (sekcje: pesymistyczny przypadek dla algorytmu naiwnego, pesymistyczny przypadek dla algorytmu BM, pesymistyczny przypadek dla algorytmu AG). W ich przypadkach dla danych parametrów wykonano (i zaprezentowano na wykresach) jeden pomiar, gdyż są to jednoznacznie ustalone wzorce i słowa.
+
+\FloatBarrier
+\subsection{Rozkład jednostajny}
+W tej sekcji przedstawiono wyniki pomiarów dla tekstów i wzorców generowanych zgodnie z rozkładem jednostajnym nad ustalonym alfabetem (każda litera ma prawdopodobieństwo równe $\frac{1}{|\mathcal{A}|}$ wystąpienia na danym indeksie tekstu oraz wzorca).
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_3_pat_10_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_uni_3_pat_10_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_3_pat_10_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_uni_3_pat_10_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $|\mathcal{A}| = 3$ i $len(pat) = 10$}
+    \label{fig:result_alph_uni_3_pat_10}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_3_pat_len(text)2_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_uni_3_pat_len(text)2_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_3_pat_len(text)2_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_uni_3_pat_len(text)2_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $|\mathcal{A}| = 3$ i $len(pat) = \frac{len(text)}{2}$}
+    \label{fig:result_alph_uni_3_pat_len(text)2}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_3_text_1000_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_uni_3_text_1000_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_3_text_1000_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_uni_3_text_1000_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(pat)$ dla $|\mathcal{A}| = 3$ i $len(text) = 1000$}
+    \label{fig:result_alph_uni_3_text_1000}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_26_pat_10_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_uni_26_pat_10_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_26_pat_10_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_uni_26_pat_10_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $|\mathcal{A}| = 26$ i $len(pat) = 10$}
+    \label{fig:result_alph_uni_26_pat_10}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_26_pat_len(text)2_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_uni_26_pat_len(text)2_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_26_pat_len(text)2_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_uni_26_pat_len(text)2_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $|\mathcal{A}| = 26$ i $len(pat) = \frac{len(text)}{2}$}
+    \label{fig:result_alph_uni_26_pat_len(text)2}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_26_text_1000_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_uni_26_text_1000_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_uni_26_text_1000_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_uni_26_text_1000_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(pat)$ dla $|\mathcal{A}| = 26$ i $len(text) = 1000$}
+    \label{fig:result_alph_uni_26_text_1000}
+\end{figure}
+
+\FloatBarrier
+\subsection{Rozkład geometryczny}
+W tej sekcji przedstawiono wyniki pomiarów dla tekstów i wzorców generowanych zgodnie z rozkładem geometrycznym z ustalonym parametrem $p$ ($i$-ta litera alfabetu ma prawdopodobieństwo równe $(1-p)^{i-1}p$ wystąpienia na danym indeksie tekstu oraz wzorca).
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_02_pat_10_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_02_pat_10_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_02_pat_10_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_02_pat_10_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $p = 0.2$ i $len(pat) = 10$}
+    \label{fig:result_alph_geo_02_pat_10}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_02_pat_len(text)2_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_02_pat_len(text)2_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_02_pat_len(text)2_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_02_pat_len(text)2_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $p = 0.2$ i $len(pat) = \frac{len(text)}{2}$}
+    \label{fig:result_alph_geo_02_pat_len(text)2}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_02_text_1000_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_02_text_1000_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_02_text_1000_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_02_text_1000_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(pat)$ dla $p = 0.2$ i $len(text) = 1000$}
+    \label{fig:result_alph_geo_02_text_1000}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_05_pat_10_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_05_pat_10_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_05_pat_10_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_05_pat_10_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $p = 0.5$ i $len(pat) = 10$}
+    \label{fig:result_alph_geo_05_pat_10}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_05_pat_len(text)2_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_05_pat_len(text)2_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_05_pat_len(text)2_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_05_pat_len(text)2_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $p = 0.5$ i $len(pat) = \frac{len(text)}{2}$}
+    \label{fig:result_alph_geo_05_pat_len(text)2}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_05_text_1000_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_05_text_1000_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_05_text_1000_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_05_text_1000_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(pat)$ dla $p = 0.5$ i $len(text) = 1000$}
+    \label{fig:result_alph_geo_05_text_1000}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_08_pat_10_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_08_pat_10_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_08_pat_10_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_08_pat_10_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $p = 0.8$ i $len(pat) = 10$}
+    \label{fig:result_alph_geo_08_pat_10}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_08_pat_len(text)2_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_08_pat_len(text)2_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_08_pat_len(text)2_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_08_pat_len(text)2_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $p = 0.8$ i $len(pat) = \frac{len(text)}{2}$}
+    \label{fig:result_alph_geo_08_pat_len(text)2}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_08_text_1000_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_alph_geo_08_text_1000_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_alph_geo_08_text_1000_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_alph_geo_08_text_1000_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(pat)$ dla $p = 0.8$ i $len(text) = 1000$}
+    \label{fig:result_alph_geo_08_text_1000}
+\end{figure}
+
+\FloatBarrier
+\subsection{Język naturalny}
+W tej sekcji przedstawiono wyniki pomiarów dla tekstów i wzorców wybieranych losowo z pewnego tekstu języka naturalnego (Adam Mickiewicz: "Pan Tadeusz", źródło: \url{https://gist.github.com/tomekziel/47b7c3dffb17adbc70c42b9be8dc93a7}), który został znormalizowany poprzez zamianę wszystkich liter na małe, zamianę wszystkich znaków białych na spacje i usunięcie znaków niebędących znakami alfanumerycznymi lub spacjami.
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_natural_pat_10_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_natural_pat_10_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_natural_pat_10_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_natural_pat_10_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $len(pat) = 10$}
+    \label{fig:result_natural_pat_10}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_natural_pat_len(text)2_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_natural_pat_len(text)2_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_natural_pat_len(text)2_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_natural_pat_len(text)2_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $len(pat) = \frac{len(text)}{2}$}
+    \label{fig:result_natural_pat_len(text)2}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_natural_text_1000_plot_avg_100}
+        \caption{średnia liczba porównań}
+        \label{fig:result_natural_text_1000_plot_avg_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{result_natural_text_1000_plot_max_100}
+        \caption{maksymalna liczba porównań}
+        \label{fig:result_natural_text_1000_plot_max_100}
+    \end{subfigure}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(pat)$ dla $len(text) = 1000$}
+    \label{fig:result_natural_text_1000}
+\end{figure}
+
+\FloatBarrier
+\subsection{Pesymistyczny przypadek dla algorytmu naiwnego}
+W poniższej sekcji przedstawiono wyniki dla tekstów i wzorców będących przypadkiem pesymistycznym dla algorytmu naiwnego, czyli $text = a^{e}b$ i $pat = a^{\frac{e}{2}}b$, gdzie $a$ i $b$ są różnymi literami.
+
+\begin{figure}[htb]
+    \centering
+    \includesvg[width=0.49\textwidth]{result_bf_hard_plot}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$}
+    \label{fig:result_bf_hard_plot}
+\end{figure}
+
+\FloatBarrier
+\subsection{Pesymistyczny przypadek dla algorytmu BM}
+W poniższej sekcji przedstawiono wyniki dla tekstów i wzorców będących przypadkiem pesymistycznym dla algorytmu BM, czyli $text = a^{n}$ i $pat = a^{m}$, gdzie $a$ jest literą.
+
+\begin{figure}[htb]
+    \centering
+    \includesvg[width=0.49\textwidth]{result_bm_hard_pat_10_plot}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $len(pat) = 10$}
+    \label{fig:result_bm_hard_pat_10_plot}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \includesvg[width=0.49\textwidth]{result_bm_hard_pat_len(text)2_plot}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $len(pat) = \frac{len(text)}{2}$}
+    \label{fig:result_bm_hard_pat_len(text)2_plot}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \includesvg[width=0.49\textwidth]{result_bm_hard_text_1000_plot}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(pat)$ dla $len(text) = 1000$}
+    \label{fig:result_bm_hard_text_1000_plot}
+\end{figure}
+
+\FloatBarrier
+\subsection{Pesymistyczny przypadek dla algorytmu AG}
+W poniższej sekcji przedstawiono wyniki dla tekstów i wzorców będących przypadkiem pesymistycznym dla algorytmu AG, czyli $text = pat^{e}$ i $pat = a^{m-1}ba^{m}b$, gdzie $a$ i $b$ są różnymi literami.
+
+\begin{figure}[htb]
+    \centering
+    \includesvg[width=0.49\textwidth]{result_ag_hard_pat_10_plot}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $len(pat) = 10$}
+    \label{fig:result_ag_hard_pat_10_plot}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \includesvg[width=0.49\textwidth]{result_ag_hard_pat_len(text)2_plot}
+    \hfill
+    \caption{Liczba porównań w zależności od $len(text)$ dla $len(pat) = \frac{len(text)}{2}$}
+    \label{fig:result_ag_hard_pat_len(text)2_plot}
+\end{figure}
+
+\FloatBarrier
+\newpage
+\section{Wnioski}
+Na podstawie powyższych pomiarów można stwierdzić, że \textbf{w celu wyboru najwydajniejszego algorytmu dla danego zastosowania powinno się wziąć pod uwagę przede wszystkim rozmiar alfabetu i długość wzorca względem długości tekstu}. 
+
+Można zauważyć jednak, że \textbf{w większości przypadków najmniejszą liczbę porównań (do uzyskania której dążymy) wykona jedna z wersji algorytmu BM} -- często liczba porównań będzie nawet mniejsza niż długość tekstu. \textbf{W przypadku małego rozmiaru alfabetu lepiej sprawdza się wersja BMB} -- pomijająca przesunięcie nieodpowiedniego znaku (rys. \ref{fig:result_alph_uni_3_pat_10}--\ref{fig:result_alph_uni_3_text_1000} i rys. \ref{fig:result_alph_geo_08_pat_10}--\ref{fig:result_alph_geo_08_text_1000}). W takich przypadkach korzyść z użycia tej tablicy jest znikoma, a obliczenie jej jest pewnym kosztem. 
+
+Sytuacja zmienia się znacznie w przypadku dużych alfabetów -- w szczególności złożonego z wszystkich liter alfabetu łacińskiego. W takich przypadkach przesunięcia dobrego sufiksu są dominowane przez przesunięcia nieodpowiedniego znaku. Różnica w liczbie porównań jest tym większa, im krótszy jest wzorzec, gdyż koszt dodatkowego preprocessingu jest wtedy odpowiednio mniejszy (rys. \ref{fig:result_alph_uni_26_pat_10}--\ref{fig:result_alph_geo_02_pat_10} i rys. \ref{fig:result_alph_geo_05_pat_10}). \textbf{Dla dużych alfabetów wydajniejsza jest więc pełna wersja algorytmu BM}.
+
+Warto zauważyć, że spośród przeprowadzonych testów \textbf{tylko w jednym przypadku algorytm AG wykonał mniej porównań niż algorytm BM (i odpowiednio AGB niż BMB) - w przypadku pesymistycznym dla algorytmu BM} (rys. \ref{fig:result_bm_hard_pat_10_plot}--\ref{fig:result_bm_hard_text_1000_plot}). Warto jednak zauważyć, że różnice w wydajności dla pozostałych przypadków nie były zwykle znaczne, więc warto rozważyć, czy dla danego zastosowania ważniejszy jest średni zysk wydajności, czy gwarancja liniowego ograniczenia liczby wykonanych porównań.
+
+Na koniec zwróćmy uwagę na jeszcze jeden ciekawy wynik. \textbf{Dla odpowiednio długich wzorców, w przypadku wyszukiwania w tekście naturalnym, najlepiej sprawdzał się algorytm naiwny} (rys. \ref{fig:result_natural_pat_len(text)2}). Jest to zapewne spowodowane tym, że pesymistyczne przypadki dla algorytmu naiwnego (czyli długie słowa mające krótki najkrótszy cykl) rzadko występują w języku naturalnym. Algorytm naiwny zyskuje przewagę, gdyż nie wykonuje preprocessingu, podczas którego liczba wykonanych porównań jest uzależniona od długości wzorca.
