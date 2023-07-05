@@ -11,7 +11,6 @@ class uniform_generator:
 class geometric_generator:
     def generate(n, m, *, A = string.ascii_lowercase, p = 0.5):
         choice = [v for i, v in enumerate(A) for _ in range(int(1000*scipy.stats.geom.pmf(i+1, p)))]
-        print(choice)
         t = ''.join(random.choice(choice) for i in range(n))
         w = ''.join(random.choice(choice) for i in range(m))
         return (t, w)
