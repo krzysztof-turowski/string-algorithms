@@ -31,7 +31,7 @@ Algorytm ten ma złożoność pesymistyczną $O(len(pat) \cdot len(text))$ poró
 
 \newpage
 \section{Algorytm Knutha, Morrisa i Pratta (KMP)}
-Donald E. Knuth, James H. Morris i Vaughan R. Pratt zaproponowali algorytm, który ulepsza podejście naiwne, korzystając z obserwacji, że w przypadku wystąpienia niezgodności podczas porównywania wzorca z tekstem możliwe jest pominięcie części porównań \cite{KMP}. Możliwy przeskok jest określany na podstawie obliczonej początkowo dla danego wzorca tablicy, która uzależnia go od pozycji we wzorcu, na której wystąpiła nierówność znaków.
+D. E. Knuth, J. H. Morris i V. R. Pratt zaproponowali algorytm, który ulepsza podejście naiwne, korzystając z obserwacji, że w przypadku wystąpienia niezgodności podczas porównywania wzorca z tekstem możliwe jest pominięcie części porównań \cite{KMP}. Możliwy przeskok jest określany na podstawie obliczonej początkowo dla danego wzorca tablicy, która uzależnia go od pozycji we wzorcu, na której wystąpiła nierówność znaków.
 
 \subsection{Opis algorytmu}
 Ogólna zasada działania tego algorytmu jest podobna do podejścia naiwnego, jednak w przypadku niedopasowania zaczyna on sprawdzać nie kolejny znak, ale pierwszy od którego jeszcze jest możliwe dopasowanie wzorca. W tym celu wykorzystywana jest tablica (nazwijmy ją $next$) informująca, od którego znaku należy kontynuować porównywanie.
@@ -135,7 +135,7 @@ W przypadku algorytmu \ref{alg:sps} ograniczenie wynosi $3 \cdot len(pat)$, z po
 
 \newpage
 \section{Algorytm Boyera i Moore’a (BM)}
-Robert S. Boyer i J Strother Moore zaproponowali algorytm, który korzysta z obserwacji, że sprawdzanie dopasowania wzorca od prawej strony zamiast od lewej pozwala na zdobycie większej ilości informacji \cite{BM}. Pozwala to na wydajniejsze pomijanie porównań w przypadku znalezienia niezgodności między wzorcem i tekstem.  
+R. S. Boyer i J. S. Moore zaproponowali algorytm, który korzysta z obserwacji, że sprawdzanie dopasowania wzorca od prawej strony zamiast od lewej pozwala na zdobycie większej ilości informacji \cite{BM}. Pozwala to na wydajniejsze pomijanie porównań w przypadku znalezienia niezgodności między wzorcem i tekstem.  
 
 \subsection{Opis algorytmu}
 Algorytm sprawdza dopasowanie wzorca na danej pozycji, zaczynając od jego prawego znaku i kontynuując porównania kolejnych znaków na lewo aż do momentu wystąpienia niezgodności (lub dopasowania całego wzorca). W przypadku wystąpienia niezgodności korzysta on z dwóch obliczonych wcześniej tablic pomocniczych -- nazwijmy je przesunięciem nieodpowiedniego znaku (\textit{bad character shift} -- $bcs$) i przesunięciem dobrego sufiksu (\textit{good suffix shift} -- $gss$). 
@@ -145,7 +145,6 @@ Niech tablica $bcs$ dla każdego znaku z rozważanego alfabetu utrzymuje odległ
 Niech tablica $gss$ dla każdego indeksu $i$ od 1 do $len(pat)$ będzie odległością między $i$ oraz początkiem najbardziej wysuniętego na prawo dopasowania $x(pat[i+1:len(pat)])$, gdzie $x \neq pat[i]$, do $pat$ powiększoną o $len(pat) - i$.
 
 \noindent
-% Poniżej przedstawiono algorytm BM w pseudokodzie, przy założeniu że mamy dostęp do tablic $bcs$ i $gss$.
 Algorytm w pseudokodzie, przy założeniu że mamy dostęp do tablic $bcs$ i $gss$, wygląda następująco:
 \begin{algorithm}
 \caption{Algorytm BM}\label{alg:bm}
@@ -181,13 +180,13 @@ Analiza ilości porównań wykonywanych przez ten algorytm jest trudna, gdyż je
 
 W oryginalnej pracy zauważono, że algorytm ten w optymistycznym przypadku wykonuje jedynie rzędu $len(text)/len(pat)$ porównań i wynik taki jest osiągany średnio dla alfabetu dużego względem długości wzorca.
 
-Donald E. Knuth udowodnił, że nawet wersja BMB wykonuje co najwyżej $6 \cdot len(text)$ porównań w przypadku braku wystąpienia wzorca w tekście \cite{KMP}. Ograniczenie to poprawił Richard Cole \cite{BM-Cole}, który dowiódł, że przy dodatkowym założeniu braku okresowości wzorca (tj. nie jest on postaci $wv^{k}$, gdzie $w$ jest sufiksem właściwym $v$), w przypadku niewystąpienia wzorca w tekście algorytm ten wykonuje co najwyżej $3 \cdot len(text)$ porównań.
+D. E. Knuth udowodnił, że nawet wersja BMB wykonuje co najwyżej $6 \cdot len(text)$ porównań w przypadku braku wystąpienia wzorca w tekście \cite{KMP}. Ograniczenie to poprawił R. Cole \cite{BM-Cole}, który dowiódł, że przy dodatkowym założeniu braku okresowości wzorca (tj. nie jest on postaci $wv^{k}$, gdzie $w$ jest sufiksem właściwym $v$), w przypadku niewystąpienia wzorca w tekście algorytm ten wykonuje co najwyżej $3 \cdot len(text)$ porównań.
 
 W przypadku wyszukiwania jedynie pierwszego wystąpienia wzorca i jego obecności w tekście ograniczenia te zwiększają się o $len(pat)$ porównań. Jednak w przypadku wyszukiwania wszystkich wystąpień liczba porównań jest już rzędu $O(len(text) \cdot len(pat))$, czego najlepszym przykładem jest wyszukiwanie wzorca postaci $a^{m}$ w tekście postaci $a^{n}$. 
 
 \newpage
 \section{Algorytm Apostolico i Giancarlo (AG)}
-Alberto Apostolico i Raffaele Giancarlo przedstawili algorytm, oparty na algorytmie Boyera i Moore’a, który usprawnia go poprzez przechowywanie informacji o dopasowanych wcześniej sufiksach wzorca do tekstu \cite{AG}. Pozwala to na zmniejszenie pesymistycznej liczby porównań do liniowej względem długości tekstu.
+A. Apostolico i R. Giancarlo przedstawili algorytm, oparty na algorytmie Boyera i Moore’a, który usprawnia go poprzez przechowywanie informacji o dopasowanych wcześniej sufiksach wzorca do tekstu \cite{AG}. Pozwala to na zmniejszenie pesymistycznej liczby porównań do liniowej względem długości tekstu.
 
 \subsection{Opis algorytmu}
 Algorytm ten analogicznie do algorytmu BM sprawdza dopasowanie wzorca na danej pozycji, zaczynając od jego prawego znaku i kontynuując porównania kolejnych znaków na lewo aż do momentu wystąpienia niezgodności (lub dopasowania całego wzorca), a w przypadku wystąpienia niezgodności korzysta on z tablic przesunięcia nieodpowiedniego znaku ($bcs$) i przesunięcia dobrego sufiksu ($gss$) opisanych w części poświęconej algorytmowi BM. Korzysta on jednak dodatkowo z dwóch kolejnych struktur -- aktualizowanej podczas działania algorytmu tablicy $skip$ i możliwej do szybkiego obliczenia na podstawie odpowiedniego preprocessingu wzorca funkcji $Q(i,k)$.
@@ -242,11 +241,11 @@ Rozważmy teraz złożoność algorytmu \ref{alg:ag} (mierzoną liczbą porówna
 
 Przedstawmy najpierw wraz z dowodem ograniczenie wskazane w oryginalnej pracy \cite{AG}. Przyjmijmy, że $and$ w 5. linii nie sprawdza drugiego warunku, jeśli pierwszy nie jest spełniony. Zauważmy, że każde porównanie znaków tekstu i wzorca prowadzi do dopasowania lub niedopasowania. Jeśli dojdzie do dopasowania, to dany znak zostanie uwzględniony w aktualizacji tablicy $skip$ w 16. linii i nie będzie później bezpośrednio porównywany. Wynika z tego, że każdy znak tekstu może być co najwyżej raz poddany porównaniu ze znakiem z wzorca kończącym się dopasowaniem, więc takich porównań jest łącznie co najwyżej $len(text)$. Teraz zauważmy, że każde niedopasowanie znaku prowadzi do zwiększenia zmiennej $i$, więc takich porównań może być co najwyżej $len(text) - len(pat) + 1$. Łącznie więc, wszystkich porównań jest nie więcej niż $2 \cdot len(text) - len(pat) + 1$.
 
-Ograniczenie to zostało poprawione przez Maxime'a Crochemore'a i Thierry'ego Lecroq'a, którzy dowiedli, że algorytm AG nie wykonuje więcej niż $\frac{3}{2} \cdot len(text)$ porównań i że ograniczenie to jest ścisłe, gdyż przykładowo dla wyszukiwania wzorca postaci $a^{m-1}ba^{m}b$ w tekście postaci $(a^{m-1}ba^{m}b)^{e}$, gdzie $m,e > 0$ i $len(text) = (2m+1)e$, algorytm wykona $2m+1+(3m+1)e$, czyli $\frac{3m+1}{2m+1}len(pat)-m$ porównań znaków \cite{AG-CrLc}.
+Ograniczenie to zostało poprawione przez M. Crochemore'a i T. Lecroq'a, którzy dowiedli, że algorytm AG nie wykonuje więcej niż $\frac{3}{2} \cdot len(text)$ porównań i że ograniczenie to jest ścisłe, gdyż przykładowo dla wyszukiwania wzorca postaci $a^{m-1}ba^{m}b$ w tekście postaci $(a^{m-1}ba^{m}b)^{e}$, gdzie $m,e > 0$ i $len(text) = (2m+1)e$, algorytm wykona $2m+1+(3m+1)e$, czyli $\frac{3m+1}{2m+1}len(pat)-m$ porównań znaków \cite{AG-CrLc}.
 
 \newpage
 \section{Algorytm Crochemore'a (Cr)}
-Maxime Crochemore przedstawił algorytm oparty na pewnych własnościach kombinatorycznych słów nad uporządkowanym alfabetem, w szczególności związanych z długością cykli \cite{Cr-or}. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu, a jednocześnie wyróżnia się brakiem wstępnego przetwarzania wzorca i wymaganiem jedynie stałej dodatkowej pamięci.
+M. Crochemore przedstawił algorytm oparty na pewnych własnościach kombinatorycznych słów nad uporządkowanym alfabetem, w szczególności związanych z długością cykli \cite{Cr-or}. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu, a jednocześnie wyróżnia się brakiem wstępnego przetwarzania wzorca i wymaganiem jedynie stałej dodatkowej pamięci.
 
 \subsection{Opis algorytmu}
 Algorytm ten sprawdza dopasowanie wzorca w danym miejscu tekstu przez porównywanie znaków począwszy od lewej strony (podobnie jak w algorytmie KMP). W przypadku wystąpienia niezgodności $i$-tego znaku tekstu z $j$-tym znakiem wzorca, algorytm liczy długość najkrótszego okresu słowa $pat[1:j-1]text[i]$ lub jego pewne ograniczenie dolne. W celu obliczenia tych wartości algorytm korzysta z rozkładu MS (Maximal Suffix). 
@@ -339,7 +338,7 @@ Autor oryginalnej pracy wskazał ograniczenie górne na liczbę porównań znak�
 
 \newpage
 \section{Algorytm Galila i Seiferasa (GS)}
-Zvi Galil i Joel Seiferas zaproponowali algorytm korzystający z pewnego podziału wzorca na dwa podsłowa wykonywanego podczas preprocessingu \cite{GS}. Podczas właściwego wyszukiwania, najpierw porównuje się z tekstem jedno z nich, a dopiero w przypadku całkowitej zgodności -- drugie. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu oraz w głównej fazie działania wymaga jedynie stałej dodatkowej pamięci.
+Z. Galil i J. Seiferas zaproponowali algorytm korzystający z pewnego podziału wzorca na dwa podsłowa wykonywanego podczas preprocessingu \cite{GS}. Podczas właściwego wyszukiwania, najpierw porównuje się z tekstem jedno z nich, a dopiero w przypadku całkowitej zgodności -- drugie. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu oraz w głównej fazie działania wymaga jedynie stałej dodatkowej pamięci.
 
 \subsection{Opis algorytmu}
 Zdefiniujmy funkcję $reach(w,p) = max\{q \leq len(w) \colon w[1:p] \text{ jest okresem } w[1:q]\}$. Dla pewnej ustalonej liczby naturalnej $k>1$, którą w oryginalnej pracy zaproponowano jako 4 (udowodniono, że w tym algorytmie możliwe jest użycie $k \geq 3$ \cite{GS-CR}).
@@ -404,7 +403,7 @@ Zauważmy, że porównania wykonuje się jedynie w liniach 3. i 6., gdzie w lini
 
 \newpage
 \section{Algorytm Two-Way (TW)}
-Maxime Crochemore i Dominique Perrin zaproponowali algorytm, będący kompromisem pomiędzy podejściem algorytmu KMP (dopasowywaniem wzorca od lewej strony) i algorytmu BM (dopasowywaniem wzorca od prawej strony) \cite{TW}. Na początku dzieli on wzorzec na pewne dwie części, a następnie sprawdza zgodność z tekstem, porównując jedną z nich od lewej strony, a drugą od prawej. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu oraz w głównej fazie działania wymaga jedynie stałej dodatkowej pamięci.
+M. Crochemore i D. Perrin zaproponowali algorytm, będący kompromisem pomiędzy podejściem algorytmu KMP (dopasowywaniem wzorca od lewej strony) i algorytmu BM (dopasowywaniem wzorca od prawej strony) \cite{TW}. Na początku dzieli on wzorzec na pewne dwie części, a następnie sprawdza zgodność z tekstem, porównując jedną z nich od lewej strony, a drugą od prawej. Algorytm ten wykonuje w pesymistycznym przypadku liniową liczbę porównań względem długości tekstu oraz w głównej fazie działania wymaga jedynie stałej dodatkowej pamięci.
 
 \subsection{Opis algorytmu}
 \begin{definition}[Lokalny okres słowa]
