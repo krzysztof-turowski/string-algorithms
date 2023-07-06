@@ -19,7 +19,7 @@
 	 	footinclude=true,cleardoublepage=empty,dottedtoc,
 		BCOR=5mm,paper=a4,fontsize=11pt,
 		ngerman,american,polish]{scrreprt}
-\input{classicthesis-config}
+\input{classicthesis}
 
 \addbibresource{bibliography/bibliography.bib}
 
@@ -34,27 +34,27 @@
 \pagenumbering{roman}
 \pagestyle{plain}
 
-\input{text/front-back/titlepage.tex}
+\input{front-back/titlepage.tex}
 % \cleardoublepage
-% \input{text/front-back/dedication.tex}
+% \input{front-back/dedication.tex}
 % \cleardoublepage
-% \input{text/front-back/foreword.tex}
+% \input{front-back/foreword.tex}
 % \cleardoublepage
-% \input{text/front-back/acknowledgments.tex}
+% \input{front-back/acknowledgments.tex}
 
 \pagestyle{scrheadings}
 \cleardoublepage
-\input{text/front-back/Contents}
+\input{front-back/Contents}
 \cleardoublepage
-\input{text/chapters/introduction/00-main.tex}
+\input{chapters/introduction/00-main.tex}
 \cleardoublepage
 \pagenumbering{arabic}
 \cleardoublepage
 
-\input{text/chapters/chapter-01/00-main.tex}
+\input{chapters/chapter-01/00-main.tex}
 \cleardoublepage
 %\chapter{Dokładne dopasowanie wielu wzorców}
-%\include{text-new/chapters/chapter-01/00-main.tex}
+%\include{chapters/chapter-01/00-main.tex}
 %\cleardoublepage
 %\chapter{Indeksowanie tekstu: drzewa sufiksowe}
 %\cleardoublepage
@@ -71,6 +71,6 @@
 %\part{Kompresja tekstu}
 %\cleardoublepage
 
-% \input{text/front-back/colophon.tex}
+% \input{front-back/colophon.tex}
 
 \end{document}
