@@ -5,7 +5,7 @@ from exact_string_matching import forward
 from benchar import benchar
 
 if os.environ.get('CBENCHAR') is not None:
-    from benchar.cbenchar.build import cbenchar
+    from benchar.build import cbenchar
 
 class TestBenchar(unittest.TestCase):
     run_cbenchar = unittest.skipUnless(
