@@ -1,8 +1,4 @@
-[submodule "extern/pybind11"]
-	path = extern/pybind11
-	url = ../../pybind/pybind11
-	branch = stable
-[submodule "benchar/cbenchar/pybind11"]
-	path = benchar/cbenchar/pybind11
+[submodule "lib/pybind11"]
+	path = lib/pybind11
 	url = ../../pybind/pybind11
 	branch = stable
