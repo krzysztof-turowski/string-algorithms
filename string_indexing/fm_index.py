@@ -12,29 +12,28 @@ def inverse_transform_naive(BWT, n):
     reversal = [c + r for (r, c) in zip(sorted(reversal), BWT[1:])]
   return '#' + ''.join(sorted(reversal)[0][1:])
 
-def get_L_from_SA(SA, text, n):
-    return '#$' + ''.join(text[SA[i]] for i in range(1, n + 1))
-
 
 class FMIndex:
    
    # all of strings beginns with # (idk why?)
    # F is first characters from suffixes in order from suffix array with $ at the beggining
    # L is result of BWT
-   def __init__ (self, F, L, n):
-      self.L = L
-      self.F = F
+   
+   def __init__ (self, SA, BWT, n):
+      self.L = BWT
+      self.F = '#$' + ''.join(text[SA[i]] for i in range(1, n + 1))
       self.n = n
+      self.SA = SA
       self.sampleSize = 8 # const for sampling
 
       #prepare char mapping for F
-      self.mapperOfChar = { F[2] : 0}
+      self.mapperOfChar = { self.F[2] : 0}
       self.begginings = [2]
-      last = F[2]
+      last = self.F[2]
       lenOfBeginings = 1
       for i in range(3, n+2):
-         if F[i] != last:
-            last = F[i]
+         if self.F[i] != last:
+            last = self.F[i]
             self.begginings.append(i)
             self.mapperOfChar[last] = lenOfBeginings
             lenOfBeginings += 1
@@ -50,12 +49,12 @@ class FMIndex:
          self.closestSample.append(currentSample)
 
       #Generate values for occ for given samples O(|A|*n)
-      self.occInSampleForChar = { L[i]: [0] for i in range(1, n+2)}
+      self.occInSampleForChar = { self.L[i]: [0] for i in range(1, n+2)}
       for c in self.mapperOfChar:
          currValue = 0
          nextSample = self.sampleSize
          for i in range(1, n+2):
-            if L[i] == c:
+            if self.L[i] == c:
                currValue += 1
             if i == nextSample:
                self.occInSampleForChar[c].append(currValue)
@@ -121,26 +120,26 @@ class FMIndex:
 
    def query(self, p, l):
       return self.count(p, l) > 0
-        
+   
+   def get_all_occurrance(self, p, l):
+      arr = self.getRangeOfOccurence(p, l)
+      if arr[0] == -1:
+         return -1
+      return [self.SA[i-1] for i in range(arr[0], arr[1] + 1)]      
 
 
-text = '#abaaba'
-n = 6
+text = '#ababa'
+n = 5
 SA = naive(text, n)
-bwt = transform_from_suffix_array(SA, text, n)
-revBWT = inverse_transform_naive(bwt, n)
+BWT = transform_from_suffix_array(SA, text, n)
 print(text)
-#print(SA)
-#print(bwt)
-F = get_L_from_SA(SA, text, n)
-L = bwt
-#print(F)
-index = FMIndex(F, L, n)
-print(index.count('aa', 2))
+print(SA)
+index = FMIndex(SA, BWT, n)
+print(index.get_all_occurrance('aa', 2))
 print(index.count('aab', 3))
 print(index.count('a', 1))
 print(index.count('b', 1))
-print(index.count('aba', 3))
+print(index.get_all_occurrance('aba', 3))
 print(index.count('c', 1))
 print(index.count('caab', 4))
 print(index.count('abaaba', 6))
