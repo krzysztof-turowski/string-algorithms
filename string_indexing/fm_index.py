@@ -42,34 +42,35 @@ class FMIndex:
       self.lenOfAlphabet = len(self.mapperOfChar)
       
       #prepare closest samplings
-      currentSample = 1
-      self.closestSample = [1, 1]
-      for i in range(2, n+2):
+      currentSample = 0
+      self.closestSample = [0]
+      for i in range(1, n+2):
          if abs(currentSample-i) > abs(currentSample + self.sampleSize-i) and i + self.sampleSize < self.n:
             currentSample += self.sampleSize
          self.closestSample.append(currentSample)
 
       #Generate values for occ for given samples O(|A|*n)
-      self.occInSampleForChar = { i: [0] for i in self.mapperOfChar}
+      self.occInSampleForChar = { L[i]: [0] for i in range(1, n+2)}
       for c in self.mapperOfChar:
          currValue = 0
-         nextSample = 1 + self.sampleSize
-         for i in range(2, n+2):
+         nextSample = self.sampleSize
+         for i in range(1, n+2):
             if L[i] == c:
                currValue += 1
             if i == nextSample:
                self.occInSampleForChar[c].append(currValue)
-      
-      print(self.begginings)
-      print(self.mapperOfChar)
+      #print(self.occInSampleForChar)
+      #print(self.closestSample)
+      #print(self.begginings)
+      #print(self.mapperOfChar)
 
-   def count(self, p, size):
+   def getRangeOfOccurence(self, p, size):
       if size > self.n:
-        return 0
+        return [-1, -1]
       
       currChar = p[size-1]
       if currChar not in self.mapperOfChar:
-         return 0
+         return [-1, -1]
       
       mapIdx = self.mapperOfChar[currChar]
       l = self.begginings[mapIdx]
@@ -78,17 +79,28 @@ class FMIndex:
          r = self.begginings[mapIdx + 1] - 1
       
       for i in range(size-2, -1, -1):
+         #print(l, r)
          currChar = p[i]
          if currChar not in self.mapperOfChar:
-            return 0
+            return [-1, -1]
          occurencesBefore = self._getOcc(currChar, l - 1)
          occurencesAfter = self._getOcc(currChar, r)
+         #print('OCC ', occurencesBefore, occurencesAfter)
          if occurencesBefore == occurencesAfter:
-            return 0
+            return [-1, -1]
          mapIdx = self.mapperOfChar[currChar]
          l = self.begginings[mapIdx] + occurencesBefore
-         r = l + occurencesAfter - 1
-      return r - l + 1
+         r = self.begginings[mapIdx] + occurencesAfter - 1
+         if r < l:
+            return [-1, -1]
+      #print(l, r)
+      return [l, r]
+
+   def count(self, p, size):
+      ran = self.getRangeOfOccurence(p, size)
+      if ran[0] == -1:
+         return 0
+      return max(ran[1] - ran[0] + 1, 0)
 
 
     #Should be private
@@ -104,7 +116,7 @@ class FMIndex:
             if self.L[j] == c:
                toAdd -= 1
          
-      return self.occInSampleForChar[c][(closestSample-1)//self.sampleSize] + toAdd
+      return self.occInSampleForChar[c][(closestSample)//self.sampleSize] + toAdd
       
 
    def query(self, p, l):
@@ -118,11 +130,11 @@ SA = naive(text, n)
 bwt = transform_from_suffix_array(SA, text, n)
 revBWT = inverse_transform_naive(bwt, n)
 print(text)
-print(SA)
-print(bwt)
+#print(SA)
+#print(bwt)
 F = get_L_from_SA(SA, text, n)
 L = bwt
-print(F)
+#print(F)
 index = FMIndex(F, L, n)
 print(index.count('aa', 2))
 print(index.count('aab', 3))
