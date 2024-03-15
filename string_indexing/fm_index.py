@@ -16,8 +16,7 @@ def inverse_transform_naive(BWT, n):
 class FMIndex:
    
    # all of strings beginns with # (idk why?)
-   # F is first characters from suffixes in order from suffix array with $ at the beggining
-   # L is result of BWT
+   # i sppose that patterns do not starts with #
    
    def __init__ (self, SA, BWT, n):
       self.L = BWT
@@ -124,7 +123,7 @@ class FMIndex:
    def get_all_occurrance(self, p, l):
       arr = self.getRangeOfOccurence(p, l)
       if arr[0] == -1:
-         return -1
+         return []
       return [self.SA[i-1] for i in range(arr[0], arr[1] + 1)]      
 
 
