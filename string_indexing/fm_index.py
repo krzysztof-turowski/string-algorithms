@@ -76,13 +76,13 @@ def _get_range_of_occurrences(fm, p, size):
    for i in range(size-1, 0, -1):
       if p[i] not in fm.mapper_of_chars:
          return (-1, -1)
-      occurencesBefore = _get_occ(fm, p[i], l - 1)
-      occurencesAfter = _get_occ(fm, p[i], r)
-      if occurencesBefore == occurencesAfter:
+      occurrences_before = _get_occ(fm, p[i], l - 1)
+      occurrences_after = _get_occ(fm, p[i], r)
+      if occurrences_before == occurrences_after:
          return (-1, -1)
       map_idx = fm.mapper_of_chars[p[i]]
-      l = fm.beginnings[map_idx] + occurencesBefore
-      r = fm.beginnings[map_idx] + occurencesAfter - 1
+      l = fm.beginnings[map_idx] + occurrences_before
+      r = fm.beginnings[map_idx] + occurrences_after - 1
       if r < l:
          return (-1, -1)
    return (l, r)
