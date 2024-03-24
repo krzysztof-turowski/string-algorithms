@@ -6,12 +6,19 @@ import parameterized
 
 from generator import rand
 from exact_string_matching import forward, backward, other
-from string_indexing import lcp, suffix_tree, suffix_array
+from string_indexing import lcp, suffix_tree, suffix_array, fm_index
+from compression import burrows_wheeler
 
 def lcp_lr_contains(t, w, n, m):
   SA = suffix_array.skew(t, n)
   LCP_LR = lcp.build_lcp_lr(lcp.kasai(SA, t, n), n)
   return lcp.contains(SA, LCP_LR, t, w, n, m)
+
+def fm_index_contains(t, w, n, m):
+  SA = suffix_array.skew(t, n)
+  BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
+  fm = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n)
+  return fm_index.contains(fm, w, m)
 
 EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Morris-Pratt', forward.morris_pratt ],
@@ -45,6 +52,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
             suffix_array.prefix_doubling(t, n), t, w, n, m),
     ],
     [ 'lcp-lr array', lcp_lr_contains ],
+    [ 'Fm index', fm_index_contains]
 ]
 
 class TestExactStringMatching(unittest.TestCase):

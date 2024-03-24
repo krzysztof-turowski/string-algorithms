@@ -1,118 +1,88 @@
 
-class FMIndex:
-   
-   # all of strings beginns with # (idk why?)
-   # i sppose that patterns do not starts with #
-   
+class _FMIndex:
    def __init__ (self, SA, BWT, text, n):
       self.L = BWT
       self.F = '#$' + ''.join(text[SA[i]] for i in range(1, n + 1))
       self.n = n
       self.SA = SA
-      self.sampleSize = 8 # const for sampling
+      self.sample_size = 8 # const for sampling
 
       #prepare char mapping for F
-      self.mapperOfChar = { self.F[2] : 0}
-      self.begginings = [2]
+      self.mapper_of_chars = { self.F[2] : 0}
+      self.beginnings = [2]
       last = self.F[2]
-      lenOfBeginings = 1
       for i in range(3, n+2):
          if self.F[i] != last:
             last = self.F[i]
-            self.begginings.append(i)
-            self.mapperOfChar[last] = lenOfBeginings
-            lenOfBeginings += 1
+            self.beginnings.append(i)
+            self.mapper_of_chars[last] = len(self.beginnings) - 1
 
-      self.lenOfAlphabet = len(self.mapperOfChar)
+      self.len_of_alphabet = len(self.mapper_of_chars)
       
       #prepare closest samplings
-      currentSample = 0
-      self.closestSample = [0]
+      current_sample = 0
+      self.closest_sample = [0]
       for i in range(1, n+2):
-         if abs(currentSample-i) > abs(currentSample + self.sampleSize-i) and (i + self.sampleSize < self.n):
-            currentSample += self.sampleSize
-         self.closestSample.append(currentSample)
+         if abs(current_sample-i) > abs(current_sample + self.sample_size-i) and (i + self.sample_size < self.n):
+            current_sample += self.sample_size
+         self.closest_sample.append(current_sample)
 
       #Generate values for occ for given samples O(|A|*n)
-      self.occInSampleForChar = { self.L[i]: [0] for i in range(1, n+2)}
-      for c in self.mapperOfChar:
-         currValue = 0
-         nextSample = self.sampleSize
+      self.occ_in_sample_for_char = { self.L[i]: [0] for i in range(1, n+2)}
+      for c in self.mapper_of_chars:
+         current_value = 0
+         next_sample = self.sample_size
          for i in range(1, n+2):
             if self.L[i] == c:
-               currValue += 1
-            if i == nextSample:
-               self.occInSampleForChar[c].append(currValue)
-               nextSample = nextSample + self.sampleSize
-
-    # should be private
-   def getRangeOfOccurence(self, p, size):
-      if size > self.n:
-        return [-1, -1]
-      
-      currChar = p[size-1]
-      if currChar not in self.mapperOfChar:
-         return [-1, -1]
-
-      mapIdx = self.mapperOfChar[currChar]
-      l = self.begginings[mapIdx]
-      r = self.n + 1
-      if mapIdx != self.lenOfAlphabet - 1:
-         r = self.begginings[mapIdx + 1] - 1
-      
-      for i in range(size-2, -1, -1):
-         currChar = p[i]
-         if currChar not in self.mapperOfChar:
-            return [-1, -1]
-         occurencesBefore = self._getOcc(currChar, l - 1)
-         occurencesAfter = self._getOcc(currChar, r)
-         if occurencesBefore == occurencesAfter:
-            return [-1, -1]
-         mapIdx = self.mapperOfChar[currChar]
-         l = self.begginings[mapIdx] + occurencesBefore
-         r = self.begginings[mapIdx] + occurencesAfter - 1
-         if r < l:
-            return [-1, -1]
-      return [l, r]
-
-    # O(|p|)
-   def count(self, p, size):
-      ran = self.getRangeOfOccurence(p, size)
-      if ran[0] == -1:
-         return 0
-      return max(ran[1] - ran[0] + 1, 0)
-
-
-    #Should be private
-   def _getOcc(self, c, i):
-      closestSample = self.closestSample[i]
-      toAdd = 0
-      if closestSample < i:
-         for j in range(closestSample + 1, i + 1):
-            if self.L[j] == c:
-               toAdd += 1
-      elif closestSample > i:
-         for j in range(i+1, closestSample + 1):
-            if self.L[j] == c:
-               toAdd -= 1
-         
-      return self.occInSampleForChar[c][(closestSample)//self.sampleSize] + toAdd
-      
-    #O(|p|)
-   def query(self, p, l):
-      return self.count(p, l) > 0
+               current_value += 1
+            if i == next_sample:
+               self.occ_in_sample_for_char[c].append(current_value)
+               next_sample = next_sample + self.sample_size
    
-   # O(|p| + k) where k is the number or occurances of p in text
-   def get_all_occurrance(self, p, l):
-      arr = self.getRangeOfOccurence(p, l)
-      if arr[0] == -1:
-         return []
-      return [self.SA[i-1] for i in range(arr[0], arr[1] + 1)]
+def from_suffix_array_and_bwt (SA, BWT, text, n):
+   return _FMIndex(SA, BWT, text, n)
 
-    # O(|p|)
-   def get_any_occurrance(self, p, l):
-      arr = self.getRangeOfOccurence(p, l)
-      if arr[0] == -1:
-         return -1
-      return self.SA[arr[0]-1]
+# O(|p|)
+def count(fm, p, size):
+   (low, high) = _get_range_of_occurrences(fm, p, size)
+   return max(high - low + 1, 0) if low > -1 else 0
+
+# O(|p| + k) where k is the number or occurances of p in text
+def contains(fm, p, l):
+   (low, high) = _get_range_of_occurrences(fm, p, l)
+   yield from sorted([fm.SA[i-1] for i in range(low, high + 1) if low > -1])
+
+
+def _get_occ(fm, c, i):
+   if fm.closest_sample[i] < i:
+      to_add = sum(1 for c_prim in fm.L[fm.closest_sample[i] + 1:i + 1] if c_prim == c)
+   else:
+      to_add = sum(-1 for c_prim in fm.L[i + 1:fm.closest_sample[i] + 1] if c_prim == c)
+   return fm.occ_in_sample_for_char[c][fm.closest_sample[i] // fm.sample_size] + to_add
    
+def _get_range_of_occurrences(fm, p, size):
+   if size > fm.n or size == 0:
+      return (-1, -1)
+
+   if p[-1] not in fm.mapper_of_chars:
+      return (-1, -1)
+
+   map_idx = fm.mapper_of_chars[p[-1]]
+   l = fm.beginnings[map_idx]
+   r = fm.n + 1
+   if map_idx != fm.len_of_alphabet - 1:
+      r = fm.beginnings[map_idx + 1] - 1
+   
+   for i in range(size-1, 0, -1):
+      if p[i] not in fm.mapper_of_chars:
+         return (-1, -1)
+      occurencesBefore = _get_occ(fm, p[i], l - 1)
+      occurencesAfter = _get_occ(fm, p[i], r)
+      if occurencesBefore == occurencesAfter:
+         return (-1, -1)
+      map_idx = fm.mapper_of_chars[p[i]]
+      l = fm.beginnings[map_idx] + occurencesBefore
+      r = fm.beginnings[map_idx] + occurencesAfter - 1
+      if r < l:
+         return (-1, -1)
+   return (l, r)
