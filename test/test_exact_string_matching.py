@@ -8,11 +8,19 @@ from generator import rand
 from exact_string_matching import forward, backward, other
 from string_indexing import lcp, suffix_tree, suffix_array, fm_index
 from compression import burrows_wheeler
+from common import wavelet_tree
 
 def lcp_lr_contains(t, w, n, m):
   SA = suffix_array.skew(t, n)
   LCP_LR = lcp.build_lcp_lr(lcp.kasai(SA, t, n), n)
   return lcp.contains(SA, LCP_LR, t, w, n, m)
+
+def fm_index_wavelet_contains(t, w, n, m):
+  SA = suffix_array.skew(t, n)
+  BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
+  rank_searcher = wavelet_tree.wavelet_tree(t, n)
+  fm = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n, rank_searcher)
+  return fm_index.contains(fm, w, m)
 
 def fm_index_contains(t, w, n, m):
   SA = suffix_array.skew(t, n)
@@ -52,7 +60,8 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
             suffix_array.prefix_doubling(t, n), t, w, n, m),
     ],
     [ 'lcp-lr array', lcp_lr_contains ],
-    [ 'Fm index', fm_index_contains]
+    [ 'fm index', fm_index_contains],
+    [ 'fm index with wavelet tree', fm_index_contains]
 ]
 
 class TestExactStringMatching(unittest.TestCase):
