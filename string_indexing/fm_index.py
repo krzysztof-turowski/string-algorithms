@@ -4,12 +4,12 @@ class _RankSearcher:
 
   def __init__(self, L, mapper_of_chars, n):
     self.L = L
-    
     #prepare closest samplings
     current_sample = 0
     self.closest_sample = [0]
     for i in range(1, n+2):
-      if abs(current_sample-i) > abs(current_sample + self.SAMPLE_SIZE-i) and (i + self.SAMPLE_SIZE < n):
+      if abs(current_sample-i) > abs(current_sample + self.SAMPLE_SIZE-i) and \
+      (i + self.SAMPLE_SIZE < n):
         current_sample += self.SAMPLE_SIZE
       self.closest_sample.append(current_sample)
 
@@ -89,5 +89,5 @@ def _get_range_of_occurrences(FM, p, size):
     r = FM.beginnings[map_idx] + occurrences_after - 1
     if r < l:
       return -1, -1
-    
+
   return l, r

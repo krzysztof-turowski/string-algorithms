@@ -6,7 +6,7 @@ import parameterized
 
 from generator import rand
 from exact_string_matching import forward, backward, other
-from string_indexing import lcp, suffix_tree, suffix_array, fm_index
+from string_indexing import lcp, suffix_tree, suffix_array, fm_index, lz_index
 from compression import burrows_wheeler
 from common import wavelet_tree
 
@@ -27,6 +27,10 @@ def fm_index_contains(t, w, n, m):
   BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
   FM = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n)
   return fm_index.contains(FM, w, m)
+
+def lz_index_contains(t, w, n, m):
+  LZ = lz_index.create_lz_index(t, n)
+  return lz_index.contains(LZ, w, m)
 
 EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Morris-Pratt', forward.morris_pratt ],
@@ -61,7 +65,8 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     ],
     [ 'lcp-lr array', lcp_lr_contains ],
     [ 'fm index', fm_index_contains],
-    [ 'fm index with wavelet tree', fm_index_contains]
+    [ 'fm index with wavelet tree', fm_index_contains],
+    [ 'lz index', lz_index_contains]
 ]
 
 class TestExactStringMatching(unittest.TestCase):
