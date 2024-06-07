@@ -18,15 +18,15 @@ def lcp_lr_contains(t, w, n, m):
 def fm_index_wavelet_contains(t, w, n, m):
   SA = suffix_array.skew(t, n)
   BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
-  rank_searcher = wavelet_tree.wavelet_tree(t, n)
-  fm = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n, rank_searcher)
-  return fm_index.contains(fm, w, m)
+  RS = wavelet_tree.wavelet_tree(t, n)
+  FM = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n, RS)
+  return fm_index.contains(FM, w, m)
 
 def fm_index_contains(t, w, n, m):
   SA = suffix_array.skew(t, n)
   BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
-  fm = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n)
-  return fm_index.contains(fm, w, m)
+  FM = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n)
+  return fm_index.contains(FM, w, m)
 
 EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Morris-Pratt', forward.morris_pratt ],
