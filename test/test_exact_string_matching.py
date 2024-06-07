@@ -18,7 +18,7 @@ def lcp_lr_contains(t, w, n, m):
 def fm_index_wavelet_contains(t, w, n, m):
   SA = suffix_array.skew(t, n)
   BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
-  RS = wavelet_tree.wavelet_tree(t, n)
+  RS = wavelet_tree.WaveletTree(t, n)
   FM = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n, RS)
   return fm_index.contains(FM, w, m)
 
