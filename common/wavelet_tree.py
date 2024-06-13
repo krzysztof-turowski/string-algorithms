@@ -39,8 +39,8 @@ class WaveletTree:
     return l - self.prefix_sum[l-1], r - self.prefix_sum[r]
 
   def _right_tree_range(self, l, r):
-    return self.prefix_sum[l] + (1 if self.t[l] in self.zero_indexed else 0) \
-    , self.prefix_sum[r]
+    return (self.prefix_sum[l] + (1 if self.t[l] in self.zero_indexed else 0),
+      self.prefix_sum[r])
 
   def rank(self, c, l, r):
     if c not in self.alphabet or l > r or l > self.n or r < 1:
@@ -85,8 +85,8 @@ class WaveletTree:
     return (i <= l <= j) or (i <= r <= j)
 
   def _ranges_intersect(self, l, r, i, j):
-    return self._does_one_range_end_in_another(l, r, i ,j) or \
-    self._does_one_range_end_in_another(i, j, l, r)
+    return (self._does_one_range_end_in_another(l, r, i ,j) or
+      self._does_one_range_end_in_another(i, j, l, r))
 
   def range_count(self, l, r, x, y):
     if l > r or l > self.n or l < 1 or x > y:
@@ -96,12 +96,12 @@ class WaveletTree:
     if self.leaf or y < self.smallest or x > self.biggest:
       return 0
     l_node, r_node = self.left, self.right
-    if self._ranges_intersect(l_node.smallest, l_node.biggest, x, y) and \
-    self._ranges_intersect(r_node.smallest, r_node.biggest, x, y):
+    if (self._ranges_intersect(l_node.smallest, l_node.biggest, x, y) and
+        self._ranges_intersect(r_node.smallest, r_node.biggest, x, y)):
       new_left_l, new_left_r = self._left_tree_range(l, r)
       new_right_l, new_right_r = self._right_tree_range(l, r)
-      return self.left.range_count(new_left_l, new_left_r, x, y) \
-      + self.right.range_count(new_right_l, new_right_r, x, y)
+      return (self.left.range_count(new_left_l, new_left_r, x, y)
+        + self.right.range_count(new_right_l, new_right_r, x, y))
     if self._ranges_intersect(self.right.smallest, self.right.biggest, x, y):
       new_l, new_r = self._right_tree_range(l, r)
       return self.right.range_count(new_l, new_r, x, y)

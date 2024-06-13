@@ -1,4 +1,5 @@
-
+#pylint: disable=too-few-public-methods
+#pylint: disable=invalid-name
 class _RankSearcher:
   SAMPLE_SIZE = 8
 
@@ -8,30 +9,34 @@ class _RankSearcher:
     current_sample = 0
     self.closest_sample = [0]
     for i in range(1, n+2):
-      if abs(current_sample-i) > abs(current_sample + self.SAMPLE_SIZE-i) and \
-      (i + self.SAMPLE_SIZE < n):
+      if (abs(current_sample-i) > abs(current_sample + self.SAMPLE_SIZE-i) and
+          (i + self.SAMPLE_SIZE < n)):
         current_sample += self.SAMPLE_SIZE
       self.closest_sample.append(current_sample)
 
     #Generate values for occ for given samples O(|A|*n)
-    self.occ_in_sample_for_char = { self.L[i]: [0] for i in range(1, n+2)}
+    self.occ_for_char = { self.L[i]: [0] for i in range(1, n+2)}
     for c in mapper_of_chars:
       current_value, next_sample = 0, self.SAMPLE_SIZE
       for i in range(1, n+2):
         if L[i] == c:
           current_value += 1
         if i == next_sample:
-          self.occ_in_sample_for_char[c].append(current_value)
+          self.occ_for_char[c].append(current_value)
           next_sample = next_sample + self.SAMPLE_SIZE
 
   def prefix_rank(self, c, i):
     if self.closest_sample[i] < i:
-      to_add = sum(1 for c_prim in self.L[self.closest_sample[i] + 1:i + 1] if c_prim == c)
+      to_add = sum(
+        1 for c_it in self.L[self.closest_sample[i] + 1:i + 1] if c_it == c)
     else:
-      to_add = sum(-1 for c_prim in self.L[i + 1:self.closest_sample[i] + 1] if c_prim == c)
-    return self.occ_in_sample_for_char[c][self.closest_sample[i] // self.SAMPLE_SIZE] + to_add
+      to_add = sum(
+        -1 for c_it in self.L[i + 1:self.closest_sample[i] + 1] if c_it == c)
+    return (self.occ_for_char[c][self.closest_sample[i] // self.SAMPLE_SIZE]
+      + to_add)
 
-
+#pylint: disable=too-few-public-methods
+#pylint: disable=invalid-name
 class _FMIndex:
   def __init__ (self, SA, BWT, text, n, rank_searcher = None):
     self.L = BWT
@@ -50,8 +55,8 @@ class _FMIndex:
         self.mapper_of_chars[last] = len(self.beginnings) - 1
 
     self.len_of_alphabet = len(self.mapper_of_chars)
-    self.rank_searcher = _RankSearcher(self.L, self.mapper_of_chars, n) \
-      if rank_searcher is None else rank_searcher
+    self.rank_searcher = (_RankSearcher(self.L, self.mapper_of_chars, n)
+      if rank_searcher is None else rank_searcher)
 
 def from_suffix_array_and_bwt(SA, BWT, text, n, rank_searcher = None):
   return _FMIndex(SA, BWT, text, n, rank_searcher)
@@ -75,7 +80,8 @@ def _get_range_of_occurrences(FM, p, size):
 
   map_idx = FM.mapper_of_chars[p[-1]]
   l= FM.beginnings[map_idx]
-  r = FM.beginnings[map_idx + 1] - 1 if map_idx != FM.len_of_alphabet - 1 else FM.n + 1
+  r = (FM.beginnings[map_idx + 1] - 1
+    if map_idx != FM.len_of_alphabet - 1 else FM.n + 1)
 
   for c in p[-2:0:-1]:
     if c not in FM.mapper_of_chars:

@@ -12,7 +12,7 @@ class DummySolver:
   def rank(self, c, l ,r):
     if l > r or l > self.n or l < 1:
       return 0
-    return sum([1 if self.t[i] == c else 0 for i in range(l, r+1)])
+    return sum(1 if x == c else 0 for x in self.t[l:r+1])
 
   def preifx_rank(self, c, r):
     return self.rank(c, 1, r)
@@ -125,8 +125,10 @@ class TestWaveletTree(unittest.TestCase):
   def tree_api_random_test(self, n, q, alphabet):
     text = rand.random_word(n, alphabet)
     model_solver = DummySolver(text, n)
-    runners_args = [(runner, self.create_queries(n, q, alphabet, fun)) for (fun, runner) in self.runner_functions]
-    model_results = [runner(model_solver, queries) for (runner, queries) in runners_args]
+    runners_args = [(runner, self.create_queries(n, q, alphabet, fun))
+      for (fun, runner) in self.runner_functions]
+    model_results = [runner(model_solver, queries)
+      for (runner, queries) in runners_args]
     for cls in self.test_classes:
       solver = cls(text, n)
       results =  [runner(solver, queries) for (runner, queries) in runners_args]
@@ -135,7 +137,8 @@ class TestWaveletTree(unittest.TestCase):
 
   large_test_case_data = [
     (1000, 10000, ['a', 'b']),
-    (1000, 10000, 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM[];,./?><+_)(*&^%$#@!1234567890-=)'.split()),
+    (1000, 10000, '''qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM
+[];,./?><+_)(*&^%$#@!1234567890-=)'''.split()),
   ]
 
   @run_large
