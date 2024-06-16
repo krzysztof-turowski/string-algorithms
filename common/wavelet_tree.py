@@ -1,7 +1,6 @@
 # pylint: disable=too-many-instance-attributes
 class WaveletTree:
   def __init__(self, t, n, sorted_alphabet_list = None):
-    self.t = t
     t = t[1:]
     if sorted_alphabet_list is not None:
       self.alphabet = sorted_alphabet_list
@@ -39,8 +38,7 @@ class WaveletTree:
     return l - self.prefix_sum[l-1], r - self.prefix_sum[r]
 
   def _right_tree_range(self, l, r):
-    return (self.prefix_sum[l] + (1 if self.t[l] in self.zero_indexed else 0),
-      self.prefix_sum[r])
+    return (self.prefix_sum[l-1] + 1, self.prefix_sum[r])
 
   def rank(self, c, l, r):
     if c not in self.alphabet or l > r or l > self.n or r < 1:
