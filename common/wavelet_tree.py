@@ -51,7 +51,7 @@ class WaveletTree:
     new_l, new_r =  self._right_tree_range(l, r)
     return self.right.rank(c, new_l, new_r)
 
-  def preifx_rank(self, c, r):
+  def prefix_rank(self, c, r):
     return self.rank(c, 1, r)
 
   def select(self, c, k, l, r):
