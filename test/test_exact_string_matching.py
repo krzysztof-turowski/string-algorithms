@@ -71,7 +71,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
 
 class TestExactStringMatching(unittest.TestCase):
   run_large = unittest.skipUnless(
-      True, 'Skip test in small runs')
+      os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_first_exact_match(self, t, w, n, m, reference, algorithm):
     self.assertEqual(next(algorithm(t, w, n, m)), reference)
