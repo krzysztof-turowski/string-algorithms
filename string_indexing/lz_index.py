@@ -1,3 +1,5 @@
+from common import wavelet_tree
+
 #pylint: disable=too-many-instance-attributes
 #pylint: disable=too-few-public-methods
 class _LZTreeNode:
@@ -82,18 +84,6 @@ class _NodeMapper:
     return self.arr[idx]
 
 #pylint: disable=too-few-public-methods
-class _RangeSearcher:
-  def __init__(self, points):
-    self.points = points
-
-  def search_in_range(self, l1, r1, l2, r2):
-    result = []
-    for (x, y) in self.points:
-      if l1 <= x <= r1 and l2 <= y <= r2:
-        result.append((x, y))
-    return result
-
-#pylint: disable=too-few-public-methods
 class _RankMapper:
   def __init__(self, lz_trie, size):
     self.arr = [None] * size
@@ -107,6 +97,37 @@ class _RankMapper:
 
   def get_node_by_rank(self, rank):
     return self.arr[rank]
+
+#pylint: disable=too-few-public-methods
+class _RangeSearcher:
+  def __init__(self, points):
+    self.points = sorted(points, key= lambda x: x[0])
+    values = ['#'] + [y for x, y in self.points]
+    self.wavelet_tree = wavelet_tree.WaveletTree(values, len(values)-1)
+
+  def search_in_range(self, l1, r1, l2, r2):
+    l, r = 0, len(self.points)
+    while l < r:
+      s = (l+r)//2
+      x, _ = self.points[s]
+      if x < l1:
+        l = s + 1
+      else:
+        r = s
+    left = l
+    l, r = -1, len(self.points) - 1
+    while l < r:
+      s = (l+r+1)//2
+      x, _ = self.points[s]
+      if x <= r1:
+        l = s
+      else:
+        r = s - 1
+    right = l
+    if left > right or left == len(self.points) or right == -1:
+      return []
+    return ([self.points[x-1] for x in
+              self.wavelet_tree.range_search(left + 1, right + 1, l2, r2)])
 
 #pylint: disable=too-few-public-methods
 class _RevLZTrie:
