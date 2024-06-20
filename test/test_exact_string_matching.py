@@ -18,8 +18,8 @@ def lcp_lr_contains(t, w, n, m):
 def fm_index_wavelet_contains(t, w, n, m):
   SA = suffix_array.skew(t, n)
   BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
-  RS = wavelet_tree.WaveletTree(t, n)
-  FM = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n, RS)
+  FM = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n, 0)
+  FM.rank_searcher = wavelet_tree.WaveletTree(FM.L, len(FM.L) - 1)
   return fm_index.contains(FM, w, m)
 
 def fm_index_contains(t, w, n, m):
@@ -65,7 +65,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     ],
     [ 'lcp-lr array', lcp_lr_contains ],
     [ 'fm index', fm_index_contains],
-    [ 'fm index with wavelet tree', fm_index_contains],
+    [ 'fm index with wavelet tree', fm_index_wavelet_contains],
     [ 'lz index', lz_index_contains]
 ]
 
