@@ -99,6 +99,14 @@ class _RankMapper:
     return self.arr[rank]
 
 #pylint: disable=too-few-public-methods
+class _NaiveRangeSearcher:
+  def __init__(self, points):
+    self.points = points
+ 
+  def search_in_range(self, l1, r1, l2, r2):
+    return [(x, y) for (x, y) in self.points if l1 <= x <= r1 and l2 <= y <= r2]
+
+#pylint: disable=too-few-public-methods
 class _RangeSearcher:
   def __init__(self, points):
     self.points = sorted(points, key= lambda x: x[0])
