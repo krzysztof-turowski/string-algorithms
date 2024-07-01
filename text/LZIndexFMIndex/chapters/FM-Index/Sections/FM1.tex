@@ -1,0 +1,107 @@
+\section{Idea}
+
+The general idea of FM-Index \cite{FMIndex} is quite simple. We will want to find a way to get a range of the suffix array such that the pattern occurs in all the suffixes in that range. It can be seen that if the pattern occurs in text $t$ then it occurs in a consistent range on the suffix array of $t$. More formally:
+
+\begin{theorem}
+    If $s$ occurs in $t$ then there exists a range $[i, j]$ such that for all $k \in [i, j]$: $t[SA[k]: SA[k] + m] = s$ and for all $l \notin [i, j]$, it holds that $t[SA[l]: SA[l] + m] \neq s$.
+\end{theorem}
+
+\begin{proof}
+    The proof follows from Observation 1.
+\end{proof}
+
+Earlier it was shown that such a range can be obtained using two binary searches over suffix array, but it requires in the worst case $\bigO(m \cdot \log (n))$ time. Using FM-index we can change that complexity. The required structure for FM-index is $\texttt{RankSearcher}$ which can answer $\texttt{prefix\_rank(i, c)}$ query. $\texttt{prefix\_rank(i, c)}$ returns the number of characters $c$ in prefix of length $i$ for given text or array. Assuming that we can create $\texttt{RankSearcher}$ in $\bigO(f(n, |\mathcal{A}|))$ time and time required for $\texttt{prefix\_rank(i, c)}$ is $\bigO(g(n, |\mathcal{A}|))$ time, the complexity of FM-index will be $\bigO(n + f(n, |\mathcal{A}|))$ time for creation and $\bigO(m\cdot g(n, |\mathcal{A}|))$ time for query. The possible structures that may be used to implement $\texttt{RankSearcher}$ are as follows:
+
+\begin{enumerate}
+    \item Wavelet Tree -- it can be constructed in $\bigO(n\cdot \log(|\mathcal{A}|))$ time and can answer $\texttt{rank(i, c)}$ query in $\bigO(\log(|\mathcal{A}|))$ time, which results in $\bigO(n\cdot \log(|\mathcal{A}|))$ time for creation of FM-index and $\bigO(m\cdot \log(|\mathcal{A}|))$ time to perform search. This structure is described in \Cref{subsection:WaveletTree}.
+    \item Prefix array for each character in $\mathcal{A}$ -- this structure can be built in $\bigO(n\cdot |\mathcal{A}|)$ time but answers a query in $\bigO(1)$ time, that means we can create the FM-index in $\bigO(n\cdot |\mathcal{A}|)$ and perform a search in $\bigO(m)$ time. This structure is used more commonly in practice due to the small size of alphabet.
+\end{enumerate}
+
+
+\subsection{Idea of algorithm}
+\label{subsection:IdeaOfFMAlgo}
+
+Let us show the main idea on a following example: FM-index stores text $t = ababa\$$, suffix array of $t$, $BWT(t)$ and length of text $n$ but as an example to better show the idea we will use the matrix from the BWT section. The pattern given for query is $s = aba$. So let us consider a matrix of circular shifts of $t$ sorted in lexicographic order.
+
+$$
+\begin{bmatrix}
+\$ababa\\
+a\$abab\\
+aba\$ab\\
+ababa\$\\
+ba\$aba\\
+baba\$a
+\end{bmatrix}
+$$
+\newline
+As it was show earlier the first column of matrix is the suffix array of $t$ and the last column is $BWT(t)$. Now we want to search for the pattern. Let us consider a pattern character by character backwards, so the first character we want to use is $\textbf{a}$ from $s = ab\textbf{a}$. Now we want to find a range such that all the suffixes begin with that character (the details of how to do it fast will be explained later), in this case this range is [1,3].
+
+$$
+\begin{bmatrix}
+\$ababa\\
+\textbf{a\$abab}\\
+\textbf{aba\$ab}\\
+\textbf{ababa\$}\\
+ba\$aba\\
+baba\$a
+\end{bmatrix}
+$$
+
+The next operation to perform is to find the new range for the previous letter in pattern which is $\textbf{b}$, but it must be done in such a way that this range will only contain suffixes that starts with $b$ and have the already performed suffix of pattern as a next character, so we want to find all corresponding suffixes which starts with $\textbf{b}$ and are obtained from suffixes from previous range. So for all suffixes in range [1,3] they have to have $\textbf{b}$ as the value of the last column (which means the previous character for that suffix was $b$). Only suffixes from the range [1,2] fulfill that condition.
+
+$$
+\begin{bmatrix}
+\$ababa\\
+\textbf{a\$abab}\\
+\textbf{aba\$ab}\\
+ababa\$\\
+ba\$aba\\
+baba\$a
+\end{bmatrix}
+$$
+
+Next, we have to map that range for the corresponding suffixes starting with $\textbf{b}$, which is the range $[4,5]$. We will explain later a way of building such a range.
+
+$$
+\begin{bmatrix}
+\$ababa\\
+a\$abab\\
+aba\$ab\\
+ababa\$\\
+\textbf{ba\$aba}\\
+\textbf{baba\$a}
+\end{bmatrix}
+$$
+
+This way we construct the result range step by step. The algorithm ends after obtaining the range for the first character of the pattern which in this example is range $[2,3]$, which is the correct answer.
+$$
+\begin{bmatrix}
+\$ababa\\
+a\$abab\\
+\textbf{aba\$ab}\\
+\textbf{ababa\$}\\
+ba\$aba\\
+baba\$a
+\end{bmatrix}
+$$
+
+If an algorithm cannot create a proper range at any step the answer is that pattern does not exist in the text. The correctness of that process follows from the fact that we construct ranges step by step and in each step we obtain a proper range for each consecutive suffix of $s$.
+
+\subsection{API of FM-Index}
+
+The basic function of FM-Index is finding a range of suffix array such that the pattern occurs in all the suffixes in that range, but what can be obtained from that information.
+\begin{itemize}
+    \item $\texttt{count(s, m)}$ -- Counting the number of occurrences of the pattern has $\bigO(m\cdot g(n, |\mathcal{A}|))$ time complexity. To obtain the number of occurrences from the given range of suffix array we just retrieve the size of that range and it will be the expected result.
+    \item $\texttt{exists(s, m)}$ -- Checking if the pattern occurs in text in $\bigO(m\cdot g(n, |\mathcal{A}|))$ time. Getting the answer for that function is equivalent to checking if $\texttt{count(s, m)} > 0$. 
+    \item $\texttt{all\_occurrences(s, m)}$ -- All occurrences of the pattern in text in $\bigO(m\cdot g(n, |\mathcal{A}|) + R)$ time complexity, where $R$ is the number of occurrences of the pattern in text.  To obtain such information you can just map indexes from given range to indexes at that positions in suffix array.
+    \item $\texttt{any\_occurrence(s, m)}$ -- Any occurrence of the pattern in text in $\bigO(m\cdot g(n, |\mathcal{A}|))$ time. It can be done by mapping any index from result range to index of suffix array.
+    \item $\texttt{first\_occurence(s, m)}$ -- Getting first occurrence of the pattern in text. There are many ways to get that, one of them require to get all occurrences and find the minimal index, but it requires $\bigO(m\cdot g(n, |\mathcal{A}|) + k)$ time, which at the worst case can be a lot. Finding it faster requires solving the RMQ (Range minimal query) problem, which can be achieved in many ways, using such data structures:
+    \begin{itemize}
+        \item Sparse table \cite{RMQ1} -- which will require $\bigO(n \cdot \log n)$ preprocessing time and space, and it returns an answer to such query in $\bigO(1)$ time.
+        \item Segment tree \cite{SegmentTreeRMQ} -- using segment tree allows us to compute the answer in $\bigO(\log n)$ time, but it will only require $\bigO(n)$ time and space for preprocessing.
+        \item Combined sparse table and segment tree -- combining both of above techniques allows solving RMQ in $\bigO(\log \log n)$ for query and $\bigO(n \cdot \log \log n)$ time for preprocessing.
+        \item Optimal RMQ algorithm \cite{RMQ1} (Sparse table + Cartesian trees + segmentation) -- optimal algorithm finds an answer in $\bigO(1)$ time and requires only $\bigO(n)$ time for preprocessing.
+    \end{itemize}
+    \item $\texttt{last\_occurrence(s, m)}$ -- Getting the last occurrence of the pattern. It can be done similarly to $\texttt{first\_occurrence(s, m)}$ with the only change that the answer is maximum instead of minimum.
+    \item $\texttt{count\_in\_range(s, m, i, j)}$ -- Getting the number of occurrences of $s$ in substring $t[i:j]$. It can be done using separated Wavelet Tree on indices of $SA$ using at most $\bigO(m\cdot g(n, |\mathcal{A}|) + \log (n))$ operations.
+\end{itemize}
