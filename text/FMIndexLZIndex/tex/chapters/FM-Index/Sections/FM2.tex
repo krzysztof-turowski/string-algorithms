@@ -2,7 +2,7 @@
 
 The creation of FM-Index will require the text $t$, Burrows-Wheeler transform $BWT$ of $t$, suffix array $SA$ of $t$, $RankSearcher$ structure, which can perform $\texttt{prefix\_rank(i, c)}$ query and $Beginnings$ structure which will help to get a range in which character $c$ occurs in a given array.
 
-\subsection{Creation of $F$ and $L$}
+\subsection[Creation of F and L]{Creation of F and L}
 
 The array $F$ will correspond to the first column of the matrix which was shown in \Cref{subsection:IdeaOfFMAlgo}, which is array of character created from the suffix array as $F[i+1] = t[SA[i]]$ and $F[0] = \$$. The array $L$ corresponds to the last column of the previous matrix and will be equal to $BWT$. This stage takes at most $\bigO(n)$ time and space.
 
