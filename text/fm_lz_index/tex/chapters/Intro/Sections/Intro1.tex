@@ -1,0 +1,44 @@
+\section{String-searching}
+
+\subsection{Definitions}
+Let us first introduce basic concepts, used through this work. Let $\mathcal{A}$ denote an alphabet, that is the set of characters. A text, denoted as $t$, is the sequence of characters from the alphabet $\mathcal{A}$, we denote reversed text $t$ as $t^r$. A pattern $s$ is a text that we will try to find in given text $t$.
+
+\begin{definition}
+     Substring $t[i: j+1]$ is a part of the text $t = a_1...a_n$ such that $t[i : j+1] = a_i,a_{i+1}...a_{j-1},a_j$.
+\end{definition}
+
+\begin{definition}
+     Suffix $t[i:]$ is a substring of text $t = a_1...a_n$ such that $t[i:] = a_i...a_n$
+\end{definition}
+
+\begin{definition}
+    Prefix $t[:j+1]$ is a substring of text $t = a_1...a_n$, such that $t[:j+1] = a_1...a_j$. 
+\end{definition}
+
+\begin{definition}
+    Compression of text $t$ is a function $F: \mathcal{A}^\mathbb{N} \mapsto X^\mathbb{N}$, that maps text to any object used for compression. We denote length of the result of compression as $w$.
+\end{definition}
+
+\begin{definition}
+    Compression rate is the ratio of the bit representation of uncompressed text and compressed text. That is $\frac{x}{y}$, where $x$ is the size of uncompressed text in bits and $y$ is length of bit representation of its compression.
+\end{definition}
+
+\subsection{Problem definitions}
+String-searching is well known problem which can also be found in everyday life.
+\begin{problem}[String-searching] \cite{stringSearchingDef} 
+ The string searching, sometimes also called string matching problem, consists of finding all occurrences (or the first  occurrence) of a pattern $s$ in a text $t$.
+\end{problem}
+
+\begin{problem}[Multiple string-searching] \cite{multiString} Given a finite set of $k$ pattern strings $S = \{s_1, s_2, ,..., s_k\}$ and a text $t$. The problem is to find all the text positions where the $s_i$ occurs in $t$. More precisely the problem is to compute the set $\{ j \colon \exists_i \hspace{1mm} s_i = t_jt_{j+1}...t_{j+|Pi|-1}\}$.
+\end{problem}
+
+\begin{problem}[String-searching with mismatches] \cite{missMatch}
+Given a text $t = a_1a_2...a_n$, and a pattern $s$ = $s_1s_2...s_m$, return, index i, $(1 \leq i \leq n-m+1)$, such that strings $t[i : i+m+1]$, $s$ differ at the minimal number of positions.
+\end{problem}
+
+\begin{problem}[Wildcard matching] \cite{wildcardsMatch}
+    Let text $t= t_1...t_n$ and pattern $s = s_1...s_m$. The pattern $s$ is said to occur at location $i$ in $t$ if, for every position $j$ in the pattern, either $s_j = t_{i+j}$
+or at least one of $s_j$ and $t_{i+j}$ is the wildcard symbol.
+\end{problem}
+
+Through this work we focus only on the string-searching and the multiple string-searching problems. The most we will focus on the multiple string-searching problem due to the fact that we can save much more time solving that version compared to naive algorithms and it has more usages in practice.

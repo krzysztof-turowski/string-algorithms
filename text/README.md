@@ -4,4 +4,4 @@ Lecture notes for the _String Algorithms_ course (summer semester 2019/20) at [J
 
 ### Submission
 
-Please put the pull requests in separate directories with your name
+Please put the pull requests in separate directories with your project name

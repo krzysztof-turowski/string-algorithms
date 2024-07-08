@@ -1,0 +1,225 @@
+\section{Idea of LZ-Index searching}
+String-searching in compressed text using LZ78 compression may be split in three cases depending on the number of block in which the pattern is located.
+
+\begin{enumerate}
+    \item Pattern occurrence is fully located inside a single block.
+    \item Pattern occurrence lies in to following blocks, it means that the prefix of the pattern matches the suffix of some block $B_i$ and the left suffix of the pattern matches with the prefix of the block $B_{i+1}$ for some $i$.
+    \item Pattern occurrence lies in three on more blocks, which means that it will be like in case 2, but there can be some blocks in between.
+\end{enumerate}
+
+\begin{table}[H]
+\begin{center}
+\caption*{Types of occurrences}
+\begin{tabular}{|l|
+l
+>{\columncolor[HTML]{C0C0C0}}l
+l|
+l
+l
+>{\columncolor[HTML]{C0C0C0}}l|
+>{\columncolor[HTML]{C0C0C0}}l
+>{\columncolor[HTML]{C0C0C0}}l
+l
+l
+>{\columncolor[HTML]{C0C0C0}}l|
+>{\columncolor[HTML]{C0C0C0}}l|
+>{\columncolor[HTML]{C0C0C0}}l
+>{\columncolor[HTML]{C0C0C0}}l
+l|}
+\hline
+ &  & & & & & & &  & & & & & & & \\ 
+ $B_1$ &  & $B_2$ & & & $B_3$& & & & $B_4$& & &  $B_5$ & & $B_6$ &\\ 
+ &  & & & & & & & & & & & & & &
+ \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Let us consider all these cases in turn.
+
+\subsection{Occurrences inside one block}
+To find all occurrences in that case we look at blocks as the independent texts. We use the idea of searching in the suffix array, that is, we want to obtain all suffixes for each block and check if the pattern is its prefix. It can be done all at once, so we do not have to get all suffixes for each block. To achieve that we use RevLZTrie, but first we have to notice some properties. We know that if there is some block $B_i$ in LZTrie, then LZTrie also contains blocks that corresponds to all prefixes of the substring compressed in $B_i$. That property will follow to the observation below.
+
+\begin{observation}
+    Let $B_j$ be the parent block of $B_i$. If a pattern $s$ occurs inside the string compressed in $B_i$, and it is not a suffix of string compressed in $B_i$ then string compressed in $B_j$ also contains the pattern $s$. 
+\end{observation}
+
+That means if we find the node corresponding to $s$ in RevLZTrie, denoted as $v$, then all nodes that correspond to some block in the subtree of $v$ will be a candidate to be the pattern occurrence, but it will be even a little more form that observation. For each correct node $u$ in subtree of $v$ it is enough to find it in LZTrie and all nodes in subtree of $u$ will correspond to an occurrence. This follows to the algorithm for the first case.
+
+\begin{enumerate}
+    \item Find the node $v$ that correspond to $s^r$ in $\texttt{RevLZTrie}$.
+    \item For each $i$ in range $[x.left\_rank, x.right\_rank]$ do:
+    \begin{enumerate}
+        \item Find node $u$ in LZTrie that correspond to the node with rank $i$ in RevLZTrie, it can be done by using RevLZRankMapper and LZNodeMapper.
+        \item For each node $x$ in subtree of $u$ add to result index $x.position + u.depth - m$.
+    
+    \end{enumerate}
+\end{enumerate}
+
+Finding the node $v$ requires at most $\bigO(m)$. From Observation 8. follows that for each node in subtree of $v$ there is at least one unique occurrence. That gives us that by traversing the subtree of $v$ we obtain all occurrences of that type. This gives us in total $\bigO(m + R)$ time complexity. In short, the above procedure can be implemented with all edge cases handled as follows:
+
+\begin{minted}[xleftmargin=20pt, linenos]{python}
+def _contains_in_single_block(lz_index : _LZIndex, s, m):
+  v = '#' + (s[::-1])[:-1]
+  root = search(lz_index.rev_lz_trie, v, m)
+  if root is not None:
+    for i in range(root.left_rank, root.right_rank + 1):
+      rev_node = lz_index.rev_lz_rank_mapper.get_node_by_rank(i)
+      node = lz_index.lz_node_mapper.get_node_by_idx(rev_node.idx)
+      for j in range(node.left_rank, node.right_rank + 1):
+        result_node = lz_index.lz_rank_mapper.get_node_by_rank(j)
+        yield result_node.position + node.depth - m
+\end{minted}
+
+\subsection{Occurrences spanning two blocks}
+In the second type of occurrences we consider all partitions of the pattern. It was mentioned before that the occurrences are in form such that the prefix of the pattern is the suffix of one block and the suffix of the pattern is the prefix of the next block. Therefore, for each partition of the pattern we find all nodes that contains the first part of partition as a suffix, which means searching for the reversed first part in RevLZTrie and for the second part in LZTrie. Let us denote $u$ as the result of search for the prefix of the pattern and $v$ the result of search for the suffix of the pattern. Now we want to check that if there are nodes $x, y$ such that $x$ is in subtree of $u$, $y$ is in subtree of $v$ and $x.idx + 1 = y.idx$. That way the nodes $x, y$ are neighbors. We can find such nodes using RangeSearcher structure in the following way.
+
+\begin{enumerate}
+    \item For all $i$ in range $[1, |s|-1]$ do:
+    \begin{enumerate}
+        \item Let $pref$ be the prefix of $s$ of length $i$ and $suf$ the suffix of $s$ of length $|s| - i$.
+        \item Find node that correspond to reversed $pref$ in RevLZTrie, let us denote the result as $u$ and find node that correspond to the $suf$ in LZTrie, let us denote it as $v$.
+        \item For all points $(x, y)$ returned by RangeSearcher query with arguments \\ $u.left\_rank$, $u.rigth\_rank$, $u.left\_rank$, $v.right\_rank$. Let us denote $z$ as the node of LZTrie that corresponds to the node with rank $x$ in RevLZTrie and add to result index $z.position + z.depth - i$.
+    \end{enumerate}
+\end{enumerate}
+
+For each position index in patter we perform a query on RangeSearcher and return the results, so it is easy to observe that the time complexity is $\bigO(m^2 + m \cdot \log (w) + R \cdot \log (w))$. Above procedure can be implemented in the following way:
+
+\begin{minted}[xleftmargin=20pt, linenos]{python}
+def _contains_within_two_blocks(lz_index : _LZIndex, s, m):
+  for i in range(1, m):
+    rev_prefix = '#' + (s[::-1])[m-i:m]
+    sufix = '#' + s[i+1:]
+    rev_node = search(lz_index.rev_lz_trie, rev_prefix, i)
+    node = search(lz_index.lz_trie, sufix, m-i)
+    if rev_node is None or node is None:
+      continue
+    l1,r1 = rev_node.left_rank, rev_node.right_rank
+    l2,r2 = node.left_rank, node.right_rank
+    for (x, _) in (lz_index.range_searcher.search_in_range(l1,
+            r1, l2, r1)):
+      rev_node = lz_index.rev_lz_rank_mapper.get_node_by_rank(x)
+      node = lz_index.lz_node_mapper.get_node_by_idx(rev_node.idx)
+      yield node.position + node.depth - i
+      
+\end{minted}
+
+
+\subsection{Occurrences spanning three or more blocks}
+For the last case we will use the property of LZ78 compression that all the block in result compression are unique to make an observation. 
+
+\begin{observation} \cite{LZIndex} 
+    There is only one block $B_i$ such that the string compressed in $B_i$ is equal to $s[j:k]$. 
+\end{observation}
+\begin{proof}
+    We prove it by contradiction: if there were two blocks that match such substring it would mean that they are the same, which conflicts with a property of LZ78 compression that all blocks corresponds to unique substrings. 
+\end{proof}
+From that observation it can be also concluded that there are at most $\bigO(m^2)$ blocks that match some substring of $s$ in that case. It follows from the fact that there are at most $\bigO(m^2)$ substring in $s$.
+
+\begin{observation}
+    If the substring compressed in block $B_k$ lies inside the occurrence of the pattern, and it matches substring $s[i:j]$. It will not be used to match that substring in any other occurrence.
+\end{observation}
+
+\begin{proof}
+    Again we prove it by contradiction. Suppose that there are two different occurrences of $s$ that contains block $B_k$ at exactly position $i$ in the pattern, which means that the next block are implied and the previous ones also because the next one has to be $b_{k+1}$, and it is also at the same position which means that these occurrences will be the same.
+\end{proof}
+
+Using these observations we compute array $C[i][j]$, which will store a node that correspond to the substring $s[i: j+1]$, array of dictionaries $A[i]$, which store a dictionary that maps the node index to an index $j$ such that $C[i][j] = x$, array $visited[i][j]$, which store information that the block, which strings match $s[i : j+1]$ was already used. To compute these structures we use the following procedure:
+
+\begin{enumerate}
+    \item For each $i$ in range $[1, |s|]$ do:
+    \begin{enumerate}
+        \item Denote $LZTrie.root$ as $v$, and create empty dictionary $d$.
+        \item For each $j$ in range $[i, |s|]$ do:
+        \begin{enumerate}
+            \item If $s[j]$ not in $v.children$ then go to step 1
+            \item Set $v = v.children[s[j]]$, $C[i][j] = v$ and $d[v.idx] = j$
+        \end{enumerate}
+        \item Set $A[i] = d$
+    \end{enumerate}
+\end{enumerate}
+
+Above procedure requires $\bigO(m^2)$ time and space and can be implemented as follows:
+
+\begin{minted}[xleftmargin=20pt, linenos]{python}
+def _prepare_structures_for_third_case(lz_index : _LZIndex, s, m):
+  used = [[False]*(m+1) for _ in range(m+1)]
+  existance = [[None]*(m+1) for _ in range(m+1)]
+  arr = [{}]
+  for i in range(1, m+1):
+    recorded = {}
+    current_node = lz_index.lz_trie.root
+    for j in range(i, m+1):
+      if (current_node is not None and
+            s[j] not in current_node.children):
+        current_node = None
+      elif current_node is not None:
+        current_node = current_node.children[s[j]]
+      existance[i][j] = current_node
+      if current_node is not None:
+        recorded[current_node.idx] = j
+    arr.append(recorded)
+  return used, existance, arr
+\end{minted}
+
+Using that information we can now search for all occurrences with case 3.
+
+\begin{enumerate}
+    \item For all $i$ in range $[1, |s|]$ do:
+    \begin{enumerate}
+        \item For all $j$ in range $[i, |s|]$ do:
+        \begin{enumerate}
+            \item If $C[i][j]$ is $None$ or $visited[i][j]$ is true, go back to step 2
+            \item Try to expand range $[i,j]$ with the next blocks from $C[i][j]$ that matches exactly as far as it's possible and denote the new range as $[i, r]$
+            \item If the next block does not contain $s_{r+1},...,s_m$ as a suffix, then go back to step 2
+            \item If the suffix of block with $idx = C[i][j].idx - 1$ contains $s_1,...,s_{i-1}$ as a suffix and there are at least 3 blocks, then denote $v$ as \\ $LZNodeMapper.get\_node\_by\_idx(C[i][j].idx-1)$ and add index \\ $v.position - i + 1$ to the result.
+        \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
+
+During that process we mark every used node and check if it was not reused. This procedure can be done in $\bigO(m^3)$ time. Unfortunately, there are some edge cases which has to be considered within that procedure. Implementation that cover all of that edge cases can be seen below:
+
+\begin{minted}[xleftmargin=20pt, linenos]{python}
+def _contains_within_three_or_more_blocks(lz_index : _LZIndex, s, m):
+  used, exist, arr = _prepare_structures_for_third_case(lz_index, s, m)
+  for i in range(1, m+1):
+    for j in range(i, m+1):
+      if exist[i][j] is None or used[i][j] is True:
+        continue
+      start_idx = exist[i][j].idx
+      current_idx = start_idx
+      current_end = j
+      while current_end < m and (current_idx + 1) in arr[current_end+1]:
+        current_idx = current_idx + 1
+        used[current_end + 1][arr[current_end + 1][current_idx]] = True
+        current_end = arr[current_end + 1][current_idx]
+      size = current_idx - start_idx  + 1
+      if i > 1:
+        size = size + 1
+      if current_end < m:
+        size = size + 1
+      if size < 3 or (current_end != m and
+            exist[current_end+1][m] is None):
+        continue
+      if (lz_index.lz_trie.size > current_idx + 1 and
+          (current_end == m or (exist[current_end+1][m].left_rank <=
+          lz_index.lz_node_mapper.get_node_by_idx(current_idx+1).rank <=
+          exist[current_end+1][m].right_rank ))):
+        if i == 1:
+          yield lz_index.lz_node_mapper.get_node_by_idx(start_idx).position
+          continue
+        if start_idx == 1:
+          continue
+        current_node = lz_index.lz_node_mapper.get_node_by_idx(start_idx-1)
+        prev = i - 1
+        while (prev > 0 and current_node.parent is not None and
+            s[prev] in current_node.parent.children and
+            current_node.parent.children[s[prev]] == current_node):
+          prev = prev - 1
+          current_node = current_node.parent
+        if prev == 0:
+          node = lz_index.lz_node_mapper.get_node_by_idx(start_idx)
+          yield node.position - i + 1
+\end{minted}
+
+By summing the complexities of all cases we get the total running time $\bigO(m^3 + (m + R) \cdot \log (w))$, where $R$ is the number of occurrences of $s$ in $t$. Note that some operations on LZTrie and RevLZTrie use dictionaries, e.g. for $\texttt{children(x)}$, which in the worst case may require more than $\bigO(1)$ operations. If we want to use data structures with deterministic guarantees, such as balanced BST, the total complexity will be $\bigO(m^3 \cdot \log (|\mathcal{A}|) + (m + R)\cdot \log (w))$. 
