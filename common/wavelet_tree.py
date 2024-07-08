@@ -1,50 +1,45 @@
+import itertools
+
 # pylint: disable=too-many-instance-attributes
 class WaveletTree:
-  def __init__(self, t, n, sorted_alphabet_list = None):
+  def __init__(self, t, n, A = None):
     t = t[1:]
-    if sorted_alphabet_list is not None:
-      self.alphabet = set(sorted_alphabet_list)
+    if A is not None:
+      self.alphabet = set(A)
     else:
       self.alphabet = set(t)
-      sorted_alphabet_list = sorted(list(self.alphabet))
-    self.n = n
-    self.smallest = sorted_alphabet_list[0]
-    self.largest = sorted_alphabet_list[-1]
-    if len(sorted_alphabet_list) == 1:
+      A = sorted(list(self.alphabet))
+    self.n, self.smallest, self.largest = n, A[0], A[-1]
+    if len(A) == 1:
       self.leaf = True
       return
     self.leaf = False
-    left_alphabet = sorted_alphabet_list[:(len(sorted_alphabet_list) + 1)//2]
-    right_alphabet = sorted_alphabet_list[(len(sorted_alphabet_list) + 1)//2:]
-    self.zero_indexed = set(left_alphabet)
-    self.one_indexed = set(right_alphabet)
-    value_array = [1 if c in self.one_indexed else 0 for c in t ]
-    self.prefix_sum = [0]
-    for i in range(n):
-      self.prefix_sum.append(self.prefix_sum[i] + value_array[i])
-    self.left_indices = [0]
-    self.right_indices = [0]
-    for i in range(n):
-      if t[i] in self.zero_indexed:
-        self.left_indices.append(i+1)
+    A_left, A_right = A[:(len(A) + 1) // 2], A[(len(A) + 1) // 2:]
+    self.zero_indexed, self.one_indexed = set(A_left), set(A_right)
+    value_array = [1 if c in self.one_indexed else 0 for c in t]
+    self.prefix_sum = list(itertools.accumulate(value_array, initial = 0))
+    self.left_indices, self.right_indices = [0], [0]
+    for i, c in enumerate(t, start = 1):
+      if c in self.zero_indexed:
+        self.left_indices.append(i)
       else:
-        self.right_indices.append(i+1)
+        self.right_indices.append(i)
     left_text = ['#'] + [c for c in t if c in self.zero_indexed]
     right_text = ['#'] + [c for c in t if c in self.one_indexed]
-    self.left = WaveletTree(left_text, len(left_text) - 1, left_alphabet)
-    self.right = WaveletTree(right_text, len(right_text) - 1, right_alphabet)
+    self.left = WaveletTree(left_text, len(left_text) - 1, A_left)
+    self.right = WaveletTree(right_text, len(right_text) - 1, A_right)
 
   def _left_tree_range(self, l, r):
-    return l - self.prefix_sum[l-1], r - self.prefix_sum[r]
+    return l - self.prefix_sum[l - 1], r - self.prefix_sum[r]
 
   def _right_tree_range(self, l, r):
-    return (self.prefix_sum[l-1] + 1, self.prefix_sum[r])
+    return (self.prefix_sum[l - 1] + 1, self.prefix_sum[r])
 
   def rank(self, c, l, r):
     if c not in self.alphabet or l > r or l > self.n or r < 1:
       return 0
     if self.leaf:
-      return r-l+1
+      return r - l + 1
     if c in self.zero_indexed:
       new_l, new_r =  self._left_tree_range(l, r)
       return self.left.rank(c, new_l, new_r)
@@ -58,23 +53,23 @@ class WaveletTree:
     if c not in self.alphabet or l > r or l > self.n or r < 1 :
       return None
     if self.leaf:
-      return k+l-1 if k <= r-l+1 else None
+      return k + l - 1 if k <= r - l + 1 else None
     if c in self.zero_indexed:
       new_l, new_r =  self._left_tree_range(l, r)
-      rec_result = self.left.select(c, k, new_l, new_r)
-      return self.left_indices[rec_result] if rec_result is not None else None
+      result = self.left.select(c, k, new_l, new_r)
+      return self.left_indices[result] if result is not None else None
     new_l, new_r =  self._right_tree_range(l, r)
-    rec_result = self.right.select(c, k, new_l, new_r)
-    return self.right_indices[rec_result] if rec_result is not None else None
+    result = self.right.select(c, k, new_l, new_r)
+    return self.right_indices[result] if result is not None else None
 
   def quantile(self, k, l, r):
-    if k < 1 or k > r-l+1:
+    if k < 1 or k > r - l + 1:
       return None
     if self.leaf:
       return self.smallest if k <= self.n else None
     left_num = self.prefix_sum[r] - self.prefix_sum[l-1]
-    if r-l+1-left_num >= k:
-      new_l, new_r =  self._left_tree_range(l, r)
+    if r - l + 1 - left_num >= k:
+      new_l, new_r = self._left_tree_range(l, r)
       return self.left.quantile(k, new_l, new_r)
     new_l, new_r =  self._right_tree_range(l, r)
     return self.right.quantile(k-r+l-1+left_num, new_l, new_r)
@@ -109,13 +104,13 @@ class WaveletTree:
   def range_search(self, l, r, x, y):
     if l > r or l > self.n or l < 1 or x > y:
       return []
-    if x <= self.smallest  and self.largest <= y:
-      return list(range(l, r+1))
+    if x <= self.smallest and self.largest <= y:
+      return list(range(l, r + 1))
     if self.leaf or y < self.smallest or x > self.largest:
       return []
     l_node, r_node = self.left, self.right
-    if (self._ranges_intersect(l_node.smallest, l_node.largest, x, y) and
-        self._ranges_intersect(r_node.smallest, r_node.largest, x, y)):
+    if (self._ranges_intersect(l_node.smallest, l_node.largest, x, y)
+        and self._ranges_intersect(r_node.smallest, r_node.largest, x, y)):
       new_left_l, new_left_r = self._left_tree_range(l, r)
       new_right_l, new_right_r = self._right_tree_range(l, r)
       return (([self.left_indices[x] for x in
@@ -123,9 +118,9 @@ class WaveletTree:
               ([self.right_indices[x] for x in
                  self.right.range_search(new_right_l, new_right_r, x, y)]))
     if self._ranges_intersect(self.right.smallest, self.right.largest, x, y):
-      new_l, new_r = self._right_tree_range(l, r)
-      return ([self.right_indices[x] for x in
-                self.right.range_search(new_l, new_r, x, y)])
-    new_l, new_r = self._left_tree_range(l, r)
-    return ([self.left_indices[x] for x in
-              self.left.range_search(new_l, new_r, x, y)])
+      return [
+        self.right_indices[x]
+        for x in self.right.range_search(*self._right_tree_range(l, r), x, y)]
+    return [
+      self.left_indices[x]
+      for x in self.left.range_search(*self._left_tree_range(l, r), x, y)]
