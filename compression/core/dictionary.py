@@ -44,7 +44,6 @@ class TrieDict:
   def connect(self, node):
     self.link = node
 
-# pylint: disable=no-self-use
 class TrieReverseTrie:
   def __init__(self):
     self.trie = TrieDict(None, index=0)

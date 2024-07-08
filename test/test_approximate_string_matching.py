@@ -18,14 +18,14 @@ APPROXIMATE_STRING_MATCHING_HAMMING_ALGORITHMS = [
         matching_with_mismatches.landau_vishkin,
     ],
     [
-        'Bitap-Shift-Add',
+        'bitap-shift-add',
         matching_with_mismatches.bitap_shift_add,
     ],
-    [   'grossi_luccio linear',
+    [   'Grossi-Luccio linear',
         matching_with_mismatches.grossi_luccio_linear,
     ],
     [
-        'grossi_luccio tree',
+        'Grossi-Luccio tree',
         lambda t, w, n, m, k: matching_with_mismatches.grossi_luccio_tree(
             t, w, n, m, k, matching_with_mismatches.LcpLca),
     ],
@@ -156,8 +156,7 @@ class TestApproximateStringPermutationMatching(
       c_t[c] = c_t.get(c, 0) + 1
     for c in w[1:]:
       c_w[c] = c_w.get(c, 0) + 1
-    return sum(
-        [max(count - c_t.get(c, 0), 0) for (c, count) in c_w.items()]) <= k
+    return sum(max(count - c_t.get(c, 0), 0) for c, count in c_w.items()) <= k
 
   @parameterized.parameterized.expand(
       APPROXIMATE_STRING_PERMUTATION_MATCHING_ALGORITHMS)
