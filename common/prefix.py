@@ -11,9 +11,9 @@ def prefix_suffix(w, m):
   '''Computes table of prefix-suffix lengths for a word w'''
   B, t = [-1] + [0] * m, -1
   for i in range(1, m + 1):
-    # niezmiennik: t = B[i - 1]
+    # invariant: t = B[i - 1]
     while t >= 0 and w[t + 1] != w[i]:
-      # prefikso-sufiks to relacja przechodnia
+      # prefix-suffix is transitive
       t = B[t]
     t = t + 1
     B[i] = t
@@ -26,14 +26,14 @@ def strong_prefix_suffix(w, m):
   '''Computes table of strong prefix-suffix lengths for a word w'''
   sB, t = [-1] + [0] * m, -1
   for i in range(1, m + 1):
-    # niezmiennik: t = B[i - 1]
+    # invariant: t = B[i - 1]
     while t >= 0 and w[t + 1] != w[i]:
       t = sB[t]
     t = t + 1
     if i == m or w[t + 1] != w[i + 1]:
       sB[i] = t
     else:
-      # silny prefikso-sufiks slabego prefikso-sufiksu jest silny
+      # strong prefix-suffix of prefix-suffix is strong
       sB[i] = sB[t]
   return sB
 
@@ -62,7 +62,7 @@ def prefix_prefix(w, m):
     return r
   PREF, s = [-1] * 2 + [0] * (m - 1), 1
   for i in range(2, m + 1):
-    # niezmiennik: s takie, że PREF[s] > 0 i s + PREF[s] - 1 jest maksymalne
+    # invariant: s such that PREF[s] > 0 and maximal value of s + PREF[s] - 1
     k = i - s + 1
     s_max = s + PREF[s] - 1
     if s_max < i:

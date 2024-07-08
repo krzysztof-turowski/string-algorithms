@@ -42,7 +42,7 @@ def weiner(text, n):
   root = trie.TrieNode('')
   link, head = { (root, ''): root }, root
   for i in range(n + 1, 0, -1):
-    # niezmiennik: link[v][c] = u dla u i v takich, ze word(u) = c word(v)
+    # invariant: link[v][c] = u for u, v with word(u) = c word(v)
     v, depth = head, n + 2
     while v != root and link.get((v, text[i])) is None:
       v, depth = v.parent, depth - len(v.label)
@@ -67,13 +67,13 @@ def mccreight(text, n):
   root.add_child(leaf)
   S, head = { }, root
   for _ in range(2, n + 2):
-    # niezmiennik: S[v] jest zdefiniowane dla wszystkich v != head(i - 1)
+    # invariant: S[v] is defined for all v != head(i - 1)
     if head == root:
-      # wyjatek 1: drzewo z jednym lisciem
+      # exception 1: tree with one leaf
       beta, gamma, v = '', head.children[leaf.label[0]].label[1:], root
     else:
       if head.parent == root:
-        # wyjatek 2: head.parent jest rootem
+        # exception 2: head.parent is a root
         beta = head.parent.children[head.label[0]].label[1:]
       else:
         beta = head.parent.children[head.label[0]].label
@@ -91,7 +91,7 @@ def ukkonen(text, n):
   root.add_child(leaf)
   S, head, shift = {root : root}, root, 0
   for i in range(2, n + 2):
-    # niezmiennik: S[v] jest zdefiniowane dla wszystkich v != head(i - 1)
+    # invariant: S[v] is defined for all v != head(i - 1)
     child = head.children.get(text[i - shift])
     if (child is None or shift >= len(child.label)
         or text[i] != child.label[shift]):
