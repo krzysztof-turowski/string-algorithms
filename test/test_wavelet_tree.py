@@ -14,7 +14,7 @@ class DummySolver:
       return 0
     return sum(1 if x == c else 0 for x in self.t[l:r+1])
 
-  def preifx_rank(self, c, r):
+  def prefix_rank(self, c, r):
     return self.rank(c, 1, r)
 
   def select(self, c, k, l, r):
@@ -29,16 +29,16 @@ class DummySolver:
     return None
 
   def quantile(self, k, l, r):
-    if l > r or l > self.n or l < 1 or k > r-l+1:
+    if l > r or l > self.n or l < 1 or k > r - l + 1:
       return None
-    substring = self.t[l : r+1]
-    return sorted(substring)[k-1]
+    substring = self.t[l:r + 1]
+    return sorted(substring)[k - 1]
 
   def range_count(self, l, r, x, y):
     if l > r or l > self.n or l < 1:
       return None
     result = 0
-    for i in range(l, r+1):
+    for i in range(l, r + 1):
       if x <= self.t[i] <= y:
         result = result + 1
     return result
@@ -60,26 +60,22 @@ def create_range_for_query(n):
   r = rand.random.randint(l, n)
   return (l, r)
 
-def create_rank_query(n, alphabet):
+def create_rank_query(n, A):
   l, r = create_range_for_query(n)
-  return (rand.random.choice(alphabet), l, r)
+  return (rand.random.choice(A), l, r)
 
-def create_select_query(n, alphabet):
+def create_select_query(n, A):
   l, r = create_range_for_query(n)
-  return (rand.random.choice(alphabet), rand.random.randint(1, r-l+1), l, r)
+  return (rand.random.choice(A), rand.random.randint(1, r - l + 1), l, r)
 
-# pylint: disable=unused-argument
-def create_quantile_query(n, alphabet):
+def create_quantile_query(n, _):
   l, r = create_range_for_query(n)
-  return (rand.random.randint(1, r-l+1), l, r)
+  return (rand.random.randint(1, r - l + 1), l, r)
 
-def create_range_count_query(n, alphabet):
+def create_range_count_query(n, A):
   l, r = create_range_for_query(n)
-  x = rand.random.choice(alphabet)
-  y = rand.random.choice(alphabet)
-  if x > y:
-    x, y = y, x
-  return (l, r, x, y)
+  x, y = minrand.random.choice(A), rand.random.choice(A)
+  return (l, r, min(x, y), max(x, y))
 
 
 class TestWaveletTree(unittest.TestCase):

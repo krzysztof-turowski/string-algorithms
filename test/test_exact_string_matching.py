@@ -52,7 +52,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Karp-Rabin', other.karp_rabin ],
     [ 'fast-on-average', other.fast_on_average ],
     [ 'two-way constant space', other.two_way ],
-    [ 'fft', other.fft ],
+    [ 'FFT', other.fft ],
     [
         'suffix tree',
         lambda t, w, n, m: suffix_tree.contains(
@@ -63,10 +63,10 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
         lambda t, w, n, m: suffix_array.contains(
             suffix_array.prefix_doubling(t, n), t, w, n, m),
     ],
-    [ 'lcp-lr array', lcp_lr_contains ],
-    [ 'fm index', fm_index_contains],
-    [ 'fm index with wavelet tree', fm_index_wavelet_contains],
-    [ 'lz index', lz_index_contains]
+    [ 'LCP-LR array', lcp_lr_contains ],
+    [ 'FM index', fm_index_contains ],
+    [ 'FM index with wavelet tree', fm_index_wavelet_contains ],
+    [ 'LZ index', lz_index_contains ],
 ]
 
 class TestExactStringMatching(unittest.TestCase):
