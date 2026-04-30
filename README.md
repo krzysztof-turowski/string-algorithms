@@ -3,6 +3,16 @@ Collection of algorithms for _String Algorithms_ course (summer semesters 2019/2
 
 ## Algorithms
 
+### Text decomposition
+
+#### Maximum suffix
+1. Algorithm based on prefix-suffix array
+1. Algorithm in constant space, based on critical factorization
+1. Adamczyk-Rytter algorithm
+
+#### Lyndon factorization
+1. Duval algorithm
+
 ### Exact string matching
 1. Morris-Pratt and Knuth-Morris-Pratt algorithms
 1. Boyer-Moore algorithm with many variants
@@ -90,20 +100,11 @@ Collection of algorithms for _String Algorithms_ course (summer semesters 2019/2
 1. Teng-Yao algorithm
 1. Paluch-Elbassioni-van Zuylen algorithm
 
-### Text decomposition
-
-#### Maximum suffix/Lyndon factorization
-1. Duval algorithm
-1. Maximum suffix algorithm based on prefix-suffix array
-1. Maximum suffix algorithm in constant space, based on critical factorization
-1. Adamczyk-Rytter maximum suffix algorithm
-
 ### Compression
 
 #### Burrows-Wheeler transform
 
 #### Lempel-Ziv 77 factorization
-
 1. Crochemore-Ilie-Smyth incomplete factorization algorithm
 
 ## Testing

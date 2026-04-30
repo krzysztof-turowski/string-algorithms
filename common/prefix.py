@@ -2,7 +2,7 @@ def prefix_suffix_brute_force(w, m):
   B = [-1] * (m + 1)
   for i in range(1, m + 1):
     for j in range(i - 1, -1, -1):
-      if w[1:1+i].endswith(w[1:1+j]):
+      if w[1:i + 1].endswith(w[1:j + 1]):
         B[i] = j
         break
   return B
@@ -13,7 +13,6 @@ def prefix_suffix(w, m):
   for i in range(1, m + 1):
     # invariant: t = B[i - 1]
     while t >= 0 and w[t + 1] != w[i]:
-      # prefix-suffix is transitive
       t = B[t]
     t = t + 1
     B[i] = t
@@ -33,7 +32,6 @@ def strong_prefix_suffix(w, m):
     if i == m or w[t + 1] != w[i + 1]:
       sB[i] = t
     else:
-      # strong prefix-suffix of prefix-suffix is strong
       sB[i] = sB[t]
   return sB
 
@@ -62,7 +60,7 @@ def prefix_prefix(w, m):
     return r
   PREF, s = [-1] * 2 + [0] * (m - 1), 1
   for i in range(2, m + 1):
-    # invariant: s such that PREF[s] > 0 and maximal value of s + PREF[s] - 1
+    # invariant: PREF[s] > 0 and value of s + PREF[s] - 1 is maximal
     k = i - s + 1
     s_max = s + PREF[s] - 1
     if s_max < i:
@@ -76,10 +74,10 @@ def prefix_prefix(w, m):
       s = i
   return PREF
 
-
 def get_longest_common_prefix(x, y):
-  return next((i for i, (x_i, y_i) in enumerate(zip(x, y)) if x_i != y_i),
-              min(len(x), len(y)))
+  return next(
+    (i for i, (x_i, y_i) in enumerate(zip(x, y)) if x_i != y_i),
+     min(len(x), len(y)))
 
 def get_overlap(x, y):
   word = x if x == y else y + x

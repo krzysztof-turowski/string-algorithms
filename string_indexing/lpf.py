@@ -1,31 +1,26 @@
 from string_indexing import lcp, suffix_array
 
-
 def naive(w, n):
-  ret = []
+  out = [-1]
   for i in range(1, n + 1):
     right = w[i:]
     while True:
       if right in w[1:(i + len(right) - 1)]:
-        ret.append(len(right))
+        out.append(len(right))
         break
       right = right[:-1]
-  return [-1] + ret
+  return out
 
-
-def crochemore_ilie_smyth(text, n, SA=None, LCP=None):
-  SA = SA or suffix_array.small_large(text, n)
-  LCP = LCP or lcp.kasai(SA, text, n)
+def crochemore_ilie_smyth(t, n, SA = None, LCP = None):
+  SA = SA or suffix_array.small_large(t, n)
+  LCP = LCP or lcp.kasai(SA, t, n)
   return _compute_cis_lpf(SA, LCP, n)
-
 
 def _compute_cis_lpf(SA, LCP, n):
   SA += [-1]
   LCP += [0]
   LPF = [-1] * (n + 1)
-
   L = [1]
-
   for i in range(2, n + 2):
     while L:
       if SA[i] < SA[L[-1]]:
@@ -37,15 +32,12 @@ def _compute_cis_lpf(SA, LCP, n):
         break
       L.pop()
     L.append(i)
-
   return LPF
 
-
-def crochemore_ilie_smyth_no_stack(text, n, SA=None, LCP=None):
-  SA = SA or suffix_array.small_large(text, n)
-  LCP = LCP or lcp.from_suffix_array(SA, text, n)
+def crochemore_ilie_smyth_no_stack(t, n, SA = None, LCP = None):
+  SA = SA or suffix_array.small_large(t, n)
+  LCP = LCP or lcp.from_suffix_array(SA, t, n)
   return _compute_cis_lpf_no_stack(SA, LCP, n)
-
 
 def _compute_cis_lpf_no_stack(SA, LCP, n):
   SA += [-1]
@@ -61,12 +53,10 @@ def _compute_cis_lpf_no_stack(SA, LCP, n):
       LPF[SA[t]] = LCP[t]
       return i
     return None
-
   def recurse(i, t):
     return update(i, t) or recurse(recurse(i + 1, i), t)
 
   c = 1
   while c <= n:
     c = recurse(c + 1, c)
-
   return LPF

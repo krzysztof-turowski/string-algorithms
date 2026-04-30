@@ -37,84 +37,59 @@ class _Hrp:
   period: int
   scope: Tuple[int, int]
 
+def galil_seifaras(t, w, n, m, k = 4):
+  def get_hrp(w, m, k):
+    '''Yields k-Highly-Repeating-Prefixes (k-HRP),
+    i.e. basic periods with at least k periods.'''
+    period, j = 1, 0
+    hrps: List[_Hrp] = []
+    while period + j < m:
+      while period + j < m and w[j + 1] == w[period + j + 1]:
+        j += 1
+      if period * (k - 1) <= j:
+        hrps.append(_Hrp(period = period, scope = (2 * period, period + j)))
+        yield hrps[-1]
+      hrp = next((h for h in hrps if 2 * h.scope[0] <= j <= h.scope[1]), None)
+      if hrp is not None:
+        period, j = period + hrp.period, j - hrp.period
+      else:
+        period, j = period + (j // k) + 1, 0
 
-def _preprocess_first_hrps(w, m, k, limit = 2):
-  '''Compute list of first n k-Highly-Repeating-Prefixes (k-HRP).
+  def perfect_decomposition(w, m, k):
+    '''Returns strings u, v and k-HRP of v,
+    such that w = u*v and v has only one k-HRP'''
+    hrp_generator = get_hrp(w, m, k)
+    j, hrp1, hrp2 = 0, next(hrp_generator, None), next(hrp_generator, None)
+    while hrp1 is not None and hrp2 is not None:
+      j += hrp1.period
+      hrp_generator = get_hrp(w[j:], m - j, k)
+      hrp1 = next(hrp_generator, None)
+      if hrp1 and hrp1.period >= hrp2.period:
+        hrp2 = next(hrp_generator, None)
+    return w[:j + 1], '#' + w[j + 1:], j, m - j, hrp1
 
-  A prefix is k-HRP if it is basic period with at least k periods.
-  '''
-  period, j = 1, 0
-  # TODO(krzysztof-turowski): migrate to yield
-  hrps: List[_Hrp] = []
-  while period + j < m:
-    while period + j < m and w[j + 1] == w[period + j + 1]:
-      j += 1
-    prefix_len = period + j
+  def simple_text_search(t, w, n, m, hrp1: _Hrp, k):
+    '''Iterates over every occurrence of pattern w in text t.
+    Assumes w has only one k-HRP hrp1.'''
+    i, j = 0, 0
+    while i + m <= n:
+      while j < m and w[j + 1] == t[i + j + 1]:
+        j += 1
+      if j == m:
+        yield i + 1
+      if hrp1 and 2 * hrp1.scope[0] <= j <= hrp1.scope[1]:
+        i, j = i + hrp1.period, j - hrp1.period
+      else:
+        i, j = i + (j // k) + 1, 0
 
-    if period * k <= prefix_len:
-      hrps.append(_Hrp(period=period, scope=(2 * period, prefix_len)))
-      if len(hrps) == limit:
-        return hrps
-
-    hrp = next((h for h in hrps if 2 * h.scope[0] <= j <= h.scope[1]), None)
-    if hrp is not None:
-      period, j = period + hrp.period, j - hrp.period
-    else:
-      period, j = period + (j // k) + 1, 0
-  return hrps
-
-def _get_hrp1(w, m, k):
-  hrps = _preprocess_first_hrps(w, m, k, limit=1)
-  return hrps[0] if len(hrps) > 0 else None
-
-def _get_hrp2(w, m, k):
-  hrps = _preprocess_first_hrps(w, m, k, limit=2)
-  return hrps[0] if len(hrps) > 1 else None
-
-def _perfect_decomposition(w, m, k):
-  '''Returns strings u, v and k-HRP of v,
-  such that w = u*v and v has only one k-HRP
-  '''
-  j = 0
-  hrp1, hrp2 = _get_hrp1(w, m, k), _get_hrp2(w, m, k)
-
-  while hrp1 and hrp2:
-    j += hrp1.period
-    hrp1 = _get_hrp1(w[j:], m - j, k)
-    if hrp1 and hrp1.period >= hrp2.period:
-      hrp2 = _get_hrp2(w[j:], m - j, k)
-
-  return w[:j+1], w[j:], j, m - j, hrp1
-
-
-def _simple_text_search(t, v, n, m, hrp1: _Hrp, k):
-  '''Iterates over every occurrence of pattern v in text t.
-
-  Assumes v has only one k-HRP hrp1.
-  '''
-  position, j = 0, 0
-  while position + m <= n:
-    while j < m and v[j+1] == t[position + j + 1]:
-      j += 1
-
-    if j == m:
-      yield position + 1
-
-    if hrp1 and 2 * hrp1.scope[0] <= j <= hrp1.scope[1]:
-      position, j = position + hrp1.period, j - hrp1.period
-    else:
-      position, j = position + (j // k) + 1, 0
-
-def galil_seifaras(t, w, n, m):
-  k = 4
-  u, v, uLen, vLen, hrp1 = _perfect_decomposition(w, m, k)
-  for i in _simple_text_search(t, v, n, vLen, hrp1, k):
-    if i > uLen and u[1:] == t[i - uLen :i]:
-      yield i - uLen
+  u, v, u_size, v_size, hrp1 = perfect_decomposition(w, m, k)
+  for i in simple_text_search(t, v, n, v_size, hrp1, k):
+    if i > u_size and u[1:] == t[i - u_size:i]:
+      yield i - u_size
 
 def crochemore(t, w, n, m):
-  def next_maximal_suffix(w, n, i, j, k, p):
-    while j + k <= n:
+  def next_maximal_suffix(w, m, i, j, k, p):
+    while j + k <= m:
       if w[i + k] == w[j + k]:
         if k == p:
           j, k = j + p, 1
@@ -126,28 +101,23 @@ def crochemore(t, w, n, m):
         i, j, k, p = j, i + 1, 1, 1
     return i, j, k, p
 
-  t_pos, w_pos = 0, 1
+  x, y = 0, 1
   i, j, k, p = 0, 1, 1, 1
-  while t_pos <= n - m:
-    while w_pos <= m and t[t_pos + w_pos] == w[w_pos]:
-      w_pos += 1
-
-    if w_pos == m + 1:
-      yield t_pos + 1
-
-    if t_pos == n - m:
+  while x <= n - m:
+    while y <= m and t[x + y] == w[y]:
+      y += 1
+    if y == m + 1:
+      yield x + 1
+    if x == n - m:
       return
-
-    i, j, k, p = next_maximal_suffix(
-      w[:w_pos] + t[t_pos + w_pos], w_pos, i, j, k, p)
-
-    w_ew_prim = w[i + 1:w_pos] + t[t_pos + w_pos]
-    if w_ew_prim[:p].endswith(w[1:i + 1]):
-      t_pos, w_pos = t_pos + p, w_pos - p + 1
+    i, j, k, p = next_maximal_suffix(w[:y] + t[x + y], y, i, j, k, p)
+    w_prim = w[i + 1:y] + t[x + y]
+    if w_prim[:p].endswith(w[1:i + 1]):
+      x, y = x + p, y - p + 1
       if j - i > p:
         j = j - p
       else:
         i, j, k, p = 0, 1, 1, 1
     else:
-      t_pos, w_pos = t_pos + max(i, min(w_pos - i, j)) + 1, 1
+      x, y = x + max(i, min(y - i, j)) + 1, 1
       i, j, k, p = 0, 1, 1, 1
