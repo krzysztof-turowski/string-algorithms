@@ -45,8 +45,14 @@ class TestSuffixTrees(unittest.TestCase):
   def check_suffix_trees(self, t, n, reference, algorithm, links):
     result = algorithm(t, n)
     self.assertEqual(result[0], reference[0])
-    if links is not None:
+    if links is not None and len(reference) > 1 and reference[1] is not None:
       self.assertEqual(links(*result), reference)
+
+  @parameterized.parameterized.expand(SUFFIX_TREE_ALGORITHMS)
+  def test_examples(self, _, algorithm, links):
+    self.check_suffix_trees('#abaaba', 6, (suffix_tree.naive('#abaaba', 6),), algorithm, links)
+    self.check_suffix_trees('#banana', 6, (suffix_tree.naive('#banana', 6),), algorithm, links)
+    self.check_suffix_trees('#abaaaaaaa', 9, (suffix_tree.naive('#abaaaaaaa', 9),), algorithm, links)
 
   @parameterized.parameterized.expand(SUFFIX_TREE_ALGORITHMS)
   @run_large
