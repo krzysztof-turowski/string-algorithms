@@ -1,4 +1,5 @@
-backup*/*
+backup/*
 benchar/cbenchar/build/*
 .codex
 .coverage
+.vscode/*
