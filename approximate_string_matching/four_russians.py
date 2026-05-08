@@ -13,7 +13,9 @@ class FourRussians:
             else (S.insert(cj) if ci == '$' else S.delete(ci))))
 
   def prepare_parameters(self, text_1, text_2, n_1, n_2):
-    m = int(math.log2(n_1)) if n_1 > 0 else 1
+    if n_1 < n_2:
+      text_1, text_2, n_1, n_2 = text_2, text_1, n_2, n_1
+    m = int(math.log2(n_1)) if n_1 > 1 else 1
     A = list(sorted(set(c for c in text_1[1:] + text_2[1:])))
     step_size_bound = max(
         max((self.score.insert(c) for c in A), default = 0),
@@ -111,9 +113,11 @@ class FourRussians:
             self.score.insert(D[j]) + M[i][j - 1])
     return M
 
-  def restore_lcs_part(self, C, D, R, S, m, i1, j1):
+  def restore_lcs_part(self, C, D, R, S, m, i_1, j_1):
+    for i in range(1, m + 1):
+      R[i], S[i] = R[i] + R[i - 1], S[i] + S[i - 1]
     M = self.restore_matrix(C, D, R, S, m)
-    i, j, lcs = i1, j1, ""
+    i, j, lcs = i_1, j_1, ''
     while i != 0 and j != 0:
       if C[i] == D[j]:
         if C[i] not in {'#', '$'}:
@@ -123,11 +127,13 @@ class FourRussians:
         i = i - 1
       elif M[i][j] == self.score.insert(D[j]) + M[i][j - 1]:
         j = j - 1
+      else:
+        raise ValueError('Partial distance matrix is inconsistent')
     return lcs, i, j
 
   def restore_lcs(self, text_1, text_2, P, Q, m):
     I, J = (len(text_1) - 1) // m, (len(text_2) - 1) // m
-    i, j, lcs = m, m, ""
+    i, j, lcs = m, m, ''
     while I != 0 and J != 0:
       C = '#' + text_1[((I - 1) * m + 1):(I * m + 1)]
       D = '#' + text_2[((J - 1) * m + 1):(J * m + 1)]
@@ -138,8 +144,6 @@ class FourRussians:
       if j == 0:
         J, j = J - 1, m
       lcs += lcs_part
-
-    # reverse result:
     return lcs[::-1]
 
   def get_distance(self, m, text_1, text_2, storage):

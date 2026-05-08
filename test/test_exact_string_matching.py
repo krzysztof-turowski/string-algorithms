@@ -6,12 +6,31 @@ import parameterized
 
 from generator import rand
 from exact_string_matching import forward, backward, other
-from string_indexing import lcp, suffix_tree, suffix_array
+from string_indexing import lcp, suffix_tree, suffix_array, fm_index, lz_index
+from compression import burrows_wheeler
+from common import wavelet_tree
 
 def lcp_lr_contains(t, w, n, m):
   SA = suffix_array.skew(t, n)
   LCP_LR = lcp.build_lcp_lr(lcp.kasai(SA, t, n), n)
   return lcp.contains(SA, LCP_LR, t, w, n, m)
+
+def fm_index_wavelet_contains(t, w, n, m):
+  SA = suffix_array.skew(t, n)
+  BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
+  FM = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n, 0)
+  FM.rank_searcher = wavelet_tree.WaveletTree(FM.L, len(FM.L) - 1)
+  return fm_index.contains(FM, w, m)
+
+def fm_index_contains(t, w, n, m):
+  SA = suffix_array.skew(t, n)
+  BWT = burrows_wheeler.transform_from_suffix_array(SA, t, n)
+  FM = fm_index.from_suffix_array_and_bwt(SA, BWT, t, n)
+  return fm_index.contains(FM, w, m)
+
+def lz_index_contains(t, w, n, m):
+  LZ = lz_index.create_lz_index(t, n)
+  return lz_index.contains(LZ, w, m)
 
 EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Morris-Pratt', forward.morris_pratt ],
@@ -33,7 +52,7 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
     [ 'Karp-Rabin', other.karp_rabin ],
     [ 'fast-on-average', other.fast_on_average ],
     [ 'two-way constant space', other.two_way ],
-    [ 'fft', other.fft ],
+    [ 'FFT', other.fft ],
     [
         'suffix tree',
         lambda t, w, n, m: suffix_tree.contains(
@@ -44,7 +63,10 @@ EXACT_STRING_MATCHING_ALGORITHMS = [
         lambda t, w, n, m: suffix_array.contains(
             suffix_array.prefix_doubling(t, n), t, w, n, m),
     ],
-    [ 'lcp-lr array', lcp_lr_contains ],
+    [ 'LCP-LR array', lcp_lr_contains ],
+    [ 'FM index', fm_index_contains ],
+    [ 'FM index with wavelet tree', fm_index_wavelet_contains ],
+    [ 'LZ index', lz_index_contains ],
 ]
 
 class TestExactStringMatching(unittest.TestCase):

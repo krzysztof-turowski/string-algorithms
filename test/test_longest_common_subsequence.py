@@ -46,6 +46,7 @@ class TestLongestCommonSubsequence(unittest.TestCase):
     self.check_lcs('#aaab', '#baaa', 4, 4, 2, algorithm)
     self.check_lcs('#baaba', '#babaa', 5, 5, 2, algorithm)
     self.check_lcs('#baaa', '#ababaa', 4, 6, 2, algorithm)
+    self.check_lcs('#bbbaaab', '#aaaabbb', 7, 7, 5, algorithm)
 
   @parameterized.parameterized.expand(LCS_ALGORITHMS)
   @run_large
