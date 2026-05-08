@@ -1,1 +1,3 @@
 text/**/* linguist-documentation
+
+lib/benchar/cbenchar_build.sh text eol=lf

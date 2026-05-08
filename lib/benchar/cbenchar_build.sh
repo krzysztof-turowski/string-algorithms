@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
+cd ./lib/benchar
 cmake -B./build
 cd ./build && make

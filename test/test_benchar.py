@@ -4,7 +4,6 @@ import os
 from exact_string_matching import forward
 from lib.benchar import benchar
 
-from benchar import benchar
 if os.environ.get('CBENCHAR') is not None:
   from lib.benchar.build import cbenchar
 
