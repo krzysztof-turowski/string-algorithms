@@ -18,14 +18,14 @@ APPROXIMATE_STRING_MATCHING_HAMMING_ALGORITHMS = [
         matching_with_mismatches.landau_vishkin,
     ],
     [
-        'Bitap-Shift-Add',
+        'bitap-shift-add',
         matching_with_mismatches.bitap_shift_add,
     ],
-    [   'grossi_luccio linear',
+    [   'Grossi-Luccio linear',
         matching_with_mismatches.grossi_luccio_linear,
     ],
     [
-        'grossi_luccio tree',
+        'Grossi-Luccio tree',
         lambda t, w, n, m, k: matching_with_mismatches.grossi_luccio_tree(
             t, w, n, m, k, matching_with_mismatches.LcpLca),
     ],

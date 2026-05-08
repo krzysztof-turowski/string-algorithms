@@ -6,13 +6,12 @@ from generator import rand
 
 class DummySolver:
   def __init__(self, t, n):
-    self.t = t
-    self.n = n
+    self.t, self.n = t, n
 
-  def rank(self, c, l ,r):
+  def rank(self, c, l, r):
     if l > r or l > self.n or l < 1:
       return 0
-    return sum(1 if x == c else 0 for x in self.t[l:r+1])
+    return sum(1 if x == c else 0 for x in self.t[l:r + 1])
 
   def prefix_rank(self, c, r):
     return self.rank(c, 1, r)
@@ -21,7 +20,7 @@ class DummySolver:
     current_occurrence = 0
     if l > r or l > self.n or l < 1:
       return None
-    for i in range(l, r+1):
+    for i in range(l, r + 1):
       if self.t[i] == c:
         current_occurrence = current_occurrence + 1
       if current_occurrence == k:
@@ -73,9 +72,8 @@ def create_quantile_query(n, _):
   return (rand.random.randint(1, r - l + 1), l, r)
 
 def create_range_count_query(n, A):
-  l, r = create_range_for_query(n)
-  x, y = minrand.random.choice(A), rand.random.choice(A)
-  return (l, r, min(x, y), max(x, y))
+  x, y = rand.random.choice(A), rand.random.choice(A)
+  return (*create_range_for_query(n), min(x, y), max(x, y))
 
 
 class TestWaveletTree(unittest.TestCase):
@@ -104,13 +102,12 @@ class TestWaveletTree(unittest.TestCase):
 
   def test_tree_api_handmade(self):
     # pylint: disable=consider-using-enumerate
-    for test_idx in range(len(self.test_inputs)):
+    for test_idx, _ in enumerate(self.test_inputs):
       for cls in self.test_classes:
         text, test_cases = self.test_inputs[test_idx]
         solver = cls(text, len(text)-1)
         # pylint: disable=consider-using-enumerate
-        for i in range(len(self.runner_functions)):
-          _, runner = self.runner_functions[i]
+        for i, (_, runner) in enumerate(self.runner_functions):
           result = runner(solver, test_cases[i])
           self.assertEqual(self.test_expected_outputs[test_idx][i], result)
 

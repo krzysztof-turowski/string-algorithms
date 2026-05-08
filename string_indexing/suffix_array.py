@@ -26,34 +26,34 @@ def _merge(A, B, compare):
       out[i], a = A[a], a + 1
   return out
 
-def naive(text, n):
-  text += '$'
-  return [i for _, i in sorted([(text[i:], i) for i in range(1, n + 2)])]
+def naive(t, n):
+  t += '$'
+  return [i for _, i in sorted([(t[i:], i) for i in range(1, n + 2)])]
 
-def prefix_doubling(text, n):
+def prefix_doubling(t, n):
   '''Computes suffix array using Karp-Miller-Rosenberg algorithm'''
-  text += '$'
-  R, k = _rank(text[1:]), 1
+  t += '$'
+  R, k = _rank(t[1:]), 1
   while k < 2 * n:
     pairs = [(R[i], R[i + k] if i + k < len(R) else 0) for i in range(len(R))]
     R, k = _rank(pairs), 2 * k
   return get_reverse(R)
 
-def skew(text, n):
+def skew(t, n):
   '''Computes suffix array using Kärkkäinen-Sanders algorithm'''
   def _convert(data):
-    # zamiana tablicy liczb na string UTF-32 w tym samym porzadku znakow
+    # convert list of numbers to UTF-32 string
     return '#' + ''.join(chr(ord('0') + v) for v in data)
   def _compare(i, j):
     if i % 3 == 1:
-      return (text[i], S.get(i + 1, 0)) >= (text[j], S.get(j + 1, 0))
-    return (text[i:i + 2], S.get(i + 2, 0)) >= (text[j:j + 2], S.get(j + 2, 0))
+      return (t[i], S.get(i + 1, 0)) >= (t[j], S.get(j + 1, 0))
+    return (t[i:i + 2], S.get(i + 2, 0)) >= (t[j:j + 2], S.get(j + 2, 0))
 
   if n <= 4:
-    return naive(text, n)
-  text += '$'
+    return naive(t, n)
+  t += '$'
   P12 = list(range(1, n + 2, 3)) + list(range(2, n + 2, 3))
-  triples = _rank([text[i:i + 3] for i in P12])
+  triples = _rank([t[i:i + 3] for i in P12])
   recursion = skew(_convert(triples), (2 * n + 1) // 3 + 1)[1:]
   L12 = [P12[v - 1] for v in recursion]
 
@@ -61,7 +61,7 @@ def skew(text, n):
   S = {v: mapping[v] for v in P12}
 
   P0 = [i for i in range(1, n + 2) if i % 3 == 0]
-  tuples = [(text[i], S.get(i + 1, 0)) for i in P0]
+  tuples = [(t[i], S.get(i + 1, 0)) for i in P0]
   L0 = [P0[i - 1] for i in get_reverse(_rank(tuples))]
   return _merge(L12, L0, compare = _compare)
 
@@ -92,23 +92,23 @@ def _ternary_sort(I, begin, end, V, get_key_for_index):
       V[I[i] - 1] = last_equal - 1
   _ternary_sort(I, last_equal, end, V, get_key_for_index)
 
-def larsson_sadakane(text, n):
-  text += '$'
-  I = sorted(list(range(1, n + 2)), key = lambda index: text[index])
+def larsson_sadakane(t, n):
+  t += '$'
+  I = sorted(list(range(1, n + 2)), key = lambda index: t[index])
 
   V = [0] * (n + 1)
-  current_index, current_symbol = n, text[I[n]]
+  current_index, current_symbol = n, t[I[n]]
   for i, v in enumerate(reversed(I)):
-    if current_symbol != text[v]:
-      current_index, current_symbol = n - i, text[v]
+    if current_symbol != t[v]:
+      current_index, current_symbol = n - i, t[v]
     V[v - 1] = current_index
 
   current_length, current_symbol = 0, '$'
   for i, current_suffix in enumerate(I):
-    if current_symbol != text[current_suffix]:
+    if current_symbol != t[current_suffix]:
       if current_length == 1:
         I[i - 1] = -1
-      current_length, current_symbol = 0, text[current_suffix]
+      current_length, current_symbol = 0, t[current_suffix]
     current_length += 1
 
   k = 1
@@ -129,8 +129,8 @@ def larsson_sadakane(text, n):
   return I
 
 class _SLText:
-  def __init__(self, text):
-    self.text = text
+  def __init__(self, t):
+    self.t = t
     self._get_ls_types()
     self.lms_positions = [
         i for i in range(2, len(self.types)) if self.is_lms(i)]
@@ -140,17 +140,17 @@ class _SLText:
             (PREFIX_TYPE.LARGE, PREFIX_TYPE.SMALL))
 
   def _get_ls_types(self):
-    self.types = [PREFIX_TYPE.SMALL] * len(self.text)
-    for i in range(len(self.text) - 2, 0, -1):
-      if self.text[i] == self.text[i + 1]:
+    self.types = [PREFIX_TYPE.SMALL] * len(self.t)
+    for i in range(len(self.t) - 2, 0, -1):
+      if self.t[i] == self.t[i + 1]:
         self.types[i] = self.types[i + 1]
-      elif self.text[i] >= self.text[i + 1]:
+      elif self.t[i] >= self.t[i + 1]:
         self.types[i] = PREFIX_TYPE.LARGE
 
   def is_lms_equal(self, a, b):
     if a != b:
-      for t, _ in enumerate(self.text):
-        if (self.text[a + t] != self.text[b + t]
+      for t, _ in enumerate(self.t):
+        if (self.t[a + t] != self.t[b + t]
             or self.types[a + t] != self.types[b + t]):
           return False
         if t > 0 and (self.is_lms(a + t) or self.is_lms(b + t)):
@@ -158,14 +158,14 @@ class _SLText:
     return True
 
 class _Buckets:
-  def __init__(self, text, direction):
-    self.target = [-1] * len(text)
-    self._get_bucket_sizes(text)
+  def __init__(self, t, direction):
+    self.target = [-1] * len(t)
+    self._get_bucket_sizes(t)
     self.recompute(direction)
 
-  def _get_bucket_sizes(self, text):
-    self.sizes = [0] * (max(text) + 1)
-    for c in text[1:]:
+  def _get_bucket_sizes(self, t):
+    self.sizes = [0] * (max(t) + 1)
+    for c in t[1:]:
       self.sizes[c] += 1
 
   def recompute(self, direction):
@@ -178,54 +178,54 @@ class _Buckets:
     self.target[self.heads[bucket]] = value
     self.heads[bucket] += self.direction.value
 
-def _induced_sort(sltext, initial):
-  buckets = _Buckets(sltext.text, BUCKET_DIR.BACKWARD)
+def _induced_sort(slt, initial):
+  buckets = _Buckets(slt.t, BUCKET_DIR.BACKWARD)
   for i in initial:
-    buckets.set_and_advance(sltext.text[i], i)
+    buckets.set_and_advance(slt.t[i], i)
   buckets.recompute(BUCKET_DIR.FORWARD)
-  for i in range(1, len(sltext.text)):
+  for i in range(1, len(slt.t)):
     j = buckets.target[i] - 1
-    if j > 0 and sltext.types[j] == PREFIX_TYPE.LARGE:
-      buckets.set_and_advance(sltext.text[j], j)
+    if j > 0 and slt.types[j] == PREFIX_TYPE.LARGE:
+      buckets.set_and_advance(slt.t[j], j)
   buckets.recompute(BUCKET_DIR.BACKWARD)
-  for i in range(len(sltext.text) - 1, 0, -1):
+  for i in range(len(slt.t) - 1, 0, -1):
     j = buckets.target[i] - 1
-    if j > 0 and sltext.types[j] == PREFIX_TYPE.SMALL:
-      buckets.set_and_advance(sltext.text[j], j)
+    if j > 0 and slt.types[j] == PREFIX_TYPE.SMALL:
+      buckets.set_and_advance(slt.t[j], j)
   return buckets.target
 
-def _rename_lms_substrings(sltext, suf):
-  names, index, previous = [-1] * len(sltext.text), 0, suf[1]
+def _rename_lms_substrings(slt, suf):
+  names, index, previous = [-1] * len(slt.t), 0, suf[1]
   for i in suf[1:]:
-    if sltext.is_lms(i):
-      if not sltext.is_lms_equal(previous, i):
+    if slt.is_lms(i):
+      if not slt.is_lms_equal(previous, i):
         index += 1
       names[i], previous = index, i
   return names
 
-def _sa_distinct(text):
-  result = [-1] * len(text)
-  for i, c in enumerate(text[1:]):
+def _sa_distinct(t):
+  result = [-1] * len(t)
+  for i, c in enumerate(t[1:]):
     result[c + 1] = i + 1
   return result
 
-def _induced_sorting(text, n):
+def _induced_sorting(t, n):
   if n == 1:
     return [-1, 1]
 
-  sltext = _SLText(text)
-  suffixes = _induced_sort(sltext, initial = sltext.lms_positions)
-  lms_names = _rename_lms_substrings(sltext, suffixes)
-  reduced_text = [-1] + [lms_names[i] for i in sltext.lms_positions]
-  reduced_array = (_induced_sorting(reduced_text, len(reduced_text) - 1)
-                   if max(reduced_text) < len(reduced_text) - 2
-                   else _sa_distinct(reduced_text))
-  ordered_lms = [sltext.lms_positions[i - 1] for i in reduced_array[1:]]
-  return _induced_sort(sltext, initial = ordered_lms[::-1])
+  slt = _SLText(t)
+  suffixes = _induced_sort(slt, initial = slt.lms_positions)
+  lms_names = _rename_lms_substrings(slt, suffixes)
+  reduced_t = [-1] + [lms_names[i] for i in slt.lms_positions]
+  reduced_array = (_induced_sorting(reduced_t, len(reduced_t) - 1)
+                   if max(reduced_t) < len(reduced_t) - 2
+                   else _sa_distinct(reduced_t))
+  ordered_lms = [slt.lms_positions[i - 1] for i in reduced_array[1:]]
+  return _induced_sort(slt, initial = ordered_lms[::-1])
 
-def induced_sorting(text, n):
+def induced_sorting(t, n):
   '''Computes suffix array using Nong-Zhang-Chan algorithm'''
-  return _induced_sorting([-1] + _rank(text[1:]) + [0], n + 1)[1:]
+  return _induced_sorting([-1] + _rank(t[1:]) + [0], n + 1)[1:]
 
 def _sort_category(s, SL, category):
   suffixes_by_distances, category_substring = _prepare_substring_lists(
@@ -386,8 +386,8 @@ class _GroupedArray:
       self.swap(l, r)
       l, r = l + 1, r - 1
 
-def _small_large(text_int, n):
-  A, SL = _bucket_array(text_int), _categorize_sl(text_int, n)
+def _small_large(t_int, n):
+  A, SL = _bucket_array(t_int), _categorize_sl(t_int, n)
   if n == 2:
     return [2, 1]
   if SL.count(PREFIX_TYPE.LARGE) == 1:
@@ -396,7 +396,7 @@ def _small_large(text_int, n):
     return list(reversed(range(1, n + 1)))
 
   if SL[-1] == PREFIX_TYPE.SMALL:
-    sortedS = _sort_category(text_int, SL, PREFIX_TYPE.SMALL)
+    sortedS = _sort_category(t_int, SL, PREFIX_TYPE.SMALL)
     groups = A.groups.copy()
     _move_to_group_end(
         reversed(sortedS[1:]), lambda x: True, A, groups, front = False)
@@ -404,7 +404,7 @@ def _small_large(text_int, n):
         (A.index[i] - 1 for i in range(1, len(A.index))),
         lambda x: SL[x] == PREFIX_TYPE.LARGE, A, groups, front = True)
   else:
-    sortedL = _sort_category(text_int, SL, PREFIX_TYPE.LARGE)
+    sortedL = _sort_category(t_int, SL, PREFIX_TYPE.LARGE)
     groups = A.groups.copy()
     _move_to_group_end(sortedL[1:], lambda x: True, A, groups, front = True)
     _move_to_group_end(
@@ -412,15 +412,15 @@ def _small_large(text_int, n):
         lambda x: SL[x] == PREFIX_TYPE.SMALL, A, groups, front = False)
   return A.index[1:]
 
-def small_large(text, n):
+def small_large(t, n):
   '''Computes suffix array using Ko-Aluru algorithm'''
-  return _small_large([-1] + _rank(text[1:]) + [0], n + 1)
+  return _small_large([-1] + _rank(t[1:]) + [0], n + 1)
 
 def from_suffix_tree(ST, n):
   ST.set_depth()
   return ST.get_all_leaves(lambda x: n + 2 - x.depth)
 
-def contains(SA, text, word, n, m):
+def contains(SA, t, w, n, m):
   def _binary_search(f):
     left, right = -1, n + 1
     while left + 1 < right:
@@ -430,8 +430,8 @@ def contains(SA, text, word, n, m):
       else:
         left = mid
     return right
-  # Najmniejszy sufiksu nie większy niż szukane słowo
-  low = _binary_search(lambda x: word[1:] <= text[SA[x]:])
-  # Najmniejszy sufiks większego niż m-literowy prefiks szukanego słowa
-  high = _binary_search(lambda x: word[1:] < text[SA[x]:SA[x] + m])
+  # Smallest suffix greater or equal to w
+  low = _binary_search(lambda x: w[1:] <= t[SA[x]:])
+  # Smallest suffix greater than m-letter prefix of w
+  high = _binary_search(lambda x: w[1:] < t[SA[x]:SA[x] + m])
   yield from sorted([SA[i] for i in range(low, high)])

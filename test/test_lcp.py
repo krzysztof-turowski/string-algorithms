@@ -14,8 +14,7 @@ LCP_ARRAY_ALGORITHMS = [
     ],
     [
         'Kasai',
-        lambda t, n: lcp.kasai(
-            suffix_array.prefix_doubling(t, n), t, n),
+        lambda t, n: lcp.kasai(suffix_array.prefix_doubling(t, n), t, n),
     ],
     [
         'from suffix tree',
@@ -56,7 +55,7 @@ LCP_ARRAY_ALGORITHMS = [
     ],
     [
         'from Wee LCP o(n)',
-        lcp.from_wee_lcp_o_n,
+        lcp.from_wee_lcp_on,
     ]
 ]
 
