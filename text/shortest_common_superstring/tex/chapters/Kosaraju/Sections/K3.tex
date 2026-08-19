@@ -1,0 +1,253 @@
+\section{Version 2: Path Coloring} \label{sec:kps_v2}
+
+To extract a heavier set of paths from the cycle cover, the second iteration of
+the generic algorithm utilizes non-cycle edges. To establish the core mechanics,
+we first present a simplified variant before introducing the fully optimized
+version that achieves the stronger approximation bound.
+
+\subsection{The Simple Variant of Version 2}
+The basic variant operates through the following sequence of
+steps:\begin{enumerate}[label=\textbf{Step 2\alph*.}, leftmargin=*]
+    \item Form an auxiliary undirected graph $G'$ derived from the base graph
+    $G$ and its cycle cover $\mathcal{C}$ in the following manner:
+    \begin{itemize}
+        \item Substitute each 2-cycle $\{(u, v), (v, u)\}$ of $\mathcal{C}$ with
+        an undirected edge $\{u, v\}$ carrying a weight of $0$.
+        \item For all remaining pairs of vertices $u$ and $v$, introduce an
+        undirected edge $\{u, v\}$ whose weight is equal to $\max\{w(u, v), w(v,
+        u)\}$.
+    \end{itemize}
+    \item Compute a maximum-weight matching $M$ within this auxiliary graph
+    $G'$.
+    \item Revert the edges of $M$ to their directed forms, and augment this set
+    by selecting a single edge from every $3^+$-cycle (ensuring no cycles are
+    created in the corresponding undirected graph).\footnote{Proof that it can
+    be done is omitted, because in the real variant we use the stronger Lemma
+    \ref{lemma:path_coloring}.}
+    \item Contract the 2-cycles into single vertices.
+    \item Two-color edges of the remaining graph to divide it into two sets of
+    directed paths. Form the final path collection $P$ by taking the edges from
+    the heavier color group and supplementing them with one compatible edge
+    extracted from each 2-cycle.
+\end{enumerate}
+
+\paragraph{Analysis of the Simple Variant}
+Let $T_{opt}$ represent the optimal maximum-weight tour, with $w(T_{opt})$
+denoting its total weight. When evaluating the weight of $T_{opt}$ within the
+context of $G'$, we note that 2-cycles are assigned a weight of 0, while all
+other edges maintain or increase their weights. As a result, the weight of
+$T_{opt}$ in $G'$ is bounded below by $w(T_{opt}) - bW$, given that each 2-cycle
+can contribute at most one edge to $T_{opt}$.
+
+Because $T_{opt}$ is a single cycle on an even number of vertices, its edges can
+be alternately split into two matchings averaging at least
+$\frac{1}{2}(w(T_{opt}) - bW)$. Therefore, the maximum-weight matching $M$
+obtained in Step 2b is at least this average weight.
+
+Adding one edge from each $3^+$-cycle in Step 2c contributes an additional
+weight of $pW$. The total weight of this constructed set of edges is therefore
+bounded below by:
+\begin{equation}
+\alpha = \frac{w(T_{opt}) - bW}{2} + pW
+\end{equation}
+
+Contracting the 2-cycles in Step 2d does not alter this total weight, as they
+were initially zero-weighted in $G'$. We are then left with a collection of
+paths and cycles. These edges can be two-colored (partitioned into two color
+classes) such that each color class forms a collection of vertex-disjoint
+directed paths. Consequently, the heavier of these two classes must contain a
+total weight of at least $\frac{\alpha}{2}$.
+
+Upon uncontracting the 2-cycles, it is mathematically guaranteed that we can
+always select one edge per 2-cycle to add to our chosen color class while
+maintaining a valid collection of disjoint paths. Assume, for the contradiction,
+that this was impossible. This would imply that a 2-cycle has two incident edges
+of the same color, both directed either towards or away from the cycle. However,
+in the contracted graph, these two edges would have been directed either toward
+or away from the contracted vertex—meaning they could not have validly received
+the same color in a path coloring, establishing a contradiction.
+
+This final addition gives a set of directed paths with a minimum weight of:
+\begin{equation}
+\frac{\alpha}{2} + cW = \frac{w(T_{opt}) - bW}{4} + \frac{pW}{2} + cW
+\end{equation}
+Substituting the bounds $p \le \frac{1}{3}(1 - b - c)$ and $W \ge w(T_{opt})$
+into this equation results in a bound of $\frac{5}{4}(c + p)w(T_{opt})$.
+
+By combining this bound with the $(1 - c - p)w(T_{opt})$ bound from Version 1
+(Theorem~\ref{lemma:version1}) -- taking whichever of the two constructions
+yields the heavier set of paths -- it guarantees a weight of at least:
+\begin{equation}
+\max\left\{(1 - c - p),\ \frac{5}{4}(c + p)\right\} w(T_{opt}).
+\end{equation}
+Writing $x = c + p$, the first term is decreasing in $x$ and the second is
+increasing in $x$, so their maximum is minimized exactly where the two coincide:
+\begin{equation}
+1 - x = \frac{5}{4}x \iff x = \frac{4}{9},
+\end{equation}
+at which point both bounds equal $1 - x = \frac{5}{9}$. Hence, in the worst case
+over all valid $b, c, p$, this basic variant is guaranteed to achieve a
+$\frac{5}{9}$-approximation for the Max TSP.
+
+\subsection{Version 2: The Real Variant}
+
+To secure a stronger approximation bound, the simplified algorithm requires two major improvements. First, rather than assigning zero weight to the 2-cycle edges (which only guarantees the inclusion of the lighter edge), we allow a 2-cycle edge to be placed in the matching if the heavier edge significantly outweighs the lighter edge. To achieve this, we assign a weight of $2(b_i - c_i)$ to the undirected edge representing a 2-cycle $C_i$, where $b_i$ and $c_i$ are the weights of the heavy and light edges, respectively. Second, a specialized path-coloring lemma is utilized, permitting the inclusion of every edge in a $3^+$-cycle except the lightest.\\
+\vspace{0.5em}
+\noindent\textbf{Algorithm: Version 2, Real Variant}
+\begin{enumerate}[label=\textbf{Step 2\alph*.}, leftmargin=*]
+    \item Build the undirected graph $G'$ from $G$ and $\mathcal{C}$ with the
+    following adjustments:
+    \begin{itemize}
+        \item Reclassify any 2-cycle where $b_i > 2c_i$ as a $3^+$-cycle.
+        \item Replace each 2-cycle $\{(u, v), (v, u)\}$ of $\mathcal{C}$ with an
+        undirected edge $\{u, v\}$ carrying a weight of $2(b_i - c_i)$.
+        \item For all other pairs of vertices $u$ and $v$, create an undirected
+        edge $\{u, v\}$ with weight $\max\{w(u, v), w(v, u)\}$.
+    \end{itemize}
+    \item Extract a maximum-weight matching $M$ from $G'$.
+    \item To the directed versions of $M$'s edges, attach every edge besides
+    lightest from the $3^+$-cycles.
+    \item Contract the 2-cycles found in $\mathcal{C}$.
+    \item Two-color edges of the remaining graph using Lemmas
+    \ref{lemma:path_coloring} and \ref{lemma:induced_cycles} to generate two
+    sets of directed paths. The final set $P$ comprises the heavier color group
+    combined with one edge from each 2-cycle.
+\end{enumerate}
+\vspace{0.5em}
+
+We start by stating the primary coloring lemma, referring to the resulting
+coloring as a \textit{path coloring}. Proof of this was omitted in the original
+paper, but since it is a complex result, we devote Chapter 4 to its elaboration.
+
+\begin{lemma}[Path-Coloring Lemma \cite{Kosaraju1994}] \label{lemma:path_coloring}
+Let $G$ be a directed graph satisfying two conditions: (1) each vertex has an
+indegree of at most 2, an outdegree of at most 2, and a total degree of at most
+3, and (2) the graph contains no 2-cycles. Under these conditions, the edges of
+$G$ can be 2-colored such that each color class forms a collection of directed
+paths.
+\end{lemma}
+
+\paragraph{Algorithm Analysis}
+We introduce four weight quantities describing how the edges of $T_{opt}$
+interact with the 2-cycles of $\mathcal{C}$:
+\begin{itemize}
+    \item $b_1 W$ -- the total weight of the edges in $T_{opt}$ that are the
+    heavier edge of a 2-cycle in $\mathcal{C}$
+    \item $c_1 W$ -- the total weight of the corresponding (lighter) sibling
+    edges of those same 2-cycles
+    \item $c_2 W$ -- the total weight of the edges in $T_{opt}$ that are the
+    lighter edge of a 2-cycle in $\mathcal{C}$
+    \item $b_2 W$ -- the total weight of the corresponding (heavier) sibling
+    edges of those same 2-cycles
+\end{itemize}
+
+The weight of the optimal tour edges not belonging to a 2-cycle in $\mathcal{C}$
+is $w(T_{opt}) - b_1W - c_2W$. By adding back the modified weight of the 2-cycle
+edges, the total weight of the optimal tour in $G'$ is bounded below by:
+$$w(T_{opt}) - b_1W - c_2W + 2(b_1 - c_1)W + 2(b_2 - c_2)W$$
+
+Given that each 2-cycle $C_i$ satisfies $c_i \le b_i \le 2c_i$, it follows that:
+$$(b_1 - 2c_1 + 2b_2 - 3c_2) \ge (b_1 + b_2) - 2(c_1 + c_2) \ge b - 2c$$
+This implies the optimal tour's weight in $G'$ is at least $w(T_{opt}) + (b -
+2c)W$. As a result, the matching extracted in Step 2b has a weight of at least
+$\frac{1}{2}(w(T_{opt}) + (b - 2c)W)$.
+
+In Step 2c, including the $3^+$-cycles adds a weight of $(1 - p - b - c)W$.
+Therefore, prior to Step 2d, the graph's total weight is at least:
+\begin{equation} \label{eq:weight_before_contraction_real}
+\frac{w(T_{opt}) + (b - 2c)W}{2} + (1 - p - b - c)W
+\end{equation}
+
+To evaluate the remaining weight after Step 2d, let $A$ denote the set of
+2-cycles with corresponding edges in the matching. Let $\hat{b}W$ and $\hat{c}W$
+be the sum of the weights of the heavier and lighter edges in $A$, respectively.
+Simplifying equation (\ref{eq:weight_before_contraction_real}) and subtracting
+the contracted weight $2(\hat{b} - \hat{c})W$, we are left with an edge
+collection at the end of Step 2d weighing at least:
+\begin{equation} \label{eq:weight_after_contraction_real}
+\frac{w(T_{opt})}{2} + \left(1 - 2c - \frac{b}{2} - p - 2(\hat{b} - \hat{c})\right)W
+\end{equation}
+
+\paragraph{Handling Induced 2-Cycles}
+The edges at the start of Step 2e consist of paths originating from the
+$3^+$-cycles combined with matching edges. While this graph violates the
+conditions of Lemma \ref{lemma:path_coloring}, the following lemma proves it can
+still be path-colored with two colors.
+
+\begin{lemma}[\cite{Kosaraju1994}] \label{lemma:induced_cycles}
+The set of edges $E$ remaining after Step 2d can be successfully path-colored
+using two colors.
+\end{lemma}
+
+\begin{proof}
+By design, every vertex has at most one incoming cycle edge, one outgoing cycle
+edge, and one matching edge, satisfying the degree constraints of Lemma
+\ref{lemma:path_coloring}. Moreover, contracting the 2-cycles of $\mathcal{C}$
+merges two vertices (each of degree at most 3, sharing 2 edges) into a single
+vertex of degree at most 2. This satisfies all conditions of Lemma
+\ref{lemma:path_coloring} except for the potential presence of 2-cycles. These
+remaining 2-cycles, formed solely by one cycle edge and one matching edge, are
+referred to as \textit{induced 2-cycles}.
+
+Consider such an induced 2-cycle $\{(u, v), (v, u)\}$. Due to the degree-three
+limit and the presence of a matching edge between $u$ and $v$, there is at most
+one additional edge connected to $v$ (labeled $(v, x)$) and at most one
+additional edge connected to $u$ (labeled $(u, y)$), neither being a matching
+edge. To resolve the 2-cycle, the path $(x, v, u, y)$ is contracted into a
+single edge $(x, y)$. The resulting graph retains the same properties but
+contains one fewer 2-cycle. This process is repeated until all 2-cycles are
+eliminated. Once the contracted graph is colored, coloring the original graph is
+straightforward: if $(x, y)$ is colored red, then $(x, v)$, $(v, u)$, and $(u,
+y)$ are colored red, while $(u, v)$ is assigned blue. Because $(u, v)$ shares no
+vertices with another blue edge, this assignment is perfectly safe.
+\end{proof}
+
+\paragraph{Final Bound}
+Given that the edge weight remaining after Step 2d's contractions is bounded by
+equation (\ref{eq:weight_after_contraction_real}), the preceding lemma allows us
+to secure a collection of directed paths with a weight of at least:
+\begin{equation} \label{eq:weight_directed_paths_real}
+\frac{1}{2} \left( \frac{w(T_{opt})}{2} + \left(1 - 2c - \frac{b}{2} - p - 2(\hat{b} - \hat{c})\right)W \right)
+\end{equation}
+The final step—adding 2-cycle edges at the conclusion of Step 2e—increases the
+value in (\ref{eq:weight_directed_paths_real}) by a minimum of $(\hat{b} + (c -
+\hat{c}))W$. This is because, for each 2-cycle in $\mathcal{C}$, we include its
+heavier edge if the corresponding undirected edge was in $M$, or an edge
+weighing at least as much as the lighter edge if it was not. Since $\mathcal{C}$
+is a cycle cover, the vertices of a 2-cycle belong to no other cycle, so if its
+collapsed edge was chosen in $M$, both endpoints are matched only to each other,
+the contracted vertex is then completely isolated in the graph colored in Step
+2e, and either directed edge can be added back without conflict, so we pick the
+heavier one. Otherwise, at least one endpoint may carry an external matching
+edge, which fixes which direction is safe to add -- we can then only guarantee
+the weight of the lighter edge. Finally, this gives a path collection with a
+weight of at least:
+\begin{align*}
+& \frac{1}{2} \left( \frac{w(T_{opt})}{2} + \left(1 - 2c - \frac{b}{2} - p - 2(\hat{b} - \hat{c})\right)W \right) + (\hat{b} + (c - \hat{c}))W \\
+& \ge \left( \frac{3}{4} - \frac{b}{4} - \frac{p}{2} \right) w(T_{opt})
+\ge \left( \frac{7}{12} - \frac{1}{12}(b - 2c) \right) w(T_{opt}).
+\end{align*}
+
+This final inequality is derived by applying the bound $p \le \frac{1}{3}(1 - b
+- c)$, which remains valid even after reclassifying 2-cycles with $b_i > 2c_i$
+as $3^+$-cycles. This leads to the final lemma.
+
+\begin{theorem} \label{lemma:version2_final}
+Version 2 of the generic algorithm guarantees a $\left(\frac{7}{12} -
+\frac{1}{12}(b - 2c)\right)$-approximation for the Max TSP.
+\end{theorem}
+
+Although this bound is formulated using the values of $b$ and $c$ obtained after
+reclassifying specific 2-cycles, this reclassification can only decrease the
+value of $b - 2c$. Therefore, the bound established in Theorem
+\ref{lemma:version2_final} is strictly valid for the original parameters of $b$
+and $c$ as well.
+
+\paragraph{Computational Complexity}
+Let $n$ denote the number of vertices of $G$. Building the auxiliary graph $G'$
+in Step 2a takes $O(n^2)$ time. Extracting the maximum-weight matching $M$ in
+Step 2b, using Edmonds' blossom algorithm, takes $O(n^3)$ time
+\cite{edmonds1965paths, edmonds1965matching}. Steps 2c and 2d are linear in $n$. The path coloring of
+Step 2e executes deterministically in $O(n^3)$ time, as established in Chapter
+4. The matching computation and path coloring therefore dominate, and Version 2
+runs in $O(n^3)$ time overall.

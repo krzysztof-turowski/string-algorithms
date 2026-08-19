@@ -1,0 +1,142 @@
+\section{The Generic Approximation Algorithm}
+
+Many approximation algorithms for the shortest superstring problem share a
+similar structural framework based on cycle covers. In this section, we outline
+a generic approach that serves as a foundation for more advanced algorithms. We
+will also demonstrate that this generic algorithm, originally proposed by Blum
+et al. \cite{blum1994linear}, achieves an approximation ratio of 3, which acts
+as a theoretical warm-up before introducing more complex overlap bounds.
+
+\subsection{Algorithm Outline}
+The generic approximation algorithm constructs a superstring by computing
+optimal cycle covers on the distance graph, generating representative strings
+for each cycle, and then repeating the process to merge these representatives.
+The exact steps are:
+
+\begin{enumerate}
+    \item \textbf{Initial Distance Graph:} Construct the distance graph $G_S$
+    for the input set of strings $S$.
+    \item \textbf{First Cycle Cover:} Find a minimum weight cycle cover
+    $\mathcal{C}_S$ on the graph $G_S$.
+    \item \textbf{Cycle Representatives:} For each cycle $C = s_{i_1}, \dots,
+    s_{i_r}, s_{i_1} \in \mathcal{C}_S$, choose a representative string $t_C$
+    such that for some index $j$:
+    \begin{itemize}
+        \item[(i)] $t_C$ contains the string $\langle s_{i_{j+1}}, \dots,
+        s_{i_r}, s_{i_1}, \dots, s_{i_j} \rangle$, and
+        \item[(ii)] $t_C$ is contained in the string $\langle s_{i_j}, \dots,
+        s_{i_r}, s_{i_1}, \dots, s_{i_{j-1}}, s_{i_j} \rangle$.
+    \end{itemize}
+    \item \textbf{Second Distance Graph:} Let $T$ be the set of all chosen
+    representative strings $t_C$. Construct the distance graph $G_T$ for the set
+    $T$.
+    \item \textbf{Second Cycle Cover:} Find a minimum weight cycle cover
+    $\mathcal{C}_T$ on the graph $G_T$.
+    \item \textbf{Breaking Cycles:} Break each cycle of $\mathcal{C}_T$
+    arbitrarily to obtain a superstring of the elements contained in that cycle.
+    \item \textbf{Final Concatenation:} Arbitrarily concatenate the strings
+    obtained in Step 6 to produce the final superstring $\tilde{s}$ for the set
+    $S$.
+\end{enumerate}
+
+A key distinction between this algorithm and earlier approaches lies in Step 3.
+Instead of simply picking one of the original strings contained in the cycle
+$C$, the algorithm selects a string $t_C$ that acts as a short superstring of
+the elements in $C$, without being excessively long.
+
+\subsection{Approximation Ratio Analysis}
+To prove that this generic algorithm achieves a 3-approximation, we rely on
+bounds on the optimal superstring length of the representative set $T$ and on
+the maximum possible overlap between inequivalent strings.
+
+\begin{lemma} \label{lemma:optT}
+The length of the optimal superstring for the set $T$ is bounded by:
+\begin{equation}
+opt(T) \le opt(S) + CYC(G_S) \le 2opt(S)
+\end{equation}
+\end{lemma}
+\begin{proof}
+    Second inequality is given by equation (\ref{eq:1.3}). First inequality
+    holds because each $t_C \in T$ is contained in $\langle s_{i_j}, \dots,
+    s_{i_{j-1}}, s_{i_j} \rangle$. So, we can take an optimal superstring of
+    $S$, and for each $t_C \in T$, substitute the occurrence of $s_{i_j}$ with
+    $\langle s_{i_j}, \dots, s_{i_{j-1}}, s_{i_j} \rangle$. Each such
+    substitution increases the length by $w(C)$, since we replace $|s_{i_j}|$
+    with $w(C) + |s_{i_j}|$, so in total we add $CYC(G_S)$ to the length. Since
+    each $t_C$ is a substring of the resulting string, it is a superstring of
+    $T$ of length $opt(S) + CYC(G_S)$, which gives the first inequality.
+\end{proof}
+Since the weight of the minimum cycle cover on $G_T$ cannot exceed the length of
+the optimal superstring for $T$, Lemma \ref{lemma:optT} immediately implies that
+$CYC(G_T) \le opt(T) \le 2opt(S)$.
+
+The amount of overlap lost when breaking the cycles in Step 6 depends on the
+periodicity of the strings in $T$. This is bounded by the following property of
+discrete periodic functions:
+
+\begin{lemma}[\cite{blum1994linear}] \label{lemma:inequivalent_overlap}
+For any two inequivalent strings $s$ and $t$, their maximum overlap is strictly
+bounded by the sum of their periods:
+\begin{equation}
+ov(s, t) \le period(s) + period(t)
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $p = period(s)$, $q = period(t)$, and suppose for contradiction that $u =
+ov(s,t)$ satisfies $|u| \ge p+q$. Write $u_{k,l}$ for the substring of $u$ from
+position $k$ to $l$ (inclusive). Since $u$ is a suffix of $s$, and $s$ is a
+substring of $\textit{factor}(s)^\infty$, $u$ inherits period $p$: $u_{k,l} =
+u_{k+p,l+p}$ whenever both sides are defined. Symmetrically, since $u$ is a
+prefix of $t$, $u$ inherits period $q$. Moreover, because $u$ is literally $t$'s
+own prefix of length $|u| \ge q$ we have $u_{1,q} = \textit{factor}(t)$.
+
+\textbf{Case $p = q$.} Then $u_{1,p} = \textit{factor}(t)$ as noted above. On
+the other hand, $u$ is a substring of $\textit{factor}(s)^\infty$, so $u_{1,p}$
+is a substring of length $p = \textit{period}(s)$ of that periodic string, i.e.,
+a cyclic rotation of $\textit{factor}(s)$. Hence $\textit{factor}(t)$ is a
+cyclic rotation of $\textit{factor}(s)$, so $s$ and $t$ are equivalent -- a
+contradiction.
+
+\textbf{Case $p \neq q$}, say without loss of generality $p > q$. Combining the
+two inherited periods of $u$:
+\begin{equation}
+x \;=\; u_{1,p} \;=\; u_{1+q,\,p+q} \;=\; u_{1+q,\,p}\cdot u_{p+1,\,p+q} \;=\; u_{1+q,\,p}\cdot u_{1,\,q}
+\end{equation}
+(the first equality uses $u$'s period $q$, the second is just splitting the
+range, the third uses $u$'s period $p$). Writing $a = u_{1,q} =
+\textit{factor}(t)$ and $b = u_{1+q,\,p}$ (so $|a|=q$, $|b|=p-q$), this reads $x
+= b \cdot a$. But trivially $x = u_{1,p} = a' \cdot b'$ for $a' = u_{1,q} = a$
+and $b' = u_{1+q,p} = b$ as well, i.e. $x = a \cdot b$. So $x = ab = ba$ with
+$a, b$ both non-empty.
+
+Since $x = u_{1,p}$ is a cyclic rotation of $\textit{factor}(s)$, and $ab=ba$
+makes $x$ a power of a shorter string $z$~\cite{lyndon1962equation}, it
+follows that $\textit{factor}(s)$
+is also a power of a shorter string, which contradicts the fact that
+$\textit{factor}(s)$ is minimal.
+
+In both cases we reach a contradiction, so $ov(s,t) = |u| < p + q =
+\textit{period}(s) + \textit{period}(t)$.
+\end{proof}
+
+Based on the structural properties of superstrings, the string $t_C$ selected in
+Step 3 is equivalent to the cyclic superstring $\langle s_{i_1}, \dots, s_{i_r}
+\rangle$. Because the initial cycle cover $\mathcal{C}_S$ has minimum weight,
+the strings in the set $T$ are guaranteed to be mutually inequivalent.
+Therefore, Lemma \ref{lemma:inequivalent_overlap} applies to all strings in $T$.
+
+Let $OV$ denote the total overlap lost by breaking the edges in Step 6. Since
+the sum of the overlaps between adjacent strings in $T$ cannot exceed the sum of
+their periods, $OV$ is bounded by the total weight of the initial cycle cover.
+By the relationship between cycle weight and period length established in
+Corollary \ref{cor:cycle_weight_period}, we have:
+\begin{equation}
+OV \le \sum_{C \in \mathcal{C}_S} w(C) = CYC(G_S)
+\end{equation}
+
+By combining these observations, we can establish the upper bound on the length
+of the final superstring $\tilde{s}$ produced by the algorithm:
+\begin{equation}
+|\tilde{s}| = CYC(G_T) + OV \le CYC(G_T) + CYC(G_S) \le 2opt(S) + opt(S) = 3opt(S)
+\end{equation}
+Thus, the generic algorithm safely achieves an approximation ratio of 3.

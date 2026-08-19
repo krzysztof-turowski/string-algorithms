@@ -1,0 +1,149 @@
+\section{The $2\frac{25}{42}$-Approximation Algorithm}
+
+The approach utilized by the $2\frac{25}{42}$-approximation algorithm is similar
+to earlier methods that rely on overlap maximization. The core structural steps
+resemble the generic algorithm, with the critical difference lying in the final
+step: instead of computing a second cycle cover, the algorithm employs a
+sophisticated overlap approximation algorithm to merge the cycle
+representatives.
+
+\subsection{Algorithm Outline}
+The cycle representatives $t_C$ are chosen using the exact same optimal rotation
+conditions as established in the $2\frac{2}{3}$-approximation algorithm. The
+steps are defined as follows:
+
+\begin{enumerate}
+    \item \textbf{Initial Distance Graph:} Construct the distance graph $G_S$
+    for the set $S$.
+    \item \textbf{First Cycle Cover:} Find a minimum weight cycle cover
+    $\mathcal{C}_S$ on the graph $G_S$.
+    \item \textbf{Optimal Representatives:} For each cycle $C \in
+    \mathcal{C}_S$, compute and choose the representative string $t_C$ exactly
+    as described in Lemma \ref{lemma:representative_choice}.
+    \item \textbf{Overlap Approximation:} Let $T$ be the set of all chosen
+    strings $t_C$. Construct a superstring of $T$ using a $\delta$-approximation
+    maximum overlap algorithm.
+\end{enumerate}
+
+\subsection{Approximation Ratio Analysis}
+To establish the final approximation ratio, we first need to define the
+relationship between the length of the produced superstring and the maximum
+overlap of the set $T$.
+
+\begin{lemma} \label{lemma:apx_overlap}
+Let $apx(T)$ be the length of the superstring of $T$ produced by a
+$\delta$-approximation maximum overlap algorithm. Then:
+\begin{equation}
+apx(T) \le opt(T) + (1 - \delta)\textit{maxov}(T)
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Recall the fundamental relationship that $opt(T) = \sum_{t_i \in T} |t_i| -
+\textit{maxov}(T)$. Since the overlap achieved by the $\delta$-overlap
+approximation algorithm is by definition at least $\delta \cdot
+\textit{maxov}(T)$, the length of the resulting string is bounded by:
+\begin{equation}
+apx(T) \le \sum_{t_i \in T} |t_i| - \delta \cdot \textit{maxov}(T) = opt(T) + (1 - \delta)\textit{maxov}(T)
+\end{equation}
+\end{proof}
+
+To utilize this lemma, we need a strict upper bound on the possible maximum
+overlap $\textit{maxov}(T)$. In older algorithms, the standard bound was
+$\textit{maxov}(T) \le 2 CYC(G_S)$. However, due to the specific choice of cycle
+representatives $t_C$ in Step 3, this bound can be significantly tightened.
+
+\begin{lemma} \label{lemma:tight_maxov}
+The maximum overlap of the set $T$ is bounded by:
+\begin{equation}
+\textit{maxov}(T) \le \frac{3}{2} CYC(G_S)
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Consider the shortest superstring for $T$, and assume that it contains the
+strings $t_1, t_2, \dots$ in that specific order. Recall that the strings in $T$
+are mutually inequivalent due to the minimality of the cycle cover
+$\mathcal{C}_S$. Therefore, by applying the Overlap-Rotation Lemma
+\ref{lemma:overlap_rotation}, the overlap between any two adjacent strings in
+the superstring satisfies:
+\begin{equation}
+ov(t_i, t_{i+1}) \le \textit{period}(t_i) + \frac{1}{2}\textit{period}(t_{i+1})
+\end{equation}
+Summing these overlaps over all adjacent strings $t_i \in T$, and recalling that
+the period of a representative string equals the weight of its generating cycle,
+we obtain:
+\begin{equation}
+\textit{maxov}(T) = \sum_{i=1}^{|T|-1} ov(t_i, t_{i+1}) \le \frac{3}{2} \sum_{t_i \in T} \textit{period}(t_i) = \frac{3}{2} CYC(G_S)
+\end{equation}
+\end{proof}
+
+By combining these bounds and utilizing a $\delta$-approximation algorithm for
+directed Max-TSP-Path in the final step, the overall approximation ratio is
+established. Table~\ref{tab:maxtsp_history} summarizes the history of such
+algorithms and the resulting shortest superstring ratio obtained by substituting
+$\delta$ into Lemma~\ref{lemma:apx_overlap} and Lemma~\ref{lemma:tight_maxov}.
+
+\begin{table}[htpb]
+    \centering
+    \caption{History of approximation-ratio improvements for directed
+    Max-TSP-Path, and the resulting Shortest Superstring ratio $2 +
+    \frac{3}{2}(1-\delta)$ obtained when the algorithm is plugged into Step 4 of
+    this section.}
+    \label{tab:maxtsp_history}
+    \renewcommand{\arraystretch}{1.3}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{@{}llcc@{}}
+        \toprule
+        \textbf{Year} & \textbf{Authors} & \textbf{Max-TSP-Path Ratio $\delta$} & \textbf{Resulting SCS Ratio} \\
+        \midrule
+        \textbf{1994} & \textbf{Kosaraju, Park, Stein \cite{Kosaraju1994}} & $\mathbf{\frac{38}{63} \approx 0.603}$ & $\mathbf{2\frac{25}{42} \approx 2.596}$ \\
+        2004 & Bläser \cite{Blaser2004} & $\frac{8}{13} \approx 0.615$ & $2\frac{15}{26} \approx 2.577$ \\
+        2005 & Kaplan et al. \cite{kaplan2005approximation} & $\frac{2}{3} \approx 0.667$ & $2\frac{1}{2} = 2.5$ \\
+        2012 & Paluch, Elbassioni, van Zuylen \cite{paluch2012simpler} & $\frac{2}{3} \approx 0.667$ & $2\frac{1}{2} = 2.5$ \\
+        2020 & Paluch \cite{paluch2020new} & $\frac{7}{10} = 0.7$ & $2\frac{9}{20} = 2.45$ \\
+        \bottomrule
+    \end{tabular}%
+    }
+\end{table}
+
+\begin{theorem}
+By employing the $\frac{38}{63}$-overlap approximation algorithm proposed by
+Kosaraju in Step 4, the algorithm achieves a $2\frac{25}{42} \approx 2.596$
+approximation for the shortest superstring problem.
+\end{theorem}
+
+\begin{proof}
+By substituting the bounds from Lemma \ref{lemma:optT}, Lemma
+\ref{lemma:apx_overlap}, and Lemma \ref{lemma:tight_maxov} into the overlap
+approximation formula with $\delta = \frac{38}{63}$, the length of the produced
+superstring is bounded by:
+\begin{equation}
+apx(T) \le opt(T) + \left(1 - \frac{38}{63}\right)\textit{maxov}(T)
+\end{equation}
+\begin{equation}
+apx(T) \le 2opt(S) + \left(\frac{25}{63}\right) \frac{3}{2} CYC(G_S)
+\end{equation}
+Since $CYC(G_S) \le opt(S)$, this simplifies to:
+\begin{equation}
+apx(T) \le 2opt(S) + \frac{25}{42} opt(S) = 2\frac{25}{42} opt(S)
+\end{equation}
+This mathematically guarantees the $2.596$ approximation ratio.
+\end{proof}
+
+\subsection{Computational Complexity}
+Let $n = |S|$ and let $L = \sum_{s \in S} |s|$ denote the total input length.
+Steps 1 and 2 build the distance graph $G_S$ and compute its minimum weight
+cycle cover, the latter using the Hungarian algorithm in $O(n^3)$ time
+\cite{kuhn1955hungarian, edmondskarp1972, tomizawa1971techniques}. As in the $2\frac{2}{3}$-approximation algorithm, Step
+3 computes the representatives $t_C$ in $O(L)$ time overall, by Lemma
+\ref{lemma:representative_choice}. Step 4 runs a $\delta$-approximation
+algorithm for directed Max-TSP-Path on $T$, where $|T| \le n$. Writing
+$T_\delta(n)$ for the running time of this subroutine, the algorithm overall
+runs in $O(n^3 + T_\delta(n) + L)$ time.
+
+When Kosaraju's $\frac{38}{63}$-approximation algorithm is used for this step
+(Theorem \ref{thm:final_approximation}), each of its three versions relies on
+the Hungarian algorithm and Edmonds' blossom algorithm, both running in $O(n^3)$
+time, so $T_\delta(n) = O(n^3)$. Substituting this back, the algorithm as a
+whole runs in $O(n^3 + L)$ time.

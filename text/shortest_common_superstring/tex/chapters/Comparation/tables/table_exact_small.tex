@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Comparison against the true optimum, computed by brute-force enumeration. A single instance consists of $n \in \{3,4\}$ words of length $3$ or $4$ over the alphabet $\{a,b\}$, and the table averages over 20 such instances.}
+    \label{tab:bench_exact_small}
+    \small
+    \setlength{\tabcolsep}{7pt}
+    \renewcommand{\arraystretch}{1.1}
+    \begin{tabular}{@{}lrrr@{}}
+        \toprule
+        \textbf{Algorithm} & \multicolumn{2}{c}{\textbf{Length / OPT}} & \textbf{Optimal} \\
+        \cmidrule(lr){2-3}
+         & mean & worst & instances \\
+        \midrule
+        \textsc{Greedy} (max overlap) & 1.1541 & 1.2500 & 0/20 \\
+        \textsc{MGreedy} & 1.1091 & 1.5000 & 11/20 \\
+        \textsc{TGreedy} & 1.1541 & 1.2500 & 0/20 \\
+        Group Merge & 1.0000 & 1.0000 & 20/20 \\
+        Teng--Yao & 1.0872 & 1.3333 & 11/20 \\
+        Paluch--Elbassioni--van~Zuylen & 1.0083 & 1.1667 & 19/20 \\
+        Kosaraju--Park--Stein ($\frac{38}{63}$) & 1.0674 & 1.3750 & 14/20 \\
+        Breslauer--Jiang--Jiang $2\frac{2}{3}$ & 1.1488 & 1.4286 & 9/20 \\
+        Breslauer--Jiang--Jiang $2\frac{25}{42}$ & 1.1488 & 1.4286 & 9/20 \\
+        \bottomrule
+    \end{tabular}
+\end{table}

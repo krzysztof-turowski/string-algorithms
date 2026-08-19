@@ -1,0 +1,121 @@
+\section{The $2\frac{2}{3}$-Approximation Algorithm}
+
+The algorithm proposed by authors improves the generic shortest superstring
+algorithm by refining the selection of cycle representatives before the second
+cycle cover is computed. The key idea is to choose representative strings so
+that the overlap between any two representatives is sufficiently small. As a
+result, the total overlap lost $OV$ during the cycle-breaking phase is reduced,
+leading to a better approximation ratio.
+
+\subsection{Choosing Cycle Representatives}
+We must select a representative string $t_C$ for each cycle that satisfies the
+superstring containment conditions and whose infinite periodic extension is
+aligned with the corresponding optimal rotation from Lemma
+\ref{lemma:overlap_rotation}.
+
+\begin{lemma} \label{lemma:representative_choice}
+For any cycle $C = s_{i_1}, \dots, s_{i_r}, s_{i_1} \in \mathcal{C}_S$, there
+exists a string $t_C$ such that for some index $j$:
+\begin{enumerate}
+    \item $t_C$ contains the string $\langle s_{i_{j+1}}, \dots, s_{i_r},
+    s_{i_1}, \dots, s_{i_j} \rangle$.
+    \item $t_C$ is contained in the string $\langle s_{i_j}, \dots, s_{i_r},
+    s_{i_1}, \dots, s_{i_{j-1}}, s_{i_j} \rangle$.
+    \item $(t_C)_\infty = \overrightarrow{\langle s_{i_1}, \dots, s_{i_r}
+    \rangle}_\infty$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Order the equivalent cyclic strings $\langle s_{i_1}, \dots, s_{i_r} \rangle,
+\dots, \langle s_{i_r}, s_{i_1}, \dots, s_{i_{r-1}} \rangle$ according to their
+first appearances in the infinite optimally rotated string
+$\overrightarrow{\langle s_{i_1}, \dots, s_{i_r} \rangle}_\infty$. This ordering
+is unique.
+
+Suppose that the string $\langle s_{i_{j+1}}, \dots, s_{i_r}, s_{i_1}, \dots,
+s_{i_j} \rangle$ appears first in this ordering. Let $t$ be the prefix of
+$\overrightarrow{\langle s_{i_1}, \dots, s_{i_r} \rangle}_\infty$ that ends
+exactly at $\langle s_{i_{j+1}}, \dots, s_{i_r}, s_{i_1}, \dots, s_{i_j}
+\rangle$ (inclusive). Consequently, $t$ is naturally contained in $\langle
+s_{i_j}, \dots, s_{i_r}, s_{i_1}, \dots, s_{i_{j-1}}, s_{i_j} \rangle$. If it
+were not, the string $\langle s_{i_j}, \dots, s_{i_r}, s_{i_1}, \dots,
+s_{i_{j-1}} \rangle$ would have to appear before $\langle s_{i_{j+1}}, \dots,
+s_{i_r}, s_{i_1}, \dots, s_{i_j} \rangle$ in the infinite string, which
+fundamentally contradicts our initial choice of the earliest appearing string.
+
+The chosen string $t$ is designated as our representative $t_C$. This selection
+process can be executed in polynomial (and in fact, linear) time. From Lemma
+\ref{lemma:overlap_rotation} we can get $\overrightarrow{\langle s_{i_1}, \dots,
+s_{i_r} \rangle}_\infty$ in linear time to $|\langle s_{i_1}, \dots, s_{i_r}
+\rangle|$. Then we only need to find which string appears first which can be
+easily done by looking which concatenation point appears first in rotated
+string.
+$$
+\langle s_{i_1}, \dots, s_{i_r} \rangle = \textit{pref}(s_{i_1}, s_{i_2})
+\textit{pref}(s_{i_2}, s_{i_3}) \dots \textit{pref}(s_{i_{r-1}}, s_{i_r})
+s_{i_r}
+$$
+\end{proof}
+
+\subsection{Algorithm Outline}
+With the representative strings correctly defined we can modify steps 3 and 6 of
+generic algorithm and obtaine improved version:
+
+\begin{enumerate}
+    \item \textbf{Initial Distance Graph:} Construct the distance graph $G_S$
+    for the input set $S$.
+    \item \textbf{First Cycle Cover:} Find a minimum weight cycle cover
+    $\mathcal{C}_S$ on the graph $G_S$.
+    \item \textbf{Optimal Representatives:} For each cycle $C \in
+    \mathcal{C}_S$, compute and choose the representative string $t_C$ exactly
+    as described in Lemma \ref{lemma:representative_choice}.
+    \item \textbf{Second Distance Graph:} Let $T$ be the set of all chosen
+    strings $t_C$. Construct the distance graph $G_T$.
+    \item \textbf{Second Cycle Cover:} Find a minimum weight cycle cover
+    $\mathcal{C}_T$ on the graph $G_T$.
+    \item \textbf{Strategic Cycle Breaking:} For each cycle of $\mathcal{C}_T$,
+    break the cycle by explicitly deleting an edge that goes from a string to a
+    string of equal or larger period. This creates a superstring of the elements
+    within the cycle.
+    \item \textbf{Final Concatenation:} Arbitrarily concatenate the resulting
+    strings to produce the final superstring $\tilde{s}$ for the set $S$.
+\end{enumerate}
+
+\subsection{Approximation Ratio Analysis}
+It is crucial to note that small cycles in $\mathcal{C}_T$ are not given any
+special structural treatment. Instead, the algorithm relies entirely on the
+precise condition in Step 6: cutting an edge that leads to a string with an
+equal or larger period.
+
+\begin{theorem} \label{thm:2_67_ratio}
+The length of the final superstring $\tilde{s}$ produced by the algorithm
+satisfies $|\tilde{s}| \le 2\frac{2}{3} opt(S) \approx 2.67 opt(S)$.
+\end{theorem}
+
+\begin{proof}Let $OV$ denote the total overlap lost by cutting the edges during Step 6. Because the representative strings comprising the set $T$ are mutually inequivalent, we can apply the bounds provided by the Overlap-Rotation Lemma alongside the established period-weight corollaries. Moreover, since Step 6 always cuts an edge leading to a string of equal or larger period, every such edge satisfies $\textit{period}(t_{C}) \le \textit{period}(t_{C'})$ for the pair of representatives it connects, which is exactly the condition required to invoke the tighter $\frac{2}{3}$ bound of the Overlap-Rotation Lemma rather than the general $period(s) + period(\alpha)$ bound.
+\begin{equation}
+OV \le \frac{2}{3} \sum_{C \in \mathcal{C}_S} \textit{period}(t_C) = \frac{2}{3} \sum_{C \in \mathcal{C}_S} w(C) = \frac{2}{3} CYC(G_S) \le \frac{2}{3} opt(S)
+\end{equation}
+
+From Lemma \ref{lemma:optT} we know that the weight of the cycle cover
+$CYC(G_T)$ cannot exceed $2opt(S)$, we can sum these components to find the
+strict upper bound on the length of the final superstring $\tilde{s}$:
+\begin{equation}
+|\tilde{s}| = CYC(G_T) + OV \le 2opt(S) + \frac{2}{3}opt(S) = 2\frac{2}{3}opt(S)
+\end{equation}
+This concludes the proof, guaranteeing the $2\frac{2}{3}$ approximation ratio.
+\end{proof}
+
+\subsection{Computational Complexity}
+Let $n = |S|$ and let $L = \sum_{s \in S} |s|$ denote the total input length.
+Steps 1 and 4 each build a distance graph on at most $n$ vertices. Steps 2 and 5
+each compute a minimum weight cycle cover using the Hungarian algorithm, which
+runs in $O(n^3)$ time \cite{kuhn1955hungarian, edmondskarp1972, tomizawa1971techniques}. By Lemma
+\ref{lemma:representative_choice}, computing the representative $t_C$ for a
+cycle $C$ takes time linear in $|\langle s_{i_1}, \dots, s_{i_r} \rangle|$.
+Since the cycles of $\mathcal{C}_S$ partition $S$, Step 3 takes time $O(L)$
+overall. Steps 6 and 7 are also linear in the size of the strings being
+concatenated, so they take $O(L)$ time as well. Since the two cycle cover
+computations take $O(n^3)$ time and all remaining steps take $O(L)$ time, the
+algorithm runs in $O(n^3 + L)$ time.

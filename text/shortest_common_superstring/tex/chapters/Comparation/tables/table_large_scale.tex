@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+    \centering
+    \caption{The largest instance measured for each source: superstring length relative to the shortest found on that instance, and running time. Every algorithm was given the same instance.}
+    \label{tab:bench_large_scale}
+    \small
+    \setlength{\tabcolsep}{6pt}
+    \renewcommand{\arraystretch}{1.1}
+    \begin{tabular}{@{}lrrrr@{}}
+        \toprule
+        \textbf{Algorithm} & \multicolumn{2}{c}{\textbf{Text, $n=1600$}} & \multicolumn{2}{c}{\textbf{DNA, $n=800$}} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5}
+          & length / best & time (s) & length / best & time (s) \\
+        \midrule
+        \textsc{Greedy} (max overlap) & 1.0000 & 4152.5 & 1.0000 & 1421.3 \\
+        \textsc{MGreedy} & 1.0004 & 4091.3 & 1.0003 & 1420.8 \\
+        \textsc{TGreedy} & 1.0002 & 4090.5 & 1.0001 & 1422.1 \\
+        Group Merge & 1.0054 & 495.7 & 1.0507 & 165.5 \\
+        Teng--Yao & 1.0005 & 19.2 & 1.0034 & 16.5 \\
+        Paluch--Elbassioni--van~Zuylen & 1.0000 & 9.0 & 1.0000 & 8.6 \\
+        Kosaraju--Park--Stein ($\frac{38}{63}$) & 1.0033 & 249.2 & 1.0248 & 50.2 \\
+        Breslauer--Jiang--Jiang $2\frac{2}{3}$ & 1.0007 & 11.5 & 1.0123 & 6.6 \\
+        Breslauer--Jiang--Jiang $2\frac{25}{42}$ & 1.0007 & 11.5 & 1.0122 & 6.6 \\
+        \bottomrule
+    \end{tabular}
+\end{table}

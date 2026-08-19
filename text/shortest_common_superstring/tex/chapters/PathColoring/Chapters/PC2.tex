@@ -1,0 +1,400 @@
+\section{Algorithmic Proof of the Path-Coloring Lemma}
+
+Let $G = (V, E)$ be the directed graph we intend to color, satisfying the degree
+and 2-cycle restrictions outlined previously.
+
+\subsection{Phase 1: Constructing the Initial Coloring}
+
+The first phase aims to partition the edges of $G$ into two color classes such
+that no node acts as a junction for two edges of the same color pointing in the
+same direction.
+
+We construct an auxiliary undirected graph $A_1 = (E, F_1)$. Every edge $e \in
+E$ of the original graph $G$ becomes a vertex in $A_1$ (referred to as an
+\textit{A-node}). The edge set $F_1$ (containing \textit{A-edges}) is
+constructed to capture structural conflicts: an undirected edge $\{e, f\} \in
+F_1$ exists if and only if the directed edges $e$ and $f$ share either a common
+head or a common tail in $G$. Specifically, $\{e, f\} \in F_1$ if there exist
+vertices $u, v, w \in V$ such that either $e = (u, v)$ and $f = (w, v)$, or $e =
+(v, u)$ and $f = (v, w)$. This guarantees that colliding edges are forced into
+separate color classes.
+
+Because the maximum total degree of any vertex in $G$ is bounded by 3, every
+A-node in $A_1$ has a degree of at most 2. As a result, the auxiliary graph
+$A_1$ decomposes entirely into a collection of isolated vertices, simple paths
+(A-paths), and simple cycles (A-cycles).
+
+Crucially, every A-cycle in $A_1$ must contain an even number of A-edges. This
+property arises because traversing an A-cycle corresponds to alternating between
+"head-meets" and "tail-meets" in the original graph $G$. This structural
+guarantee allows us to trivially 2-color the A-nodes by simply alternating
+colors along each A-path and A-cycle.
+
+\begin{lemma} \label{lemma:initial_coloring}
+The edges of $G$ can be colored with two colors such that each color class forms
+a collection of node-disjoint paths and cycles. Furthermore, this initial
+coloring can be computed in polynomial time.
+\end{lemma}
+While Lemma \ref{lemma:initial_coloring} successfully isolates paths and cycles,
+the path-coloring property requires the complete elimination of all
+monochromatic cycles. Note that for any A-path or A-cycle in $A_1$, there are
+exactly two valid alternating colorings, and we initially choose one
+arbitrarily. This flexibility is the key observation.
+
+\subsection{Phase 2: Refining the Coloring and Breaking Cycles}
+To systematically eliminate monochromatic cycles, we classify the A-nodes (edges
+of $G$) based on their configuration in $A_1$:
+\begin{itemize}
+    \item Let $Z$ be the set of all A-nodes belonging to A-cycles in $A_1$.
+    \item Let $P$ be the set of all A-nodes belonging to A-paths that contain at
+    least one A-edge (i.e., non-isolated A-nodes not in $Z$).
+    \item Let $S$ be the set of all isolated A-nodes in $A_1$.
+\end{itemize}
+Furthermore, for any A-path, we define its first and last A-nodes as
+\textit{A-end nodes}.
+We first restrict our focus to the subgraph $G' = (V, Z \cup P)$. Our objective
+is to ensure that $G'$ can be 2-colored such that each color class contains
+strictly node-disjoint paths. Because $G$ lacks 2-cycles, any monochromatic
+cycle formed in $G'$ must consist of at least three edges. More importantly, due
+to the established alternating coloring, the only way a monochromatic cycle can
+manifest in $G'$ is if all participating edges are A-end nodes of various
+A-paths in $P$. Furthermore, degree restrictions and the fact that every A-path
+in $P$ represents at least two edges in $G$ guarantee that any such
+monochromatic cycles in $G'$ are entirely node-disjoint.
+
+To destroy a monochromatic cycle containing edges $e_1, e_2, \dots, e_l$ in
+$G'$, we forcefully introduce a color conflict between two adjacent edges. We
+arbitrarily select $e_1$ and $e_2$ and add a new auxiliary edge $\{e_1, e_2\}$
+to our conflict set. Applying this to all monochromatic cycles in $G'$ produces
+an augmented edge set $F_2$, giving a new auxiliary graph $A_2 = (Z \cup P,
+F_2)$.
+
+Since the problematic cycles in $G'$ are node-disjoint, there are at most
+$|E|/3$ such cycles, meaning they can be identified and neutralized in
+polynomial time. While introducing the new A-edges in $F_2$ may fuse some
+A-paths into new A-cycles, these newly formed A-cycles maintain an even length.
+This is because adding an A-edge $\{e_1, e_2\}$ structurally represents the
+meeting of two heads or two tails, preserving the alternating parity required
+for 2-colorability.
+
+\begin{lemma} \label{lemma:refined_coloring}
+The edges of the subgraph $G' = (V, Z \cup P)$ can be 2-colored such that each
+color class consists strictly of node-disjoint paths. This refined coloring is
+computable in polynomial time.
+\end{lemma}
+
+Following this augmentation, we update the sets $Z$ and $P$ to reflect the
+transfer of A-nodes from paths into the newly formed A-cycles of $A_2$. The
+final step of the algorithm must then correctly integrate the isolated edges of
+set $S$ without closing any new monochromatic cycles.
+
+\subsection{Phase 3: Integrating Isolated Edges}
+\paragraph{The Special Case}
+Assume temporarily that any directed cycle in $G$ contains at least two edges
+belonging to $S$. Under this assumption, we construct a new auxiliary directed
+multigraph, $B$, designed to track the monochromatic paths already established
+in the refined subgraph $G' = (V, Z \cup P)$:
+\begin{itemize}
+    \item \textbf{Vertices:} The vertices of $B$ correspond directly to the
+    edges in $S$.
+    \item \textbf{Edges:} A directed A-edge $(e, f)$ is added to $B$ if there
+    exists a monochromatic path in $G'$ connecting the head of $e$ to the tail
+    of $f$. This new A-edge inherits the color of that connecting path.
+    \item \textbf{Adjacency Handling:} If two edges in $S$ are directly adjacent
+    in $G$ (e.g., $e = (u, v)$ and $f = (v, w)$), two parallel A-edges are added
+    between them in $B$, one for each color.
+\end{itemize}
+
+Because of our temporary assumption that every cycle in $G$ contains at least
+two edges from $S$, the multigraph $B$ is guaranteed to be free of self-loops.
+Furthermore, degree constraints dictate that every vertex in $B$ has an indegree
+and outdegree of at most 2, and any incoming or outgoing pairs of A-edges must
+be assigned different colors.
+
+\begin{lemma} \label{lemma:b_coloring}
+If the vertices of $B$ can be 2-colored such that every monochromatic cycle in
+$B$ contains at least one vertex of the opposite color, then the entirety of $G$
+can be validly 2-colored into node-disjoint paths.
+\end{lemma}
+
+To deterministically find the coloring required by Lemma \ref{lemma:b_coloring},
+we analyze the monochromatic cycles of $B$ by constructing a secondary
+undirected multigraph, $B^*$. The vertices of $B^*$ represent the monochromatic
+cycles of $B$, and an edge exists between two vertices in $B^*$ if their
+corresponding cycles share a vertex in $B$.
+
+The coloring algorithm for $B$ proceeds recursively based on the concept of
+\textit{free A-nodes} (vertices in $B$ that belong to at most one monochromatic
+cycle):
+\begin{enumerate}
+    \item If a connected component in $B$ contains a free A-node, we assign it
+    the color opposite to its cycle, virtually destroying that cycle. This
+    removal breaks the component into smaller subcomponents, each guaranteed to
+    now possess a free A-node, allowing the process to recurs.
+    \item If a component lacks a free A-node, its corresponding structure in
+    $B^*$ must contain a cycle or a double edge. Because all cycles in $B^*$
+    have even length, we can alternatively 2-color the elements of the $B^*$
+    cycle. This simultaneous color assignment shatters all associated cycles in
+    $B$, generating free A-nodes and returning us to the first case.
+\end{enumerate}
+
+\paragraph{The General Case: Inductive Graph Reduction}
+To remove the restrictive assumption that every cycle in $G$ contains at least
+two edges from $S$, the algorithm uses induction on the number of vertices,
+$|V|$.
+
+First, trivially isolated edges in $S$ (those sharing no endpoints with any
+other edge in $E$) are colored arbitrarily, and adjacent pairs in $S$ are
+assigned opposite colors and removed from consideration. Let $T \subseteq S$ be
+the remaining subset of these isolated A-nodes.
+
+For each edge $t \in T$, we determine if its tail is reachable from its head
+within the currently colored subgraph $(V, Z \cup P)$. If no such path exists
+for any $t$, then any cycle formed by incorporating $T$ must necessarily contain
+at least two edges from $T$. This directly satisfies our earlier assumption,
+allowing us to safely apply the coloring logic of multigraph $B$.
+
+However, if there exists a cycle containing exactly one edge $e \in T$, the
+algorithm executes a structural graph contraction. Because $G$ contains no
+2-cycles, $e$ must be adjacent to an edge $f$ that is an endpoint of an
+established path. By strategically discarding $e$, $f$, and their shared
+junction, and rewiring the surrounding edges to bypass the removed segment, we
+produce a strictly smaller graph $\hat{G}$. This smaller graph inherits the
+necessary structural properties, allowing the path-coloring to proceed
+inductively.
+
+\paragraph{Inductive Step and Subcase Analysis}
+Throughout this induction, the two colors are denoted $0$ and $1$, so that for a
+color $C \in \{0,1\}$ the opposite color is $1-C$.
+
+The discard-and-rewire step splits into several subcases, all worked out by
+Bl\"aser \cite{Blaser2004} except one. Below we number them Case 1 through Case
+3: Cases 1 and 2 are representative examples of case types Bl\"aser already
+covers in full (the remaining case types follow the same pattern and are left to
+\cite{Blaser2004}), while Case 3 is the one genuinely missing from his figures.
+
+Figure~\ref{fig:pc-full} shows the local picture we start from: the edge
+$e=(x,y)$ we are trying to remove, its preceding path-edge $f_1$, the edge
+continuing the cycle at $y$ (call it $g_1$), and the other edge at $x$, $a_1$,
+whose far endpoint we write $u$. The other edge at $y$ is $c_1$, with far
+endpoint $q$.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}, hol/.style={circle,draw,fill=white,inner sep=1.6pt}]
+    \node[dot,label=above:{$z$}] (z) at (0,0) {};
+    \node[dot,label=above:{$x$}] (x) at (1.6,0) {};
+    \node[dot,label=above:{$y$}] (y) at (3.2,0) {};
+    \node[dot,label=above:{$w_1$}] (w1) at (4.9,0) {};
+    \node[hol,label=below:{$u$}] (u) at (1.6,-1.4) {};
+    \node[hol,label=below:{$q$}] (q) at (3.2,-1.4) {};
+    \draw[->] (z) -- (x) node[midway,above] {$f_1$};
+    \draw[->] (x) -- (y) node[midway,above] {$e$};
+    \draw[->] (y) -- (w1) node[midway,above] {$g_1$};
+    \draw[->] (u) -- (x) node[midway,left] {$a_1$};
+    \draw[->] (y) -- (q) node[midway,right] {$c_1$};
+\end{tikzpicture}
+\caption{Local picture around $e$, with all four surrounding edges
+$f_1,e,a_1,c_1$ shown, before anything is discarded.}
+\label{fig:pc-full}
+\end{figure}
+
+Discarding $e,f_1$ removes $x$ and $z$ from consideration and rewires $a_1$ to
+end at $y$ instead of $x$, giving Figure~\ref{fig:pc-branch}. Everything that
+follows is based on comparing $u$ (where $a_1$ now starts) with $q$ (where $c_1$
+ends).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}, hol/.style={circle,draw,fill=white,inner sep=1.6pt}]
+    \node[dot,label=above:{$y$}] (y) at (1.6,0) {};
+    \node[dot,label=above:{$w_1$}] (w1) at (3.3,0) {};
+    \node[hol,label=below:{$u$}] (u) at (0.4,-1.4) {};
+    \node[hol,label=below:{$q$}] (q) at (2.4,-1.4) {};
+    \draw[->] (y) -- (w1) node[midway,above] {$g_1$};
+    \draw[->] (u) -- (y) node[midway,left] {$a_1$};
+    \draw[->] (y) -- (q) node[midway,right] {$c_1$};
+\end{tikzpicture}
+\caption{After discarding $e,f_1$ and rewiring $a_1$. Whether $u=q$ decides the
+case.}
+\label{fig:pc-branch}
+\end{figure}
+
+\subparagraph{Case 1 ($u \ne q$): nothing else collides.}
+No 2-cycle is created, so we recurse on Figure~\ref{fig:pc-branch} directly,
+with $a_1$ ending at $y$ as drawn. Let $C$ be the color $a_1$ receives from the
+recursion. We then set $e=C$ and $f_1=1-C$ (Figure~\ref{fig:pc-case0}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}, hol/.style={circle,draw,fill=white,inner sep=1.6pt}]
+    \node[dot,label=above:{$z$}] (z) at (0,0) {};
+    \node[dot,label=above:{$x$}] (x) at (1.6,0) {};
+    \node[dot,label=above:{$y$}] (y) at (3.2,0) {};
+    \node[dot,label=above:{$w_1$}] (w1) at (4.9,0) {};
+    \node[hol,label=below:{$u$}] (u) at (1.6,-1.4) {};
+    \node[hol,label=below:{$q$}] (q) at (3.2,-1.4) {};
+    \draw[dashed,->] (z) -- (x) node[midway,above] {$f_1$};
+    \draw[->] (x) -- (y) node[midway,above] {$e$};
+    \draw[->] (u) -- (x) node[midway,left] {$a_1$};
+    \draw[dotted,->] (y) -- (w1) node[midway,above] {$g_1$};
+    \draw[dotted,->] (y) -- (q) node[midway,right] {$c_1$};
+\end{tikzpicture}
+\caption{Recovered coloring for $u\ne q$, undoing the reduction in full back to
+Figure~\ref{fig:pc-full}: $a_1,e$ share color $C$ (solid) and $f_1$ gets $1-C$
+(dashed), matching \texttt{path\_coloring.py}. $g_1,c_1$ (dotted) already have
+real colors too, assigned by this same recursive call -- just not ones this rule
+determines, so we leave them unstyled.}
+\label{fig:pc-case0}
+\end{figure}
+
+\subparagraph{Case 2 ($u=q=v$, and $v$ is the tail of the third edge $h$ at
+$v$)}
+Beyond $a_1,c_1$ colliding, nothing else needs to be touched.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}, hol/.style={circle,draw,fill=white,inner sep=1.6pt}]
+    \node[dot,label=above:{$y$}] (y) at (0,0) {};
+    \node[dot,label=left:{$v$}] (v) at (0,-1.4) {};
+    \node[dot,label=above:{$w_1$}] (w1) at (2.2,0) {};
+    \node[hol] (p) at (2.2,-1.4) {};
+    \draw[->] (y) -- (w1) node[midway,above] {$g_1$};
+    \draw[->] (v) -- (p) node[midway,below] {$h$};
+    \draw[->] (v) to[bend right=35] node[right,xshift=2pt] {$a_1$} (y);
+    \draw[->] (y) to[bend right=35] node[left,xshift=-2pt] {$c_1$} (v);
+\end{tikzpicture}
+\caption{Setup: $a_1,c_1$ close a 2-cycle at $v$, while $h$ leaves $v$ toward an
+unrelated node.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}, hol/.style={circle,draw,fill=white,inner sep=1.6pt}]
+    \node[dot,label=left:{$y{=}v$}] (yv) at (0,-0.7) {};
+    \node[dot,label=above:{$w_1$}] (w1) at (2.2,0) {};
+    \node[hol] (p) at (2.2,-1.4) {};
+    \draw[->] (yv) -- (w1) node[midway,above] {$g_1$};
+    \draw[->] (yv) -- (p) node[midway,below] {$h$};
+\end{tikzpicture}
+\caption{Discard $a_1,c_1$ and identify $y$ with $v$. Recurse on the smaller
+graph.}
+\end{figure}
+Undoing this reduction in full means restoring not just $a_1,c_1$ but also $x,z$
+with $e,f_1$. Crucially, $a_1$ reverts to its original form $(v,x)$ -- the
+rewired $(v,y)$ version existed only inside the reduction. We set $a_1$ to
+$g_1$'s color, $c_1$ to $h$'s color, then $e$ to $a_1$'s color and $f_1$ to the
+opposite.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}, hol/.style={circle,draw,fill=white,inner sep=1.6pt}]
+    \node[dot,label=above:{$z$}] (z) at (0,0) {};
+    \node[dot,label=above:{$x$}] (x) at (1.6,0) {};
+    \node[dot,label=above:{$y$}] (y) at (3.2,0) {};
+    \node[dot,label=above:{$w_1$}] (w1) at (5.4,0) {};
+    \node[dot,label=below:{$v$}] (v) at (3.2,-1.4) {};
+    \node[hol] (p) at (5.4,-1.4) {};
+    \draw[->] (z) -- (x) node[midway,above] {$f_1$};
+    \draw[dashed,->] (x) -- (y) node[midway,above] {$e$};
+    \draw[dashed,->] (y) -- (w1) node[midway,above] {$g_1$};
+    \draw[->] (v) -- (p) node[midway,below] {$h$};
+    \draw[dashed,->] (v) -- (x) node[midway,below left] {$a_1$};
+    \draw[->] (y) -- (v) node[midway,right] {$c_1$};
+\end{tikzpicture}
+\caption{Recovered coloring, undone in full: $g_1,a_1,e$ share one color
+(dashed), $h,c_1,f_1$ the other (solid). The dashed class is the path $v\to x\to
+y\to w_1$ and the solid class is $z\to x$ together with $y\to v\to p$ -- both
+simple, no cycle.}
+\end{figure}
+
+\subparagraph{Case 3 ($u=q=v$, and $v$ is the head of $h$): omitted from
+\cite{Blaser2004}.}
+Write $w_1=\textit{head}(g_1)$ and $w_2=\textit{tail}(h)$. If $w_1=w_2$ this is
+a loop, not a fresh 2-cycle, fixed by discarding $g_1,c_1,h,e,f_1$ and
+recoloring from the next chain edge at $w_1$. Assume $w_1 \ne w_2$. Now $w_1$
+carries a second edge $c_2$ (its chain neighbor $g_2$ leads elsewhere, dashed
+below) -- and it matters whether $c_2$ happens to land exactly on $w_2$.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}, hol/.style={circle,draw,fill=white,inner sep=1.6pt}]
+    \node[dot,label=above:{$y$}] (y) at (0,0) {};
+    \node[dot,label=left:{$v$}] (v) at (0,-1.4) {};
+    \node[dot,label=above:{$w_1$}] (w1) at (2.2,0) {};
+    \node[dot,label=below:{$w_2$}] (w2) at (2.2,-1.4) {};
+    \node[hol] (chain) at (4,0) {};
+    \draw[->] (y) -- (w1) node[midway,above] {$g_1$};
+    \draw[->] (v) to[bend right=35] node[right,xshift=2pt] {$a_1$} (y);
+    \draw[->] (y) to[bend right=35] node[left,xshift=-2pt] {$c_1$} (v);
+    \draw[->] (w2) -- (v) node[midway,below] {$h$};
+    \draw[->,dashed] (w1) -- (chain) node[midway,above] {\small $g_2$};
+    \draw[->,line width=1.1pt] (w1) -- (w2) node[midway,right] {$c_2$};
+\end{tikzpicture}
+\caption{Setup: $a_1,c_1$ close a 2-cycle at $v$, and $w_1$'s loose edge $c_2$
+(bold) happens to coincide with $w_2=\textit{tail}(h)$ -- unrelated to where the
+chain edge $g_2$ (dashed) actually goes.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}]
+    \node[dot,label=above:{$w_1$}] (w1) at (0,0) {};
+    \node[dot,label=above:{$w_2$}] (w2) at (2.2,0) {};
+    \draw[->,line width=1.1pt] (w1) -- (w2) node[midway,above] {$c_2$};
+\end{tikzpicture}
+\caption{Discard $g_1,h,c_1,a_1$ and the nodes $x,y,v$, leaving $c_2$ untouched.
+Recurse on what remains.}
+\end{figure}
+
+Let $v_e$ be the third edge at $w_2$ (other than $h,c_2$), colored $C$ by the
+recursion. We set
+\begin{equation}
+f_1 = C, \quad e = C, \quad c_1 = C, \qquad g_1 = 1-C, \quad h = 1-C, \quad a_1 = 1-C,
+\end{equation}
+and leave $c_2$ with whatever color the recursion already gave it.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, dot/.style={circle,fill=black,inner sep=1.6pt}]
+    \node[dot,label=above:{$z$}] (z) at (0,0) {};
+    \node[dot,label=above:{$x$}] (x) at (1.6,0) {};
+    \node[dot,label=above:{$y$}] (y) at (3.2,0) {};
+    \node[dot,label=below:{$v$}] (v) at (3.2,-1.4) {};
+    \node[dot,label=above:{$w_1$}] (w1) at (5.4,0) {};
+    \node[dot,label=below:{$w_2$}] (w2) at (5.4,-1.4) {};
+    \draw[->] (z) -- (x) node[midway,above] {$f_1$};
+    \draw[->] (x) -- (y) node[midway,above] {$e$};
+    \draw[dashed,->] (y) -- (w1) node[midway,above] {$g_1$};
+    \draw[dashed,->] (v) -- (x) node[midway,below left] {$a_1$};
+    \draw[->] (y) -- (v) node[midway,right] {$c_1$};
+    \draw[dashed,->] (w2) -- (v) node[midway,below] {$h$};
+    \draw[->,line width=1.1pt] (w1) -- (w2) node[midway,right] {$c_2$};
+\end{tikzpicture}
+\caption{Recovered coloring, undone in full back to $z,x$, with $a_1$ reverted
+to $(v,x)$: $f_1,e,c_1$ (color $C$, solid) versus $g_1,a_1,h$ (color $1-C$,
+dashed). The edge $c_2$ (bold) keeps whatever color the recursion assigned it.}
+\end{figure}
+
+Bl\"aser's own Fig.~A.10 in \cite{Blaser2004} handles a different coincidence:
+the chain edge $g_2$ (not $c_2$) leading to a node whose \emph{own} further edge
+(his $c_3$) coincides with $h$, resolved by discarding $g_2,g_1,h,c_1,a_1$ and
+splicing a further chain edge $g_3$ into $w_1$. The case above -- $c_2$ itself
+landing on $w_2$ -- is not among his figures. It is, however, exactly the branch
+\texttt{two\_cycle\_edge == c\_2} in the reference implementation
+(\texttt{path\_coloring.py}, function
+\texttt{\_lemma\_15\_inductive\_coloring}), which is why we have spelled it out
+in full.
+\section{Complexity and Running Time}
+The efficiency of this coloring scheme relies fundamentally on the graph's
+degree restrictions. Since every vertex has a total degree of at most 3, the
+number of edges is strictly bounded by $|E| \le \frac{3}{2}|V|$. The inductive
+reduction eliminates at least one vertex per step, so the reduction is applied
+at most $|V|$ times. Each individual step, however, does not run in $O(|E|)$
+time: constructing the auxiliary graph $A_1$ requires comparing every pair of
+edges for a shared endpoint, which takes $O(|E|^2) = O(|V|^2)$ time, and
+locating the target edge $e$ requires testing, for each of the $O(|V|)$
+candidates in $T$, whether it lies on a cycle of $G'$, at a further cost of
+$O(|V|+|E|) = O(|V|)$ per candidate -- again $O(|V|^2)$ in total. Hence each
+inductive step costs $O(|V|^2)$ time, and since at most $|V|$ steps are
+performed, the entire path-coloring algorithm executes deterministically in
+$O(|V|) \cdot O(|V|^2) = O(n^3)$ time.

@@ -1,0 +1,157 @@
+\section{The Overlap-Rotation Lemma}
+
+To establish tighter bounds on the overlap between strings, it is necessary to
+explore the combinatorial properties of periodic strings. The foundation of
+these properties relies on the concepts of unbordered strings and
+factorizations.
+
+\subsection{Combinatorial Properties of Strings}
+
+\begin{definition}[Unbordered String \cite{lothaire1983combinatorics}]
+A string $w$ is \textit{unbordered} if it has no proper prefix that is also a
+suffix. In other words $ov(w, w) = 0$ and $\textit{factor}(w) = w$.
+\end{definition}
+
+\begin{definition}[Local Factor and Critical Factorization \cite{lothaire1983combinatorics}]
+Given a non-trivial factorization $w = uv$ (a partition of $w$ into a non-empty
+prefix $u$ and a non-empty suffix $v$), a non-empty string $z$ is a
+\textit{repetition} at $(u,v)$ if $z$ is suffix-comparable with $u$ (i.e. $z$ is
+a suffix of $u$, or $u$ is a suffix of $z$) and prefix-comparable with $v$ (i.e.
+$z$ is a prefix of $v$, or $v$ is a prefix of $z$). The \textit{local factor} of
+the factorization $(u,v)$ is the shortest repetition at $(u,v)$.
+
+A non-trivial factorization $w = uv$ is called a \textit{critical factorization}
+if its local factor has the exact same length as $\textit{period}(w)$.
+\end{definition}
+
+The concept of critical factorization applies to both finite and infinite
+strings, and its existence is guaranteed by the following theorem:
+
+\begin{theorem}[Critical Factorization Theorem \cite{cesari1978caracterisation, lothaire1983combinatorics}]\label{th:critical_factorization}
+Given any $\textit{period}(w) - 1$ consecutive non-trivial factorizations of a
+string $w$, at least one of them is a critical factorization.
+\end{theorem}
+
+The behavior of critical factorizations under string rotation is characterized
+by the following useful lemma:
+
+\begin{lemma} \label{lemma:unbordered_rotation}
+Let $w$ be an unbordered string with the critical factorization $w = uv$. Then:
+\begin{enumerate}
+    \item The rotation $w' = vu$ of $w$ is also unbordered.
+    \item $vu$ is a critical factorization of $w'$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\noindent
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+\item Assume that $w' = vu$ is not unbordered. Then there is a string $x$ ($0 <
+|x| < |w|$) that is a proper prefix and suffix of $w'$. This string is then a
+local factor of $w = uv$, because it is consistent with both sides of the
+factorization. We have $|\textit{factor}(w)| = |w| = \textit{period}(w) \neq
+|x|$, which contradicts the fact that $w = uv$ is a critical factorization.
+
+\item Assume that $w' = vu$ is not a critical factorization. Then there is a
+string $x$ ($0 < |x| < |w|$) that is consistent with both sides of the
+factorization. We also know that $|x| > \min\{|u|,|v|\}$, because $w$ is
+unbordered -- otherwise we would have $v = tx$, $u = xk$, $w = xktx$. Without
+loss of generality, assume that $|v| \leq |u|$, so $|x| > |v|$ and $x = tv$. We
+have two cases:
+\begin{enumerate}[label=(\arabic{enumi}.\arabic*), leftmargin=*]
+\item $|x| \leq |u|$. Then $u = xk = tvk$ and $x = tv$, so $tv$ is consistent
+with both sides of the factorization $w = uv = (tvk)(v)$ and $|kv| = |x| < |w|$,
+which contradicts the fact that $w = uv$ is a critical factorization.
+\item $|x| > |u|$. Then $x = tv = uk$ with $|t| < |u|$ and $|k| < |v|$, since
+$|x| < |w| = |uv|$. This implies that $\textit{ov}(u,v) > 0$, which contradicts
+the fact that $w'$ is unbordered.
+\end{enumerate}
+\end{enumerate}
+\end{proof}
+
+\subsection{Overlap Bounds}
+We now prove the Overlap-Rotation Lemma, which forms the basis for the improved
+approximation bounds of the shortest superstring algorithms presented later. For
+a semi-infinite string $\alpha = a_1 a_2 \dots$, we denote its rotation as
+$\alpha[k] = a_k a_{k+1} \dots$.
+
+\begin{lemma}[Overlap-Rotation Lemma] \label{lemma:overlap_rotation}
+Let $\alpha$ be a periodic semi-infinite string. There exists an integer $k$
+such that for any finite string $s$ that is inequivalent to $\alpha$:
+\begin{equation}
+ov(s, \alpha[k]) < \textit{period}(s) + \frac{1}{2}\textit{period}(\alpha).
+\end{equation}
+Furthermore, if $\textit{period}(s) \le \textit{period}(\alpha)$, the bound is
+even tighter:
+\begin{equation}
+ov(s, \alpha[k]) < \frac{2}{3} (\textit{period}(s) + \textit{period}(\alpha)).
+\end{equation}
+\end{lemma}
+\begin{proof}
+\noindent
+\begin{claim} \label{claim:critical_suffix}
+There exists a suffix $\alpha'$ of $\alpha$ that has a critical factorization
+$\alpha' = kt$ where $|k| \leq \frac{1}{2}\textit{period}(\alpha)$.
+\end{claim}
+\begin{proof}
+Let $\alpha = y\alpha'$ be some critical factorization of $\alpha$, and let $f =
+\textit{factor}(\alpha')$. We claim that $f$ is unbordered: otherwise we would
+have $f = xf'x$ and $\textit{period}(\alpha) = \textit{period}(\alpha')$, so $x$
+would be a local factor with $|x| < \textit{period}(\alpha)$, a contradiction.
+Now take a critical factorization $f = uv$:
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+\item $|u| \leq \frac{1}{2}\textit{period}(\alpha)$: then $\alpha' =
+(uv)^\infty$.
+\item $|u| > \frac{1}{2}\textit{period}(\alpha)$: then by
+Lemma~\ref{lemma:unbordered_rotation}, $\alpha' = (vu)^\infty$.
+\end{enumerate}
+\end{proof}
+
+We can now proceed with the proof of \Cref{lemma:overlap_rotation}. Let
+$\alpha'$ and $k$ be as in Claim~\ref{claim:critical_suffix}. We state that
+\begin{equation}
+ov(s, \alpha') < \textit{period}(s) + |k| \le \textit{period}(s) + \frac{1}{2}\textit{period}(\alpha).
+\end{equation}
+The second inequality follows from the bound on $|k|$ given by
+Claim~\ref{claim:critical_suffix}. We prove the first inequality by
+contradiction. Assume that
+\begin{equation}
+ov(s, \alpha') \geq \textit{period}(s) + |k|.
+\end{equation}
+This means there is a string $x$, $|x| = \textit{period}(s)$, that is consistent
+with both sides of the factorization $\alpha' = kt$. Indeed, $\alpha'$ can be
+expressed as $\alpha' = kx\alpha''$, so $x$ is consistent with the right side of
+the factorization, and it is also consistent with the left side because the
+whole $kx$ is a substring of $s$ and $|x| = \textit{period}(s)$. We consider
+three cases:
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+\item $\textit{period}(s) = \textit{period}(\alpha)$: then, since $s$ and
+$\alpha$ are inequivalent,
+\begin{equation}
+ov(s, \alpha) < \textit{period}(s)
+\end{equation}
+holds, so we may skip this case.
+\item $\textit{period}(s) < \textit{period}(\alpha)$: this contradicts the fact
+that $\alpha' = kt$ is a critical factorization.
+\item $\textit{period}(s) > \textit{period}(\alpha)$: then $x$ also has a factor
+of length $\textit{period}(\alpha)$, so $x = y^iz$ where $|y| =
+\textit{period}(\alpha)$. If $|z| = 0$, then $\alpha$ and $s$ are equivalent, a
+contradiction. If $|z| > 0$, then $z$ is consistent with both sides of the
+factorization and $|z| < |y| = \textit{period}(\alpha)$, again a contradiction.
+\end{enumerate}
+
+It remains to prove the second part of the lemma. We have $\textit{period}(s)
+\le \textit{period}(\alpha)$, and also $ov(s, \alpha') <
+\textit{period}(\alpha)$ because $\textit{factor}(\alpha')$ is unbordered (see
+proof of Claim~\ref{claim:critical_suffix}). Combining both inequalities gives
+the strict bound:
+\begin{equation}
+ov(s, \alpha') < \min\left\{\textit{period}(s) + \frac{1}{2}\textit{period}(\alpha), \textit{period}(\alpha)\right\} \le \frac{2}{3}(\textit{period}(s) + \textit{period}(\alpha))
+\end{equation}
+\end{proof}
+The constructive nature of this proof implies that finding this rotation
+requires at most two computations of critical factorizations, which can be
+executed in time linear to $\textit{period}(\alpha)$ \cite{crochemore1991two,
+crochemore1994text}. Further in work, the specific optimal rotation $\alpha[k]$
+that satisfies Lemma \ref{lemma:overlap_rotation} is conventionally denoted by
+notation $\vec{\alpha}$.

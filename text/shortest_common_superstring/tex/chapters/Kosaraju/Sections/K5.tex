@@ -1,0 +1,35 @@
+\section{The Combined Approximation Ratio}
+\begin{theorem} \label{thm:final_approximation}
+Executing versions 1, 2, and 3 of the generic algorithm and selecting the
+optimal result guarantees a $\frac{38}{63}$-approximation for the Max TSP
+problem.
+\end{theorem}
+
+\begin{proof}
+Write $y = b - 2c$. The three bounds are linear in $y$: $f_1(y) =
+\frac23+\frac13y$ (Theorem \ref{lemma:version1}), $f_2(y) =
+\frac{7}{12}-\frac1{12}y$ (Theorem \ref{lemma:version2_final}), $f_3(y) =
+\frac23+\frac4{15}y$ (Theorem \ref{lemma:version3_final}). Taking the best of
+the three guarantees $\max\{f_1,f_2,f_3\}$, so the worst case is its minimum
+over $y$.
+
+Since $f_1, f_3$ increase in $y$ (with $f_1$ steeper) and $f_2$ decreases, this
+minimum occurs where the decreasing curve meets the shallower increasing one,
+$f_3$. Setting $f_2(y) = f_3(y)$:
+\begin{equation}
+\frac{7}{12}-\frac{1}{12}y = \frac23+\frac4{15}y \iff y = -\frac{5}{21}, \qquad f_3\left(-\frac{5}{21}\right) = \frac23-\frac{4}{63} = \frac{38}{63}.
+\end{equation}
+At this $y$ the first bound stays below the other two,
+\begin{equation}
+f_1\left(-\frac{5}{21}\right) = \frac23-\frac{5}{63} = \frac{37}{63} < \frac{38}{63},
+\end{equation}
+so it does not interfere. Hence $\max\{f_1(y),f_2(y),f_3(y)\} \ge \frac{38}{63}$
+for all $y$.
+\end{proof}
+
+\paragraph{Computational Complexity}
+Running versions 1, 2, and 3 and keeping the best result costs the sum of their
+individual running times, each of which is $O(n^3)$, as established in the
+complexity analysis of each version above. Since a constant number of
+$O(n^3)$-time algorithms sum to $O(n^3)$, the generic algorithm as a whole runs
+in $O(n^3)$ time.

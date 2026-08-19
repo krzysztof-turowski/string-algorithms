@@ -1,0 +1,64 @@
+\section{Approximating the Longest Tour in a Directed Graph}
+To construct the overlap approximation subroutine used in
+$2\frac{25}{42}$-Approximation algorithm, we analyze the
+$\frac{38}{63}$-approximation algorithm for the directed Max TSP. For the
+simplicity in the theoretical analysis, we assume throughout this section that
+the number of vertices in the input graph is even. If the number of vertices is
+odd, we can add a vertex that is connected to all other vertices with $0$-weight
+edges.
+
+The algorithm heavily relies on two standard polynomial-time graph subroutines:
+\begin{enumerate}
+    \item The Hungarian algorithm \cite{kuhn1955hungarian, edmondskarp1972, tomizawa1971techniques} for solving the
+    maximum-weight cycle cover problem via its reduction to the assignment
+    problem, running in $O(n^3)$ time.
+    \item Edmonds' blossom algorithm \cite{edmonds1965paths, edmonds1965matching} for finding a
+    maximum-weight (not necessarily perfect) matching in an undirected graph,
+    also running in $O(n^3)$ time.
+\end{enumerate}
+
+\subsection{The Generic Directed Max TSP Algorithm}
+The approximation algorithm consists of three distinct versions, all of which
+share the following framework:
+
+\begin{enumerate}
+    \item \textbf{Cycle Cover:} Compute a maximum-weight cycle cover
+    $\mathcal{C}$ for the graph $G$.
+    \item \textbf{Path Extraction:} Use the cycle cover $\mathcal{C}$ to obtain
+    a set $P$ of vertex-disjoint paths.
+    \item \textbf{Tour Construction:} Construct a final tour by patching
+    together the paths from $P$.
+\end{enumerate}
+
+The three versions of the algorithm differ strictly in their implementation of
+Step 2. The first version follows the simple approach of deleting the smallest
+edge in each cycle. The second and third approaches are significantly more
+complicated, utilizing non-cycle edges in an attempt to extract a set of paths
+with a greater total weight.
+\subsection{Preliminaries}
+Before comparing these three approaches, we must establish the following
+definitions regarding the cycle cover $\mathcal{C}$:
+\begin{itemize}
+    \item A \textbf{2-cycle} is any cycle passing through exactly 2 vertices.
+    \item A \textbf{$3^+$-cycle} is any cycle passing through 3 or more
+    vertices.
+    \item $W$ denotes the total weight of all edges in $\mathcal{C}$.
+    \item $bW$ denotes the total weight of the edges that are the heavier (i.e.,
+    larger-weight) edge in some 2-cycle of $\mathcal{C}$.
+    \item $cW$ denotes the total weight of the edges that are the lighter (i.e.,
+    smaller-weight) edge in some 2-cycle of $\mathcal{C}$.
+\end{itemize}
+
+By expressing the approximation bounds of the three versions as linear functions
+of the term $(b - 2c)$, we can prove that the best of the three always
+guarantees at least a $\frac{38}{63}$-approximation.
+
+\subsection{Crucial Observation}
+A crucial observation simplifies the mathematical analysis of this framework. To
+bound the weight of the final produced tour, it is entirely sufficient to obtain
+a lower bound on $w(P)$, which is the total weight of the paths extracted in
+Step 2. Because the graph strictly contains non-negative edge weights, no matter
+how the vertex-disjoint paths of $P$ are patched together in Step 3, the weight
+of the resulting tour will always be at least $w(P)$. As the result, the
+explicit operations of Step 3 can be safely ignored in the remainder of the
+analysis.

@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Overview of all benchmarked algorithms over the four comparative experiments: superstring length relative to the best result found on the same instance, and mean running time.}
+    \label{tab:bench_overview}
+    \small
+    \setlength{\tabcolsep}{7pt}
+    \renewcommand{\arraystretch}{1.1}
+    \begin{tabular}{@{}lrrr@{}}
+        \toprule
+        \textbf{Algorithm} & \multicolumn{2}{c}{\textbf{Length / best found}} & \textbf{Mean time} \\
+        \cmidrule(lr){2-3}
+         & mean & worst & (ms) \\
+        \midrule
+        \textsc{Greedy} (max overlap) & 1.0052 & 1.0364 & 28.42 \\
+        \textsc{MGreedy} & 1.0115 & 1.0992 & 28.17 \\
+        \textsc{TGreedy} & 1.0071 & 1.0577 & 29.77 \\
+        Group Merge & 1.0093 & 1.0534 & 6.60 \\
+        Teng--Yao & 1.0191 & 1.1264 & 5.58 \\
+        Paluch--Elbassioni--van~Zuylen & 1.0018 & 1.0221 & 3.42 \\
+        Kosaraju--Park--Stein ($\frac{38}{63}$) & 1.0046 & 1.1074 & 17.31 \\
+        Breslauer--Jiang--Jiang $2\frac{2}{3}$ & 1.0794 & 1.3158 & 2.99 \\
+        Breslauer--Jiang--Jiang $2\frac{25}{42}$ & 1.0772 & 1.3158 & 3.03 \\
+        \bottomrule
+    \end{tabular}
+\end{table}

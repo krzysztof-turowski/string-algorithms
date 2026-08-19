@@ -1,0 +1,57 @@
+\section{Version 1: Simple Edge Deletion} \label{sec:kps_v1}
+
+The first version of the generic algorithm relies on a straightforward approach
+to break the cycles. To obtain the set of vertex-disjoint paths $P$ from the
+cycle cover $\mathcal{C}$, the algorithm simply deletes the minimum-weight edge
+from each cycle.
+
+In the absolute worst-case scenario—where the cycle cover $\mathcal{C}$ consists
+entirely of 2-cycles and both edges in every 2-cycle have identical weights
+(i.e., $b = c$)—the weight of the resulting paths $w(P)$ can be as small as
+$\frac{1}{2}W$. However, in most instances, the presence of larger cycles and
+weight imbalances ensures a significantly better result.
+
+To analyze this formally, let $pW$ denote the total weight of the set consisting
+of the lightest edge from each $3^+$-cycle in $\mathcal{C}$. Because we remove
+exactly the lighter edge from each 2-cycle (totaling $cW$) and the lightest edge
+from each $3^+$-cycle (totaling $pW$), the total weight of the remaining paths
+is precisely:
+\begin{equation}
+w(P) = (1 - c - p)W
+\end{equation}
+
+By definition, the lightest edge in any $3^+$-cycle can contain at most
+one-third of the total weight of that cycle. Since the total weight of all
+$3^+$-cycles in $\mathcal{C}$ is exactly $(1 - b - c)W$, we can bound $p$ by the
+inequality:
+\begin{equation} \label{eq:p_bound}
+p \le \frac{1}{3}(1 - b - c)
+\end{equation}
+
+By substituting the upper bound from Inequality \ref{eq:p_bound} into the
+equation for $w(P)$, we can establish the guaranteed approximation ratio for
+this version.
+
+\begin{theorem} \label{lemma:version1}
+Version 1 of the generic algorithm returns a $\left(\frac{2}{3} + \frac{1}{3}(b
+- 2c)\right)$-approximation to the directed Max TSP.
+\end{theorem}
+
+\begin{proof}
+Substituting $p \le \frac{1}{3}(1 - b - c)$ into the weight function gives:
+\begin{equation}
+w(P) \ge \left(1 - c - \frac{1}{3}(1 - b - c)\right)W = \left(\frac{2}{3} + \frac{1}{3}(b - 2c)\right)W
+\end{equation}
+Since the weight of the optimal tour $w(T_{opt})$ is bounded from above by the
+weight of the optimal cycle cover $W$, the resulting set of paths $P$ guarantees
+the stated approximation ratio.
+\end{proof}
+
+\subsection{Computational Complexity}
+Let $n$ denote the number of vertices of $G$. Computing the maximum-weight cycle
+cover $\mathcal{C}$ via the Hungarian algorithm takes $O(n^3)$ time
+\cite{kuhn1955hungarian, edmondskarp1972, tomizawa1971techniques}. Since the cycles of $\mathcal{C}$ partition the vertex
+set, deleting the minimum-weight edge from each cycle -- and thereby obtaining
+the set of paths $P$ -- takes only $O(n)$ time overall, as does patching the
+paths of $P$ into a single tour. The cycle cover computation therefore
+dominates, and Version 1 runs in $O(n^3)$ time.

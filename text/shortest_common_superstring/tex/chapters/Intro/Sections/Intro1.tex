@@ -1,0 +1,178 @@
+\section{Definitions and Problem Statement}
+
+\subsection{Definitions}
+In this section, we introduce the basic concepts that will be used throughout
+this paper. Let $\Sigma$ denote an alphabet, which is a finite set of
+characters. A string $s$ is a sequence of characters derived from the alphabet
+$\Sigma$. The length of a string $s$ is denoted as $|s|$.
+
+\begin{definition}[Prefix and Suffix \cite{crochemore1994text}]
+A prefix of a string $s = a_1 a_2 \dots a_n$ of length $j$ is a string denoted
+by $s[:j+1] = a_1 a_2 \dots a_j$. Similarly, a suffix is a string denoted by
+$s[i:] = a_i \dots a_n$.
+\end{definition}
+
+\begin{definition}[Substring \cite{crochemore1994text}]
+A string $x$ is a substring of a string $s$ if there exist strings $u$ and $v$
+(which may be empty) such that $s = uxv$. A set of strings $S = \{s_1, s_2,
+\dots, s_m\}$ is considered substring-free if no string $s_i \in S$ is a
+substring of any other string $s_j \in S$.
+\end{definition}
+
+\begin{definition}[Overlap, Prefix, and Distance \cite{blum1994linear}]
+For two strings $s$ and $t$, let $y$ be the longest string such that $s = xy$
+and $t = yz$ for some non-empty strings $x$ and $z$. We define the following
+concepts:
+\begin{itemize}
+    \item The \textbf{overlap} between $s$ and $t$, denoted as $ov(s, t)$, is
+    the length of the string $y$, i.e., $ov(s,t) = |y|$. This notion can be
+    naturally extended to cases where $t$ is a semi-infinite string, provided
+    that $s$ remains finite.
+    \item The \textbf{prefix} of $s$ with respect to $t$, denoted as
+    $\textit{pref}(s, t)$, is defined as the string $x$. Therefore, $s$ can be
+    uniquely decomposed as $s = \textit{pref}(s,t) y$.
+    \item The \textbf{distance} from $s$ to $t$, denoted as $d(s, t)$, is
+    defined as the length of this prefix, meaning $d(s, t) = |\textit{pref}(s,
+    t)| = |x|$.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Common Superstring \cite{blum1994linear}]
+A common superstring for a set of strings $S = \{s_1, s_2, \dots, s_m\}$ is a
+string $s$ such that every $s_i \in S$ is a substring of $s$.
+\end{definition}
+
+\begin{definition}[Superstring of a Sequence \cite{blum1994linear}]
+For a given ordered list of strings $s_{i_1}, \dots, s_{i_r}$, the shortest
+common superstring representing them, denoted as $\langle s_{i_1}, \dots,
+s_{i_r} \rangle$, is defined as the concatenation of the prefixes and the final
+string:
+\begin{equation}
+\langle s_{i_1}, \dots, s_{i_r} \rangle = \textit{pref}(s_{i_1}, s_{i_2}) \textit{pref}(s_{i_2}, s_{i_3}) \dots \textit{pref}(s_{i_{r-1}}, s_{i_r}) s_{i_r}
+\end{equation}
+\end{definition}
+
+Any optimal common superstring for a finite set of strings $S = \{s_1, \dots,
+s_m\}$ always corresponds to a sequential construction of the form $\langle
+s_{i_1}, \dots, s_{i_m} \rangle$ for some optimal permutation of indices $i_1,
+\dots, i_m$ from the set $\{1, \dots, m\}$. The length of such a shortest
+superstring is denoted as $\textit{opt}(S)$.
+
+We define $\textit{maxov}(S)$ as the maximum total overlap between adjacent
+elements in the superstring. Formally, it is the maximum possible sum of
+overlaps $\sum_{j=1}^{m-1} ov(s_{i_j}, s_{i_{j+1}})$ achieved over all
+permutations of the input sequence. The size of the optimal solution, denoted as
+$\textit{opt}(S)$, is strictly related to this value by the equation:
+\begin{equation}
+\textit{opt}(S) = \sum_{s_i \in S} |s_i| - \textit{maxov}(S)
+\end{equation}
+From the above identity, it follows that the problem of minimizing the
+superstring length $\textit{opt}(S)$ is equivalent to the problem of maximizing
+the sum of overlaps $\textit{maxov}(S)$.
+
+\subsection{Problem Statement and Applications}
+
+\begin{problem}[Shortest Common Superstring]
+Given a set of strings $S = \{s_1, s_2, \dots, s_m\}$ over a finite alphabet
+$\Sigma$, the problem is to find a common superstring for the set $S$ of the
+minimum possible length. A string $s$ is considered a superstring of $S$ if
+every string $s_i \in S$ appears as a contiguous substring (a consecutive block)
+of $s$. The length of this optimal shortest superstring is denoted as $opt(S)$.
+\end{problem}
+
+Since the Shortest Common Superstring problem is NP-hard \cite{gallant1980finding}, no polynomial-time algorithm for finding an exact solution is known, and it is widely believed that none exists (assuming $\text{P} \neq \text{NP}$) \cite{garey1979computers}. Consequently, all known exact algorithms require exponential time in the worst case, making them impractical for large problem instances encountered in practice. Therefore, research has focused on the development of polynomial-time approximation algorithms that produce near-optimal solutions with provable approximation guarantees \cite{vazirani2001approximation}.\\
+The SCS problem has numerous real-world applications across multiple scientific
+and engineering fields:
+\begin{itemize}
+    \item \textbf{Bioinformatics:} One of the most prominent applications of the
+    Shortest Common Superstring problem is DNA sequence assembly
+    \cite{setubal1997introduction}. In shotgun sequencing, long DNA
+    molecules—often consisting of millions of base pairs—are fragmented into
+    thousands of short, overlapping reads, typically around 500 bases long. The
+    original DNA sequence is then reconstructed by finding a short superstring
+    that contains all reads, making SCS a natural computational model for this
+    task \cite{peltola1984seqa}.
+    \item \textbf{Data Compression:} The SCS serves as a theoretical foundation
+    for dictionary-based data compression \cite{storer1982data}. A common
+    superstring can be viewed as a maximally compressed form of a set of
+    keywords, drastically decreasing data redundancy.
+    \item \textbf{Operations Research:} Beyond strings and text, SCS solutions
+    can be abstracted to solve scheduling problems, specifically in routing or
+    scheduling operations on machines that require coordinated starting times
+    \cite{lawler1985traveling}.
+\end{itemize}
+\begin{table}[htpb]
+    \centering
+    \caption{History of approximation-ratio improvements for the Shortest Common
+    Superstring (SCS) problem. Rows in \textbf{bold} indicate the algorithm(s)
+    discussed in this work.}
+    \label{tab:scs_approximation_history}
+    \renewcommand{\arraystretch}{1.3}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{@{}lllc@{}}
+        \toprule
+        \textbf{Year} & \textbf{Authors} & \textbf{Algorithm / Main Approach} & \textbf{Approximation Ratio} \\
+        \midrule
+        1994 & Blum et al. \cite{blum1994linear} & Cycle Cover / Modified Greedy & $3$ \\
+        1997 & Teng, Yao \cite{teng1997approximating} & Optimal Cycle Covers / Matchings & $2 \frac{8}{9} \approx 2.89$ \\
+        1997 & Czumaj et al. \cite{czumaj1997sequential} & Prefix Graph / Cycle Covers & $2 \frac{5}{6} \approx 2.83$ \\
+        1998 & Armen, Stein \cite{armen19982} & Graph Matching Frameworks & $2 \frac{2}{3} \approx 2.67$ \\
+        \textbf{1997} & \textbf{Breslauer, Jiang, Jiang \cite{Breslauer1996}} & \textbf{String Periodicity / Overlap Rotation (Algorithm 1)} & $\mathbf{2 \frac{2}{3} \approx 2.67}$ \\
+        \textbf{1997} & \textbf{Breslauer, Jiang, Jiang \cite{Breslauer1996}} & \textbf{String Periodicity / Overlap Rotation (Algorithm 2)} & $\mathbf{2 \frac{25}{42} \approx 2.596}$ \\
+        2005 & Kaplan et al. \cite{kaplan2005approximation} & ATSP Cycle Cover Reduction & $2 \frac{1}{2} = 2.50$ \\
+        2013 & Mucha \cite{mucha2013lyndon} & ATSP Bounding via Lyndon Words & $2 \frac{11}{23} \approx 2.478$ \\
+        2023 & Englert et al. \cite{englert2023approximation} & Improved Cycle Overlap Bounds & $\frac{\sqrt{67}+14}{9} \approx 2.466$ \\
+        \bottomrule
+    \end{tabular}%
+    }
+\end{table}
+
+\section{Distance Graph and Cycle Covers}
+
+It turns out that there is a relation between the Shortest Common Superstring
+problem and certain graph problems, which forms the basis of the approximation
+algorithms discussed in this work.
+
+\begin{definition}[Traveling Salesperson Problem (TSP) \cite{karp1972reducibility}]
+Given a complete directed weighted graph $G = (V, E, w)$, the Traveling
+Salesperson Problem (TSP) asks for a minimum weight Hamiltonian cycle in $G$,
+i.e., a minimum weight cycle visiting every vertex of $G$ exactly once.
+\end{definition}
+
+\begin{definition}[Distance Graph \cite{vazirani2001approximation}]
+The distance graph for a set of strings $S = \{s_1, \dots, s_m\}$ is a directed
+weighted graph $G_S = (V,E,w)$, in which the set of vertices is $V = S$, the set
+of edges is $E = \{(s_i, s_j) \colon 1 \le i \neq j \le m\}$, and the weight
+function assigns to each edge the distance between the corresponding strings,
+i.e., $w(s_i, s_j) = d(s_i, s_j)$.
+\end{definition}
+
+If we denote the cost of a minimum weight Hamiltonian cycle on $G_S$ as
+$TSP(G_S)$, it provides a very good approximation of the shortest superstring.
+Specifically, for any $s_i \in S$, the relationship $TSP(G_S) \le opt(S) \le
+TSP(G_S) + |s_i|$ holds. However, since the TSP is NP-hard
+\cite{karp1972reducibility}, approximation algorithms utilize a relaxed version
+of this problem known as the cycle cover problem (also referred to as the
+assignment problem).
+
+\begin{definition}[Cycle Cover \cite{vazirani2001approximation}]
+A cycle cover in a directed weighted graph is a set of simple cycles such that
+every vertex of the graph is contained in exactly one of them. The weight of the
+cover is the total sum of the weights of all cycles comprising it.
+\end{definition}
+
+Unlike the TSP, a minimum weight cycle cover on any directed weighted graph can
+be efficiently computed in polynomial time. Specifically, it can be solved in
+$O(n^3)$ time using the Hungarian algorithm \cite{kuhn1955hungarian, edmondskarp1972, tomizawa1971techniques}.
+
+Let $CYC(G_S)$ denote the weight of a minimum weight cycle cover of $G_S$. This
+weight provides a useful lower bound for the length of the optimal superstring,
+establishing the inequality:
+\begin{equation}\label{eq:1.3}
+CYC(G_S) \le TSP(G_S) \le opt(S)
+\end{equation}
+However, because there is no obvious general upper bound on $opt(S)$ expressed
+solely in terms of $CYC(G_S)$, designing effective approximation algorithms
+relies on specific properties of the strings. In fact, on general distance
+graphs the gap between $CYC(G_S)$ and $TSP(G_S)$ can be made arbitrarily large
+\cite{sahni1976pcomplete}.

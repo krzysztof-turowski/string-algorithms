@@ -1,0 +1,340 @@
+\section{Version 3: Cycle Contraction and Compatible Weights} \label{sec:kps_v3}
+
+The third variant of the generic algorithm shifts its strategy to aggressively
+capture edge weight that was entirely missed by the initial cycle cover
+$\mathcal{C}$, while simultaneously preserving as much weight from the cycles as
+possible. Again to introduce the mechanics and mathematical framework of this
+approach, we first perform an analysis of a simplified variant.
+
+The core intuition relies on constructing an auxiliary directed multigraph and
+modifying edge weights to reflect the ``compatibility'' between external edges
+and the edges within the cycle cover.
+
+\subsection{The Compatible Weight Metric}
+For any cycle $C \in \mathcal{C}$ and an edge $e$ with exactly one endpoint
+incident to $C$, we define $cw(e, C)$, the \textit{compatible weight} of $C$
+with respect to $e$, as follows:
+$$ cw(e, C) = w(C) - w(f_{e, C}) $$
+where $f_{e, C}$ is the unique edge in $C$ that is structurally incompatible
+with $e$ (i.e., it shares either a head or a tail with $e$).
+
+When we form a new auxiliary directed multigraph $G' = (V', E')$ by contracting
+the cycles of $\mathcal{C}$ into single vertices, we define a new weight metric
+$w'(e)$ for every edge $e \in E'$. This new weight aggregates the original
+weight of the edge and the compatible weights of the cycles corresponding to its
+endpoints:
+$$ w'(e) = w(e) + cw(e, C_{head(e)}) + cw(e, C_{tail(e)}) $$
+where $C_{head(e)}$ and $C_{tail(e)}$ represent the specific cycles in $G$ that
+contain the head and tail of edge $e$, respectively. By definition, a matching
+$M$ found in $G'$ corresponds naturally to a set of disjoint paths $P$ in the
+original graph $G$, such that the actual weight of the paths equals the modified
+weight of the matching: $w(P) = w'(M)$.
+
+\subsection{Algorithm: Version 3, Simple Variant}
+The simplified variant proceeds via the following steps:
+\begin{enumerate}[label=\textbf{Step 2\alph*.}, leftmargin=*]
+    \item Construct an auxiliary directed multigraph $G' = (V', E')$ by
+    contracting each cycle $C \in \mathcal{C}$ to a single vertex. Assign the
+    edge weights $w'$ for $G'$ as defined above.
+    \item Find a maximum-weight matching $M$ in $G'$. Let $P$ be the set of
+    paths in $G$ corresponding to the edges of $M$.
+\end{enumerate}
+
+\subsection{Mathematical Analysis of the Simple Variant}
+
+To analyze the weight of the extracted paths $P$, we define $\gamma$ as the
+maximum number of vertices present in any single cycle within $\mathcal{C}$. Let
+$T_{opt}$ denote the optimal Max TSP tour, and let $T_{ext}$ denote the subset
+of edges from $T_{opt}$ that have endpoints in distinct cycles of $\mathcal{C}$
+(i.e., external edges).
+
+\paragraph{Assuming No Internal Tour Edges}
+We begin our analysis by assuming that $T_{opt} = T_{ext}$, meaning all edges of
+the optimal tour travel between distinct cycles in the cycle cover. We can bound
+the total modified weight of the optimal tour in $G'$ by summing the modified
+weights of all its edges:
+\begin{align*}
+w'(T_{opt}) &= \sum_{e \in T_{opt}} w'(e) = \sum_{e \in T_{opt}} \left( w(e) + cw(e, C_{head(e)}) + cw(e, C_{tail(e)}) \right)
+\end{align*}
+By substituting the definition of compatible weight and regrouping the terms by
+cycle, we obtain:
+$$ w'(T_{opt}) = w(T_{opt}) + \sum_{C \in \mathcal{C}} \sum_{\substack{e \in
+T_{opt} \text{ s.t.} \\ head(e) \in C \text{ or } tail(e) \in C}} (w(C) -
+w(f_{e, C})) $$
+Because $T_{opt}$ is a valid tour, each cycle $C$ will have exactly $2|C|$
+incident tour edges ($|C|$ entering and $|C|$ leaving). Furthermore, each
+internal edge of $C$ will be structurally incompatible with exactly two of these
+tour edges. Therefore, the summation simplifies to:
+$$ w'(T_{opt}) = w(T_{opt}) + \sum_{C \in \mathcal{C}} (2|C| - 2)w(C) $$
+
+\paragraph{Applying Vizing's Theorem and Unmatched Vertices}
+In the auxiliary graph $G'$, no vertex can have more than $2\gamma$ edges from
+$T_{opt}$ incident to it. According to Vizing's Theorem
+\cite{vizing1964estimate}, this implies that the edges of $T_{opt}$ in $G'$ can
+be properly colored using $(2\gamma + 1)$ colors. Thus, the edges of $T_{opt}$
+can be partitioned into $(2\gamma + 1)$ distinct matchings, giving an average
+weight of at least $\frac{1}{2\gamma + 1}w'(T_{opt})$.
+
+However, we can make a significantly stronger mathematical claim by considering
+unmatched vertices. In any specific color class, a vertex $v_C$ (representing
+cycle $C$) might not have any incident edges. If $v_C$ is unmatched, it means no
+vertex within cycle $C$ has an incident edge in the corresponding path set $P$.
+In this scenario, we can augment $P$ by independently adding all but the single
+lightest edge of $C$. If we let $w'(C)$ denote the weight of all edges in $C$
+except the lightest, we can guarantee that $w'(C) \ge \frac{|C| - 1}{|C|}w(C)$.
+
+A vertex $v_C$ has exactly $2|C|$ incident edges in $T_{opt}$, meaning it is
+matched in exactly $2|C|$ of the color classes. Consequently, it must remain
+unmatched in exactly $(2\gamma + 1 - 2|C|)$ of the $(2\gamma + 1)$ matchings.
+Summing these guaranteed additions over all $2\gamma + 1$ matchings, we
+establish that the maximum-weight matching $M$ must satisfy:
+\begin{align}\label{eq:version3_eq4}
+w'(M) &\ge \frac{1}{2\gamma + 1} \left( w(T_{opt}) + \sum_{C \in \mathcal{C}} (2|C| - 2)w(C) + \sum_{C \in \mathcal{C}} (2\gamma + 1 - 2|C|)\frac{|C| - 1}{|C|}w(C) \right)
+\end{align}
+\begin{equation} \label{eq:version3_eq5}
+= \frac{1}{2\gamma + 1} \left( w(T_{opt}) + \sum_{C \in \mathcal{C}} (2\gamma + 1)\frac{|C| - 1}{|C|}w(C) \right)
+\end{equation}
+For the purpose of analysis we refer to:
+\begin{itemize}[itemsep=4pt, topsep=4pt]
+    \item $\displaystyle\sum_{C \in \mathcal{C}} (2|C| - 2)w(C)$ as the cycle's
+    \textit{colored contribution},
+    \item $\displaystyle\sum_{C \in \mathcal{C}} (2\gamma + 1 - 2|C|)\frac{|C| -
+    1}{|C|}w(C)$ as its \textit{uncolored contribution}.
+\end{itemize}
+
+\paragraph{Handling Internal Tour Edges}
+We now remove the simplifying assumption and account for cases where $T_{opt}
+\neq T_{ext}$. Because only the edges of $T_{ext}$ appear in $G'$, we must
+replace $w(T_{opt})$ with $w(T_{ext})$ in our formula.
+
+When an edge of $T_{opt}$ is internal to a cycle $C$, the vertex representing
+$C$ in $G'$ has two fewer incident edges from the optimal tour. This decreases
+the cycle's colored contribution by $2w(C) - w(e_1) - w(e_2)$ (where $e_1$ and
+$e_2$ are edges of $C$). However, because the vertex's degree in $G'$ has
+dropped by two, it is now uncolored two additional times. This increases its
+uncolored contribution by $2w'(C) = 2w(C) - 2w(e_{lightest})$, where
+$e_{lightest}$ is the lightest edge of the cycle $C$. The net effect on the
+bound is the increase in uncolored contribution minus the decrease in colored
+contribution:
+\begin{equation}
+\left(2w(C) - 2w(e_{lightest})\right) - \left(2w(C) - w(e_1) - w(e_2)\right) = \left(w(e_1) + w(e_2)\right) - 2w(e_{lightest}).
+\end{equation}
+Because the weights of any edges $e_1, e_2 \in C$ must be greater than or equal
+to $w(e_{lightest})$, this net effect is always non-negative -- the gain in
+uncolored contribution never shrinks by more than the loss in colored
+contribution. Therefore, the inequality remains valid when adjusted for external
+edges:
+\begin{equation} \label{eq:version3_eq6}
+w'(M) \ge \frac{1}{2\gamma + 1} \left( w(T_{ext}) + \sum_{C \in \mathcal{C}} (2\gamma + 1)\frac{|C| - 1}{|C|}w(C) \right)
+\end{equation}
+
+To relate this back to the total optimal tour weight, let $T_{int}(C)$ denote
+the set of $T_{opt}$ edges completely internal to cycle $C$. It must hold that
+$w(T_{int}(C)) \le w(C)$ otherwise we could patch edges of $T_{int}(C)$ to
+cycles which would give a cycle cover with strictly greater weight, violating
+the definition of a maximum-weight cycle cover. We can always do it because our
+graph is complete and all edges have non negative weights. Thus, $w(T_{ext}) \ge
+w(T_{opt}) - \sum_{C \in \mathcal{C}} w(C)$. Substituting this lower bound into
+equation (\ref{eq:version3_eq6}) gives:
+\begin{equation} \label{eq:version3_eq7}
+w'(M) \ge \frac{1}{2\gamma + 1} \left( w(T_{opt}) + \sum_{C \in \mathcal{C}} \left( (2\gamma + 1)\frac{|C| - 1}{|C|} - 1 \right)w(C) \right)
+\end{equation}
+
+\paragraph{Limitations of the Simple Variant}
+If we plug the worst-case lower bound of $|C| \ge 2$ into equation
+(\ref{eq:version3_eq7}), the result simplifies to show only that $w'(M) \ge
+\frac{1}{2}w(T_{opt})$. Because this provides no improvement over the bound
+established in Version 1, a more sophisticated approach is required.
+
+To see this explicitly: since $\frac{|C|-1}{|C|}$ is increasing in $|C|$ and
+every cycle satisfies $|C| \ge 2$, each coefficient in equation
+(\ref{eq:version3_eq7}) is minimized at $|C| = 2$, giving
+\begin{equation}
+(2\gamma + 1)\frac{|C| - 1}{|C|} - 1 \ge (2\gamma + 1)\cdot\frac{1}{2} - 1 = \gamma - \frac{1}{2}.
+\end{equation}
+Applying this bound to every term of the sum, and recalling $\sum_{C \in
+\mathcal{C}} w(C) = W$, gives
+\begin{equation}
+w'(M) \ge \frac{1}{2\gamma + 1}\left(w(T_{opt}) + \left(\gamma - \frac{1}{2}\right)W\right).
+\end{equation}
+Substituting the worst case $W = w(T_{opt})$ (the smallest value consistent with
+$W \ge w(T_{opt})$) yields
+\begin{equation}
+w'(M) \ge \frac{1}{2\gamma + 1}\left(w(T_{opt}) + \left(\gamma - \frac{1}{2}\right)w(T_{opt})\right) = \frac{\gamma + \frac{1}{2}}{2\gamma + 1}\, w(T_{opt}) = \frac{1}{2}w(T_{opt}),
+\end{equation}
+since $\gamma + \frac{1}{2} = \frac{2\gamma+1}{2}$. Notably, $\gamma$ cancels
+out entirely, so this weak bound holds regardless of the largest cycle size.
+\subsection{Version 3: The Real Variant}
+
+To overcome the mathematical limitations of the simple variant, the ``Real
+Variant'' introduces a critical modification: bounding the maximum size of any
+cycle. Additionally, it refines the compatible weight metric by utilizing
+Hamiltonian paths.
+
+It is worth noting that simply plugging a bound on $\gamma$ into the previous
+formula would not help: as shown above, the weak bound $w'(M) \ge
+\frac{1}{2}w(T_{opt})$ holds regardless of $\gamma$, since $\gamma$ cancels out
+entirely. The real issue is that Vizing's Theorem forces $(2\gamma+1)$ colors
+for the \emph{entire} auxiliary graph $G'$, based on whichever single cycle
+happens to be largest -- so even a cycle of moderate size gets diluted by
+dividing its contribution by this same, potentially huge, $2\gamma+1$. By
+splitting every cycle larger than a constant $x$ into pieces of size at most
+$x$, every piece becomes small enough to be analyzed with the \emph{same}
+Vizing-based colored/uncolored contribution formula, but now with $x$ (a
+constant we control) in place of the unbounded $\gamma$ -- this is exactly what
+Lemma \ref{lemma:large_cycles_net} does. 2-cycles are treated separately still:
+they bypass the coloring argument entirely, via the dedicated case analysis of
+Lemma \ref{lemma:2_cycles_net}, since their two edges admit a direct
+combinatorial argument that a generic coloring bound cannot capture as tightly.
+
+Specifically, the compatible weight $cw(e, C)$ is redefined as $w(H_{e, C})$,
+where $H_{e, C}$ is a maximum-weight Hamiltonian path spanning the vertices of
+$C$ that remains structurally compatible with the external edge $e$. Similarly,
+the uncolored weight of a cycle is updated to $w(H_C)$, representing an
+unrestricted maximum-weight Hamiltonian path on the vertices of $C$. Since the
+cycle size will be bounded by a constant, computing these Hamiltonian paths
+requires only constant time per cycle.
+
+\vspace{0.5em}
+\noindent\textbf{Algorithm: Version 3, Real Variant}
+\begin{enumerate}[label=\textbf{Step 2\alph*.}, leftmargin=*]
+    \item Define a constant $x$ (to be specified later). For every cycle $C \in
+    \mathcal{C}$ where $|C| > x$, divide it into $\lceil |C|/x \rceil$ distinct
+    segments. This division must ensure that all resulting pieces, with the
+    possible exception of at most one, contain exactly $x$ vertices. Let
+    $\mathcal{C}'$ denote this updated collection of cycles and paths.
+    \item Construct an auxiliary directed multigraph $G' = (V', E')$ by
+    contracting each element within $\mathcal{C}'$ into a single corresponding
+    vertex. Assign edge weights $w'$ across $G'$ using the updated
+    Hamiltonian-based metric described above.
+    \item Compute a maximum-weight matching $M$ within $G'$. Define $P$ as the
+    collection of vertex-disjoint paths in the original graph $G$ that
+    correspond to the edges in $M$.
+\end{enumerate}
+\vspace{0.5em}
+
+\paragraph{Analysis of Cycle Splitting}
+Breaking cycles into smaller segments definitly  causes some loss of weight.
+However, this loss can be strictly bounded, as established by the following
+lemma.
+
+\begin{lemma} \label{lemma:cycle_splitting}
+During Step 2a, any given cycle $C$ can be partitioned into a set of pieces
+$P_i$ such that the total weight retained satisfies:
+$$ \sum_{P_i \in C} w(P_i) \ge \frac{|C| - \lceil|C|/x\rceil}{|C|} w(C) \ge
+\frac{x-1}{x+1}w(C) $$
+\end{lemma}
+
+\begin{proof}[Proof Sketch]
+Write $l = |C|$ and $k = \lceil l/x \rceil \ge 2$. Recall that Step 2a cuts $C$
+into pieces of (at most) $x$ consecutive vertices, rather than removing an
+arbitrary set of $k$ edges we must therefore show that some such cut retains
+enough weight. For each offset $s \in \{0, 1, \dots, x-1\}$, cutting every
+$x$-th edge of $C$ starting from $s$ yields exactly this kind of partition.
+Since each edge of $C$ is cut for exactly one offset $s$, the total weight cut
+summed over all $x$ offsets equals $w(C)$ exactly, so the average weight cut per
+offset is $w(C)/x$. As $k \ge l/x$, this average is at most $(k/l)w(C)$, so some
+offset cuts a total weight of at most $(k/l)w(C)$ using this offset retains at
+least $w(C) - (k/l)w(C) = \frac{l-k}{l}w(C)$, establishing the first inequality.
+The worst-case scenario resulting in the highest fraction of lost weight occurs
+when exactly 2 edges must be removed from a cycle consisting of $x + 1$ edges.
+
+To see this, multiplying the desired inequality $\frac{l-k}{l} \ge
+\frac{x-1}{x+1}$ by $l(x+1) > 0$ gives $(l-k)(x+1) \ge l(x-1)$ expanding both
+sides yields $lx+l-kx-k \ge lx-l$, and subtracting $lx$ then adding $l$ to both
+sides simplifies this to
+$$ 2l - kx - k \ge 0 \iff 2l \ge k(x+1). $$
+By definition of the ceiling, $l \ge x(k-1) + 1$, so it suffices to check this
+bound at its smallest value:
+$$ 2\big(x(k-1)+1\big) \ge k(x+1) \iff kx - k \ge 2x - 2 \iff k(x-1) \ge 2(x-1)
+\iff k \ge 2, $$
+which always holds once splitting occurs. Equality holds precisely when $k=2$,
+i.e., $l = x+1$, confirming the worst case and establishing the second
+inequality of the lemma.
+\end{proof}
+
+For analytical purposes, there is a fundamental difference between an original
+unsplit cycle and a newly created piece $P_i$ resulting from a split. Because
+$P_i$ is structurally a path rather than a closed cycle, its entire weight can
+be recovered if it remains unmatched in the auxiliary graph. Consequently, for
+any piece $P_i$, the following inequality holds:
+\begin{equation} \label{eq:piece_weight}
+w'(P_i) \ge w(P_i)
+\end{equation}
+
+\paragraph{Net Contribution of Cycles}
+To accurately evaluate the matching, we calculate the \textit{net contribution}
+for each element. Defined as the sum of its colored and uncolored contributions,
+minus its internal weight. The following lemmas establish lower bounds for
+different categories of cycles.
+
+\begin{lemma} \label{lemma:large_cycles_net}
+For any original cycle $C \in \mathcal{C}$ where $|C| > x$, the aggregate net
+contribution of the pieces $P_i$ that constitute $C$ is bounded from below by:
+$$ (2x - 2)\frac{x-1}{x+1}w(C) $$
+\end{lemma}
+
+\begin{proof}
+Given that the redefined edge weights are at least as large as those in the
+simple variant, the combined colored and uncolored contributions
+\ref{eq:version3_eq4} of any piece $P_i$ sum to a minimum of:
+$$ (2|P_i| - 2)w(P_i) + (2x + 1 - 2|P_i|)w'(P_i) $$
+Furthermore, similar to \ref{eq:version3_eq6} we need to consider also edges
+internal to $P_i$. The weight of a maximum-weight Hamiltonian path $w(H_{P_i})$
+serves as an upper bound for the weight of the $T_{opt}$ edges internal to
+$P_i$. Because $w'(P_i)$ shares this bound, the total net contribution of all
+pieces forming $C$ is at least:
+$$ \sum_{P_i \in C} \left( (2|P_i| - 2)w(P_i) + (2x + 1 - 2|P_i|)w'(P_i) -
+w'(P_i) \right) $$
+By applying inequality (\ref{eq:piece_weight}) and simplifying the algebraic
+terms, the lemma is proven.
+\end{proof}
+
+A separate analysis is required for 2-cycles.
+
+\begin{lemma}[\cite{Kosaraju1994}] \label{lemma:2_cycles_net}
+Consider a 2-cycle $C_i$ consisting of a heavier edge with weight $b_i$ and a
+lighter edge with weight $c_i$. This cycle provides a net contribution of at
+least $(2x - 1)b_i + c_i$.
+\end{lemma}
+The proof evaluating the three potential traversal patterns of the optimal tour
+through $C_i$ is omitted.
+
+\paragraph{Aggregating the Final Bound}
+We can now synthesize these components to construct a lower bound for the total
+weight of the matching $M$. We utilize Lemma \ref{lemma:large_cycles_net} to
+evaluate cycles where $|C| > x$, Lemma \ref{lemma:2_cycles_net} for 2-cycles,
+and the original fractional bound \ref{eq:version3_eq5} for intermediate cycles
+(sizes 3 through $x$), leveraging the fact that $|C| \ge 3$.
+
+Summing these respective net contributions gives:
+\begin{align*}
+w'(M) \ge \frac{1}{2x + 1} \Bigg( &w(T_{opt}) + \sum_{|C_i| = 2} \left( (2x - 1)b_i + c_i \right) \\
+&+ \sum_{3 \le |C| \le x} \left( (2x + 1)\frac{2}{3} - 1 \right)w(C) \\
+&+ \sum_{|C| > x} (2x - 2)\frac{x-1}{x+1}w(C) \Bigg)
+\end{align*}
+
+Letting $bW$ and $cW$ represent the aggregate weights of the heavy and light
+edges of all 2-cycles respectively, we can simplify this expression into a
+global bound:
+$$ w'(M) \ge \frac{1}{2x + 1} \left( w(T_{opt}) + (2x - 1)bW + cW +
+\min\left\{\frac{4}{3}x - \frac{1}{3}, (2x - 2)\frac{x-1}{x+1}\right\} (1 - b -
+c)W \right) $$
+
+To maximize this approximation ratio, we fix the constant parameter at $x = 7$.
+
+\begin{theorem} \label{lemma:version3_final}
+By evaluating the aggregated bound at $x = 7$, Version 3 of the generic
+algorithm guarantees a $\left(\frac{2}{3} + \frac{4}{15}(b -
+2c)\right)$-approximation for the Max TSP.
+\end{theorem}
+
+\paragraph{Computational Complexity}
+Let $n$ denote the number of vertices of $G$. Step 2a splits every cycle in
+$O(n)$ time. Since $x$ is a fixed constant, computing the compatible weights of
+Step 2b -- which reduce to maximum-weight Hamiltonian paths on pieces of at most
+$x$ vertices -- takes only constant time per piece, so building the auxiliary
+graph $G'$ takes $O(n^2)$ time overall. Extracting the maximum-weight matching
+$M$ in Step 2c, using Edmonds' blossom algorithm on $G'$, takes $O(n^3)$ time
+\cite{edmonds1965paths, edmonds1965matching}. The matching computation therefore dominates, and
+Version 3 runs in $O(n^3)$ time overall.

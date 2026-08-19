@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Mean superstring length on real DNA fragments (bacteriophage phiX174, NCBI NC\_001422.1~\cite{ncbi_phix174}), averaged over $k \in \{8,15,25,40,60\}$ reads of length 40 at 5 repeats each. The last column is the length divided by the length of the plain concatenation of all reads, i.e.\ the compression actually achieved.}
+    \label{tab:bench_dna}
+    \small
+    \setlength{\tabcolsep}{7pt}
+    \renewcommand{\arraystretch}{1.1}
+    \begin{tabular}{@{}lrr@{}}
+        \toprule
+        \textbf{Algorithm} & \textbf{Mean superstring length} & \textbf{vs.\ concatenation} \\
+        \midrule
+        \textsc{Greedy} (max overlap) & 986.1 & 0.833 \\
+        \textsc{MGreedy} & 988.0 & 0.834 \\
+        \textsc{TGreedy} & 986.8 & 0.833 \\
+        Group Merge & 991.4 & 0.837 \\
+        Teng--Yao & 998.5 & 0.843 \\
+        Paluch--Elbassioni--van~Zuylen & 985.4 & 0.832 \\
+        Kosaraju--Park--Stein ($\frac{38}{63}$) & 994.4 & 0.840 \\
+        Breslauer--Jiang--Jiang $2\frac{2}{3}$ & 1044.9 & 0.883 \\
+        Breslauer--Jiang--Jiang $2\frac{25}{42}$ & 1044.6 & 0.882 \\
+        \addlinespace[2pt]
+        \textit{Plain concatenation (no overlap)} & 1184.0 & 1.000 \\
+        \bottomrule
+    \end{tabular}
+\end{table}

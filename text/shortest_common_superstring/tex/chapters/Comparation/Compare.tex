@@ -1,0 +1,280 @@
+\chapter{Simulations and results}
+
+This chapter compares the algorithms implemented in this work against the
+other Shortest Common Superstring heuristics and approximation algorithms
+already present in the repository\footnote{\url{\repoUrl}}: the classical
+\textsc{Greedy} (maximum overlap) heuristic with its \textsc{MGreedy} and
+\textsc{TGreedy} variants, Group
+Merge, the cycle-cover algorithms of Teng and
+Yao~\cite{teng1997approximating} and of Paluch, Elbassioni and van
+Zuylen~\cite{paluch2012simpler}, and the $\frac{38}{63}$-approximation
+directed Max-TSP algorithm of Kosaraju, Park and Stein~\cite{Kosaraju1994}
+used as an overlap approximation subroutine.
+
+Four of the nine implementations benchmarked here were contributed as part
+of this work\footnote{\url{\repoUrl/pull/61}}: the two
+Breslauer--Jiang--Jiang algorithms of
+Chapter~\ref{chap:breslauer}, the Kosaraju--Park--Stein Max-TSP
+approximation of Chapter~\ref{chap:kosaraju} that the second of them uses
+as a subroutine, and the path-coloring algorithm of
+Chapter~\ref{chap:path_coloring} that Version~2 of Kosaraju--Park--Stein
+requires in turn. Table~\ref{tab:impl_locations} lists where each of them
+is implemented, with the contributions of this work set in bold.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Where each benchmarked algorithm is implemented, as a path
+    relative to the root of the repository. The implementations contributed
+    by this work are set in \textbf{bold}.}
+    \label{tab:impl_locations}
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{@{}>{\raggedright\arraybackslash}p{135pt}l@{}}
+        \toprule
+        \textbf{Algorithm} & \textbf{File} \\
+        \midrule
+        \textsc{Greedy}, \textsc{MGreedy}, \textsc{TGreedy}, Group Merge, brute-force optimum & \texttt{\detokenize{shortest_common_superstring/shortest_common_superstring.py}} \\
+        Teng--Yao & \texttt{\detokenize{shortest_common_superstring/teng_yao.py}} \\
+        Paluch--Elbassioni--van~Zuylen & \texttt{\detokenize{shortest_common_superstring/paluch_elbassoni_zuylen.py}} \\
+        \addlinespace[3pt]
+        \textbf{Kosaraju--Park--Stein ($\frac{38}{63}$)} & \texttt{\detokenize{shortest_common_superstring/kosaraju.py}} \\
+        \textbf{Path-coloring lemma} & \texttt{\detokenize{shortest_common_superstring/path_coloring.py}} \\
+        \textbf{Breslauer--Jiang--Jiang $2\frac{2}{3}$ and $2\frac{25}{42}$} & \texttt{\detokenize{shortest_common_superstring/breslauer.py}} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Method}
+
+No standard public benchmark suite exists for the Shortest Common
+Superstring problem, unlike, e.g., TSPLIB for the Traveling Salesman
+Problem. Three sources of test instances were therefore used.
+
+\begin{itemize}[itemsep=3pt,topsep=4pt]
+\item \textbf{Random strings.} Independent words over an alphabet of
+      controlled size, with lengths drawn uniformly from $8$ to $15$.
+\item \textbf{Natural text.} Fragments of length $25$ cut at random
+      positions from \emph{Pan Tadeusz}, lowercased and stripped of
+      punctuation.
+\item \textbf{DNA.} Fragments of length $40$ cut at random positions from
+      the genome of bacteriophage phiX174~\cite{sanger1977phix174}, NCBI
+      accession NC\_001422.1~\cite{ncbi_phix174}.
+\end{itemize}
+
+The last two follow the random-fragment methodology used in the DNA
+assembly literature: a single longer source string is cut into overlapping
+pieces at random positions, rather than generating fully independent random
+words.
+
+Because the true optimum is computable by brute force only for very small
+instances, each result is reported relative to the shortest superstring
+found by any of the algorithms on the same instance. A value of $1.0000$
+therefore means the algorithm was never beaten on any instance of that
+experiment. Section~\ref{sec:bench_exact} covers instances small enough for
+the brute-force solver and compares against the true optimum instead.
+
+Every reported value is a mean over independent repetitions of the same
+experiment. Running times were measured on a single core with the overlap
+matrix computed inside the timed region, so they include the cost of
+building the overlap graph.
+
+\section{Overview}
+
+Table~\ref{tab:bench_overview} pools the four comparative experiments of
+the following sections into one ranking, over all instance sizes, alphabets
+and sources at once. The experiment on tiny instances is excluded from it,
+because there the reference is the true optimum rather than the best result
+found.
+
+\input{chapters/Comparation/tables/table_overview}
+
+\section{Scaling with instance size and alphabet}
+
+Figure~\ref{fig:bench_ratio_vs_n} varies the number of input strings at a
+fixed alphabet $\{a,b,c,d\}$, and Figure~\ref{fig:bench_ratio_vs_alphabet}
+varies the alphabet size at a fixed $n=20$.
+Figure~\ref{fig:bench_runtime_vs_n} reports the running times measured on
+the instances of Figure~\ref{fig:bench_ratio_vs_n}.
+
+\begin{figure}[tbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{chart_ratio_vs_n}
+    \caption{Mean superstring length relative to the best result found, as a
+    function of the number of input strings $n$ (random strings, alphabet
+    $\{a,b,c,d\}$, word lengths $8$--$15$, 8 repeats per point).}
+    \label{fig:bench_ratio_vs_n}
+\end{figure}
+
+\begin{figure}[tbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{chart_ratio_vs_alphabet}
+    \caption{Mean superstring length relative to the best result found, as a
+    function of alphabet size (random strings, $n=20$, word lengths
+    $8$--$15$, 8 repeats per point).}
+    \label{fig:bench_ratio_vs_alphabet}
+\end{figure}
+
+\begin{figure}[tbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{chart_runtime_vs_n}
+    \caption{Mean running time (log scale) as a function of the number of
+    input strings $n$, same instances as Figure~\ref{fig:bench_ratio_vs_n}.}
+    \label{fig:bench_runtime_vs_n}
+\end{figure}
+
+\section{Real-world data: natural text and DNA}
+
+Figure~\ref{fig:bench_source_comparison} puts the three instance sources
+side by side at the same relative scale.
+Table~\ref{tab:bench_dna} reports absolute lengths on the DNA instances
+rather than ratios, together with the compression achieved relative to the
+plain concatenation of all reads.
+
+\begin{figure}[tbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{chart_source_comparison}
+    \caption{Mean superstring length relative to the best result found,
+    grouped by instance source: random strings, fragments of a
+    natural-language text (\emph{Pan Tadeusz}), and fragments of a real
+    genome (bacteriophage phiX174).}
+    \label{fig:bench_source_comparison}
+\end{figure}
+
+\input{chapters/Comparation/tables/table_dna}
+
+\section{Comparison against the true optimum}
+\label{sec:bench_exact}
+
+The brute-force solver implemented alongside these algorithms enumerates
+candidate superstrings by increasing length, which is tractable only on
+very small inputs. Table~\ref{tab:bench_exact_small} therefore uses 20
+independent instances of three or four words of length three or four over a
+binary alphabet, on which the solver still terminates quickly, and reports
+every algorithm against the true optimum rather than against the best
+result found.
+
+\input{chapters/Comparation/tables/table_exact_small}
+
+\section{The cost of a single cycle-breaking version}
+\label{sec:bench_kosaraju_versions}
+
+The Kosaraju--Park--Stein algorithm of Chapter~\ref{chap:kosaraju} computes
+one maximum weight cycle cover and then breaks it into paths in three
+independent ways. Version~1 discards the lightest edge of every cycle
+(Section~\ref{sec:kps_v1}), Version~2 contracts the $2$-cycles and applies
+the path-coloring lemma of Chapter~\ref{chap:path_coloring}
+(Section~\ref{sec:kps_v2}), and Version~3 cuts long cycles into pieces and
+recombines them through a maximum weight matching
+(Section~\ref{sec:kps_v3}). The algorithm returns the heaviest of the three
+tours, and the $\frac{38}{63}$ guarantee of
+Theorem~\ref{thm:final_approximation} is a statement about that maximum.
+
+To measure what each version contributes on its own, the same algorithm was
+run four times per instance with the version set restricted to $\{1\}$,
+$\{2\}$, $\{3\}$ and $\{1,2,3\}$. All four start from the identical cycle
+cover, so every difference comes from the cycle-breaking step alone.
+Lengths in Table~\ref{tab:bench_kosaraju_versions} and
+Figure~\ref{fig:bench_kosaraju_versions} are relative to the best of these
+four variants, not to the full set of algorithms benchmarked earlier.
+
+\input{chapters/Comparation/tables/table_kosaraju_versions}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{chart_kosaraju_versions}
+    \caption{Quality and running time of the Kosaraju--Park--Stein algorithm
+    when restricted to a single cycle-breaking version, as a function of the
+    number of input strings $n$ (random strings, alphabet $\{a,b,c,d\}$,
+    word lengths $8$--$15$, 8 repeats per point). Lengths are relative to
+    the best of the four variants on the same instance.}
+    \label{fig:bench_kosaraju_versions}
+\end{figure}
+
+\section{Large instances}
+\label{sec:bench_large}
+
+The experiments above stay below $n = 60$, where every algorithm finishes in
+milliseconds and the running times compare implementation constants rather
+than asymptotic behaviour. This section repeats the comparison on instances
+large enough for the cubic step to dominate. Fragments were cut from
+\emph{Pan Tadeusz} at $n \in \{200, 400, 800, 1600\}$ and from the genome of
+phage lambda~\cite{sanger1982lambda}, NCBI accession
+NC\_001416.1~\cite{ncbi_lambda}, at $n \in \{200, 400, 800\}$ with reads of
+length 100. Each point is a single instance handed to all nine
+algorithms, and each run was given a 90-minute limit, which none of them
+reached.
+
+\begin{figure}[tbp]
+    \centering
+    \includegraphics[width=\textwidth]{chart_large_scale}
+    \caption{Running time on large instances, both axes logarithmic, so the
+    slope of each line is the empirical exponent. Fitted on the text
+    instances, the three greedy variants and Group Merge follow slopes of
+    3.0 and 3.1, Teng--Yao,
+    Paluch--Elbassioni--van~Zuylen and the two Breslauer--Jiang--Jiang
+    algorithms fall between 2.0 and
+    2.1, and Kosaraju--Park--Stein sits between the two
+    groups at 2.8. \textsc{Greedy}, \textsc{MGreedy} and
+    \textsc{TGreedy} differ by at most 6 percent at any
+    point and are drawn on top of one another.}
+    \label{fig:bench_large_scale}
+\end{figure}
+
+\input{chapters/Comparation/tables/table_large_scale}
+
+\section{Conclusions}
+
+Read on the small instances alone, the comparison says that the choice of
+algorithm hardly matters. Across the four experiments of
+Sections~\ref{sec:bench_exact} and earlier, every method except the two
+Breslauer--Jiang--Jiang variants stays within roughly two percent of the
+best result found, and the ordering by measured quality bears no relation
+to the ordering by provable constant. Paluch--Elbassioni--van~Zuylen leads
+at 1.0018, but \textsc{Greedy} reaches 1.0052 with no
+approximation machinery at all, and the gap between them costs a few tens
+of milliseconds either way.
+
+Section~\ref{sec:bench_large} shows that this reading is an artefact of
+scale. On $n = 1600$ fragments of natural text the two algorithms
+still return effectively the same string, differing by 1
+character, but \textsc{Greedy} now needs 69 minutes against
+9.0 seconds for Paluch--Elbassioni--van~Zuylen, a factor of
+463. The empirical exponents behind that gap are 3.0
+and roughly 2.0, so it widens with every doubling of
+$n$. Which algorithm to use is therefore settled on running time rather
+than on length, and it is a difference the small instances cannot show,
+because there the same gap is a few tens of milliseconds.
+
+The same correction applies to the algorithms of
+Chapter~\ref{chap:breslauer}, which look worst in the chapter and are not.
+They average 1.0772 on the small instances and 1.3158 in the
+worst case measured, far behind everything else, because their Step~3
+chooses cycle representatives $t_C$ so that the subsequent bound can be
+proved, and that choice gives up overlap a greedy merge would have taken.
+The overlap given up is fixed per cycle, so it dominates when there are few
+cycles and amortises when there are many. At $n = 1600$ the same two
+algorithms come in at 1.0007, within a thousandth of the best
+result, in under twelve seconds. Their weakness was a property of the
+instance sizes, not of the construction.
+
+Inside Kosaraju--Park--Stein the picture is different and does not improve
+with scale. Section~\ref{sec:bench_kosaraju_versions} shows that Version~1,
+the one-line rule discarding the lightest edge of every cycle, is
+0.06\,\% off the full algorithm while running 13
+times faster, so the path-coloring construction of
+Chapter~\ref{chap:path_coloring} and the piece-recombination of Version~3
+contribute almost nothing to the measured output. These two versions exist
+to hold up the $\frac{38}{63}$ bound, not to shorten strings.
+
+Was implementing these algorithms worth it? On the evidence collected here,
+yes, though not for the reason the approximation ratios suggest. None of
+them returns a noticeably shorter superstring than a maximum-overlap greedy
+merge, and on small inputs none of them needs to. What they provide is a
+construction that stays affordable when the input grows, which is exactly
+where the greedy heuristic stops being usable, and a guarantee that holds on
+inputs no benchmark can be asked to generate. The measurements add the part
+the proofs leave open, namely how much of the worst-case pessimism survives
+contact with realistic data. Very little of it does, and the practical
+argument for these algorithms turns out to rest on their running time rather
+than on the bounds they were designed to establish.
