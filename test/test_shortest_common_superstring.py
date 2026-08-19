@@ -6,8 +6,7 @@ import unittest
 import parameterized
 
 from generator import rand
-from shortest_common_superstring \
-  import shortest_common_superstring, teng_yao, paluch_elbassoni_zuylen
+from shortest_common_superstring import shortest_common_superstring, teng_yao, paluch_elbassoni_zuylen, breaslauer
 
 SHORTEST_COMMON_SUPERSTRING_ALGORITHMS = [
     [
@@ -40,6 +39,16 @@ SHORTEST_COMMON_SUPERSTRING_ALGORITHMS = [
         paluch_elbassoni_zuylen.shortest_common_superstring,
         lambda n: 2.5 * n,
     ],
+    [
+        'Breaslauer-Jiang-Jiang 2.67',
+        breaslauer.breslauer_jiang_jiang_2_67,
+        lambda n: 2.67 * n,
+    ],
+    [
+        'Breaslauer-Jiang-Jiang 2.596',
+        breaslauer.breslauer_jiang_jiang_2_596,
+        lambda n: 2.596 * n,
+    ]
 ]
 
 class TestShortestCommonSuperstring(unittest.TestCase):
@@ -95,6 +104,5 @@ class TestShortestCommonSuperstring(unittest.TestCase):
     S = [S_i for i in range(k) for S_i in get_si(i, k)]
     V = ['#' + 'c' + ('b' * (i - 1)) + 'c' + ('a' * (4 ** i - i - 1))
          for i in range(1, k + 1)]
-    # TODO: fix
     reference = None
     self.check_shortest_common_superstring(S + V, reference, algorithm, bound)
