@@ -1,7 +1,8 @@
 from lyndon import critical_factorization as _critical_factorization
 
 from . import kosaraju
-from .common import get_overlap, get_distance, get_period, merge_path, cycle_cover
+from .common import (get_overlap, get_distance, get_period, merge_path,
+                     cycle_cover)
 
 def get_cycle_cover(strings):
     n = len(strings)
@@ -56,8 +57,8 @@ def construct_tc(cycle_indices, strings):
         seq = [cycle_indices[(break_point + i) % L] for i in range(L)]
         broken_strings.append(build_broken_cycle_string(seq, strings))
         
-    max_H_len = max(len(h) for h in broken_strings)
-    search_space = omega * ((max_H_len // len(omega)) + 3)
+    max_broken_length = max(len(h) for h in broken_strings)
+    search_space = omega * ((max_broken_length // len(omega)) + 3)
     
     earliest_start = float('inf')
     earliest_H = ""
@@ -87,7 +88,7 @@ def remove_substrings(strings):
             
     return clean_set
 
-def breslauer_jiang_jiang_2_67(strings):
+def breslauer_jiang_jiang_simple(strings):
     if not strings:
         return ""
     strings = [s[1:] if s.startswith('#') else s for s in strings]
@@ -111,21 +112,23 @@ def breslauer_jiang_jiang_2_67(strings):
             broken_paths.append(T[cycle[0]])
             continue
 
-        break_idx = 0
+        break_index = 0
         for i in range(len(cycle)):
             u_idx = cycle[i]
             v_idx = cycle[(i + 1) % len(cycle)]
             if get_period(T[u_idx]) <= get_period(T[v_idx]):
-                break_idx = i
+                break_index = i
                 break
 
-        path_indices = [cycle[(break_idx + i) % len(cycle)] for i in range(1, len(cycle) + 1)]
+        path_indices = [cycle[(break_index + i) % len(cycle)]
+                        for i in range(1, len(cycle) + 1)]
         broken_paths.append(merge_path(path_indices, T))
 
     final_superstring = '#' + ''.join(broken_paths)
     return final_superstring
 
-def breslauer_jiang_jiang_2_596(strings, overlap_algorithm=kosaraju.superstring):
+def breslauer_jiang_jiang_by_overlap(strings,
+                                     overlap_algorithm=kosaraju.superstring):
     if not strings:
         return ""
     strings = [s[1:] if s.startswith('#') else s for s in strings]

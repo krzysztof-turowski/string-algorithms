@@ -36,10 +36,12 @@ class TestCycleCover(unittest.TestCase):
     n = len(matrix)
     cycles = common.cycle_cover(matrix, mode=mode)
     covered = sorted(v for cyc in cycles for v in cyc)
-    self.assertEqual(covered, list(range(n)), f'matrix={matrix}, mode={mode}, cycles={cycles}')
+    self.assertEqual(covered, list(range(n)),
+                     f'matrix={matrix}, mode={mode}, cycles={cycles}')
     actual = cycles_cost(matrix, cycles)
     expected = brute_force_cycle_cover_cost(matrix, mode)
-    self.assertEqual(actual, expected, f'matrix={matrix}, mode={mode}, cycles={cycles}')
+    self.assertEqual(actual, expected,
+                     f'matrix={matrix}, mode={mode}, cycles={cycles}')
 
   def test_regression_small_close_weights_no_self_loops(self):
     self.check_cycle_cover([[13, 7], [6, 3]], 'min')

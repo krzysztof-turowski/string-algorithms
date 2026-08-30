@@ -6,7 +6,9 @@ import unittest
 import parameterized
 
 from generator import rand
-from shortest_common_superstring import shortest_common_superstring, teng_yao, paluch_elbassoni_zuylen, breaslauer
+from shortest_common_superstring import (shortest_common_superstring,
+                                         teng_yao,
+                                         paluch_elbassoni_zuylen, breslauer)
 
 SHORTEST_COMMON_SUPERSTRING_ALGORITHMS = [
     [
@@ -40,13 +42,13 @@ SHORTEST_COMMON_SUPERSTRING_ALGORITHMS = [
         lambda n: 2.5 * n,
     ],
     [
-        'Breaslauer-Jiang-Jiang 2.67',
-        breaslauer.breslauer_jiang_jiang_2_67,
+        'Breslauer-Jiang-Jiang 2.67',
+        breslauer.breslauer_jiang_jiang_simple,
         lambda n: 2.67 * n,
     ],
     [
-        'Breaslauer-Jiang-Jiang 2.596',
-        breaslauer.breslauer_jiang_jiang_2_596,
+        'Breslauer-Jiang-Jiang 2.596',
+        breslauer.breslauer_jiang_jiang_by_overlap,
         lambda n: 2.596 * n,
     ]
 ]

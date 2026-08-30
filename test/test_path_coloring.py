@@ -36,12 +36,14 @@ HANDMADE_GRAPHS = [
     [
         'hex_weave',
         [0, 1, 2, 3, 4, 5],
-        [(0, 3), (0, 2), (1, 5), (2, 4), (2, 3), (3, 1), (4, 1), (5, 4), (5, 0)],
+        [(0, 3), (0, 2), (1, 5), (2, 4), (2, 3), (3, 1), (4, 1), (5, 4),
+         (5, 0)],
     ],
     [
         'gordian_knot',
         [0, 1, 2, 3, 4, 5, 6],
-        [(0, 4), (1, 2), (1, 0), (2, 5), (3, 6), (3, 2), (4, 1), (5, 3), (5, 6), (6, 4)],
+        [(0, 4), (1, 2), (1, 0), (2, 5), (3, 6), (3, 2), (4, 1), (5, 3),
+         (5, 6), (6, 4)],
     ],
     [
         'asymmetric_cycles_with_source',
@@ -56,7 +58,8 @@ HANDMADE_GRAPHS = [
     [
         'multiple_interleaved_cycles',
         [0, 1, 2, 3, 4, 5, 6],
-        [(0, 1), (1, 3), (1, 2), (2, 5), (2, 6), (3, 0), (4, 0), (5, 4), (5, 6), (6, 3)],
+        [(0, 1), (1, 3), (1, 2), (2, 5), (2, 6), (3, 0), (4, 0), (5, 4),
+         (5, 6), (6, 3)],
     ],
     [
         'regression_none_key_isolated_component',
@@ -73,15 +76,15 @@ HANDMADE_GRAPHS = [
 
 
 BRANCH_LINES = {
-    402: 'tail_or_no_h/general_contraction (Fig. A.5)',
-    435: 'tail_or_no_h/isolated_component_b_eq_h (Fig. A.6)',
-    444: 'head_of_h/simple_not_n_ge_1',
-    464: 'head_of_h/w1_eq_w2_loop (Fig. A.9)',
-    494: 'head_of_h/two_cycle_edge_eq_c2 (Fig. A.10, "c3==h")',
-    514: 'head_of_h/two_cycle_edge_neq_c2 (Fig. A.10, "c3!=h")',
-    551: 'head_of_h/general_d_case (Fig. A.11)',
-    369: 'no_2cycle_created/a_1_present',
-    374: 'no_2cycle_created/a_1_none',
+    356: 'no_2cycle_created/a_1_present',
+    361: 'no_2cycle_created/a_1_none',
+    390: 'tail_or_no_h/general_contraction (Fig. A.5)',
+    423: 'tail_or_no_h/isolated_component_b_eq_h (Fig. A.6)',
+    432: 'head_of_h/simple_not_n_ge_1',
+    455: 'head_of_h/w1_eq_w2_loop (Fig. A.9)',
+    491: 'head_of_h/two_cycle_edge_eq_c2 (Fig. A.10, "c3==h")',
+    513: 'head_of_h/two_cycle_edge_neq_c2 (Fig. A.10, "c3!=h")',
+    553: 'head_of_h/general_d_case (Fig. A.11)',
 }
 
 CASE_CASCADE_GRAPHS = [
@@ -113,7 +116,8 @@ CASE_CASCADE_GRAPHS = [
     [
         'fig_A10_two_cycle_edge_neq_c2_USER_IMAGE_CASE',
         [0, 1, 2, 3, 4, 5],
-        [(1, 5), (4, 0), (2, 4), (4, 3), (0, 1), (0, 5), (1, 3), (5, 2), (3, 2)],
+        [(1, 5), (4, 0), (2, 4), (4, 3), (0, 1), (0, 5), (1, 3), (5, 2),
+         (3, 2)],
     ],
     [
         'fig_A11_general_d_case',
@@ -165,7 +169,8 @@ def generate_random_valid_graph(n_nodes, p_edge=0.01):
   adjacency = {v: set() for v in range(n_nodes)}
   reverse_adjacency = {v: set() for v in range(n_nodes)}
   edges = []
-  potential_edges = [(u, v) for u in range(n_nodes) for v in range(n_nodes) if u != v]
+  potential_edges = [(u, v) for u in range(n_nodes)
+                     for v in range(n_nodes) if u != v]
   random.shuffle(potential_edges)
   for u, v in potential_edges:
     if random.random() > p_edge:
@@ -187,8 +192,9 @@ class TestPathColoring(unittest.TestCase):
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_path_coloring(self, V, E):
-    colors = path_coloring.PathColoringLemma().color_graph(V, E)
-    self.assertTrue(verify_coloring(V, E, colors), f'V={V}, E={E}, colors={colors}')
+    colors = path_coloring.color_graph(V, E)
+    self.assertTrue(verify_coloring(V, E, colors),
+                    f'V={V}, E={E}, colors={colors}')
 
   @parameterized.parameterized.expand(HANDMADE_GRAPHS)
   def test_handmade_examples(self, _, V, E):
@@ -202,7 +208,8 @@ class TestPathColoring(unittest.TestCase):
     hit_lines = set()
 
     def tracer(frame, event, arg):
-      if event == 'line' and frame.f_code.co_name == '_lemma_15_inductive_coloring':
+      if (event == 'line'
+          and frame.f_code.co_name == '_lemma_15_inductive_coloring'):
         if frame.f_lineno in BRANCH_LINES:
           hit_lines.add(frame.f_lineno)
       return tracer
@@ -210,7 +217,7 @@ class TestPathColoring(unittest.TestCase):
     sys.settrace(tracer)
     try:
       for _, V, E in CASE_CASCADE_GRAPHS:
-        path_coloring.PathColoringLemma().color_graph(V, E)
+        path_coloring.color_graph(V, E)
     finally:
       sys.settrace(None)
 
@@ -227,7 +234,8 @@ class TestPathColoring(unittest.TestCase):
     hit_lines = set()
 
     def tracer(frame, event, arg):
-      if event == 'line' and frame.f_code.co_name == '_lemma_15_inductive_coloring':
+      if (event == 'line'
+          and frame.f_code.co_name == '_lemma_15_inductive_coloring'):
         if frame.f_lineno in BRANCH_LINES:
           hit_lines.add(frame.f_lineno)
       return tracer
@@ -240,13 +248,15 @@ class TestPathColoring(unittest.TestCase):
         V, E = generate_random_valid_graph(n, p_edge=p)
         if not E:
           continue
-        colors = path_coloring.PathColoringLemma().color_graph(V, E)
-        self.assertTrue(verify_coloring(V, E, colors), f'V={V}, E={E}, colors={colors}')
+        colors = path_coloring.color_graph(V, E)
+        self.assertTrue(verify_coloring(V, E, colors),
+                        f'V={V}, E={E}, colors={colors}')
     finally:
       sys.settrace(None)
 
     missing = {BRANCH_LINES[l] for l in BRANCH_LINES if l not in hit_lines}
-    self.assertFalse(missing, f'Branches never hit by random fuzzing: {missing}')
+    self.assertFalse(missing,
+                     f'Branches never hit by random fuzzing: {missing}')
 
   def test_small_random(self):
     tests, n_low, n_high = 200, 4, 12

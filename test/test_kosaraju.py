@@ -3,7 +3,7 @@ import os
 import random
 import unittest
 
-from shortest_common_superstring import kosaraju, common
+from shortest_common_superstring import kosaraju, shortest_common_superstring
 
 
 def make_complete_graph(n, max_weight, rng):
@@ -16,19 +16,24 @@ def make_complete_graph(n, max_weight, rng):
 def brute_force_topt(V, weights):
   best = 0
   for perm in itertools.permutations(V):
-    w = sum(weights[(perm[i], perm[(i + 1) % len(perm)])] for i in range(len(perm)))
+    w = sum(weights[(perm[i], perm[(i + 1) % len(perm)])]
+            for i in range(len(perm)))
     best = max(best, w)
   return best
 
 
-def cycle_bcw(solver, C):
-  W = sum(solver.w(*e) for cycle in C for e in cycle)
+def edge_weight(weights, e):
+  return weights.get(e, 0)
+
+
+def cycle_bcw(weights, C):
+  W = sum(edge_weight(weights, e) for cycle in C for e in cycle)
   if W == 0:
     return 0.0, 0.0, 0.0
   b = c = 0.0
   for cycle in C:
     if len(cycle) == 2:
-      w1, w2 = solver.w(*cycle[0]), solver.w(*cycle[1])
+      w1, w2 = edge_weight(weights, cycle[0]), edge_weight(weights, cycle[1])
       b += max(w1, w2) / W
       c += min(w1, w2) / W
   return b, c, W
@@ -39,7 +44,8 @@ def assert_vertex_disjoint_paths(test, V, P):
   for u, v in P:
     out_deg[u] = out_deg.get(u, 0) + 1
     in_deg[v] = in_deg.get(v, 0) + 1
-    test.assertLessEqual(out_deg[u], 1, f'vertex {u} has out-degree > 1 in P={P}')
+    test.assertLessEqual(out_deg[u], 1,
+                         f'vertex {u} has out-degree > 1 in P={P}')
     test.assertLessEqual(in_deg[v], 1, f'vertex {v} has in-degree > 1 in P={P}')
 
 
@@ -68,51 +74,48 @@ class TestKosaraju(unittest.TestCase):
   run_large = unittest.skipUnless(
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
-  def test_compute_max_weight_cycle_cover_handmade(self):
+  def test_max_weight_cycle_cover_handmade(self):
     V = [0, 1, 2]
-    E = [(i, j) for i in V for j in V if i != j]
     weights = {(0, 1): 5, (1, 2): 5, (2, 0): 5,
                (1, 0): 1, (2, 1): 1, (0, 2): 1}
-    solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
-    C = solver.compute_max_weight_cycle_cover()
+    C = kosaraju._max_weight_cycle_cover(V, weights)
     self.assertEqual(len(C), 1)
     self.assertEqual(set(C[0]), {(0, 1), (1, 2), (2, 0)})
 
-  def check_version_bound(self, version_method, formula, n_low, n_high, rng, trials):
+  def check_version_bound(self, version_method, formula, n_low, n_high, rng,
+                          trials):
     for _ in range(trials):
       n = rng.randint(n_low, n_high)
       V, E, weights = make_complete_graph(n, 20, rng)
-      solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
-      C = solver.compute_max_weight_cycle_cover()
-      b, c, _ = cycle_bcw(solver, C)
-      P = version_method(solver, C)
+      C = kosaraju._max_weight_cycle_cover(V, weights)
+      b, c, _ = cycle_bcw(weights, C)
+      P = version_method(V, E, weights, C)
       assert_vertex_disjoint_paths(self, V, P)
-      tour = solver.patch_paths_to_tour(P)
-      self.assertTrue(is_valid_tour(solver.V, tour), f'n={n}, tour={tour}')
-      w_tour = sum(solver.w(*e) for e in tour)
+      tour = kosaraju._patch_paths_to_tour(V, P)
+      self.assertTrue(is_valid_tour(V, tour), f'n={n}, tour={tour}')
+      w_tour = sum(edge_weight(weights, e) for e in tour)
       topt = brute_force_topt(V, weights)
       bound = formula(b, c) * topt
       self.assertGreaterEqual(w_tour + 1e-9, bound,
-                               f'n={n}, b={b}, c={c}, topt={topt}, w(tour)={w_tour}, bound={bound}')
+                               f'n={n}, b={b}, c={c}, topt={topt}, '
+                               f'w(tour)={w_tour}, bound={bound}')
 
   def test_version_1_bound(self):
     rng = random.Random(1)
     self.check_version_bound(
-        lambda solver, C: solver.version_1(C),
+        lambda V, E, weights, C: kosaraju.version_1(weights, C),
         lambda b, c: 2 / 3 + 1 / 3 * (b - 2 * c), 4, 8, rng, 100)
 
   def test_version_1_bound_all_two_cycles(self):
     V = [0, 1, 2, 3]
     weights = {(0, 1): 4, (1, 0): 4, (2, 3): 6, (3, 2): 6}
-    E = list(weights.keys())
-    solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
     C = [[(0, 1), (1, 0)], [(2, 3), (3, 2)]]
-    b, c, W = cycle_bcw(solver, C)
+    b, c, W = cycle_bcw(weights, C)
     self.assertAlmostEqual(b, 0.5)
     self.assertAlmostEqual(c, 0.5)
-    P = solver.version_1(C)
-    tour = solver.patch_paths_to_tour(P)
-    w_tour = sum(solver.w(*e) for e in tour)
+    P = kosaraju.version_1(weights, C)
+    tour = kosaraju._patch_paths_to_tour(V, P)
+    w_tour = sum(edge_weight(weights, e) for e in tour)
     bound = (2 / 3 + 1 / 3 * (b - 2 * c)) * W
     self.assertAlmostEqual(bound, 0.5 * W)
     self.assertGreaterEqual(w_tour + 1e-9, bound)
@@ -121,7 +124,7 @@ class TestKosaraju(unittest.TestCase):
   def test_version_2_real_variant_bound(self):
     rng = random.Random(2)
     self.check_version_bound(
-        lambda solver, C: solver.version_2_real_variant(C),
+        lambda V, E, weights, C: kosaraju.version_2_real_variant(V, weights, C),
         lambda b, c: 7 / 12 - 1 / 12 * (b - 2 * c), 4, 8, rng, 60)
 
   def test_version_2_satisfies_lemma_3_preconditions(self):
@@ -129,10 +132,11 @@ class TestKosaraju(unittest.TestCase):
     for _ in range(500):
       n = rng.randint(4, 14)
       V, E, weights = make_complete_graph(n, 20, rng)
-      solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
-      C = solver.compute_max_weight_cycle_cover()
-      contracted_V, contracted_E, _, _ = solver.build_contracted_graph_for_version_2(C)
-      final_V, final_E, _ = solver._eliminate_induced_2_cycles(contracted_V, contracted_E)
+      C = kosaraju._max_weight_cycle_cover(V, weights)
+      contracted_V, contracted_E, _, _ = \
+          kosaraju._build_contracted_graph_for_version_2(V, weights, C)
+      final_V, final_E, _ = kosaraju._eliminate_induced_2_cycles(
+          contracted_V, contracted_E)
       self.assert_lemma_3_preconditions(final_V, final_E, n)
 
   def assert_lemma_3_preconditions(self, V, E, n):
@@ -141,18 +145,20 @@ class TestKosaraju(unittest.TestCase):
     for u, v in E:
       outdeg[u] = outdeg.get(u, 0) + 1
       indeg[v] = indeg.get(v, 0) + 1
-      self.assertNotIn((v, u), E, f'n={n}, 2-cycle: ({u},{v}) and ({v},{u}) in E={E}')
+      self.assertNotIn(
+          (v, u), E, f'n={n}, 2-cycle: ({u},{v}) and ({v},{u}) in E={E}')
     for v in V:
       i, o = indeg.get(v, 0), outdeg.get(v, 0)
       self.assertLessEqual(i, 2, f'n={n}, vertex {v}: indegree={i} > 2')
       self.assertLessEqual(o, 2, f'n={n}, vertex {v}: outdegree={o} > 2')
-      self.assertLessEqual(i + o, 3, f'n={n}, vertex {v}: total degree={i + o} > 3')
+      self.assertLessEqual(
+          i + o, 3, f'n={n}, vertex {v}: total degree={i + o} > 3')
 
   @run_large
   def test_version_3_real_variant_bound(self):
     rng = random.Random(3)
     self.check_version_bound(
-        lambda solver, C: solver.version_3_real_variant(C),
+        lambda V, E, weights, C: kosaraju.version_3_real_variant(E, weights, C),
         lambda b, c: 2 / 3 + 4 / 15 * (b - 2 * c), 4, 8, rng, 60)
 
   @run_large
@@ -161,49 +167,53 @@ class TestKosaraju(unittest.TestCase):
     for _ in range(30):
       n = rng.randint(8, 16)
       V, E, weights = make_complete_graph(n, 20, rng)
-      solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
-      C = solver.compute_max_weight_cycle_cover()
-      P = solver.version_3_real_variant(C)
+      C = kosaraju._max_weight_cycle_cover(V, weights)
+      P = kosaraju.version_3_real_variant(E, weights, C)
       assert_vertex_disjoint_paths(self, V, P)
 
   @run_large
-  def test_run_returns_valid_hamiltonian_tour(self):
+  def test_max_tsp_tour_returns_valid_hamiltonian_tour(self):
     rng = random.Random(4)
     for _ in range(300):
       n = rng.randint(4, 12)
       V, E, weights = make_complete_graph(n, 20, rng)
-      solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
-      tour = solver.run()
-      self.assertTrue(is_valid_tour(solver.V, tour), f'n={n}, tour={tour}')
+      tour = kosaraju.max_tsp_tour(V, E, weights)
+      self.assertTrue(is_valid_tour(V, tour), f'n={n}, tour={tour}')
 
   @run_large
-  def test_run_returns_valid_hamiltonian_tour_more_iterations(self):
+  def test_max_tsp_tour_returns_valid_hamiltonian_tour_more_iterations(self):
     rng = random.Random(42)
     for _ in range(3000):
       n = rng.randint(4, 15)
       V, E, weights = make_complete_graph(n, 20, rng)
-      solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
-      tour = solver.run()
-      self.assertTrue(is_valid_tour(solver.V, tour), f'n={n}, tour={tour}')
+      tour = kosaraju.max_tsp_tour(V, E, weights)
+      self.assertTrue(is_valid_tour(V, tour), f'n={n}, tour={tour}')
 
-  def test_run_versions_subset_returns_valid_tour(self):
+  def test_max_tsp_tour_versions_subset_returns_valid_tour(self):
     rng = random.Random(7)
     for versions in [(1,), (2,), (3,), (1, 2), (1, 3), (2, 3), (1, 2, 3)]:
       for _ in range(15):
         n = rng.randint(4, 10)
         V, E, weights = make_complete_graph(n, 20, rng)
-        solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
-        tour = solver.run(versions=versions)
-        self.assertTrue(is_valid_tour(solver.V, tour),
+        tour = kosaraju.max_tsp_tour(V, E, weights, versions=versions)
+        self.assertTrue(is_valid_tour(V, tour),
                          f'versions={versions}, n={n}, tour={tour}')
 
-  def test_run_versions_rejects_invalid_input(self):
+  def test_max_tsp_tour_odd_vertex_count(self):
+    rng = random.Random(11)
+    for n in [1, 3, 5, 7, 9, 11]:
+      V, E, weights = make_complete_graph(n, 20, rng)
+      tour = kosaraju.max_tsp_tour(V, E, weights)
+      self.assertTrue(is_valid_tour(V, tour), f'n={n}, tour={tour}')
+      leaked = [x for edge in tour for x in edge if x not in V]
+      self.assertEqual(leaked, [], f'n={n}, dummy vertex leaked into {tour}')
+
+  def test_max_tsp_tour_versions_rejects_invalid_input(self):
     V, E, weights = make_complete_graph(5, 20, random.Random(8))
-    solver = kosaraju.DirectedMaxTSPApproximation(V, E, weights)
     with self.assertRaises(ValueError):
-      solver.run(versions=())
+      kosaraju.max_tsp_tour(V, E, weights, versions=())
     with self.assertRaises(ValueError):
-      solver.run(versions=(4,))
+      kosaraju.max_tsp_tour(V, E, weights, versions=(4,))
 
   def test_superstring_versions_argument_is_forwarded(self):
     rng = random.Random(9)
@@ -216,35 +226,41 @@ class TestKosaraju(unittest.TestCase):
         continue
       result = kosaraju.superstring(strings, versions=versions)
       for s in strings:
-        self.assertIn(s, result, f'versions={versions}, strings={strings}, result={result}')
+        self.assertIn(
+            s, result,
+            f'versions={versions}, strings={strings}, result={result}')
 
   def test_superstring_contains_all_inputs(self):
     rng = random.Random(5)
     alphabet = ['a', 'b', 'c', 'd']
     for _ in range(50):
       k = rng.randint(2, 8)
-      strings = [''.join(rng.choice(alphabet) for _ in range(rng.randint(3, 12)))
+      strings = [''.join(rng.choice(alphabet)
+                         for _ in range(rng.randint(3, 12)))
                  for _ in range(k)]
       result = kosaraju.superstring(strings)
       for s in strings:
         self.assertIn(s, result, f'strings={strings}, result={result}')
 
-  @run_large
   def test_superstring_38_63_bound(self):
     rng = random.Random(6)
-    alphabet = ['a', 'b', 'c']
-    bound = lambda n: (2 + 50 / 63) * n
-    for _ in range(20):
-      k = rng.randint(4, 8)
-      strings = [''.join(rng.choice(alphabet) for _ in range(rng.randint(2, 6)))
+    alphabet = ['a', 'b']
+    bound = lambda opt: (2 + 50 / 63) * opt
+    for _ in range(100):
+      k = rng.randint(3, 4)
+      strings = [''.join(rng.choice(alphabet) for _ in range(rng.randint(3, 4)))
                  for _ in range(k)]
       strings = list(dict.fromkeys(strings))
+      strings = [s for s in strings
+                 if all(s == t or s not in t for t in strings)]
       if len(strings) < 2:
         continue
       result = kosaraju.superstring(strings)
-      opt_upper_bound = sum(len(s) for s in strings)
-      self.assertLessEqual(len(result), bound(opt_upper_bound),
-                            f'strings={strings}, result={result}')
+      optimum = len(shortest_common_superstring.exact(
+          ['#' + s for s in strings])) - 1
+      self.assertLessEqual(len(result), bound(optimum),
+                            f'strings={strings}, result={result}, '
+                            f'optimum={optimum}')
 
 
 if __name__ == '__main__':

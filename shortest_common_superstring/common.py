@@ -1,5 +1,5 @@
 import numpy as np
-import networkx as nx
+import networkx
 from scipy.optimize import linear_sum_assignment
 
 from common import prefix as _prefix
@@ -71,9 +71,9 @@ def max_weight_matching(weighted_edges):
     if key not in best or w > best[key]:
       best[key] = w
 
-  graph = nx.Graph()
+  graph = networkx.Graph()
   for key, w in best.items():
     u, v = tuple(key)
     graph.add_edge(u, v, weight=w)
 
-  return list(nx.max_weight_matching(graph, maxcardinality=True))
+  return list(networkx.max_weight_matching(graph, maxcardinality=True))
