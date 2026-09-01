@@ -1,0 +1,45 @@
+\section{Podstawowe pojęcia}
+
+\begin{definition}{}{}
+  \textbf{\textit{Alfabet}} $\A$ -- (skończony) zbiór symboli.
+\end{definition}
+
+W większości algorytmów rozmiar alfabetu jest stały i pomijany w analizie złożoności.
+
+\begin{definition}{}{}
+  \textbf{\textit{Słowo}} $w \in \A^*$ to ciąg symboli zbudowany nad alfabetem $\A$.
+\end{definition}
+
+Słowo puste jest oznaczane symbolem $\varepsilon$. Zbiór słów niepustych to $\A^+ = \A^* \setminus \{\varepsilon\}$.
+Zbiór słów długości $n$ oznaczamy $\A_n$ i definiujemy rekurencyjnie jako $\A_0 = \{\varepsilon\}$, $A_{n + 1} = \bigcup_{x \in \A_n, y \in \A} xy$. 
+
+Numerację symboli w słowie zaczynamy od $1$, więc $w[i]$ (albo $w_i$) jest $i$-tym symbolem w słowie $w$.
+
+\begin{definition}{}{}
+  \textbf{\textit{Długość słowa}} to funkcja $|\cdot|: \A^* \to \N$  taka, że $|w| = n$ wtedy i tylko wtedy, gdy $w \in \A_n$.
+\end{definition}
+
+\begin{definition}{}{}
+  Słowo $u$ jest \textbf{\textit{podsłowem}} (ang. \emph{factor}) słowa $w$, gdy istnieją słowa $v_1 v_2 \in \A^*$ takie, że $w = v_1 u v_2$.
+  Podsłowo jest \textbf{\textit{właściwe}}, gdy $v_1 v_2 \neq \varepsilon$.
+\end{definition}
+
+% Zbiór wszystkich podsłów oznaczamy $F(w) = \{u: \exists_{v_1, v_2: v_1 v_2\neq\varepsilon} v_1 u v_2\}$.
+% Zbiór podsłów długości $k$ oznaczamy $F_k(w) = \{u: u \in F(w) \land |u| = k\}$.
+
+\begin{definition}{}{}
+  Słowo $u$ jest \textbf{\textit{prefiksem}} (\textbf{\textit{sufiksem}}) słowa $w$, gdy istnieje słowo $v \in \A^*$ takie, że $w = u v$ ($w = v u$).
+  Prefiks (sufiks) jest \textbf{\textit{właściwy}}, gdy $v \neq \varepsilon$.
+\end{definition}
+
+\begin{definition}{}{}
+  Słowo $u$ jest \textbf{\textit{podciągiem}} słowa $w$, gdy istnieją liczby $1 \le i_1 < i_2 < \ldots < i_k \le |w|$ takie, że $u = w[i_1] w[i_2] \ldots w[i_k]$.
+\end{definition}
+
+\begin{definition}{}{}
+  Słowo $\bar{w}$ jest \textbf{\textit{odwrotnością}} słowa $w$, gdy dla $n = |w|$ mamy $\bar{w} = w[n] w[n - 1] \ldots w[1]$.
+\end{definition}
+
+\begin{definition}{}{}
+  Słowo $w$ jest \textbf{\textit{palindromem}}, jeśli istnieją słowa $u, v \in \A^*$ takie, że $|u| \le 1$ i $w = \bar{v} u v$.
+\end{definition}

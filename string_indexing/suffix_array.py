@@ -435,3 +435,108 @@ def contains(SA, t, w, n, m):
   # Smallest suffix greater than m-letter prefix of w
   high = _binary_search(lambda x: w[1:] < t[SA[x]:SA[x] + m])
   yield from sorted([SA[i] for i in range(low, high)])
+
+
+def sadakane_sort(I, V, S, start, end, k, group_index):
+  n = len(I)
+  if start >= end:
+    if start > end:
+      S.pop(group_index)
+    else:
+      S.pop(group_index)
+      S.insert(group_index, -1)
+    return
+  
+  if end == start + 1:
+    if V[(I[start] + k) % n] > V[(I[end] + k) % n]:
+      V[I[end]], V[I[start]] = V[I[start]], V[I[start]] + 1
+      I[start], I[end] = I[end], I[start]
+      S.pop(group_index)
+      S.insert(group_index, -2)
+    elif V[(I[start] + k) % n] < V[(I[end] + k) % n]:
+      V[I[end]] = V[I[start]] + 1
+      S.pop(group_index)
+      S.insert(group_index, -2)
+    return
+
+  less = start
+  equal = start
+  pivot = I[end]
+  last = end
+
+  while equal <= last:
+    if(V[(I[equal] + k) % n] < V[(pivot + k) % n]):
+      I[equal], I[less] = I[less], I[equal]
+      equal += 1
+      less += 1
+    elif(V[(I[equal] + k) % n] > V[(pivot + k) % n]):
+      I[equal], I[last] = I[last], I[equal]
+      last -= 1
+    else:
+      equal += 1
+
+  val = 0
+  S.pop(group_index)
+  S.insert(group_index, end - equal + 1)
+  if(equal - less > 1):
+    S.insert(group_index, equal - less)
+    val = 1
+  elif(equal - less == 1):
+    S.insert(group_index, -1)
+    val = 1
+  S.insert(group_index, less - start)
+
+  for i in range(less, equal):
+    V[I[i]] = less
+
+  for i in range(equal, end + 1):
+    V[I[i]] = equal
+
+  sadakane_sort(I, V, S, equal, end, k, group_index + 1 + val)
+  sadakane_sort(I, V, S, start, less - 1, k, group_index)
+
+
+def sadakane(text, n):
+  '''Computes suffix array using Sadakane algorithm'''
+  text += '$'
+  I = sorted(range(0, n + 1), key= lambda index: text[index + 1])
+  text = text[1:]
+
+  V = [0] * (n + 1)
+  current_index, current_symbol = 0, '#'
+  for i, v in enumerate(I):
+    if current_symbol != text[v]:
+      current_index, current_symbol = i, text[v]
+    V[v] = current_index
+
+  S = []
+  current_group, group_size = V[I[n]], 1
+  for i, v in enumerate(reversed(I[:-1])):
+    if current_group == V[v]:
+      group_size += 1
+    else:
+      S.append(group_size if group_size != 1 else -1)
+      current_group, group_size = V[v], 1
+  S.append(group_size if group_size != 1 else -1)
+  S.reverse()
+
+  k = 1
+  while k <= n and S[0] != -(n + 1):
+    group_index, i = n, len(S) - 1
+    while i >= 0:
+      if S[i] < 0 :
+        group_index += S[i]
+        if i != len(S) - 1 and S[i + 1] < 0 :
+          val = S.pop(i)
+          S[i] += val
+        i -= 1
+      else:
+        saved_group_index = group_index
+        group_index -= S[i]
+        sadakane_sort(
+            I, V, S, saved_group_index - S[i] + 1, saved_group_index, k, i)
+        i -= 1
+    k *= 2
+  for i in range(0, len(I)):
+    I[i] += 1
+  return I

@@ -1,0 +1,27 @@
+\section{Porządki i odległości}
+
+Złożoność obliczeniowa algorytmów tekstowych obliczana jest przy przyjęciu dwóch (binarnych) operacji atomowych na parach liter z alfabetu: $=$ oraz $\le$.
+
+\begin{definition}{}{}
+  Relacja $\preceq$ jest relacją \textbf{\textit{porządku prefiksowego}} tj. $u \preceq v$ wtedy i tylko wtedy, gdy $u$ jest prefiksem $u$.
+\end{definition}
+
+\begin{definition}{}{}
+  Relacja $\preceq_R$ jest relacją \textbf{\textit{porządku wojskowego}} (\emph{radix}) tj. $u \preceq_R v$ wtedy i tylko wtedy, gdy:
+  \begin{itemize}
+    \item albo $|u| < |v|$,
+    \item albo $|u| = |v|$ oraz istnieje $1 \le k \le |u|$ takie, że $u[k] < v[k]$ i dla wszystkich $1 \le j < k$ zachodzi $u[j] = v[j]$.
+  \end{itemize}
+\end{definition}
+
+\begin{definition}{}{}
+  Relacja $<$ jest relacją \textbf{\textit{porządku leksykograficznego}} tj. $u < v$ wtedy i tylko wtedy, gdy:
+  \begin{itemize}
+    \item albo $u$ jest prefiksem $v$,
+    \item albo istnieje $1 \le k \le |u|$ takie, że $u[k] < v[k]$ i dla wszystkich $1 \le j < k$ zachodzi $u[j] = v[j]$.
+  \end{itemize}
+\end{definition}
+
+\begin{corollary}{}{}
+  Porządek leksykograficzny i wojskowy są porządkami liniowymi, rozszerzającymi porządek prefiksowy. Dla słów równego długości $u$, $v$ zachodzi $u < v$ wtedy i tylko wtedy, gdy $u \preceq_R v$.
+\end{corollary}

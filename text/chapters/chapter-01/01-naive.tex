@@ -1,0 +1,23 @@
+\section{Algorytm naiwny}
+
+\begin{code}
+\captionof{listing}{Naiwne szukanie wprzód wzorca $w$ w tekście $t$}
+\inputminted{python}{code/exact-string-matching/naive-forward.py}
+\label{alg:exact-string-matching-naive-forward}
+\end{code}
+
+\begin{problem}{}{}
+  Dla ustalonego $n$ i $m$ znajdź przykład słowa $w$ i tekstu $t$ z $|t| = n$, $|w| = m$, dla którego \Cref{alg:exact-string-matching-naive-forward} wykonuje najwięcej porównań.
+\end{problem}
+
+\begin{proof}
+Najprostszym przykładem jest poszukiwanie wzorca $w=a^{m-1}b$ w tekście $t=a^n$. Dla takiego zestawu algorytm naiwny nie znajdzie dopasowania, a wcześniej będzie dopasowywał prawie całe słowo $w$, rozpoczynając od każdej pozycji słowa $t$. Prowadzi to do wykonania dokładnie $m (n - m + 1)$ porównań.
+\end{proof}
+
+Można również zaimplementować algorytm naiwny, który dopasowywałby wzorzec do tekstu od końca.
+
+\begin{code}
+\captionof{listing}{Naiwne szukanie wspak wzorca $w$ w tekście $t$}
+\inputminted{python}{code/exact-string-matching/naive-backward.py}
+\label{alg:exact-string-matching-naive-backward}
+\end{code}
