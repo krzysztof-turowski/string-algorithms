@@ -57,6 +57,7 @@ class TestOmegaRotation(unittest.TestCase):
     self.check_overlap_rotation_lemma(
         'abc', ['cab', 'bca', 'abcab', 'ccc', 'aabbcc'])
     self.check_overlap_rotation_lemma('aab', ['baaa', 'aabaab', 'bab', 'aaab'])
+    self.check_overlap_rotation_lemma('abaabaa', ['aabaaaba', 'aaabaaaba'])
 
   def test_random_periodic_strings(self):
     rng = random.Random(7)

@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import networkx
 from scipy.optimize import linear_sum_assignment
 
@@ -41,25 +41,24 @@ def cycle_cover(weight_matrix, mode='min'):
   n = len(weight_matrix)
   if n == 1:
     return [[0]]
-  matrix = np.array(weight_matrix, dtype=float)
+  matrix = numpy.array(weight_matrix, dtype=float)
   if mode == 'max':
     matrix = -matrix
-  np.fill_diagonal(matrix, np.inf)
-  row_ind, col_ind_raw = linear_sum_assignment(matrix)
-  assignment = [0] * n
-  for r, c in zip(row_ind, col_ind_raw):
-    assignment[int(r)] = int(c)
-  col_ind = assignment
+  numpy.fill_diagonal(matrix, numpy.inf)
+  row_index, column_index_raw = linear_sum_assignment(matrix)
+  column_index = [0] * n
+  for r, c in zip(row_index, column_index_raw):
+    column_index[int(r)] = int(c)
 
   visited = [False] * n
   cycles = []
   for i in range(n):
     if not visited[i]:
-      cycle, curr = [], i
-      while not visited[curr]:
-        visited[curr] = True
-        cycle.append(curr)
-        curr = col_ind[curr]
+      cycle, current = [], i
+      while not visited[current]:
+        visited[current] = True
+        cycle.append(current)
+        current = column_index[current]
       cycles.append(cycle)
   return cycles
 

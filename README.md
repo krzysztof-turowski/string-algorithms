@@ -111,6 +111,7 @@ Collection of algorithms for _String Algorithms_ course (summer semesters 2019/2
 1. Greedy overlap algorithm
 1. Teng-Yao algorithm
 1. Paluch-Elbassioni-van Zuylen algorithm
+1. Breslauer-Jiang-Jiang algorithms
 
 ### Compression
 
