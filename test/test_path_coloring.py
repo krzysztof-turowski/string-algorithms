@@ -76,15 +76,15 @@ HANDMADE_GRAPHS = [
 
 
 BRANCH_LINES = {
-    356: 'no_2cycle_created/a_1_present',
-    361: 'no_2cycle_created/a_1_none',
-    390: 'tail_or_no_h/general_contraction (Fig. A.5)',
-    423: 'tail_or_no_h/isolated_component_b_eq_h (Fig. A.6)',
-    432: 'head_of_h/simple_not_n_ge_1',
-    455: 'head_of_h/w1_eq_w2_loop (Fig. A.9)',
-    491: 'head_of_h/two_cycle_edge_eq_c2 (Fig. A.10, "c3==h")',
-    513: 'head_of_h/two_cycle_edge_neq_c2 (Fig. A.10, "c3!=h")',
-    553: 'head_of_h/general_d_case (Fig. A.11)',
+    351: 'no_2cycle_created/a_1_present',
+    356: 'no_2cycle_created/a_1_none',
+    385: 'tail_or_no_h/general_contraction (Fig. A.5)',
+    418: 'tail_or_no_h/isolated_component_b_eq_h (Fig. A.6)',
+    427: 'head_of_h/simple_not_n_ge_1',
+    450: 'head_of_h/w1_eq_w2_loop (Fig. A.9)',
+    486: 'head_of_h/two_cycle_edge_eq_c2 (Fig. A.10, "c3==h")',
+    495: 'head_of_h/two_cycle_edge_neq_c2 (Fig. A.10, "c3!=h")',
+    548: 'head_of_h/general_d_case (Fig. A.11)',
 }
 
 CASE_CASCADE_GRAPHS = [
@@ -125,6 +125,17 @@ CASE_CASCADE_GRAPHS = [
         [(3, 0), (4, 1), (4, 3), (1, 0), (2, 1), (0, 4)],
     ],
     [
+        'fig_A5_general_contraction_shortest_path',
+        [0, 1, 2, 3, 4],
+        [(2, 1), (3, 2), (0, 4), (0, 3), (1, 3), (2, 0)],
+    ],
+    [
+        'fig_A10_two_cycle_edge_neq_c2_shortest_path',
+        [0, 1, 2, 3, 4, 5, 6],
+        [(2, 1), (1, 4), (3, 4), (0, 6), (2, 3), (5, 0), (1, 0), (6, 5),
+         (4, 6), (5, 2)],
+    ],
+    [
         'no_2cycle_created_a_1_present',
         [0, 1, 2, 3],
         [(2, 3), (1, 2), (3, 0), (1, 0), (0, 2)],
@@ -142,7 +153,7 @@ def verify_coloring(V, E, colors):
     return False
   for c in [0, 1]:
     out_of, in_deg = {}, {}
-    for u, v in (e for e, col in colors.items() if col == c):
+    for u, v, *_ in (e for e, col in colors.items() if col == c):
       if u in out_of:
         return False
       out_of[u] = v

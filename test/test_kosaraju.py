@@ -133,22 +133,34 @@ class TestKosaraju(unittest.TestCase):
       n = rng.randint(4, 14)
       V, E, weights = make_complete_graph(n, 20, rng)
       C = kosaraju._max_weight_cycle_cover(V, weights)
-      contracted_V, contracted_E, _, _ = \
-          kosaraju._build_contracted_graph_for_version_2(V, weights, C)
-      final_V, final_E, _ = kosaraju._eliminate_induced_2_cycles(
-          contracted_V, contracted_E)
-      self.assert_lemma_3_preconditions(final_V, final_E, n)
+      contracted, _ = kosaraju._build_contracted_graph_for_version_2(
+          V, weights, C)
+      final, _ = kosaraju._reduce_for_path_coloring(contracted)
+      self.assert_lemma_3_preconditions(final, n)
 
-  def assert_lemma_3_preconditions(self, V, E, n):
-    E = set(E)
-    indeg, outdeg = {}, {}
-    for u, v in E:
-      outdeg[u] = outdeg.get(u, 0) + 1
-      indeg[v] = indeg.get(v, 0) + 1
-      self.assertNotIn(
-          (v, u), E, f'n={n}, 2-cycle: ({u},{v}) and ({v},{u}) in E={E}')
-    for v in V:
-      i, o = indeg.get(v, 0), outdeg.get(v, 0)
+  def test_version_2_keeps_half_of_the_step_2e_weight(self):
+    rng = random.Random(3)
+    for _ in range(200):
+      n = rng.randint(4, 9)
+      V, E, weights = make_complete_graph(n, 20, rng)
+      C = kosaraju._max_weight_cycle_cover(V, weights)
+      contracted, _ = kosaraju._build_contracted_graph_for_version_2(
+          V, weights, C)
+      alpha = sum(edge_weight(weights, data['original'])
+                  for *_, data in contracted.edges(data=True))
+      P = kosaraju.version_2_real_variant(V, weights, C)
+      w_P = sum(edge_weight(weights, e) for e in P)
+      self.assertGreaterEqual(
+          w_P + 1e-9, alpha / 2,
+          f'n={n}, w(P)={w_P} < alpha/2={alpha / 2}')
+
+  def assert_lemma_3_preconditions(self, graph, n):
+    for u, v in graph.edges():
+      self.assertFalse(
+          graph.has_edge(v, u),
+          f'n={n}, 2-cycle: ({u},{v}) and ({v},{u}) in {list(graph.edges())}')
+    for v in graph.nodes():
+      i, o = graph.in_degree(v), graph.out_degree(v)
       self.assertLessEqual(i, 2, f'n={n}, vertex {v}: indegree={i} > 2')
       self.assertLessEqual(o, 2, f'n={n}, vertex {v}: outdegree={o} > 2')
       self.assertLessEqual(

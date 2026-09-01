@@ -60,6 +60,8 @@ def construct_tc(cycle_indices, strings):
     max_broken_length = max(len(h) for h in broken_strings)
     search_space = omega * ((max_broken_length // len(omega)) + 3)
     
+    # TODO O(L * |search_space|), one scan per broken string.
+    # Aho-Corasick would be (|search_space| + sum of their lengths).
     earliest_start = float('inf')
     earliest_H = ""
     for H_j in broken_strings:

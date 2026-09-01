@@ -272,15 +272,10 @@ def _lemma_15_inductive_coloring(current_V, current_E,
     else:
         for t in sorted(list(T), key=str):
             if networkx.has_path(G_prime, t[1], t[0]):
-                for p in networkx.all_simple_paths(G_prime, t[1], t[0]):
-                    f_cand = (p[-2], p[-1])
-                    g_cand = (p[0], p[1])
-                    if ((f_cand in P and A2.degree(f_cand) == 1)
-                            or (g_cand in P and A2.degree(g_cand) == 1)):
-                        target_e = t
-                        cycle_nodes = p
-                        break
-            if target_e: break
+                target_e = t
+                cycle_nodes = next(
+                    networkx.all_simple_paths(G_prime, t[1], t[0]))
+                break
 
     if not target_e:
         zp_cols = _color_Z_P(A2, Z, P)
@@ -557,4 +552,8 @@ def _lemma_15_inductive_coloring(current_V, current_E,
     return colors
 
 def color_graph(V, E):
-    return _lemma_15_inductive_coloring(set(V), set(E))
+    edges = list(E)
+    if len(edges) != len(set(edges)):
+        raise ValueError(
+            'the path coloring lemma needs a graph without parallel edges')
+    return _lemma_15_inductive_coloring(set(V), set(edges))

@@ -202,6 +202,23 @@ y)$ are colored red, while $(u, v)$ is assigned blue. Because $(u, v)$ shares no
 vertices with another blue edge, this assignment is perfectly safe.
 \end{proof}
 
+\paragraph{An Inconsistency Between the Two Sources}
+The proof above treats induced 2-cycles as the only way in which the edges
+entering Step 2e can violate the conditions of Lemma
+\ref{lemma:path_coloring}. A matching edge may however also run in the
+same direction as a kept cycle edge, and the two then form a double
+edge. Kosaraju, Park and Stein implicitly accept such an input: their lemma is
+stated for a directed graph without further restriction, and their case
+analysis does not list double edges among the situations to be resolved.
+Bl\"aser \cite{Blaser2004}, whose proof of that lemma we reconstruct in
+Chapter \ref{chap:path_coloring}, reads it the other way: he states it for a
+loopless graph and notes explicitly that a graph containing double edges does
+not fulfil its premises. The two sources therefore disagree about what the
+path-coloring lemma may be given.
+
+Step 2e of the implementation therefore contracts double edges alongside the
+2-cycles, so that the path coloring algorithm receives the input Bl\"aser's proof assumes.
+
 \paragraph{Final Bound}
 Given that the edge weight remaining after Step 2d's contractions is bounded by
 equation (\ref{eq:weight_after_contraction_real}), the preceding lemma allows us
