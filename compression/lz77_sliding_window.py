@@ -61,7 +61,7 @@ class Ring:
 # Encoder
 def _reproducible_extension(ring, j, m):
   """
-  Longest prefix of B(j + 1 .. m) that occurs in B(1 .. m) 
+  Longest prefix of B(j + 1 .. m) that occurs in B(1 .. m)
   and starts in B(1 .. j)
   """
   max_l, best_p, best_l = m - j, 1, 0
@@ -134,7 +134,7 @@ class Decoder:
       raise ValueError('codeword of length Lc expected')
     p = numeric.from_radix(C[:self.params.Lp], self.params.alpha) + 1
     l = numeric.from_radix(
-      C[self.params.Lp:self.params.Lp + self.params.Ll], 
+      C[self.params.Lp:self.params.Lp + self.params.Ll],
       self.params.alpha) + 1
     if not 1 <= p <= self.params.window_size:
       raise ValueError('pointer out of range')
