@@ -141,9 +141,9 @@ class Encoder:
     while self.position < end:
       s = self.source[self.position]
       self.position += 1
-      next = self.dictionary.child(current, s)
-      if next != 0:
-        current = next
+      next_node = self.dictionary.child(current, s)
+      if next_node != 0:
+        current = next_node
         continue
       self._add_to_bit_buff(current, s)
       self.dictionary.add(current, s)
