@@ -38,32 +38,20 @@ def q_ary_entropy(x, q):
     return 0
   return x*math.log((q-1)/x)/math.log(q) + (1-x)*math.log(1/(1-x)/math.log(q))
 
-def ceil_log(x, base):
-  """
-  Returns the smallest integer k such that base^k >= x
-  """
-  if base == 2:
-    return max(x - 1, 0).bit_length()
-  i, y = 0, 1
-  while y < x:
-    y *= base
-    i += 1
-  return i
-
 def to_radix(value, base, width = None):
   """
   Base representation of value in `width` digits.
   Most significant digit first.
   """
   if width is None:
-    width = max(ceil_log(value + 1, base), 1)
+    width = max(math.ceil(math.log(value + 1, base)), 1)
   digits = [0] * width
   for i in range(width - 1, -1, -1):
-    value, digits[i] = value // base, value % base
+    value, digits[i] = divmod(value, base)
   if value != 0:
     raise ValueError('value does not fit into the field')
   return digits
- 
+
 def from_radix(digits, base):
   """
   Inverse of to_radix.

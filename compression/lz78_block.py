@@ -1,34 +1,32 @@
 import collections
 import math
 
-from common import numeric
+Parameters = collections.namedtuple('Parameters', ['alpha', 'block_len'])
 
-Params = collections.namedtuple('Params', ['alpha', 'block_len'])
-
-def make_params(alpha, block_len):
+def make_parameters(alpha, block_len):
   if alpha < 2:
     raise ValueError('alpha >= 2 expected')
   if block_len < 1:
     raise ValueError('block_len >= 1 expected')
-  return Params(alpha, block_len)
+  return Parameters(alpha, block_len)
 
-def codeword_width(params, j):
+def codeword_width(parameters, j):
   """
   Width in bits of the j-th codeword of a block: ceil(log2(j * alpha))
   """
-  return numeric.ceil_log(j * params.alpha, 2)
+  return math.ceil(math.log(j * parameters.alpha, 2))
 
 #----------------------------------------------------
 # Stats
-# pylint: disable=too-few-public-methods
+# @dataclass
 class Stats:
   def __init__(self):
     self.source_symbols, self.phrases, self.bits = 0, 0, 0
 
-def compression_ratio(stats, params):
+def compression_ratio(stats, parameters):
   if stats.source_symbols == 0:
     return 0.0
-  return stats.bits / (stats.source_symbols * math.log2(params.alpha))
+  return stats.bits / (stats.source_symbols * math.log2(parameters.alpha))
 #----------------------------------------------------
 
 
@@ -115,8 +113,8 @@ class Dictionary:
 #----------------------------------------------------
 # Encoder
 class Encoder:
-  def __init__(self, params, source):
-    self.params, self.source = params, list(source)
+  def __init__(self, parameters, source):
+    self.parameters, self.source = parameters, list(source)
     self.position, self.j, self.stats = 0, 1, Stats()
     self.dictionary, self.encode_res = Dictionary(), BitWriter()
 
@@ -124,8 +122,8 @@ class Encoder:
     """
     I = pi(parent) * alpha + a, written in codeword_width(j) bits
     """
-    self.encode_res.write(parent * self.params.alpha + last,
-                          codeword_width(self.params, self.j))
+    self.encode_res.write(parent * self.parameters.alpha + last,
+                          codeword_width(self.parameters, self.j))
     self.j += 1
     self.stats.phrases += 1
 
@@ -134,26 +132,26 @@ class Encoder:
 
   def encode_block(self):
     # fallback on the last block
-    end = min(self.position + self.params.block_len, len(self.source))
+    end = min(self.position + self.parameters.block_len, len(self.source))
     block_symbols = end - self.position
 
     self.dictionary.reset()
-    self.j, cur = 1, 0
+    self.j, current = 1, 0
 
     while self.position < end:
       s = self.source[self.position]
       self.position += 1
-      next = self.dictionary.child(cur, s)
+      next = self.dictionary.child(current, s)
       if next != 0:
-        cur = next
+        current = next
         continue
-      self._add_to_bit_buff(cur, s)
-      self.dictionary.add(cur, s)
-      cur = 0
+      self._add_to_bit_buff(current, s)
+      self.dictionary.add(current, s)
+      current = 0
 
     # fallback for last match of current block
-    if cur != 0:
-      entry = self.dictionary.entries[cur]
+    if current != 0:
+      entry = self.dictionary.entries[current]
       self._add_to_bit_buff(entry.parent, entry.last)
 
     self.stats.source_symbols += block_symbols
@@ -170,23 +168,23 @@ class Encoder:
 #Decoder
 # pylint: disable=too-few-public-methods
 class Decoder:
-  def __init__(self, params):
-    self.params, self.dictionary = params, Dictionary()
+  def __init__(self, parameters):
+    self.parameters, self.dictionary = parameters, Dictionary()
 
   def decode_all(self, encoded, source_length):
     reader = BitReader(encoded)
     out = []
 
     while len(out) < source_length:
-      block_symbols = min(self.params.block_len, source_length - len(out))
+      block_symbols = min(self.parameters.block_len, source_length - len(out))
       recreated = 0
 
       self.dictionary.reset()
       j = 1
 
       while recreated < block_symbols:
-        I = reader.read(codeword_width(self.params, j))
-        parent, a = divmod(I, self.params.alpha)
+        I = reader.read(codeword_width(self.parameters, j))
+        parent, a = divmod(I, self.parameters.alpha)
         phrase = self.dictionary.parent_sequence(parent) + [a]
         out += phrase
         recreated += len(phrase)
@@ -198,10 +196,10 @@ class Decoder:
 
 def compress(source, n, block_len, A = None):
   A = sorted(set(source[1:n + 1])) if A is None else sorted(A)
-  params = make_params(len(A), block_len)
+  parameters = make_parameters(len(A), block_len)
   rank = {c: i for i, c in enumerate(A)}
-  encoder = Encoder(params, [rank[c] for c in source[1:n + 1]])
-  return encoder.encode_all(), params, A, encoder.stats
+  encoder = Encoder(parameters, [rank[c] for c in source[1:n + 1]])
+  return encoder.encode_all(), parameters, A, encoder.stats
 
-def decompress(encoded, n, params, A):
-  return '#' + ''.join(A[s] for s in Decoder(params).decode_all(encoded, n))
+def decompress(encoded, n, parameters, A):
+  return '#' + ''.join(A[s] for s in Decoder(parameters).decode_all(encoded, n))

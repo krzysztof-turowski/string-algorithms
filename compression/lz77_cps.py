@@ -1,35 +1,36 @@
 import collections
+import math
 
 from common import numeric
 from string_indexing import lcp, suffix_array
 
-Params = collections.namedtuple(
-    'Params', ['alpha', 'n', 'max_len', 'Lp', 'Ll', 'Lc'])
+Parameters = collections.namedtuple(
+    'Parameters', ['alpha', 'n', 'max_length', 'Lp', 'Ll', 'Lc'])
 
-def make_params(alpha, n, max_len):
+def make_parameters(alpha, n, max_length):
   if alpha < 2:
     raise ValueError('alpha >= 2 expected')
   if n < 0:
     raise ValueError('n >= 0 expected')
-  Lp = numeric.ceil_log(n, alpha)
-  Ll = numeric.ceil_log(max_len + 1, alpha)
-  return Params(alpha, n, max_len, Lp, Ll, 1 + Lp + Ll)
+  Lp = math.ceil(math.log(n + 1, alpha))
+  Ll = math.ceil(math.log(max_length + 1, alpha))
+  return Parameters(alpha, n, max_length, Lp, Ll, 1 + Lp + Ll)
 
 #----------------------------------------------------
 # Stats
-# pylint: disable=too-few-public-methods
+# @dataclass
 class Stats:
   def __init__(self):
     self.source_symbols, self.words = 0, 0
 
-def compression_ratio(stats, params):
+def compression_ratio(stats, parameters):
   if stats.source_symbols == 0:
     return 0.0
-  return stats.words * params.Lc / stats.source_symbols
+  return stats.words * parameters.Lc / stats.source_symbols
 #----------------------------------------------------
 
 #----------------------------------------------------
-PosLen = collections.namedtuple('PosLen', ['pos', 'len'])
+PosLen = collections.namedtuple('PosLen', ['position', 'length'])
 
 def chen_puglisi_smyth_factorization(w, n, SA = None, LCP = None):
   SA = list(SA) if SA else suffix_array.induced_sorting(w, n)
@@ -53,9 +54,9 @@ def _compute_cps_pos_len(SA, LCP, n):
 
   def assign(p, q, l):
     if p < q:
-      out.pos[q], out.len[q] = p, l
+      out.position[q], out.length[q] = p, l
       return p
-    out.pos[p], out.len[p] = q, l
+    out.position[p], out.length[p] = q, l
     return q
 
   stack = []
@@ -81,7 +82,7 @@ def _compute_cps_pos_len(SA, LCP, n):
   return out
 
 Factor = collections.namedtuple(
-  'Factor', ['pos', 'len', 'literal'])
+  'Factor', ['position', 'length', 'literal'])
 
 def factorize(w, n, POS = None, LEN = None):
   """
@@ -107,21 +108,23 @@ class Encoder:
     self.rank = {c: i for i, c in enumerate(A)}
     self.next, self.stats = 0, Stats()
 
-    # compute Ll with actual max_len
-    max_len = max((f.len for f in self.factors), default = 0)
-    self.params = make_params(len(A), n, max_len)
+    # compute Ll with actual max_length
+    max_length = max((f.length for f in self.factors), default = 0)
+    self.parameters = make_parameters(len(A), n, max_length)
     self.stats.source_symbols = n
 
   def has_more(self):
     return self.next < len(self.factors)
 
   def encode_next(self):
-    f = self.factors[self.next]
+    factor = self.factors[self.next]
     self.next += 1
     self.stats.words += 1
-    return (numeric.to_radix(f.pos - 1, self.params.alpha, self.params.Lp)
-            + numeric.to_radix(f.len, self.params.alpha, self.params.Ll)
-            + [self.rank[f.literal]])
+    return (numeric.to_radix(
+              factor.position - 1, self.parameters.alpha, self.parameters.Lp)
+            + numeric.to_radix(
+              factor.length, self.parameters.alpha, self.parameters.Ll)
+            + [self.rank[factor.literal]])
 
   def encode_all(self):
     stream = []
@@ -133,31 +136,32 @@ class Encoder:
 #----------------------------------------------------
 # Decoder
 class Decoder:
-  def __init__(self, params):
-    self.params, self.out = params, [-1]
+  def __init__(self, parameters):
+    self.parameters, self.out = parameters, [-1]
 
   def decode_next(self, C):
-    if len(C) != self.params.Lc:
+    if len(C) != self.parameters.Lc:
       raise ValueError('codeword of length Lc expected')
-    p = numeric.from_radix(C[:self.params.Lp], self.params.alpha) + 1
-    l = numeric.from_radix(
-        C[self.params.Lp:self.params.Lp + self.params.Ll],
-        self.params.alpha)
-    if not 1 <= p <= len(self.out) - 1 and l > 0:
+    position = numeric.from_radix(
+        C[:self.parameters.Lp], self.parameters.alpha) + 1
+    length = numeric.from_radix(
+        C[self.parameters.Lp:self.parameters.Lp + self.parameters.Ll],
+        self.parameters.alpha)
+    if not 1 <= position <= len(self.out) - 1 and length > 0:
       raise ValueError('pointer out of range')
-    if not 0 <= l <= self.params.max_len:
+    if not 0 <= length <= self.parameters.max_length:
       raise ValueError('length out of range')
 
-    for k in range(l):
-      self.out.append(self.out[p + k])
+    for k in range(length):
+      self.out.append(self.out[position + k])
     self.out.append(C[-1])
-    return self.out[-(l + 1):]
+    return self.out[-(length + 1):]
 
   def decode_all(self, stream, source_length = 0):
-    if len(stream) % self.params.Lc != 0:
+    if len(stream) % self.parameters.Lc != 0:
       raise ValueError('stream length is not a multiple of Lc')
-    for i in range(0, len(stream), self.params.Lc):
-      self.decode_next(stream[i:i + self.params.Lc])
+    for i in range(0, len(stream), self.parameters.Lc):
+      self.decode_next(stream[i:i + self.parameters.Lc])
     out = self.out[1:]
     return out[:source_length] if source_length else out
 #----------------------------------------------------
@@ -165,7 +169,7 @@ class Decoder:
 def compress(source, n, A = None):
   A = sorted(set(source[1:n + 1])) if A is None else sorted(A)
   encoder = Encoder(source[:n + 1], n, A)
-  return encoder.encode_all(), encoder.params, A, encoder.stats
+  return encoder.encode_all(), encoder.parameters, A, encoder.stats
 
-def decompress(stream, n, params, A):
-  return '#' + ''.join(A[s] for s in Decoder(params).decode_all(stream, n))
+def decompress(stream, n, parameters, A):
+  return '#' + ''.join(A[s] for s in Decoder(parameters).decode_all(stream, n))

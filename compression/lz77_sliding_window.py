@@ -1,32 +1,33 @@
 import collections
+import math
 
 from common import numeric
 
-Params = collections.namedtuple(
-    'Params', ['alpha', 'n', 'Ls', 'Lp', 'Ll', 'Lc', 'window_size'])
+Parameters = collections.namedtuple(
+    'Parameters', ['alpha', 'n', 'Ls', 'Lp', 'Ll', 'Lc', 'window_size'])
 
-def make_params(alpha, n, Ls):
+def make_parameters(alpha, n, Ls):
   if alpha < 2:
     raise ValueError('alpha >= 2 expected')
   if Ls < 1:
     raise ValueError('Ls >= 1 expected')
   if n - Ls < Ls:
     raise ValueError('n - Ls >= Ls expected')
-  Lp = numeric.ceil_log(n - Ls, alpha)
-  Ll = numeric.ceil_log(Ls, alpha)
-  return Params(alpha, n, Ls, Lp, Ll, 1 + Lp + Ll, n - Ls)
+  Lp = math.ceil(math.log(n - Ls, alpha))
+  Ll = math.ceil(math.log(Ls, alpha))
+  return Parameters(alpha, n, Ls, Lp, Ll, 1 + Lp + Ll, n - Ls)
 
 #----------------------------------------------------
 # Stats
-# pylint: disable=too-few-public-methods
+# @dataclass
 class Stats:
   def __init__(self):
     self.source_symbols, self.words = 0, 0
 
-def compression_ratio(stats, params):
+def compression_ratio(stats, parameters):
   if stats.source_symbols == 0:
     return 0.0
-  return stats.words * params.Lc / stats.source_symbols
+  return stats.words * parameters.Lc / stats.source_symbols
 #----------------------------------------------------
 
 
@@ -64,22 +65,23 @@ def _reproducible_extension(ring, j, m):
   Longest prefix of B(j + 1 .. m) that occurs in B(1 .. m)
   and starts in B(1 .. j)
   """
-  max_l, best_p, best_l = m - j, 1, 0
+  max_length, best_position, best_length = m - j, 1, 0
   for i in range(1, j + 1):
-    l = 0
-    while (l < max_l and ring.at(i - 1 + l) == ring.at(j + l)):
-      l += 1
-    if l >= best_l:
-      best_p, best_l = i, l
-  return best_p, best_l
+    length = 0
+    while (length < max_length
+           and ring.at(i - 1 + length) == ring.at(j + length)):
+      length += 1
+    if length >= best_length:
+      best_position, best_length = i, length
+  return best_position, best_length
 
 class Encoder:
-  def __init__(self, params, source):
-    self.params, self.source = params, list(source)
-    self.buffer = Ring(params.n)
+  def __init__(self, parameters, source):
+    self.parameters, self.source = parameters, list(source)
+    self.buffer = Ring(parameters.n)
     self.position, self.encoded, self.stats = 0, 0, Stats()
-    for i in range(params.Ls):
-      self.buffer.set(params.window_size + i, self._next_symbol())
+    for i in range(parameters.Ls):
+      self.buffer.set(parameters.window_size + i, self._next_symbol())
 
   def _next_symbol(self):
     """
@@ -94,18 +96,21 @@ class Encoder:
     return self.encoded < len(self.source)
 
   def encode_next(self):
-    j = self.params.window_size
-    pos, l = _reproducible_extension(self.buffer, j, self.params.n - 1)
-    parsed_l = l + 1
+    j = self.parameters.window_size
+    position, length = _reproducible_extension(
+      self.buffer, j, self.parameters.n - 1)
+    parsed_length = length + 1
 
-    C = (numeric.to_radix(pos - 1, self.params.alpha, self.params.Lp)
-         + numeric.to_radix(l, self.params.alpha, self.params.Ll)
-         + [self.buffer.at(j + l)])
+    C = (numeric.to_radix(
+            position - 1, self.parameters.alpha, self.parameters.Lp)
+         + numeric.to_radix(
+            length, self.parameters.alpha, self.parameters.Ll)
+         + [self.buffer.at(j + length)])
 
-    for _ in range(parsed_l):
+    for _ in range(parsed_length):
       self.buffer.shift_in(self._next_symbol())
 
-    self.encoded += parsed_l
+    self.encoded += parsed_length
     self.stats.words += 1
 
     # last source block fallback
@@ -123,44 +128,45 @@ class Encoder:
 #--------------------------------------------------
 #Decoder
 class Decoder:
-  def __init__(self, params):
-    self.params, self.buffer = params, Ring(params.window_size)
+  def __init__(self, parameters):
+    self.parameters, self.buffer = parameters, Ring(parameters.window_size)
 
   def _cell(self, p):
     return self.buffer.at(p - 1)
 
   def decode_next(self, C):
-    if len(C) != self.params.Lc:
+    if len(C) != self.parameters.Lc:
       raise ValueError('codeword of length Lc expected')
-    p = numeric.from_radix(C[:self.params.Lp], self.params.alpha) + 1
-    l = numeric.from_radix(
-      C[self.params.Lp:self.params.Lp + self.params.Ll],
-      self.params.alpha) + 1
-    if not 1 <= p <= self.params.window_size:
+    position = numeric.from_radix(
+      C[:self.parameters.Lp], self.parameters.alpha) + 1
+    length = numeric.from_radix(
+      C[self.parameters.Lp:self.parameters.Lp + self.parameters.Ll],
+      self.parameters.alpha) + 1
+    if not 1 <= position <= self.parameters.window_size:
       raise ValueError('pointer out of range')
-    if not 1 <= l <= self.params.Ls:
+    if not 1 <= length <= self.parameters.Ls:
       raise ValueError('length out of range')
 
-    for _ in range(l - 1):
-      self.buffer.shift_in(self._cell(p))
+    for _ in range(length - 1):
+      self.buffer.shift_in(self._cell(position))
     self.buffer.shift_in(C[-1])
-    return self.buffer.slice(self.params.window_size - l, l)
+    return self.buffer.slice(self.parameters.window_size - length, length)
 
   def decode_all(self, stream, source_length = 0):
-    if len(stream) % self.params.Lc != 0:
+    if len(stream) % self.parameters.Lc != 0:
       raise ValueError('stream length is not a multiple of Lc')
     out = []
-    for i in range(0, len(stream), self.params.Lc):
-      out += self.decode_next(stream[i:i + self.params.Lc])
+    for i in range(0, len(stream), self.parameters.Lc):
+      out += self.decode_next(stream[i:i + self.parameters.Lc])
     return out[:source_length] if source_length else out
 #--------------------------------------------------
 
 def compress(source, n, buffer_len, lookahead_len, A = None):
   A = sorted(set(source[1:n + 1])) if A is None else sorted(A)
-  params = make_params(len(A), buffer_len, lookahead_len)
+  parameters = make_parameters(len(A), buffer_len, lookahead_len)
   rank = {c: i for i, c in enumerate(A)}
-  encoder = Encoder(params, [rank[c] for c in source[1:n + 1]])
-  return encoder.encode_all(), params, A, encoder.stats
+  encoder = Encoder(parameters, [rank[c] for c in source[1:n + 1]])
+  return encoder.encode_all(), parameters, A, encoder.stats
 
-def decompress(stream, n, params, A):
-  return '#' + ''.join(A[s] for s in Decoder(params).decode_all(stream, n))
+def decompress(stream, n, parameters, A):
+  return '#' + ''.join(A[s] for s in Decoder(parameters).decode_all(stream, n))
