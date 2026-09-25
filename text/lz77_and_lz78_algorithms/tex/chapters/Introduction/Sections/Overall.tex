@@ -1,0 +1,72 @@
+\section{Research topic}
+\label{seq:intro}
+%Need to place somewhere here some definition of factor, before section with Definitions.
+
+In this work we are going to take a look on the original versions as well as modern improvements and applications of Lempel-Ziv LZ77 and LZ78 compression methods.
+
+LZ77 and LZ78, which are widely used in text compression since the late 70's, have recently attracted more attention due to modern research in data compression with a specific purpose based on these methods, namely in the directions of factorization algorithms (\cite{ziv1977, ziv1978,kkp2012,fischer2017,acm2012}), run-length encoding (RLE) (\cite{policriti2018}), self-indexing (\cite{kreft2011,gagie2014}), grammar-compression (\cite{rytter2003}), algorithms focused on encoding of the factors (LZSS, LZW) (\cite{storer1982,welch1984}).
+
+We take a closer look at LZ77 and LZ78 versions with different factorization algorithms in this work, so below are works related to our focus.
+
+\begin{table}[H]
+    \centering
+    \setlength{\tabcolsep}{11pt}
+    \renewcommand{\arraystretch}{1.1}
+    \begin{tabular}{llccc}
+        \toprule
+        Year & Authors & Ref & Time & Space \\
+        \midrule
+        1977 & Ziv \& Lempel                     & \cite{ziv1977}    & \(\bigO(n \cdot w)\) & \(\bigO(w)\) \\
+        1989 & Fiala \& Greene                   & \cite{fiala1989}  & \(\bigO(n)\)   & \(\bigO(w)\) \\
+        2008 & Chen, Puglisi \& Smyth            & \cite{chen2008}   & \(\Theta(n)\)  & \(\bigO(n)\) \\
+        2012 & K\"arkk\"ainen, Kempa \& Puglisi  & \cite{kkp2012}    & \(\Theta(n)\)  & \(\bigO(n)\) \\
+        2017 & Fischer et al.\                   & \cite{fischer2017}& \(\bigO(n)\)   & \(\bigO(n)\) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Algorithms for the LZ77 factorization. Here \(n\) is the length of the string and \(w\) the length of the window, when the method uses one.}
+    \label{tab:related-work-lz77}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \setlength{\tabcolsep}{11pt}
+    \renewcommand{\arraystretch}{1.1}
+    \begin{tabular}{llccc}
+        \toprule
+        Year & Authors & Ref & Time & Space \\
+        \midrule
+        1978 & Ziv \& Lempel      & \cite{ziv1978}     & \(\bigO(n)\) expected & \(\bigO(w)\) \\
+        2015 & Nakashima et al.\  & \cite{nakashima2015} & \(\Theta(n)\)       & \(\bigO(n)\) \\
+        2017 & Fischer et al.\    & \cite{fischer2017} & \(\bigO(n)\)          & \(\bigO(n)\) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Algorithms for the LZ78 factorization. Here \(n\) is the length of the string and \(w\) the length of the block.}
+    \label{tab:related-work-lz78}
+\end{table}
+
+% \input{chapters/Introduction/tables/related-works}
+
+In this work we are going to have a look on problem of string compression in perspective of how can we use repetitions of blocks of symbols inside string for this task. In all approaches covered by this work we are going to use knowledge about already processed data in order to represent non-processed one of the same source. Intuition behind this is such that, for example, if we have string \(abaababa\), it would be nice to represent \(aba\) part on the end of the string with, again, for example, pair \((p = 1, l = 3)\), where \(p\) is some pointer to the start of the string and \(l\) is the length of repeated fragment, noteworthy, they might even overlap, depending on the approach we dive into, for example for same \(abaababa\) we take last two occurrences of \(aba\) --- it is easily seen that they overlap. As we can see, the substring that was already seen can help us replace future substrings with some shorter data that indicates the event of their appearance, what in terms of compression means potentially shorter representation of these future substrings. In order to get such representation we are going to work with factorization of the string. The factorization approach in this work won't be simple division into blocks, but rather the one that follows intuition from above. 
+\\
+
+% From here on, we are going to adopt a view that to compress a string, even infinite one, is to parse it into factors. Any division of a string into factors mentioned from here on is therefore understood as one made with compression in mind.
+
+Now, let us introduce two definitions that are needed to understand the whole framework. Note, the distinction of next two definitions is ours, they refer only to the content of this work, and not characterize corresponding classes of problems, but rather the side from which we look at these problems here. 
+\begin{definition}[Offline factorization]
+\label{def:offline-problem}
+    In the \emph{offline} setting the whole source text is available for computation of factorization. Each factor may point anywhere to the left where it was previously seen.
+\end{definition}
+
+\begin{definition}[Online factorization]
+\label{def:online-problem}
+    In the \emph{online} setting the source is read left to right in order to compute factorization, but having in working memory only fixed length of previously seen string, not the whole processed one. A currently formed factor may therefore point only inside part which lies in working memory at this moment.
+\end{definition}
+\noindent The \emph{online} setting allows us to produce factors, regardless of data that is no longer in working memory, which gives us a way to deal with dynamically arriving data and even hard data, which is too big to fully hold in working memory. The two settings differ in application in how much of the source a factor may point back into, but are not fully separate, as we can set working memory of \emph{online} on par with the size of the source and work with them as with \emph{offline} ones.
+\\
+
+In this work we implement and compare four algorithms: the original sliding-window \emph{LZ77} \cite{ziv1977}, \emph{LZ78} with the incremental parsing of \cite{ziv1978}, the \emph{CPS1a} variant of \emph{LZ77} of \cite{chen2008}, and the variant of \emph{LZ77} from \cite{kkp2012}, referred to as \emph{KKP3}. The concepts that are not clear in previous sentence we will try to define and explain in the next section.
+The applications of settings mentioned above are seen in our work through design of compression models. Each model consists of encoder and decoder, and factorization setting is applied inside encoder as follows: \cite{ziv1977, ziv1978} designed in the online setting, \cite{chen2008, kkp2012} in the offline one. 
+\\
+
+The rest of the work is organized as follows. \Cref{seq:definitions} collects the definitions used throughout and their explanations. \Cref{ch:lz77,ch:lz78,ch:lz77cps,ch:lz77kkp} describe the four algorithms, each in the same order: the idea, the correctness, the complexity. \Cref{ch:comparison-and-experiments} compares them and reports the measurements of experiments.
+

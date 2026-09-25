@@ -1,0 +1,131 @@
+
+\section{Experiments}
+\label{seq:experiments}
+
+\noindent All data modules live at \url{https://github.com/krzysztof-turowski/string-algorithms}.
+
+\subsection{Runs}
+All texts come from the generators that ship with the \texttt{string-algorithms} repository, so that the experiments can be reproduced without any additional data. 
+Four modules are used:
+\begin{itemize}
+    \item \texttt{generator/named.py} for the two morphic words,
+    \item \texttt{generator/rand.py} 
+    \item \texttt{generator/input/pantadeusz.txt} example of real text, 
+    \item \texttt{generator/exact\_string\_matching.py} for worst case.
+\end{itemize}
+
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{6.0cm}p{5.5cm}r}
+\hline
+text & description & generator & $\alpha$ \\
+\hline
+Fibonacci & the Fibonacci word & fibonacci\_word & 2 \\
+Thue-Morse & the Thue-Morse word & thue\_word & 2 \\
+random binary & uniform over two letters & random\_word & 2 \\
+random 26 & uniform over the lowercase Latin alphabet & random\_word & 26 \\
+natural & Pan Tadeusz & natural\_generator & 33 \\
+\hline
+\end{tabular}
+\caption{Texts used in the experiments.}
+\label{tab:texts}
+\end{table}
+
+Every text is truncated to the same length $n$, so that the rows of one table are directly comparable. Each algorithm runs in its \emph{OFFLINE} configuration, with the whole text available from start.
+
+% {
+% \setlength{\floatsep}{6pt plus 2pt minus 2pt}
+% \setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+% \setlength{\intextsep}{6pt plus 2pt minus 2pt}
+% \setlength{\abovecaptionskip}{4pt}
+% \setlength{\belowcaptionskip}{0pt}
+
+% \input{chapters/ComparisonAndExperiments/tables/tables}
+% }
+Each table reports, for one text and all four implementations:
+\begin{itemize}
+    \item \(n\) --- length of source
+    \item \(\alpha\) --- size of alphabet
+    \item \(z\) --- the number of codewords produced by algorithm
+    \item \(\rho\) --- the compression ratio, computed according to \Cref{def:compression-ratio}.
+    \item \texttt{encode} --- working time of encoder in ms
+    \item \texttt{decode} --- working time of decoder in ms
+\end{itemize}
+
+\subsubsection{Fibonacci}
+ {
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{0pt}
+
+\input{chapters/ComparisonAndExperiments/tables/Fibonacci-f}
+}
+
+\subsubsection{Thue-Morse}
+{
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{0pt}
+
+\input{chapters/ComparisonAndExperiments/tables/Thue-Morse-f}
+}
+
+\subsubsection{Random 26}
+{
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{0pt}
+
+\input{chapters/ComparisonAndExperiments/tables/random-26-f}
+}
+
+\subsubsection{Random binary}
+{
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{0pt}
+
+\input{chapters/ComparisonAndExperiments/tables/random-binary-f}
+}
+
+\subsubsection{Pan Tadeusz}
+{
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{0pt}
+
+\input{chapters/ComparisonAndExperiments/tables/natural-f}
+}
+
+\subsection{Results summary}
+
+The sliding-window LZ77 deserves a separate remark. Run offline, as all the experiments are, it has \(L_s = \len{S}\), so its length field is as wide as the pointer field and every codeword carries \(1 + 2\ceil{\log_\alpha\len{S}}\) symbols instead of \(1 + \ceil{\log_\alpha \len{S}} + \ceil{\log_\alpha (\max_i l_i + 1)}\) of CPS1a and KKP3 which size the length field from the factors actually produced. The number of factors is identical --- \(z\) agrees with CPS1a and KKP3 in every table, so the worse ratio is entirely an artifact of its implementation for rather online usage. What the tables really show about this implementation is its running time: since with the window equal to the whole text the naive search of \textsc{ReproducibleExtension} (see \Cref{def:reproducible-extension}) becomes up to quadratic.
+
+\paragraph{The number of factors and the compression ratio.}
+On the compressible texts: Fibonacci, Thue-Morse and the run of one closed letter, the three LZ77 variants produce the same factorization and the same small number of factors, while LZ78 produces a lot more factors what is caused by \emph{incremental parsing}, which doesn't support long overlapping factors. The gap is very big because of the property that LZ78 does not allow overlapping in the process of factor production. The three LZ77 implementations agree on \(z\) in every table, as they must, since they compute the same factorization by three different routes.
+
+On the incompressible (have small average factor length) texts the picture reverses, the gradually increasing codeword length covers the loss in incremental parsing. Note that it is natural, that we get a ratio greater than 1, because in such cases we face the problem, that the length of codeword eats away any possible gain in encoded representation in both LZ77 and LZ78 approaches. 
+% It is easy to see, that in our algorithms the number of factors and the compression ratio has inseparably linked forms of behavior.
+
+\paragraph{The encoding time.}
+What the tables really show about the sliding-window implementation is its running time, and here it is worth being precise about when it is slow, because it is not slow everywhere. Its cost is not driven by the length of the source alone but by the type of text itself: on one type it can run in almost \(\Theta(n)\) time, like in \emph{Fibonacci} (see \Cref{tab:Fibonacci}), on the other type it will cost \(\Theta(n^{1.5})\) or more, like in \emph{random-26} (see \Cref{tab:random-26}). Overall \emph{CPS1a} and \emph{KKP3} pay for not small amount of additional structures on all types of text, so their additional constant in complexity makes them slower than \emph{LZ78}.
+
+\paragraph{The decoding time.}
+Decoding behaves as expected, LZ78 runs slower due to the greater amount of factors. \emph{CPS1a} and \emph{KKP3} decode fastest everywhere although they share the decoder with the sliding window implementation and parse the same triples. The difference is that the latter reconstructs the output inside a ring buffer, so every symbol access requires a lot of jumps in memory, while the originally offline variants copy from the output built so far.
+
+% Decoding behaves as expected, LZ78 runs slower due to greater amount of factors.
+
+\paragraph{Implementation details}
+In \emph{CPS1a} we use \(\mathrm{SA}\) (in \emph{KKP3} too) and \(\mathrm{LCP}\) of Definitions \ref{def:suffix-array} and \ref{def:lcp-array}. Both are already available in the repository and we use them as they are, rather than reimplementing them: SA is built by induced sorting, the algorithm of \cite{nong2009}, and \(\mathrm{LCP}\) by the linear-time method of \cite{kasai2001}.

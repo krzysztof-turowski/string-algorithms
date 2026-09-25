@@ -1,0 +1,7 @@
+\section{Complexity}
+
+Precalculation of \(\mathrm{SA}\) and \(\mathrm{LCP}\) takes \(\Theta(n)\), e.g., \cite{nong2009} and \cite{kasai2001}. The scan is linear: by \Cref{lem:cps-stack} every position of \(\mathrm{SA}\) is pushed at most once and popped at most once, and each iteration of the main loop writes at least one entry of \(\mathrm{POS}\), which is never written twice, so there are at most \(n\) iterations. Turning \(\mathrm{POS}\) and \(\mathrm{LEN}\) into factors is one more pass and encoding them one more, so the whole encoder runs in \(\Theta(n)\).
+
+Decoding is linear, same as in \emph{LZ77}, \(\Theta(n)\).
+
+The memory is \(\Theta(n)\), and here the constant matters. The algorithm holds \(S\), \(\mathrm{SA}\), \(\mathrm{LCP}\), \(\mathrm{POS}\) and \(\mathrm{LEN}\) at the same time, which counts as \(17n\) bytes for \emph{CPS1a} (\cite{chen2008}).

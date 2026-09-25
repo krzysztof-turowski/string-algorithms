@@ -1,0 +1,47 @@
+\section{Correctness}
+
+Throughout this section we denote by \(S\) the source, \(n = \len{S}\), and \(\mathrm{SA}\) the suffix array of \(S\) (see \Cref{def:suffix-array}). We first prove \Cref{lem:kkp-candidates}, then the claim that the scan computes \(\mathrm{PSV}\) and \(\mathrm{NSV}\) correctly.
+
+\subsection{Two candidates suffice}
+\begin{proof}[Proof of \Cref{lem:kkp-candidates}]
+    \(\mathrm{ISA}[i]\) is the position of suffix \(i\) in \(\mathrm{SA}\) (\Cref{def:isa}). For any two suffixes, the length of their common prefix is the smallest \(\mathrm{LCP}\) value lying between them in \(\mathrm{SA}\), it means that \(\mathrm{lcp}(i, j)\) can only decrease as \(\mathrm{ISA}[j]\) moves away from \(\mathrm{ISA}[i]\) in either direction.
+
+    Let \(j < i\) be the earlier position achieving the longest common prefix with suffix \(i\). Suppose \(\mathrm{ISA}[j]\) lies to the left of \(\mathrm{ISA}[i]\) and that \(j \neq \mathrm{PSV}[i]\). By \Cref{def:nsv-psv} the entry \(\mathrm{PSV}[i]\) is then strictly between them in \(\mathrm{SA}\), and it satisfies \(\mathrm{PSV}[i] < i\), so it is also an earlier position. By the property above, \(\mathrm{lcp}(i, \mathrm{PSV}[i]) \geq \mathrm{lcp}(i, j)\), so \(\mathrm{PSV}[i]\) is at least as good and the maximum is attained there. The case where \(\mathrm{ISA}[j]\) lies to the right is symmetric and gives \(\mathrm{NSV}[i]\).
+
+    If no earlier position exists at all, both candidates are equal to \(0\) and \Call{Lcp}{} returns \(0\) for each of them, which adheres to the rules of \Cref{def:lpf}.
+\end{proof}
+
+\subsection*{The scan computes the two arrays}
+
+\begin{lemma}[Stack invariant]
+\label{lem:kkp-stack}
+    At the start of every iteration of the outer loop of \Call{ComputeSmallerValues}{} in \Cref{alg:kkp-scan}, the cells \(\mathrm{SA}[0 \ldots \mathit{top}]\) hold
+    \[
+        \mathrm{SA}[0] = 0 < \mathrm{SA}[1] < \cdots < \mathrm{SA}[\mathit{top}],
+    \]
+    they are exactly the entries read so far that have not yet been followed by a smaller one, and \(\mathit{top} \leq i\).
+\end{lemma}
+
+\begin{proof}
+    Initially \(\mathit{top} = 0\) and the stack holds only the sentinel \(\mathrm{SA}[0] = 0\), which is smaller than every text position and therefore never popped, so the invariant holds.
+
+    At each iteration the inner loop pops exactly those entries greater than \(\mathrm{SA}[i]\). Since the stack increases from bottom to top, these form a contiguous block at the top, and the loop stops at the first entry smaller than \(\mathrm{SA}[i]\). Pushing \(\mathrm{SA}[i]\) afterwards therefore keeps the stack increasing.
+
+    And the last, \(\mathit{top}\) grows by one per iteration at most, while \(i\) grows by one always, so \(\mathit{top} \leq i\) is preserved and the cell of SA written on a push has already been read in an earlier iteration.
+\end{proof}
+
+
+\begin{theorem}[The scan is correct]
+\label{thm:kkp-scan}
+    After \Call{ComputeSmallerValues}{} has finished, \(\mathrm{PSV}\) and \(\mathrm{NSV}\) hold the values of \Cref{def:nsv-psv} for every position of \(S\).
+\end{theorem}
+
+\begin{proof}
+    The moment an entry \(p\) is popped while \(\mathrm{SA}[i]\) is being read. Everything read between the push of \(p\) and this moment was greater than \(p\), since otherwise \(p\) would have been popped earlier, then \(\mathrm{SA}[i]\) is the first entry after \(p\) in \(\mathrm{SA}\) that is smaller, which is exactly \(\mathrm{NSV}[p]\). By \Cref{lem:kkp-stack} the entry sitting below \(p\) is the last one read before \(p\) that is smaller than it, everything between them having already been popped, and that is exactly \(\mathrm{PSV}[p]\).
+
+    Every entry is eventually popped: the sentinel \(\mathrm{SA}[n+1] = 0\) is smaller than every text position, so the last iteration empties the stack down to \(\mathrm{SA}[0]\). An entry that meets no smaller value on one side receives \(0\) there, what still fits \Cref{def:nsv-psv}.
+\end{proof}
+
+After computing \(\mathrm{PSV}\) and \(\mathrm{NSV}\), \Call{Factorize}{} takes at position \(i\) the better of the two candidates, which by \Cref{lem:kkp-candidates} gives the best factor. We always cover at least one symbol in a new triple on each step, and if \(l_i \neq 0\) covers \(l_i + 1\) of source, so this process terminates on approaching \(\len{S}\).
+
+The decoder is the same as in \Cref{ch:lz77cps} and parses the same triples.

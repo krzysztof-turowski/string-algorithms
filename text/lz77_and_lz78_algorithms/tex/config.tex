@@ -1,0 +1,102 @@
+\newcommand{\myName}{Aliaksandr\xspace}
+\newcommand{\mySurname}{Skvarniuk\xspace}
+\newcommand{\myUniversity}{Jagiellonian University\xspace}
+\newcommand{\myDepartament}{Department of Theoretical Computer Science\xspace}
+\newcommand{\myLocation}{Cracow\xspace}
+\newcommand{\currentYear}{2026\xspace}
+\newcommand{\myTitle}{Implementation and comparison of Lempel--Ziv factorization algorithms\xspace}
+\newcommand{\myTutor}{dr hab. Krzysztof Turowski\xspace}
+\newcommand{\bigO}{\mathcal{O}}
+\newcommand{\repoUrl}{https://github.com/krzysztof-turowski/string-algorithms}
+
+\graphicspath{ {./images/} }
+
+% Code listings
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codekw}{RGB}{0,0,160}
+\definecolor{codestr}{RGB}{160,32,32}
+\definecolor{codecom}{RGB}{96,128,96}
+\definecolor{coderule}{RGB}{200,200,200}
+
+\lstdefinestyle{pycode}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  backgroundcolor=\color{codebg},
+  numbers=left,
+  numberstyle=\ttfamily\tiny\color{gray},
+  numbersep=8pt,
+  frame=lines,
+  rulecolor=\color{coderule},
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  tabsize=2,
+  columns=fullflexible,
+  keepspaces=true,
+  upquote=true,
+  xleftmargin=14pt,
+  framexleftmargin=14pt,
+  aboveskip=10pt,
+  belowskip=10pt,
+}
+\lstset{style=pycode}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[chapter]
+
+\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}[lemma]{Lemma}
+\aliascntresetthe{lemma}
+
+\newaliascnt{corollary}{theorem}
+\newtheorem{corollary}[corollary]{Corollary}
+\aliascntresetthe{corollary}
+
+\newaliascnt{observation}{theorem}
+\newtheorem{observation}[observation]{Observation}
+\aliascntresetthe{observation}
+
+\newaliascnt{claim}{theorem}
+\newtheorem{claim}[claim]{Claim}
+\aliascntresetthe{claim}
+
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{example}{Example}[chapter]
+
+\crefname{lemma}{Lemma}{Lemmas}
+\Crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{Corollary}{Corollaries}
+\Crefname{corollary}{Corollary}{Corollaries}
+\crefname{observation}{Observation}{Observations}
+\Crefname{observation}{Observation}{Observations}
+\crefname{claim}{Claim}{Claims}
+\Crefname{claim}{Claim}{Claims}
+\crefname{algorithm}{Algorithm}{Algorithms}
+\Crefname{algorithm}{Algorithm}{Algorithms}
+
+% Float placement
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+
+% Headers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\headheight}{14pt}
+
+% Shorthands kept from the previous preamble
+\let\eps\varepsilon
+\let\len\abs
+\newcommand{\continuum}{\mathfrak{c}}
+\newcommand{\powerset}{\mathcal{P}}
+
+\author{\myName \mySurname}

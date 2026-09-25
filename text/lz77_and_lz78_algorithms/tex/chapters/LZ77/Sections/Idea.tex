@@ -1,0 +1,160 @@
+\section{Idea}
+
+The approach of \cite{ziv1977} is to design a compression scheme that works without full prior knowledge of the source and still approaches the bounds attainable by fixed code book schemes that possess such knowledge.
+
+It appears that the dictionary need not be transmitted if we use the following approach. Each word is encoded by the position of an earlier occurrence together with its length, so decoder utilises the part of the text it has already reconstructed as dictionary for rebuilding next coded word. The dictionary is therefore dynamic and derived from the codewords themselves.
+
+The algorithm consists of a rule for parsing strings of symbols from a finite alphabet \emph{A} into substrings, or words, whose lengths do not exceed a prescribed integer \(L_s\) (\Cref{def:Ls}), also do it having memory of last seen fixed amount of symbols (\Cref{def:sliding-window}). A coding scheme which maps these substrings sequentially into codewords of fixed length \(L_c\) (\Cref{def:Lc}), over the same alphabet \emph{A}. The codeword consists of a triple \((\mathit{pos}, \mathit{len}, \mathit{symbol})\), where \(\mathit{pos}\) points to an earlier occurrence inside the window which was already parsed, \(\mathit{len}\) is the length of the match found there, and \(\mathit{symbol}\) is the letter that follows it in the source and broke the match. 
+
+The code is uniquely decipherable, and each codeword can be decoded as soon as
+it arrives: all codewords have the same length \(L_c\), so the stream is cut without delimiters, and the decoder never has to look ahead.
+
+\subsection{Theoretical vs practical approach}
+If we want to compress some source, in the ideal scenario we should know its characteristics, such as 1) the alphabet, and 2) which sequences of symbols may occur and which may not. Of course, a source can be characterized in other ways as well, but here we want to show the difference between the case where we have information about the source and the case where we do not.
+
+As a rule, the alphabet is available to us in any case and does not place a large burden on transmitting it to the other side (the decoder). Further information, however, is not always at hand: either there is no way to determine it in advance, or it carries too large a structure to be practical, or we are dealing with a universal approach, which by its nature does not presuppose knowledge of all the possible data it will have to work on.
+
+In the LZ77 paper the authors want to present an approach to constructing a universal scheme (encoder and decoder) that neither relies on nor has any prior knowledge of the sources it works on, and yet achieves the same compression efficiency as schemes that have full information about those.
+
+This is achieved as follows: for a given source \(S\) over an alphabet \(\mathcal{A}\), we build an encoder with the parameters mentioned earlier (\(L_c, \ldots\)), and an instruction is given on how to compute them when the algorithm is given as input only the size of the alphabet and the interval \([\rho_1, \rho_2]\) within which we want to achieve the compression of the source. The main problem of this approach, and the reason why it is theoretical, is that the resulting parameters are not technically realizable because of their enormous size.
+\\
+
+Let's first describe with what representation of source knowledge we are going to deal and then show the flow of \cite{ziv1977} paper.
+
+A source can be defined by the finite set of strings over \(\mathcal{A}\), that can not occur in it. Assuming we have this information, we can get also the number of distinct strings of length \(m\) it can emit, which is denoted as \(\sigma(m)\), and the associated \(h\)-parameter is \(h(m) = \tfrac{1}{m} \log_\alpha \sigma(m)\). The quantity \(h(m)\) plays for such a source the role that entropy plays for a probabilistic one, but it is defined without probabilities (also mentioned in \cite{ziv1977}). It is used here only to state the bounds of \cite{ziv1977} and does not appear elsewhere in this work.
+
+Section 3 of \cite{ziv1977} proceeds in two steps. First it derives the compression attainable when \(\sigma\) and the \(h\)-parameters are known to the designer. Then it shows that this knowledge is not in fact needed: an encoder built for a prescribed range of compression ratios performs almost as well as one matched to the source itself, what gives us the desirable scheme.
+\\
+
+The buffer length (\Cref{def:sliding-window}) is chosen to be an integer of the form below. We give the formula, which was also introduced in \cite{ziv1977}, not in order to use it, but to show how large in theoretical approach the numbers it produces are: the two sums count the words the source is able to emit in the worst case, and the buffer has to be large enough to hold all of them.
+\begin{align}
+\label{eq:buffer-length}
+    n &= \sum_{m=1}^{\lambda} m \alpha^m
+     + \sum_{m=\lambda+1}^{l} m \sigma(l)
+     + (l + 1)(N_{l+1} + 1), \\
+\label{eq:N-theor}
+     N_{l+1} &= \sum_{m=1}^{\lambda} (l - m) \alpha^m
+     + \sum_{m=\lambda+1}^{l} (l - m) \sigma(l),
+\end{align}
+where \(l = L_s - 1\) and \(\lambda = \floor{l \cdot h(l)}\) is the integer part of \(\log_\alpha \sigma(l)\). 
+
+\begin{theorem}[Theorem 1 of \cite{ziv1977}]
+\label{thm:lz77-bound}
+    If the buffer length \(n\) is chosen according to \eqref{eq:buffer-length} for a source whose \(h\)-parameters are known, then the compression ratio \(\rho\) of \Cref{def:compression-ratio} satisfies
+    \[
+      \rho \leq h(L_s - 1) + \eps(L_s), \qquad
+      \eps(L_s) = \frac{1}{L_s - 1}\left(3 + 3\log_\alpha (L_s - 1) + \log_\alpha \frac{L_s}{2}\right).
+    \]
+    The term \(\eps(L_s)\) decreases as \(L_s\) grows, so the ratio approaches \(h(L_s - 1)\), the \(h\)-parameter of the second largest word length the encoder handles.
+\end{theorem}
+
+\begin{theorem}[Theorem 2 of \cite{ziv1977}]
+\label{thm:lz77-universal}
+    Let \(E_0\) be an encoder designed for a prescribed range \([\rho_0, \rho_1]\) of compression ratios. For every source \(\sigma\) whose own matched encoder achieves a ratio \(\rho(\sigma)\) inside that range,
+    \[
+      \rho_0(\sigma) \leq \rho(\sigma) + \Delta,
+    \]
+    where \(\Delta\) is fixed by the range alone and does not depend on \(\sigma\).
+\end{theorem}
+
+Theorem 1 of \cite{ziv1977} is proved under the assumption that the \(h\)-parameters are known. Theorem 2 removes it. Instead of matching a particular \(h\), one designs a single encoder \(E_0\) for a prescribed range \((\rho_0, \rho_1)\) of compression ratios. For every source whose own matched encoder achieves a ratio inside that range, \(E_0\) exceeds it by at most a fixed amount \(\Delta\), which does not depend on the source and shrinks as the buffer grows.
+
+Even in such encoder, because of the term \(\alpha^m\), the buffer length \eqref{eq:buffer-length} grows exponentially in \(L_s\). The authors note that buffer length \(n \simeq L_s \alpha^{h L_s}\), where \(h\) is the \(h\)-parameter of the source, \(h(m) = \frac{1}{m}\log_\alpha \sigma(m) \in [0, 1]\). Even for the most favorable case of binary alphabet the requirement becomes impossible very quickly: \(\alpha = 2\), \(h = 0.8\), and \(L_s = 64\) for the formula already gives \(n\) of the order of \(10^{17}\), not even closely fitting any addressable memory.
+
+Our implementation does not follow the aim to fit in certain bounds on compression, but rather practical observation of how good it works for feasible sizes on working buffer and corresponding to it \(L_s\). At this point it is natural, that we want to make buffer length as big as hardware allows it, but in regard to \(L_s\) for different sources, where resulting factors are small --- it can be better to maintain small size of \(L_s\) in order to speed up the algorithm. We see that our practical implementation differs in goals of authors, who were trying to present universal coding scheme. 
+
+\subsection{Pseudocode}
+The only nontrivial step is finding the factor. The encoder has the window \(B[1\ldots n - L_s]\) on one side and the unparsed part starting at \(n - L_s + 1\) on the other, and it tries every position of the parsed part of the window in turn: for each \(i\) it compares symbol by symbol until a mismatch, and keeps the \(i\) giving the longest agreement with \(B[n - L_s + 1 \ldots n]\). This is the reproducible extension of \Cref{def:reproducible-extension}, and it is computed by \Call{ReproducibleExtension}{} in \Cref{alg:lz77-encoder}. The search is naive in the sense of computation time, and \Cref{ch:lz77cps,ch:lz77kkp} show how to avoid it.
+
+In our implementation we use ring for window representation, so $B[k]$ is the $k$-th cell after the head of the ring.
+\begin{algorithm}[H]
+\caption{LZ77 encoder with a sliding window}
+\label{alg:lz77-encoder}
+\begin{algorithmic}[1]
+\Statex
+\State \textbf{require} the source \(S\) over an alphabet of size \(\alpha\), the buffer length \(n\), the maximal word length \(L_s\)
+\State \textbf{output} the codeword stream \(C_1 C_2 \ldots\), each codeword of \(L_c\) symbols of \(\mathcal{A}\)
+\Statex
+\Function{MakeParameters}{$\alpha, n, L_s$}
+    \State $L_p \gets \ceil{\log_\alpha (n - L_s)}$, 
+    \State $L_l \gets \ceil{\log_\alpha L_s}$
+    \State \Return $(\alpha, n, L_s, L_p, L_l, L_c = 1 + L_p + L_l)$
+\EndFunction
+\Statex
+\Function{ReproducibleExtension}{$B, j, m$} 
+    \Comment{\(m = n - 1\),  \(j = n - L_s\)}
+    \State $(p^*, l^*) \gets (1, 0)$
+    \For{$i \gets 1$ \textbf{to} $j$}
+        \State $l \gets 0$
+        \While{$l < m - j $ \textbf{and} $B[i - 1 + l] = B[j + l]$}
+            \State $l \gets l + 1$
+        \EndWhile
+        \If{$l \geq l^*$} \Comment{on equality we take rightmost candidate}
+            \State $(p^*, l^*) \gets (i, l)$
+        \EndIf
+    \EndFor
+    \State \Return $(p^*, l^*)$
+\EndFunction
+\Statex
+\Procedure{Encode}{$S, \alpha, n, L_s$}
+    \State $\Call{MakeParameters}{\alpha, n, L_s}$
+    \State $B \gets$ ring buffer of $n$ zeros
+    \For{$i \gets 0$ \textbf{to} $L_s - 1$}
+        \State $B[n - L_s + i] \gets \Call{NextSymbol}{S}$
+        \Comment{zeros after the end of $S$}
+    \EndFor
+    \While{not all of $S$ has been encoded}
+        \State $(p, l) \gets \Call{ReproducibleExtension}{B, n - L_s, n - 1}$
+        \State $C_{i1} \gets \Call{Radix}{p - 1, \alpha, L_p}$
+        \State $C_{i2} \gets \Call{Radix}{l, \alpha, L_l}$
+        \State $C_{i3} \gets B[n - L_s + l]$
+        \State \textbf{emit} $C_{i1} \cdot C_{i2} \cdot C_{i3}$
+        \For{$k \gets 1$ \textbf{to} $l + 1$}
+            \State $s \gets \Call{NextSymbol}{S}$
+            \State $\Call{ShiftIn}{B, s}$
+        \EndFor
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{LZ77 decoder}
+\label{alg:lz77-decoder}
+\begin{algorithmic}[1]
+\Statex
+\State \textbf{require} the codeword stream \(C_1 C_2 \ldots\), the window length \(n - L_s\), the field widths \(L_p, L_l, L_c\), the alphabet size \(\alpha\), source length \(\len{S}\)
+\State \textbf{output} the source string \(S\)
+\Statex
+\Procedure{DecodeNext}{$C$}
+    \State \textbf{require} $\len{C} = L_c$
+    \State $p \gets {}$\Call{FromRadix}{$C[1, \ldots , L_p]$, $\alpha$}$ + 1 $
+    \State $l \gets {}$\Call{FromRadix}{$C[L_p+1, \ldots , L_p+L_l]$, $\alpha$}$ + 1$
+  \Comment{the field holds $l - 1$}
+  \State \textbf{require} $1 \leq p \leq n - L_s$ \textbf{and} $1 \leq l \leq L_s$
+  \For{$k \gets 1$ \textbf{to} $l - 1$}
+    \State \Call{ShiftIn}{$D$, $D[p - 1]$}
+    \Comment{read and write move together}
+  \EndFor
+  \State \Call{ShiftIn}{$D$, $C[L_c]$}
+  \Comment{the mismatch letter}
+  \State \Return $D[n - L_s - l \ldots n - L_s - 1]$
+\EndProcedure
+\Statex
+\Procedure{Decode}{$\mathit{stream}$}
+  \State $D \gets$ ring buffer of size $ n - L_s$ filled with zeros
+  \State $\mathit{out} \gets$ empty list
+  \For{each block $C$ of $L_c$ symbols of $\mathit{stream}$}
+    \State $\mathit{out}.append(\Call{\text{DecodeNext}}{C})$
+  \EndFor
+  \State \Return the first $\len{S}$ symbols of $\mathit{out}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+The encoder starts with a window of zeros, so the very first word is found by the same rule as all the others and no special case is needed. Each iteration emits exactly one codeword and consumes \(l + 1\) symbols: the \(l\) matched ones and the mismatch letter. Since \(l\) may be zero, the encoder always moves forward, and since the match is sought only against the window, \(l\) never exceeds \(L_s - 1\), so the word fits into the length field.
+
+The decoder is mirroring an encode, works on buffer of size \(n - L_s\) in order to remember symbols which are needed to decode next codeword, reconstruct a word symbol by symbol in order to stay in the size of a buffer and shift new decoded symbols in order to be able to parse even those substrings which were not present in previous buffer state.
+
+\subsection{Additional notes}
+The problem with algorithm proposed here is that, first, it will represent the naive way (\textsc{ReproducibleExtension}) of finding best factors in current buffer, but this can be fixed, with other factorization approaches, for example the ones in \Cref{ch:lz77cps,ch:lz77kkp}, though they won't be seen right now, but rather after next chapter where we are going to describe the second main algorithm of this work.  

@@ -1,0 +1,42 @@
+\section{Correctness}
+\label{fact:lz78correctness}
+
+The correctness of the scheme rests on the following facts:
+\begin{enumerate}
+    \item the parsing always makes progress and never produces a word too long for the codeword to hold,
+    \item the decoder can be kept in the same state as the encoder.
+\end{enumerate}
+
+We write \(y_1 y_2 \ldots y_p\) for the phrases of one block, \(l_j = \len{y_j}\), \(D_j\) is dictionary after \(j\) phrases have been processed.
+
+\subsection{The parsing is well defined}
+
+By construction in \Cref{alg:lz78-encoder}, \(y_j = y_{\pi(j)} a_j\), where \(y_{\pi(j)} \in D_{j-1}\) and \(y_{\pi(j)} a_j \notin D_{j-1}\). Hence
+\[
+    y_j \notin D_{j-1}, \qquad \pi(j) < j, \qquad l_j = l_{\pi(j)} + 1 \geq 1
+\]
+so the phrases of a block are distinct pairwise, every phrase without its last symbol is an earlier one, each encoding step consumes at least one symbol. This is exactly the incremental parsing structure. Since \(D_0 = \varnothing\) we have \(\pi(1) = 0\) and \(l_1 = 1\), and since \(\sum_j l_j = n\) a block is parsed in at most \(n\) steps.
+
+The fields of the codeword are wide enough:
+\[
+    0 \leq I_j = \pi(j) \alpha + a_j \leq (j-1)\alpha + (\alpha - 1) = j\alpha - 1 < 2^{L_j}
+    \qquad
+    L_j = \ceil{\log_2 j\alpha}
+\]
+Here we recompute codeword length every step, starting from \(L_1 = \ceil{\log_2 \alpha}\).
+
+\subsection{The decoder reconstructs the source}
+
+The codewords have different lengths and no delimiters, so decipherability needs the boundaries to be computable. We maintain counter which shows us the positions of bits of the next codeword:
+\[
+    k_0 = 0, \qquad k_j = k_{j-1} + \ceil{\log_2 (j\alpha)} ,
+\]
+so the \(j\)-th codeword occupies bits \(k_{j-1}+1, \ldots, k_j\).
+
+Let \(D'_j\) denote the decoder dictionary. We claim \(D'_j = D_j\) for all \(j\), by induction. Both are empty at \(j = 0\). Given \(D'_{j-1} = D_{j-1}\), the decoder reads \(I_j\) from the bits above and recovers
+\[
+    \pi(j) = \floor{I_j / \alpha}, \qquad a_j = I_j \bmod \alpha ,
+\]
+which is exact since \(0 \leq a_j < \alpha\). As \(\pi(j) < j\), the entry \(y_{\pi(j)}\) lies in \(D_{j-1} = D'_{j-1}\), so \(y_j = y_{\pi(j)} a_j\) is rebuilt and inserted on both sides, giving \(D'_j = D_j\).
+
+Blocks agree because both sides count source symbols. The tail rule(that we cut the on \(n\) symbols) makes \(\sum_j l_j = n\) hold exactly.

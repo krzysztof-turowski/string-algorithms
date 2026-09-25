@@ -1,0 +1,90 @@
+\section{Idea}
+
+The previous chapter computed the same factorization as this one, and by the same route up to a point: build \(\mathrm{SA}\), read the repetitions off it, turn them into factors. What \cite{kkp2012} changes is the second step. CPS needs the \(\mathrm{LCP}\) array to know how long each repetition is, and holding it alongside \(\mathrm{SA}\). KKP3 never builds \(\mathrm{LCP}\) at all, well, instead it builds other structures: NSV and PSV of \Cref{def:nsv-psv}.
+
+The observation behind it is that the \(\mathrm{LCP}\) array answers a question we do not quite need. It gives the agreement between every pair of neighbours in \(\mathrm{SA}\), while the factorization only needs, for each position \(i\), the single \enquote{best} earlier occurrence. It turns out that this best occurrence can be found among just two candidates, and that the two can be computed from \(\mathrm{SA}\) alone, without any lengths at all. It appears that the lengths can be then obtained by comparing symbols directly in linear time.
+
+Of the algorithms proposed in \cite{kkp2012} we implement the first one, which the authors call KKP3 after the three arrays it keeps.
+
+\subsection{KKP3 approach description}
+
+The output is the same as in \Cref{ch:lz77cps}: the arrays \(\mathrm{POS}\) and \(\mathrm{LEN}\) of \Cref{def:pos-len}, from which the factors are formed by one left-to-right walk. Only the way they are obtained differs in a way, that only portion of positions are calculated.
+
+Recall from \Cref{ch:lz77cps} that suffixes sharing a long prefix stand close together in \(\mathrm{SA}\), and the further apart two suffixes are in \(\mathrm{SA}\), the shorter their common prefix. For a position \(i\) we are looking for an earlier position, that is, a suffix \(j < i\) agreeing with suffix \(i\) on their prefixes as long as possible. By the property just recalled, the best such \(j\) must be the one lying closest to \(i\) in \(\mathrm{SA}\) among all suffixes with a smaller text position. There are exactly two of those, one on each side, and they are exactly \(\mathrm{PSV}[i]\) and \(\mathrm{NSV}[i]\) from \Cref{def:nsv-psv}.
+
+\noindent This gives the lemma the whole algorithm rests on, and it is proved in correctness part.
+
+\begin{lemma}[Two candidates suffice, \cite{kkp2012}]
+\label{lem:kkp-candidates}
+    For every position \(i\),
+    \[
+        \mathrm{LEN}[i] = \max \{ \mathrm{lcp}(i, \mathrm{PSV}[i]),\; \mathrm{lcp}(i, \mathrm{NSV}[i]) \},
+    \]
+    and \(\mathrm{POS}[i]\) may be taken to be whichever of the two attains the maximum.
+\end{lemma}
+
+So the algorithm splits in two. First compute \(\mathrm{PSV}\) and \(\mathrm{NSV}\), which only needs \(\mathrm{SA}\). Then, at each position where a factor begins, compare symbols against the two candidates and keep the one with larger common prefix.
+
+It remains to compute the two arrays. Both are obtained in a single left-to-right pass over \(\mathrm{SA}\) with a stack holding those entries that have not yet met a smaller value. When the entry \(\mathrm{SA}[i]\) is read, every stacked value greater than it is popped, and each popped value has just found its next smaller value, namely \(\mathrm{SA}[i]\), while its previous smaller value is the entry sitting below it on the stack. The value \(\mathrm{SA}[i]\) is then pushed. Two sentinel zeros, one before the array and one after, make sure that every entry is eventually popped.
+
+\subsection{Pseudocode}
+In our implementation the stack is kept inside \(\mathrm{SA}\) itself: the cells \(\mathrm{SA}[0 \ldots \mathit{top}]\) hold the stack, with \(\mathrm{SA}[0] = 0\) acting as the sentinel (\Cref{def:sentinel}) at the bottom, while \(\mathrm{SA}[i]\) for \(i > \mathit{top}\) is still the unmodified suffix array. This is possible because \(\mathit{top} \leq i\) at every step, so a cell is overwritten only after it has been read. The stack needs no memory of its own: it is kept in already processed part of \(\mathrm{SA}\).
+\begin{algorithm}[H]
+\caption{KKP3: computing $\mathrm{PSV}$, $\mathrm{NSV}$ and the factors}
+\label{alg:kkp-scan}
+\begin{algorithmic}[1]
+\Procedure{ComputeSmallerValues}{$\mathrm{SA}$, $n$}
+    \State $\mathrm{SA}[0] \gets 0$, \quad $\mathrm{SA}[n+1] \gets 0$
+    \Comment{sentinels at both ends}
+    \State $\mathit{top} \gets 0$
+    \For{$i \gets 1$ \textbf{to} $n + 1$}
+        \While{$\mathrm{SA}[\mathit{top}] > \mathrm{SA}[i]$}
+            \State $\mathrm{NSV}[\mathrm{SA}[\mathit{top}]] \gets \mathrm{SA}[i]$
+            \State $\mathrm{PSV}[\mathrm{SA}[\mathit{top}]] \gets \mathrm{SA}[\mathit{top} - 1]$
+            \State $\mathit{top} \gets \mathit{top} - 1$
+        \EndWhile
+        \State $\mathit{top} \gets \mathit{top} + 1$, \quad $\mathrm{SA}[\mathit{top}] \gets \mathrm{SA}[i]$
+        \Comment{push, overwriting a cell already processed}
+    \EndFor
+\EndProcedure
+\Statex
+\Function{Lcp}{$S$, $n$, $i$, $j$}
+    \If{$j = 0$}
+        \State \Return $0$
+        \Comment{no candidate on that side}
+    \EndIf
+    \State $l \gets 0$
+    \While{$i + l \leq n$ \textbf{and} $j + l \leq n$ \textbf{and} $S[i + l] = S[j + l]$}
+        \State $l \gets l + 1$
+    \EndWhile
+    \State \Return $l$
+\EndFunction
+\Statex
+\Function{Factorize}{$S$, $n$, $\mathrm{PSV}$, $\mathrm{NSV}$}
+    \State $triples \gets$ empty list, \quad $i \gets 1$
+    \While{$i \leq n$}
+        \State $l_p \gets {}$\Call{Lcp}{$S$, $n$, $i$, $\mathrm{PSV}[i]$}
+        \State $l_n \gets {}$\Call{Lcp}{$S$, $n$, $i$, $\mathrm{NSV}[i]$}
+        \If{$l_p > l_n$}
+            \State $(p, l) \gets (\mathrm{PSV}[i], l_p)$
+        \Else
+            \State $(p, l) \gets (\mathrm{NSV}[i], l_n)$
+        \EndIf
+        \If{$i + l > n$}
+            \State $l \gets n - i$
+            \Comment{leaving one position for LZ77 mismatch symbol}
+        \EndIf
+        \If{$l > 0$}
+            \State $triples.append(p, \ l, \ S[i + l])$
+        \Else
+            \State $triples.append(1, \ 0, \ S[i])$
+            \Comment{no earlier occurrence, the pointer is unused}
+        \EndIf
+        \State $i \gets i + l + 1$
+    \EndWhile
+    \State \Return $triples$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+The encoder and the decoder are the same as in \Cref{ch:lz77cps}: the factors are triples, the codewords have the fixed length \(L_c = L_p + L_l + 1\) with \(L_p = \ceil{\log_\alpha \len{S}}\), and the decoder copies symbol by symbol from the output built so far in order to enable overlapping.

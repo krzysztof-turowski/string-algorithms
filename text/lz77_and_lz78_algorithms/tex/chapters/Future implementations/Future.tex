@@ -1,0 +1,57 @@
+\chapter{Future implementations}
+\label{ch:future}
+
+As future implementations one can consider other algorithms presented in \cite{chen2008} and the better versions of \emph{KKP3} in \cite{kkp2012}. But for proper extension for LZ compression algorithms the work \cite{acm2012} can be considered a very good example of what can be done in this field, since in their survey one can find a broad list of approaches mentioned.
+
+There we will stop after explaining some sense behind other versions of algorithms presented in \cite{chen2008} and \cite{kkp2012}, other than those we implemented here.
+
+\section{\emph{CPS} algorithms}
+
+\subsection{\emph{CPS1b} and \emph{CPS1c}}
+
+These two are not new algorithms but space optimizations of the same scan we do in \emph{CPS1a}, so the factorization they compute is exactly the one of \emph{CPS1a}. 
+
+\emph{CPS1b} rests on the observation that none of the pointers \(i_1, i_2, i_3\) ever reaches a position \(i\) of \(\mathrm{SA}\) for which the entry \(\mathrm{POS}[\mathrm{SA}[i]]\) has already been written, so the cells left behind by the scan are free and the pair \((position, length)\) can be written into them instead of into separate arrays. The text position being assigned goes into \(\mathrm{SA}[i_2]\) and the pointer it receives goes into \(\mathrm{LCP}[i_2]\), where \(i_2\) is set to \(i_1\) at the beginning of the backtracking loop. The pairs end up scattered over \(\mathrm{SA}\) and \(\mathrm{LCP}\), but their correct order can be restored by an in-place pass, which will at the end place desirable \(\mathrm{POS}\) array inside \(\mathrm{SA}\). One integer array of length \(n\) is thus removed.
+
+\emph{CPS1c} drops \(\mathrm{LEN}\) from the scan as well, so that only \(\mathrm{POS}\) is computed and no storage is allocated for the lengths at all, which frees the space of \(\mathrm{LCP}\) once the scan is over. The lengths are then recovered on demand: we do not calculate it at each position, but only at needed ones for factorization, so if source string is cut in \(N\) factors, then we were computing only \(N\) lengths, which sum to \(\Theta(n)\) comparisons. These values can be now stored inside previously freed \(\mathrm{LCP}\). One more integer array of length \(n\) is thus removed. 
+
+\subsection{\emph{CPS2}}
+
+\emph{CPS2} still requires \(\mathrm{SA}\), but removes \(\mathrm{LCP}\) from needed structures and instead makes use of a structure for range minimum queries (\(\mathrm{RMQ}\)) built on \(\mathrm{SA}\). \(\mathrm{RMQ}(a, b)\) returns the index of the smallest value among \(\mathrm{SA}[a], \ldots, \mathrm{SA}[b]\) in constant time after a preprocessing, which takes \(\bigO(n)\) time, and \(\bigO(n)\) space.
+
+We are not going to precompute \(\mathrm{POS}\) or \(\mathrm{LEN}\) like before, but make factorization of string on fly. The approach is based on the fact that similar prefixes of suffixes in \(\mathrm{SA}\) lie together in a continuous interval, and as the length of the common prefix rises this interval is narrowing, and also we can utilize the order of some \(i\)-th position of suffixes in this interval in \(\mathrm{SA}\) since they are in lexicographical order. 
+
+The algorithm keeps three things: the suffix array \(\mathrm{SA}\), the range minimum structure over it, and the current interval \(\mathrm{SA}[a \ldots b]\), which holds exactly those suffixes that begin with the part of the factor confirmed so far, \(S[i \ldots j-1]\). The invariant maintained throughout is that at least one suffix of the interval starts to the left of \(i\), as long as it holds, the substring \(S[i \ldots j-1]\) has been seen earlier and the factor can be extended further. One step of the extension consists of three operations.
+
+\begin{enumerate}[label=(\arabic*)]
+    \item \textsc{Refine}: the next symbol \(S[j]\) is appended to the pattern and the interval is narrowed to the suffixes beginning with \(S[i \ldots j]\). Two binary searches suffice, so the step costs \(\bigO(\log n)\).
+    \item \(\mathrm{RMQ}(a, b)\): the smallest value of \(\mathrm{SA}\) in the narrowed interval is found.
+    \item The minimum is compared with \(i\). If it is smaller, an occurrence to the left exists, so it is kept as the pointer, \(j\) is increased and the step repeats. If it is not, the only occurrence is the suffix \(i\) itself, the extension fails and the factor ended at the previous step.
+\end{enumerate}
+
+The worst case time becomes \(\bigO(n \log n)\), since we have at most \(n-1\) steps and each one costs \(\bigO(\log n)\). 
+
+\subsection{\emph{CPS3}}
+This approach gives up the usage of structures we deal with in our work, so the decision is to leave to the reader to familiarize themselves with \emph{CPS3} in the work \cite{chen2008}. 
+
+
+\section{\emph{KKP} algorithms}
+
+Besides \emph{KKP3}, which is the version implemented here, \cite{kkp2012} describes other versions of same approach but with reduced working memory.
+
+\subsection{\emph{KKP2s}}
+The idea of the algorithm is to keep one array fewer. The scan of \(\mathrm{SA}\) computes the \(\mathrm{NSV}\) values only, and the \(\mathrm{PSV}\) value of a position is not stored at all but produced at the moment the factorization reaches that position. What makes this possible is the array \(\Phi\), where \(\Phi[i] = \mathrm{SA}\brackets{\mathrm{ISA}[i] - 1}\) is the immediate lexicographical predecessor of the suffix \(i\), implemented as a circular linked list.
+
+Restrict that list to the suffixes starting at or before a position \(t\) and call it \(\Phi_t\). Passing from \(\Phi_{t-1}\) to \(\Phi_t\) is a single insertion, and the place where the suffix \(t\) goes is given by its lexicographical neighbours among the suffixes \(1, \ldots, t-1\), which are exactly \(\mathrm{PSV}[t]\) and \(\mathrm{NSV}[t]\). 
+
+Since \(\Phi\) points at the predecessor and nothing stands between the two neighbours before the insertion,
+\[
+    \mathrm{PSV}[t] = \Phi_{t-1}\brackets{\mathrm{NSV}[t]},
+\]
+so one array serves both roles in turn. The scan fills it with the \(\mathrm{NSV}\) values, and the factorization loop rebuilds it into \(\Phi\) from left to right by these restricted \(\Phi_t\), so that at the step \(t\) the entry \(\Phi[t]\) still holds \(\mathrm{NSV}[t]\), while the entry it points to, lying to the left of \(t\), has already been rebuilt and therefore holds \(\mathrm{PSV}[t]\). Two assignments then insert \(t\) into the list, and they are made at every position, whether or not a factor begins there, since a list left unrepaired would give wrong predecessors later on.
+
+\subsection{\emph{KKP2n}}
+The idea of this variant is to not modify the suffix array given as input, without increasing the working memory. This desire comes from a fact that in previous variants of algorithm we were using processed positions of \(\mathrm{SA}\) as stack, which is undesirable when the suffix array is needed afterwards. What makes this possible is observation that \(\mathrm{PSV}\) pointers can replace the stack. 
+
+For this the \(\mathrm{PSV}\) value has to be available before the pop that uses it, so it is computed when pushing rather than when popping, and the rest of the algorithm is mirrored accordingly. The scan now produces \(\mathrm{PSV}\) instead of \(\mathrm{NSV}\), and \(\Phi\) is replaced by the inverse permutation \(\Phi^{-1}\). At the step \(t\) the entry \(\Phi^{-1}[t]\) still holds \(\mathrm{PSV}[t]\), while the entry it points to has already been rebuilt and holds \(\mathrm{NSV}[t]\).
+

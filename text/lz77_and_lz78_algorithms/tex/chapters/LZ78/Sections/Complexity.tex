@@ -1,0 +1,9 @@
+\section{Complexity}
+
+Our implementation descends the trie while reading the input, so every source symbol costs one dictionary operation: it either continues the descent or ends a phrase. The phrases partition the block, \(\sum_j l_j = n\), so a block costs \(\bigO(n)\) operations and the whole source costs \(\bigO(\len{S})\). We store children of a node in a hash map where one operation costs \(\bigO(1)\) on average, giving \(\bigO(\len{S})\) expected time. 
+\\
+
+Decoding is linear: a word of length \(l_j\) is reconstructed by walking up the tree in \(\bigO(l_j)\) steps, and \(\sum_j l_j = n\), giving \(\bigO(\len{S})\) in total. If we take into consideration working time optimization, we can reconstruct trie, so it stores in each node the string this node represents, what would give us \(\bigO(1)\) time for reconstruction of a single word, but this would require more working space up to \(\bigO(n^2)\) in dictionary and time complexity \(\bigO(N)\), where \(N\) is number of codewords.
+\\
+
+The memory usage is the size of one dictionary. The phrases of a block are distinct and their lengths sum to \(n\), each phrase gives one more node in \(D\), so both encoder and decoder use \(\bigO(n)\) entries in worst case.

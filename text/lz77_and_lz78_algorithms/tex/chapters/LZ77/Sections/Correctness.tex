@@ -1,0 +1,23 @@
+
+\section{Correctness}
+\label{sec:lz77correctness}
+
+The correctness of the scheme rests on the following facts:
+\begin{enumerate}
+    \item the parsing always makes progress and never produces a word too long for the codeword to hold,
+    \item the decoder can be kept in the same state as the encoder.
+\end{enumerate}
+
+\subsection{The parsing is well defined}
+
+For every \(i\), the word \(S_i\) produced by \textsc{ReproducibleExtension} in \Cref{alg:lz77-encoder} satisfies \(1 \leq l_i \leq L_s\). This follows from the fact that we always add one mismatch symbol and the reproducible extension is searched only for last \(L_s - 1\) symbols of buffer.
+
+The fields of the codeword are wide enough. Since \(1 \leq l_i \leq L_s\), the value \(l_i - 1\) admits a radix-\(\alpha\) representation in \(\ceil{\log_\alpha L_s}\) symbols; since the pointer refers to a position of the window, \(1 \leq p_i \leq n - L_s\), and \(p_i - 1\) fits into \(\ceil{\log_\alpha (n - L_s)}\) symbols. Together with the single symbol \(C_{i3}\) this gives \(L_c\).
+
+\subsection{The decoder reconstructs the source}
+
+The decoder keeps a buffer \(D_i\) of \(n - L_s\) symbols, initially loaded with \(n - L_s\) zeros. Having read \(p_i\) and \(l_i\) from the fields of \(C_i\), it applies \(l_i - 1\) shifts while feeding the decoded symbols from reproducible extension, and then one more shift feeding in the last symbol \(C_{i3}\).
+
+We claim that before each codeword is decoded, the decoder buffer \(D_i\) holds exactly the same \(n - L_s\) symbols as the encoder window did when that codeword was produced. This holds by induction on \(i\). For \(i = 1\) both buffers are filled with \(n - L_s\) zeros by construction. Assume it holds for \(i\). The first \(l_i - 1\) symbols of \(S_i\) are read off positions \(p_i, p_i + 1, \ldots\) of the encoder window, and the decoder reads them off the same positions of \(D_i\), which is equal to it by assumption. The last symbol is transmitted explicitly as \(C_{i3}\). Both sides then shift in the same \(l_i\) symbols, so the buffers agree again, and the claim holds for \(i + 1\).
+
+

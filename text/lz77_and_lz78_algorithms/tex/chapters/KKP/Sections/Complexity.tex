@@ -1,0 +1,11 @@
+\section{Complexity}
+\label{sec:kkp-complexity}
+Let \(n = \len{S}\). Building \(\mathrm{SA}\) by induced sorting (\cite{nong2009}), as already was mentioned in previous chapters, takes \(\Theta(n)\) time.
+
+The scan is linear. Every entry of \(\mathrm{SA}\) is pushed exactly once and popped at most once by the stack, so the total number of stack operations is \(\bigO(n)\), and the outer loop runs \(\bigO(n)\) times, which gives \(\bigO(n)\) operation on \Call{ComputeSmallerValues}{} procedure.
+
+The symbol comparisons are linear as well. At a position \(i\) where a factor begins, \Call{Lcp}{} is called twice and costs at most \(l_p + l_n + 2\) comparisons, where \(l_p, l_n \leq l_i\), so the cost is at most \(2 l_i + 2\), as a reminder, \(l_i\) is the length of the found factor, and since in \Call{Factorize}{} we have \(2\cdot\sum_{i=1}^N (l_i + 1) = 2n\), where \(N\) is number of triples, we have total time of \Call{Lcp}{} computing as \(\bigO(n)\). 
+
+Decoding is \(\Theta(n)\), exactly as in \Cref{ch:lz77cps}.
+
+The memory is \(\Theta(n)\), and the constant is where KKP3 gains over the algorithm of \Cref{ch:lz77cps}, but only on one array of length \(n\). It holds \(S\), \(\mathrm{SA}\), \(\mathrm{PSV}\) and \(\mathrm{NSV}\), and the stack is stored inside the copy of \(\mathrm{SA}\) rather than separately.

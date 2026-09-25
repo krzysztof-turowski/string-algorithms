@@ -1,0 +1,52 @@
+\section{Correctness}
+\label{sec:cps-correctness}
+
+Throughout this section \(S\) is the source, \(n = \len{S}\), and \(\mathrm{SA}\), \(\mathrm{LCP}\) are its suffix and LCP arrays, indexed from \(1\) and extended by the sentinel values \(\mathrm{LCP}[1] = \mathrm{LCP}[n+1] = -1\). We first prove \Cref{lem:rises-falls}, then that the scan fills \(\mathrm{POS}\) and \(\mathrm{LEN}\) correctly, and finally that the decoder recovers \(S\) from the factors built from them.
+
+Recall from \Cref{alg:cps-scan} that entries are written by
+\[
+    \Call{assign}{p, q, l} =
+    \begin{cases}
+        \mathrm{POS}[q] \gets p, \; \mathrm{LEN}[q] \gets l, & \text{for } p < q,\\
+        \mathrm{POS}[p] \gets q, \; \mathrm{LEN}[p] \gets l, & \text{for } p \geq q,
+    \end{cases}
+\]
+which returns \(\min(p,q)\). Two consequences are used throughout: the entry written always belongs to the larger of the two text positions and points to the smaller, and the returned value is the smallest text position met so far in the group being closed.
+
+\begin{lemma}[Stack invariant]
+\label{lem:cps-stack}
+    At every entry to the forward loop the following holds. The pointers satisfy \(i_1 < i_2 < i_3\), and the stack contains, from bottom to top, positions \(j_1 < j_2 < \cdots < j_m < i_1\) with \(\mathrm{LCP}[j_1] \leq \mathrm{LCP}[j_2] \leq \cdots \leq \mathrm{LCP}[j_m] \leq \mathrm{LCP}[i_1]\).
+\end{lemma}
+
+\begin{proof}
+    Initially \(i_1 = 1\), \(i_2 = 2\), \(i_3 = 3\) and the stack is empty. As we set \(\mathrm{LCP}[1] = -1\) which is smaller than every other entry, position \(1\) can never be popped by the backtracking loop and acts as a sentinel at the bottom, so each backtracking procedure stops on encountering it.
+
+    The forward loop runs while \(\mathrm{LCP}[i_2] \leq \mathrm{LCP}[i_3]\). Each turn pushes \(i_1\) and shifts the three pointers one place to the right, so the new \(i_1\) is the old \(i_2\). The pushed position is therefore smaller than the new \(i_1\), and the relation between their LCP values is the loop condition tested on the previous turn. Invariant holds.
+
+    The loop stops when \(\mathrm{LCP}[i_2] > \mathrm{LCP}[i_3]\), that is, at a fall. By \labelcref{cps-obs:fall}, \(i_2\) is the right boundary of a group of level \(l = \mathrm{LCP}[i_2]\). The backtracking loop pops exactly those positions whose LCP value equals \(l\), which by the invariant are the left boundaries of the groups of that level, and stops at the first position with a strictly smaller value. All the popped groups are closed, so removing them preserves the invariant.
+
+    The last step of the iteration moves one level outwards. Suppose \(i_1 > 1\), then \(\mathrm{LCP}[i_1] < l\), so \(i_1\) is the left boundary of a wider group that contains the one just closed and is not finished yet. The group that was closed has been replaced by the single entry \(\mathrm{SA}[i_1]\), holding its smallest text position, so the algorithm can now treat it as one element: it sets \(i_2 \gets i_1\) and takes the next left boundary off the stack into \(i_1\). The outer loop then checks whether this wider group has to be closed too, note: \(i_1\) and \(i_2\) decreased and still \(i_1 < i_2 < i_3\). If instead \(i_1 = 1\), the sentinel has been reached: the stack is empty and no group is open, so the scan simply continues from \(i_3\).
+\end{proof} 
+
+\begin{lemma}[Every assignment is valid]
+\label{lem:cps-assign}
+    Each time \textsc{assign} writes \(\mathrm{POS}[i] = p\) and \(\mathrm{LEN}[i] = l\), we have \(p < i\) and \(S(p, p + l - 1) = S(i, i + l - 1)\).
+\end{lemma}
+
+\begin{proof}
+    That \(p < i\) is immediate from the definition of \textsc{assign}, which writes into the larger of its two arguments. For the equality, both arguments are text positions taken from entries of SA lying in the group closed at \(i_2\), and \(l = \mathrm{LCP}[i_2]\) is the level of that group, so by Definition \ref{def:lcp-group} the corresponding suffixes share a prefix of length \(l\).
+
+    The arguments of \textsc{assign} are not always the original entries of SA, which was given at the start: after closing a group the algorithm overwrites \(\mathrm{SA}[i_1] \gets q\), so a later call may read a value that was put there by an earlier step. This is safe, because the value \(q\) is the smallest text position of the group that was closed, and every suffix of that group, \(q\) included, starts with the same \(l\) symbols. The group has been closed before the ones containing it, so any later call using this entry works at level \(l' \leq l\), and \(l' < l\) from construction.
+\end{proof}
+
+\subsubsection*{Every position is covered}
+
+It remains to see that the scan leaves nothing out. Take a position \(i\) at which some factor has an earlier occurrence, and let \(l\) be the length of the longest one. Suffix \(i\) and that earlier suffix start with the same \(l\) symbols, so both belong to a group of level \(l\), and since \(l\) is the longest match, to no group of a higher level.
+
+That group is certain to be processed. It is closed at the position where LCP drops below \(l\), and such a drop always comes, with exception at the sentinel \(\mathrm{LCP}[n+1] = -1\). When it is closed, the backtracking loop runs over all its members, so \textsc{assign} is called with \(i\) as one of its two arguments. The other argument is a smaller position, because \(i\) has an occurrence to its left, so \(i\) is the larger one and receives the entry. By Lemma \ref{lem:cps-assign} what it receives is a real match, and its length is \(l\), the level of the inner-most group holding \(i\).
+
+If instead \(i\) has no earlier occurrence, then suffix \(i\) shares no beginning with anything before it and belongs to no group at all. It is never the larger argument of an assignment, so it keeps \(\mathrm{LEN}[i] = 0\) and \(\mathrm{POS}[i] = i\).
+
+
+The last thing to cover is the termination of algorithm. At each iteration either \(i_3\) increases or the stack loses at least one element, and at least one entry of \(\mathrm{POS}\) is written, so we have at most \(O(n)\) total iterations.
+ 
