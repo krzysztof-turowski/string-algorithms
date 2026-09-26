@@ -1,0 +1,146 @@
+\section{Idea}
+% This section proceeds in three steps: what is being measured, where the bound on compression comes from, and how the encoder is built to meet it.
+
+In \cite{ziv1978} work the authors look at the compression problem from the side of finite-state machines (\Cref{def:finite-state-encoder}), and more precisely of the \(\mathrm{ILF}\) ones (\Cref{def:ilf}). There is no source model here at all: the object of study is one individual sequence \(x\), and what replaces the source is the class of machines against which the comparison is made, namely the lossless finite-state encoders with at most \(s\) states. 
+
+The idea is to prove the existence of an encoder, bounded in the number of states, whose compression ratio is bounded from below and from above tightly enough by quantities related to \(c(x_1^n)\), the largest number of distinct phrases into which the string \(x_1^n\) can be parsed. Both bounds rest on properties of the encoder, but on different ones. The lower bound is proved under the assumption of information losslessness (\emph{IL}, \Cref{def:information-lossless}), which is wider than \emph{ILF}. The upper bound is proved by constructing a concrete encoder, and that encoder belongs to the narrower class \emph{ILF} (\Cref{def:ilf}).
+
+
+% The goal of \cite{ziv1978} is the same as in \cite{ziv1977}: to compress without prior knowledge of source and still be as good as a scheme that does know. In \cite{ziv1977} the encoder was compared with fixed code book schemes built for a known source, while here it is compared with all deterministic finite state encoders applied to a single sequence.
+
+% The class of competitors is that of finite-state encoders, \Cref{def:finite-state-encoder}: a machine \(E = (Z, A, B, g, f)\), where \(Z\) is a finite set of states, \(A\) is the input alphabet, \(B\) is the set of output words over a binary alphabet, \(g\) chooses the next state and \(f\) the output. The output words are allowed to have different lengths. The only restriction imposed is that the encoder be information lossless, \Cref{def:information-lossless}, which is what makes the compression reversible.
+
+% For such a machine the compression ratio \(\rho_E\) of \Cref{def:compression-ratio} is the number of output bits divided by the number of bits needed to write the input as it is. Taking the best encoder with at most \(s\) states and then letting \(s\) grow gives \(\rho(x)\), the \emph{compressibility} of \(x\) in the sense of \Cref{def:compressibility}: a bound that belongs to the sequence itself and that no finite-state encoder attains.
+
+% The authors then bound \(\rho(x)\) from below by \(c(x_1^n)\), the largest number of distinct phrases whose concatenation forms \(x_1^n\). This is what suggests the construction: since the bound is stated through distinct phrases, one builds an encoder whose phrases are distinct by construction. That is the \emph{incremental parsing} of \Cref{def:incremental-parsing}, in which every phrase is an earlier phrase with one symbol appended, so it can be sent as the index of that earlier phrase plus the new symbol.
+
+\begin{theorem}[Theorem 1 and Corollary 1 of \cite{ziv1978}]
+\label{thm:lz78-lower}
+    For every sequence \(x\), the compressibility of \Cref{def:compressibility} satisfies
+    \[
+        \rho(x) \geq \limsup_{n \to \infty} \frac{c(x_1^n) \log c(x_1^n)}{n \log \alpha}.
+    \]
+\end{theorem}
+
+\begin{theorem}[Theorem 2 of \cite{ziv1978}]
+\label{thm:lz78-upper}
+    For every block length \(n\) there exists a finite-state encoder \(E\) with \(s(n)\) states, implementing a block-to-variable code, whose ratio on a block satisfies
+    \[
+        \rho_E(x_1^n) \leq \frac{c(x_1^n) + 1}{n \log \alpha} \log \big( 2\alpha (c(x_1^n) + 1) \big),
+    \]
+    and on an infinite sequence exceeds \(\rho(x)\) by an amount that tends to zero as \(n\) grows.
+\end{theorem}
+
+\begin{corollary}[Theorems 1 and 2 and Corollary 1 of \cite{ziv1978}]
+\label{cor:lz78-lower-upper}
+    Let \(E\) be the encoder of \Cref{thm:lz78-upper} and let \(c\) stand for \(c(x_1^n)\). Since \(E\) is information lossless and has finitely many states, the bound of \Cref{thm:lz78-lower} applies to it as well, so its ratio is squeezed from both sides:
+    \[
+        \limsup_{n \to \infty} \frac{c \log c}{n \log \alpha}
+        \;\leq\; \limsup_{n \to \infty} \rho_E(x_1^n) \;\leq\;
+        \limsup_{n \to \infty} \frac{(c+1) \log\big(2\alpha(c+1)\big)}{n \log \alpha} .
+    \]
+\end{corollary}
+
+\noindent The two sides are close to each other. The upper bound \(\frac{(c+1)\log(2\alpha(c+1))}{n \log \alpha} = \frac{(c+1)\log(c+1)}{n \log \alpha} + \frac{(c+1)\log(2\alpha)}{n \log \alpha}\), so the bounds differ by \(\frac{(c+1)\log(2\alpha)}{n \log \alpha}\), where \(2\alpha\) is a constant and what is left is \(\frac{c+1}{n}\), by (6) of \cite{ziv1978} we know that \(c(x_1^n) \leq \frac{n \log \alpha}{(1 - \epsilon_n)\log n}\), so this is of order \(\frac{1}{\log n}\) and vanishes as \(n\) grows.
+
+We omit the proofs of these theorems and refer the reader to Sections 2 and 3 of \cite{ziv1978}.
+
+% The proof of \Cref{thm:lz78-upper} is constructive, and the machine it exhibits is the encoder described above: the segments its inner code takes as input words are exactly the phrases produced by incremental parsing. Our encoder is therefore not an alternative to the encoder of the theorem but the encoder of the theorem. The proof can be seen in Section 2 of \cite{ziv1978}.
+
+Such a dictionary grows infinitely if given infinite input, because incremental parsing gives infinite number of substrings in such case and moreover \(c(x_1^\infty)\) is even greater, thus in order to stay with the finite-state, finite-memory machine it is proposed to divide input into blocks of fixed length, so in each such block dictionary first is reset and then again built from scratch. 
+
+\noindent Here the codewords are not of fixed length. The \(j\)-th phrase of a block is sent as
+\begin{equation}
+\label{eq:lz78codeword}
+  I_j = \pi (j) \cdot \alpha + a_j
+  \qquad
+  L_j = \ceil{\log_2 (j \alpha)}
+\end{equation}
+where \(\pi(j)\) is from \Cref{def:dictionary-trie} and gives the index of the phrase being extended, \(a_j\) is the appended symbol, \(L_j\) is the width of the field in bits, and \(j\) is the number of the phrase within the current block. The width of codeword grows with \(j\), since the field has to hold the index of any phrase seen so far, and it starts over from \(\ceil{\log_2 \alpha}\) at every block. The code is uniquely decipherable, and each codeword can be decoded as soon as it arrives.
+
+\subsection{Pseudocode}
+In the pseudocode below \(D\) is the trie of \Cref{def:dictionary-trie}. \Call{Child}{$D$, $v$, $s$} returns the index of the child of node \(v\) along the edge labeled \(s\), or \(0\) if there is none. \Call{Add}{$D$, $v$, $s$} creates that child as a new leaf, and \Call{ParentSequence}{$D$, $v$} returns the phrase spelled by node \(v\), obtained by walking up to the root and reversing the symbols collected on the way.
+
+\begin{algorithm}[H]
+\caption{LZ78 encoder with block reset}
+\label{alg:lz78-encoder}
+\begin{algorithmic}[1]
+\State \textbf{require} the source \(S\) over an alphabet of size \(\alpha\), the block length \(n\)
+\State \textbf{output} the codeword stream, the \(j\)-th codeword of a block written in \(\Call{CodewordWidth}{\alpha, j}\) bits
+\Statex
+\Procedure{EmitPhrase}{$\pi, a, \alpha, j$}
+    \State \textbf{write} $\pi \cdot \alpha + a$ in $\Call{CodewordWidth}{\alpha, j}$ bits
+\EndProcedure
+\Statex
+\Procedure{EncodeBlock}{$S, \alpha, n$, $\mathit{position}$}
+    \State $end \gets \min(\mathit{position} + n, \len{S})$
+    \Comment{the last block may be shorter}
+    \State $\Call{Reset}{D}$
+    \State $j \gets 1$
+    \State $current\_node \gets 0$
+    \While{$\mathit{position} < end$}
+        \State $s \gets S[\mathit{position}]$
+        \State $\mathit{position} \gets \mathit{position} + 1$
+        \State $next\_node \gets \Call{Child}{D, current\_node, s}$
+        \Comment{$0$ when the edge is absent}
+        \If{$next\_node \neq 0$}
+            \State $current\_node \gets next\_node$
+            \Comment{the walk continues}
+        \Else
+            \State $\Call{EmitPhrase}{current\_node, s, \alpha, j}$
+            \State $\Call{Add}{D, current\_node, s}$
+            \State $current\_node \gets 0$
+            \State $j \gets j + 1$
+        \EndIf
+    \EndWhile
+    \If{$current\_node \neq 0$}
+        \Statex\hspace{\algorithmicindent}\hspace{\algorithmicindent}
+        $\triangleright${rollback on one step in order to add a mismatch symbol}
+    \EndIf
+    \State $\Call{EmitPhrase}{D.\mathit{parent}[current\_node],\, D.\mathit{last}[current\_node],\, \alpha, j}$
+    \Statex \hspace{\algorithmicindent} $\triangleright${$D.last[node\_number]$ returns symbol of this node }
+\EndProcedure
+\Statex
+\Procedure{Encode}{$S, \alpha, n$}
+    \State $\mathit{position} \gets 0$
+    \While{$\mathit{position} < \len{S}$}
+    \State $\Call{EncodeBlock}{S, \alpha, n, \mathit{position}}$
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{LZ78 decoder}
+\label{alg:lz78-decoder}
+\begin{algorithmic}[1]
+\State \textbf{require} the codeword stream, the source length \(\len{S}\), alphabet of size \(\alpha\), the block length \(n\)
+\State \textbf{output} the source string \(S\)
+\Statex
+\Procedure{Decode}{$\mathit{stream}$, $\len{S}$, $\alpha$, $n$}
+    \State $\mathit{out} \gets$ empty list
+    \While{$\len{\mathit{out}} < \len{S}$}
+        \State $block\_length \gets \min\{n, \len{S} - \len{\mathit{out}}\}$
+        \Comment{the last block may be shorter}
+        \State \Call{Reset}{$D$}
+        \State $j \gets 1$
+        \State $decoded\_length \gets 0$
+        \While{$decoded\_length < block\_length$}
+            \State $I \gets$ next $\ceil{\log_2 (j \alpha)}$ bits of $\mathit{stream}$
+            \State $(\pi, a) \gets (\floor{I / \alpha},\; I \bmod \alpha)$
+            \State $y \gets {}$\Call{ParentSequence}{$D$, $\pi$}$ \cdot a$
+            \Comment{walk up the trie from node $\pi$, then reverse}
+            \State $out.append(y)$
+            \State $decoded\_length \gets decoded\_length + \len{y}$
+            \State \Call{Add}{$D$, $\pi$, $a$}
+            \State $j \gets j + 1$
+        \EndWhile
+    \EndWhile
+    \State \Return $\mathit{out}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+The encoder starts each block with an empty dictionary, so the first phrase of a block is always a single symbol and no special case is needed. Inside the block the walk down the trie costs one step per input symbol: either the edge exists and the walk continues, or it does not and the phrase ends there, which is why the parsing never looks back and never compares anything twice. Every emitted phrase adds exactly one node to the dictionary, so the phrase counter \(j\) and the number of nodes stay equal, and both sides can derive the field width \(L_j\) from it without transmitting anything.
+
+The decoder is mirroring the encoder. It keeps the same dynamic dictionary and the same counter, so it computes \(L_j\) itself, reads that many bits, recovers \(I_j\), splits it into \(\pi(j)\) and \(a_j\) by division and remainder by \(\alpha\), and rebuilds the phrase by walking the same path as encoder, and of course clears its dictionary after \(n\) rebuilt symbols.

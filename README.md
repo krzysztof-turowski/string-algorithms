@@ -119,9 +119,14 @@ Collection of algorithms for _String Algorithms_ course (summer semesters 2019/2
 1. Naive inverse transform
 
 #### Lempel-Ziv 77 (LZ77) compression and factorization
-1. Crochemore-Ilie-Smyth incomplete factorization algorithm
+1. Naive Lempel-Ziv compression algorithm
+1. Sliding-window Lempel-Ziv compression algorithm
+1. Chen-Puglisi-Smyth (CPS1a) factorization algorithm
+1. Kärkkäinen-Kempa-Puglisi (KKP3) factorization algorithm
+1. Crochemore-Ilie-Smyth factorization algorithm
 
 #### Lempel-Ziv 78 (LZ78) compression
+1. Block-based compression with bounded dictionary
 1. Compression and decompression with greedy or optimal parsing
 
 #### Lempel-Ziv-Welch (LZW) compression

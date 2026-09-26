@@ -37,3 +37,27 @@ def q_ary_entropy(x, q):
   if x in [0,1]:
     return 0
   return x*math.log((q-1)/x)/math.log(q) + (1-x)*math.log(1/(1-x)/math.log(q))
+
+def to_radix(value, base, width = None):
+  """
+  Base representation of value in `width` digits.
+  Most significant digit first.
+  """
+  if width is None:
+    width = max(math.ceil(math.log(value + 1, base)), 1)
+  digits = [0] * width
+  for i in range(width - 1, -1, -1):
+    value, digits[i] = divmod(value, base)
+  if value != 0:
+    raise ValueError('value does not fit into the field')
+  return digits
+
+def from_radix(digits, base):
+  """
+  Inverse of to_radix.
+  Most significant digit first.
+  """
+  value = 0
+  for d in digits:
+    value = value * base + d
+  return value

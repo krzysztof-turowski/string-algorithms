@@ -1,0 +1,26 @@
+\documentclass[11pt, a4paper]{report}
+\usepackage{packages}
+\addbibresource{references.bib}
+
+\begin{document}
+\input{config}
+\input{titlepage}
+\graphicspath{{./images/}}
+\tableofcontents
+
+\setstretch{1.1}
+\pagenumbering{arabic}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\footnotetext{\fontsize{12}{14}\selectfont\textit{Large language models were used as an aid in literature searches and English spelling checks.}}
+\input{chapters/Introduction/Introduction}
+\input{chapters/LZ77/LZ77}
+\input{chapters/LZ78/LZ78} 
+\input{chapters/CPS/CPS}
+\input{chapters/KKP/KKP}
+\input{chapters/ComparisonAndExperiments/ComparisonAndExperiments}
+\input{chapters/Future implementations/Future}
+
+\singlespacing
+\printbibliography
+
+\end{document}

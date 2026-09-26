@@ -1,0 +1,78 @@
+\section{Comparison}
+
+\subsection{Repository}
+\noindent All codes of algorithms live at:\\
+\url{https://github.com/krzysztof-turowski/string-algorithms/pull/62}.
+
+% \begin{table}[htb]
+% \centering
+% \begin{tabular}{llp{5cm}}
+% \hline
+% algorithm & source & reference \\
+% \hline
+% LZ77 sliding window & \path{compression/lz77_sliding_window.py}
+%   & Ziv and Lempel, 1977 \cite{ziv1977} \\
+% LZ78 block & \path{compression/lz78_block.py}
+%   & Ziv and Lempel, 1978 \cite{ziv1978}\\
+% LZ77 CPS1a & \path{compression/lz77_cps.py}
+%   & Chen, Puglisi and Smyth, 2008 \cite{chen2008}\\
+% LZ77 KKP3 & \path{compression/lz77_kkp3.py}
+%   & K\"arkk\"ainen, Kempa and Puglisi, 2012 \cite{kkp2012}\\
+% \hline
+% \end{tabular}
+% \caption{Implementations compared in this chapter.}
+% \label{tab:implementations}
+% \end{table}
+\begin{table}[htb]
+\centering
+\begin{tabular}{@{}lll@{}}
+\hline
+algorithm & source & reference \\
+\hline
+LZ77 sliding window & \path{compression/lz77_sliding_window.py}
+  & \cite{ziv1977} \\
+LZ78 block & \path{compression/lz78_block.py}
+  & \cite{ziv1978}\\
+LZ77 CPS1a & \path{compression/lz77_cps.py}
+  & \cite{chen2008}\\
+LZ77 KKP3 & \path{compression/lz77_kkp3.py}
+  &  \cite{kkp2012}\\
+\hline
+\end{tabular}
+\caption{Implementations compared in this chapter.}
+\label{tab:implementations}
+\end{table}
+
+\subsection{Approaches}
+As we already described, we implemented online versions of LZ77 and LZ78 and offline version CPS1a, but LZ78 can be treated as offline by setting the size of block to full length of text. 
+
+LZ77 and LZ78 are streaming algorithms with a working set independent of the source length, while CPS1a is not, and its memory grows with the source. They can be turned offline by setting their bound to the length of the source: the window of LZ77 (\(n = 2L_s = 2\len{S}\)) then covers the whole text and the dictionary of LZ78 (\(n =\len{S}\)) is never cleared.
+
+LZ77, LZ77CPS1a, LZ77KKP3 produce output, which consists of triples of the form (position, length, mismatch symbol) and differ only in the range a position may take, which is why they share a decoder. LZ78 emits pairs of the form (phrase index, symbol) with no length at all, and its code-words are of varying width, which makes its output a bit stream rather than a sequence of symbols of \(\mathcal{A}\). 
+
+\subsection{Time and Space}
+
+Let \(n = \len{S}\) for the length of the source. For LZ77, \(n\) is the buffer length and \(L_s\) the maximal word length. For LZ78, \(w\) is the block length. Then from previous chapters we have
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcccc}
+        \toprule
+            & LZ77 & LZ78 & CPS1a & KKP3\\
+        \midrule
+        Encoding time   & \(\mathcal{O}(w\cdot n)\) & \(\mathcal{O}(n)\) expected & \(\Theta(n)\) &\(\Theta(n)\)\\
+        Decoding time   & \(\Theta(n)\)        & \(\Theta(n)\)    & \(\Theta(n)\)  & \(\Theta(n)\)\\
+        Working memory  & \(\Theta(w)\)             & \(\mathcal{O}(w)\)    & \(\Theta(n)\)  & \(\Theta(n)\)\\  
+        online          & yes       & yes      & no    & no\\
+        \bottomrule
+    \end{tabular}
+    \caption{Time and space of presented algorithms.}
+    \label{tab:time-and-space}
+\end{table}
+
+\subsubsection{CPS1a against KKP3}
+
+The two compute the same thing and differ only in how they find the lengths. Both start from \(\mathrm{SA}\), both produce \(\mathrm{POS}\) and \(\mathrm{LEN}\), and both run in \(\Theta(N)\).
+
+CPS1a reads the lengths off the \(\mathrm{LCP}\) array, which has to be built first by a full linear pass \cite{kasai2001}, and then walks \(\mathrm{SA}\) once with a stack, filling an entry of \(\mathrm{POS}\) at every step. \(\mathrm{KKP3}\) does not use \(\mathrm{LCP}\) array directly, it walks \(\mathrm{SA}\) once with a stack as well, but to obtain \(\mathrm{PSV}\) and \(\mathrm{NSV}\), the lengths are then recovered separately by comparing symbols directly, but only a portion of positions, because it makes factorization of string on run, without preprocessing arrays of \(\mathrm{POS}\), \(\mathrm{LEN}\) at all, because by \Cref{lem:kkp-candidates} only two candidates ever have to be compared for any position, and by the analysis of \Cref{sec:kkp-complexity} the comparisons cost \(\mathcal{O}(N)\) in total because they are made only where a factor begins.
+
+In terms of implementation both algorithms work on the same SA from \cite{nong2009}, CPS1a pays for the \(\mathrm{LCP}\) array and for the two output arrays, KKP3 for \(\mathrm{NSV}\) and \(\mathrm{PSV}\) alone, which is one integer array less and no separate stack.

@@ -1,0 +1,167 @@
+\section{Idea}
+
+\subsection{From online to offline}
+Both schemes seen so far factor the source against a bounded history: \emph{LZ77} against a window of \(n - L_s\) symbols, \emph{LZ78} against the dictionary of the current block and it was natural since those implementations fit for online coding. The algorithms of \cite{chen2008} drop that restriction and factor the string as a whole, so that every factor is matched against the entire prefix preceding it. This is the \emph{LZ} factorization in the sense of \Cref{def:lz-factorization}: \(x = w_1 w_2 \cdots w_k\), where each \(w_j\) is either a letter not occurring in \(w_1 \cdots w_{j-1}\), or the longest substring occurring at least twice in \(w_1 \cdots w_j\). Of the several algorithms proposed in \cite{chen2008} we implement the basic one, \emph{CPS1a}.
+
+The motivation is different from that of \cite{ziv1977}. Compression is no longer the only purpose: the factorization of a whole string is what they are focusing on and for this application full string is available. This is why the authors are willing to spend linear extra space on index structures, which a streaming compressor could not afford.
+
+\subsection{\emph{CPS1a} approach description}
+
+Before proceeding with following description it is highly recommended to familiarize oneself with the definitions and examples in \Cref{seq:definitions}.
+\\
+
+We will start description first showing what we want to compute, then how we do it.
+\\
+The factorization of string is the part that changes in \emph{LZ77} offline encoding. \emph{CPS1a} takes two arrays as input and computes the answer in one left-to-right scan. In order to achieve this we need \(\mathrm{SA}\) and \(\mathrm{LCP}\) of \Cref{def:suffix-array} and \Cref{def:lcp-array}.
+
+The \emph{CPS1a} algorithm computes two arrays \(\mathrm{POS}\) and \(\mathrm{LEN}\) from \Cref{def:pos-len}.
+
+
+Note that after we compute such \(\mathrm{POS}\) and \(\mathrm{LEN}\) it is required only one left-to-right run in order to form our triples of codeword in order to form the same form of coded output as did in \emph{LZ77} \cref{ch:lz77}.
+\\
+
+Now, how can we compute these two arrays \(\mathrm{POS}\) and \(\mathrm{LEN}\) from \Cref{def:pos-len}. The \(\mathrm{POS}[i]\) and \(\mathrm{LEN}[i]\) tell us that substring \(S[i \ldots i + \mathrm{LEN}[i] - 1]\) was already seen at \(S[\mathrm{POS}[i] \ldots \mathrm{POS}[i] + \mathrm{LEN}[i] - 1]\). We can view it as fact that suffixes of \(S\) that start at \(i\) and \(\mathrm{POS}[i]\) \emph{share the same prefix of length \(\mathrm{LEN}[i]\)} what is very similar to \(\mathrm{LCP}\) \Cref{def:lcp-array}. This gives the property the whole algorithm rests on. Suppose several positions of \(S\) share the same factor \(w\) of length \(l\), that is, \(S(i, i + l - 1) = w\) for each of them. Then the suffixes starting at those positions all begin with \(w\), and in \(\mathrm{SA}\) they must occupy a contiguous range. Indeed, if some suffix \(u\) is placed between two suffixes that begin with \(w\), then \(u\) is lexicographically between them, and since comparison proceeds symbol by symbol from the left, \(u\) must agree with them on the first \(l\) symbols as well, so \(u\) begins with \(w\) too. Nothing that does not begin with \(w\) can therefore be placed inside the range.
+
+This leads us to the following lemma:
+\begin{lemma}[Rises and falls of \(\mathrm{LCP}\), \cite{chen2008}]
+\label{lem:rises-falls}
+    Let \(1 \leq j \leq n\).
+    \begin{enumerate}[label=(O\arabic*)]
+        \item \label{cps-obs:rise}  If \(\mathrm{LCP}[j] < \mathrm{LCP}[j+1]\), then the suffixes \(\mathrm{SA}[j]\) and \(\mathrm{SA}[j+1]\) share a prefix of length \(\mathrm{LCP}[j+1]\) that no earlier entry of \(\mathrm{SA}\) shares. A rise thus opens a block of suffixes with a common beginning on \(j\). 
+        \item \label{cps-obs:fall}If \(\mathrm{LCP}[j] > \mathrm{LCP}[j+1]\), then the suffixes \(\mathrm{SA}[j-1]\) and \(\mathrm{SA}[j]\) share a prefix of length \(\mathrm{LCP}[j]\) that no later entry shares. A fall thus closes such a block at \(j\).
+    \end{enumerate}
+\end{lemma}
+
+\begin{proof}[Proof of \Cref{lem:rises-falls}] 
+    For \labelcref{cps-obs:rise}, let \(\mathrm{LCP}[j] < \mathrm{LCP}[j+1] = l\). The suffixes \(\mathrm{SA}[j]\) and \(\mathrm{SA}[j+1]\) share a prefix \(w\) of length \(l\) by the definition of \(\mathrm{LCP}\). Suppose some earlier entry \(\mathrm{SA}[k]\), \(k < j\), also began with \(w\). Then all entries between \(k\) and \(j+1\) would begin with \(w\) as well, since the suffixes starting with \(w\) form a contiguous range, and in particular \(\mathrm{SA}[j-1]\) and \(\mathrm{SA}[j]\) would share \(w\), giving \(\mathrm{LCP}[j] \geq l\), which contradicts the assumption.
+    
+    Part \labelcref{cps-obs:fall} is symmetric. Let \(\mathrm{LCP}[j] = l > \mathrm{LCP}[j+1]\), so \(\mathrm{SA}[j-1]\) and \(\mathrm{SA}[j]\) share a prefix \(w\) of length \(l\). If some later entry \(\mathrm{SA}[k]\), \(k > j\), began with \(w\), then by the same contiguity \(\mathrm{SA}[j]\) and \(\mathrm{SA}[j+1]\) would share \(w\), giving \(\mathrm{LCP}[j+1] \geq l\), again a contradiction.
+\end{proof}
+
+So every repeated factor of \(S\) appears in \(\mathrm{SA}\) as a block of neighbouring entries, and the length of the repetition is recorded in \(\mathrm{LCP}\) at exactly the positions of that block. Finding all repeated factors is then a matter of finding these blocks, which is what \Cref{cps-obs:rise,cps-obs:fall} make possible.
+
+\noindent Reading the same string through \(\mathrm{SA}\) shows where the blocks open and close:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{r|clcl}
+        \toprule
+        \(j\) & \(\mathrm{SA}[j]\) & suffix & \(\mathrm{LCP}[j]\) & \\
+        \midrule
+        1 & 8 & \(a\)        & \(-1\) & rise, a block opens \\
+        2 & 3 & \(aababa\)   & 1      & \\
+        3 & 6 & \(aba\)      & 1      & rise, a deeper block opens \\
+        4 & 1 & \(abaababa\) & 3      & \\
+        5 & 4 & \(ababa\)    & 3      & fall, both blocks close \\
+        6 & 7 & \(ba\)       & 0      & rise, a block opens \\
+        7 & 2 & \(baababa\)  & 2      & \\
+        8 & 5 & \(baba\)     & 2      & fall, the block closes \\
+        9 & --- & ---        & \(-1\) & \\
+        \bottomrule
+    \end{tabular}
+    \caption{Rises and falls of \(\mathrm{LCP}\) for \(x = abaababa\).}
+    \label{tab:rises-falls}
+\end{table}
+
+Two things follow from the table. A fall can close several blocks at once, as at \(j = 5\), where the ranges of level \(3\) and of level \(1\) end together. And blocks are nested, never partly overlapping, since a longer common prefix means a shorter range. So while scanning \(\mathrm{SA}\) left to right we may have several blocks open at the same time, and they close in the reverse order of opening --- which is exactly what a stack is for.
+
+\subsection{Pseudocode}
+
+Now we are going to show pseudocode, after that we proceed with algorithm elaboration.
+\begin{algorithm}[H]
+\caption{\emph{CPS1a}: computing $\mathrm{POS}$ and $\mathrm{LEN}$ and factorization computation}
+\label{alg:cps-scan}
+\begin{algorithmic}[1]
+\Function{Assign}{$p$, $q$, $l$}
+    \Comment{returns $\min(p,q)$}
+    \If{$p < q$}
+        \State $\mathrm{POS}[q] \gets p$, \quad $\mathrm{LEN}[q] \gets l$
+        \State \Return $p$
+    \Else
+        \State $\mathrm{POS}[p] \gets q$, \quad $\mathrm{LEN}[p] \gets l$
+        \State \Return $q$
+    \EndIf
+\EndFunction
+\Statex
+\Procedure{ComputePosLen}{$\mathrm{SA}$, $\mathrm{LCP}$, $n$}
+    \State $\mathrm{POS[0]} \gets -1$, \quad $\mathrm{LEN[0]} \gets -1$
+    \For{$i \in 1 \ldots n$}
+        \State $\mathrm{POS}[i] \gets i$, \quad $\mathrm{LEN}[i] \gets 0$
+    \EndFor
+    \If{$n < 2$}
+        \State \Return
+    \EndIf
+    \State $\mathrm{LCP}[1] \gets -1$
+    \State $\mathrm{LCP}[n+1] \gets -1$
+    \State $T \gets$ empty stack
+    \State $i_1 \gets 1$, \quad $i_2 \gets 2$, \quad $i_3 \gets 3$
+    \While{$i_3 \leq n + 1$}
+        \While{$\mathrm{LCP}[i_2] \leq \mathrm{LCP}[i_3]$}
+            \Comment{until fall in common prefix length detected we proceed}
+            \State \Call{Push}{$T$, $i_1$}
+            \State $i_1 \gets i_2$, \quad $i_2 \gets i_3$, \quad $i_3 \gets i_3 + 1$
+        \EndWhile
+        \State $l \gets \mathrm{LCP}[i_2]$
+        \State $q \gets {}$\Call{Assign}{$\mathrm{SA}[i_1]$, $\mathrm{SA}[i_2]$, $l$}
+        \While{$\mathrm{LCP}[i_1] = l$}
+            \State $i_1 \gets {}$\Call{Pop}{$T$}
+            \State $q \gets {}$\Call{Assign}{$\mathrm{SA}[i_1]$, $q$, $l$}
+        \EndWhile
+        \State $\mathrm{SA}[i_1] \gets q$
+        \Comment{the closed group is now a single entry}
+        \If{$i_1 > 1$}
+            \State $i_2 \gets i_1$
+            \State $i_1 \gets {}$\Call{Pop}{$T$}
+            \Comment{step one level outwards}
+        \Else
+            \State $i_2 \gets i_3$
+            \State $i_3 \gets i_3 + 1$
+            \Comment{sentinel reached, nothing is open}
+        \EndIf
+    \EndWhile
+\EndProcedure
+
+
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\emph{CPS1a}: continuation}
+\label{alg:cps-scan-cont}
+\begin{algorithmic}[1]
+\Function{Factorize}{$S$, $n$, $\mathrm{POS}$, $\mathrm{LEN}$}
+  \State $triples \gets$ empty list, \quad $i \gets 1$
+  \While{$i \leq n$}
+    \State $l \gets \mathrm{LEN}[i]$
+    \If{$i + l > n$}
+      \State $l \gets n - i$
+      \Comment{leave room for the literal}
+    \EndIf
+    \If{$l > 0$}
+      \State $triples.append(\mathrm{POS}[i],\; l,\; S[i + l])$
+    \Else
+      \State $triples.append(1,\; 0,\; S[i])$
+      \Comment{no earlier occurrence, the pointer is unused}
+    \EndIf
+    \State $i \gets i + l + 1$
+  \EndWhile
+  \State \Return $triples$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+The three pointers satisfy \(i_1 < i_2 < i_3\) throughout. The inner loop at lines 15-18 advances them while \(\mathrm{LCP}\) does not fall, pushing \(i_1\) each time, so the stack accumulates the left boundaries of the blocks currently open, innermost on top. The fall at line 19 gives the level \(l\) of the block that ends at \(i_2\). The loop at lines 28-30 pops every boundary whose level equals \(l\), calling \Call{Assign}{} for each; the running value \(q\) keeps the smallest text position met so far, so every call points a larger position at a smaller one. Line 31 writes \(q\) back into \(\mathrm{SA}[i_1]\), which lets the closed block be treated as one entry, and lines 32-34 step one level outwards.
+
+The pointer stored for a position is some earlier occurrence, not necessarily the leftmost one. The authors note that this is harmless: neither the computation inside encoder nor decompression needs the leftmost occurrence, only an occurrence to the left. Our decoder confirms this, since it copies from wherever the pointer says both in this implementation and \emph{LZ77} from previous chapters.
+
+\subsection{Encoder and decoder of \emph{CPS1a} version}
+\noindent Encoder proceeds as follows.
+\begin{enumerate}
+    \item Build \(\mathrm{SA}\) and \(\mathrm{LCP}\) for the whole source.
+    \item Scan them once as described above, filling arrays \(\mathrm{POS}\) and \(\mathrm{LEN}\) so that for every position \(i\) the substring of length \(\mathrm{LEN}[i]\) starting at \(i\) also occurs at \(\mathrm{POS}[i] < i\). The flow of \emph{CPS1a} is going to be described later.
+    \item Walk the source from left to right. At position \(i\) take \(l_i = \mathrm{LEN}[i]\), emit the factor \((\mathrm{POS}[i], l_i, x[i + l_i])\), and move to \(i + l_i + 1\). The last component is the mismatch letter, so \(l_i\) is shortened when the factor would otherwise reach the end of the source.
+    \item Encode each factor as a codeword \(C_i = C_{i1} C_{i2} C_{i3}\) of fixed length \(L_c = 1 + L_p + L_l\), where \(L_p = \ceil{\log_\alpha \len{S}}\) and \(L_l = \ceil{\log_\alpha (\max_i l_i + 1)}\).
+\end{enumerate}
+
+The pointer field is \(\ceil{\log_\alpha \len{S}}\) wide, since a factor may now refer anywhere in the source rather than into a window of fixed length. And the length field is sized from the longest factor actually produced, which is known once the factorization is complete, rather than from a parameter fixed in advance as \(L_s\) was in \emph{LZ77}. This costs one pass over the factors and saves on each codeword whenever the source has no long repetitions.
+
+The decoder is the same as in \emph{LZ77} (see \Cref{ch:lz77}). It appends \(l_i\) symbols copied from position \(\mathrm{POS}[i]\) of the output built so far, then appends the literal. Copying proceeds symbol by symbol, so a factor overlapping its own previous occurrence is handled correctly, exactly as in \Cref{sec:lz77correctness}. However, we no longer need a ring buffer: the whole decoded text has to be kept, because a pointer may reach arbitrarily far back.

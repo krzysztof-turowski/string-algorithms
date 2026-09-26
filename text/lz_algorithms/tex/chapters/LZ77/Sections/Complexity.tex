@@ -1,0 +1,17 @@
+\section{Complexity}
+\label{sec:lz77-complexity}
+
+The buffer \(B\) is a ring rather than an array that is physically shifted. A shift would cost \(\bigO(n)\) per word and would dominate the running time. The ring keeps a head index instead and a shift costs \(\bigO(1)\), at the price of every access going through a modulo. Since the head advances by one at a time, the modulo is replaced by a single comparison.
+
+The cost of encoding is the cost of \textsc{ReproducibleExtension} in \Cref{alg:lz77-encoder}, since everything else in the main loop is done once per word. That function tries every position of the parsed part of window, so its outer loop runs \(n - L_s\) times, and for each candidate the inner loop compares symbols until a mismatch. No candidate can match further than the best one, so each of them costs at most \(l_i\) comparisons and one word costs at most \((n - L_s)\,l_i\).
+
+The words partition the source, so \(\sum_i l_i = \len{S}\) and the total is
+\[
+    \sum_i (n - L_s)\,l_i = (n - L_s) \sum_i l_i = \bigO((n - L_s) \cdot \len{S}).
+\]
+Since \(n \geq 2 \cdot L_s \) it would be correct to write as \(\bigO(n \cdot \len{S})\).
+
+Decoding is linear. A word of length \(l_i\) is rebuilt by \(l_i\) shifts in \Cref{alg:lz77-decoder}, and the lengths again sum to \(\len{S}\), giving \(\Theta(\len{S})\) in total.
+\\
+
+The memory usage is \(\Theta(n)\) for the encoder and \(\Theta(n - L_s)\) for the decoder, independent of the length of the source. Both buffers are implemented as ring buffers, so one shift costs \(\bigO(1)\).
