@@ -3,7 +3,6 @@ import math
 import scipy.signal
 import numpy as np
 import random
-from itertools import combinations
 
 def basic_fft(text, word, n, m):
   if n < m:
@@ -194,7 +193,7 @@ def sperner(text, word, n, m):
     while math.comb(k, k // 2) < num_symbols:
         k += 1
 
-    char_to_subset = {char: set(subset) for char, subset in zip(alphabet, combinations(range(k), k // 2))}
+    char_to_subset = {char: set(subset) for char, subset in zip(alphabet, itertools.combinations(range(k), k // 2))}
 
     total_collisions = np.zeros(n - m + 1)
 
