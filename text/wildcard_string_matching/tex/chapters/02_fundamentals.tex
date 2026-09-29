@@ -1,0 +1,78 @@
+\chapter{Fundamentals of Wildcard Matching}
+
+\section{Problem Definition}
+
+\begin{definition}[Exact String Matching \cite{kmp1977}]
+The classical string matching problem operates on a finite alphabet $\Sigma$ consisting of standard characters. A text $T$ of length $n$ is a sequence $t_0 t_1 \dots t_{n-1}$, and a pattern $P$ of length $m$ is a sequence $p_0 p_1 \dots p_{m-1}$. The objective is to locate all valid shifts $i$ (for $0 \le i \le n - m$) where every pattern character aligns perfectly with a corresponding valid text character.
+\end{definition}
+
+\begin{definition}[Exact String Matching with Wildcards \cite{fp1974}]
+The key element in our analysis is the wildcard symbol (usually denoted as `?'). Its unique feature is that it successfully matches any standard symbol from the alphabet $\Sigma$, as well as itself. A position is considered a valid match if the characters are identical, if there is a wildcard in the text, or if there is a wildcard in the pattern.
+\end{definition}
+
+\section{The Naive Algorithm}
+
+The simplest way to solve this problem is the naive (brute-force) algorithm \cite{aho1990}. As shown in Algorithm 1, it uses two nested loops. The outer loop iterates over all possible starting positions in the text. The inner loop verifies the characters one by one, treating `?' as an automatic match. If it finds two different standard characters, it breaks the inner loop and moves to the next shift. If the inner loop finishes without breaking, a match is found.
+
+\begin{algorithm}[H]
+\caption{Naive Brute-Force Matching}
+\begin{algorithmic}[1]
+\Function{NaiveMatch}{$T$: string, $P$: string}
+    \For{$i \gets 0$ \textbf{to} $|T| - |P|$}
+        \State $\mathit{match\_found} \gets \textbf{true}$
+        \For{$j \gets 0$ \textbf{to} $|P| - 1$}
+            \If{$T[i+j] \neq P[j]$ \textbf{and} $T[i+j] \neq \text{`?'}$ \textbf{and} $P[j] \neq \text{`?'}$}
+                \State $\mathit{match\_found} \gets \textbf{false}$
+                \State \textbf{break}
+            \EndIf
+        \EndFor
+        \If{$\mathit{match\_found}$}
+            \State \textbf{yield} $i$
+        \EndIf
+    \EndFor
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Computational Complexity \cite{aho1990}]
+The worst-case time complexity of the naive algorithm is $\mathcal{O}(n \cdot m)$.
+\end{theorem}
+\begin{proof}
+Consider a worst-case scenario where the text is $T = \text{aaaa} \dots \text{a}$ and the pattern is $P = \text{aaa} \dots \text{b}$. The naive algorithm will check exactly $m-1$ matching characters for every single shift before identifying the terminal mismatch. Evaluating this across all $n - m + 1$ shifts generates precisely $\mathcal{O}(n \cdot m)$ comparisons.
+\end{proof}
+
+For short texts, this is fine, but for analyzing large databases, this quadratic complexity forces us to look for faster solutions based on discrete convolutions.
+
+\section{Discrete Convolutions and Fast Fourier Transform}
+
+Because traversing text sequentially yields quadratic complexity, modern approaches treat text strings as numerical signals. To prevent the end of the text from overlapping with the beginning, the buffer size $L$ must satisfy $L \ge n + m - 1$. The standard decimation-in-time algorithm exhibits optimal speed when $L$ is an exact power of two.
+
+\begin{definition}[Discrete Fourier Transform \cite{cormen2009introduction}]
+The Discrete Fourier Transform (DFT) evaluates a sequence of $L$ complex numbers. By applying the Convolution Theorem, the circular convolution of two discrete signals $u$ and $v$ can be resolved efficiently as:
+\begin{equation}
+    u \circledast v = \text{IFFT}(\text{FFT}(u) \cdot \text{FFT}(v))
+\end{equation}
+where IFFT denotes the inverse transform.
+\end{definition}
+
+\begin{definition}[Fast Fourier Transform \cite{cormen2009introduction}]
+The Fast Fourier Transform (FFT) is a highly efficient algorithm designed to compute the Discrete Fourier Transform (DFT) and its inverse. By recursively dividing a transform of size $L$ into smaller sub-problems, FFT dynamically lowers the computational bottleneck of sequence multiplication from quadratic $\mathcal{O}(L^2)$ down to $\mathcal{O}(L \log L)$ time.
+\end{definition}
+
+In the context of wildcard string matching, FFT serves as the universal computational engine. The algorithms evaluate the text and pattern by converting them into numerical vectors (such as binary indicator masks or algebraic weights). By processing these vectors through the FFT convolution, the algorithms calculate all possible alignments simultaneously. The final inverse transform (IFFT) yields a unified output array where each specific index directly represents the exact number of character collisions, or a structural fingerprint difference, for that corresponding text shift.
+
+To achieve this $\mathcal{O}(L \log L)$ bound in practice, modern libraries typically rely on the Cooley-Tukey algorithm \cite{cooley1965algorithm}, which requires the array length $L$ to be padded with zeros to an exact power of two for optimal hardware performance. However, if such zero-padding consumes too much memory, frameworks can dynamically switch to Bluestein's algorithm \cite{bluestein1970linear}, which successfully maintains the $\mathcal{O}(L \log L)$ time complexity for discrete sequences of arbitrary lengths, including prime numbers.
+
+\begin{table}[htbp]
+\centering
+\caption{Computational complexity of convolution algorithms.}
+\begin{tabular}{ll}
+\toprule
+\textbf{Method} & \textbf{Time Complexity} \\
+\midrule
+Naive Convolution (Double loop) & $\mathcal{O}(L^2)$ \\
+Cooley-Tukey FFT (Power of 2) & $\mathcal{O}(L \log L)$ \\
+Bluestein's FFT (Arbitrary sizes) & $\mathcal{O}(L \log L)$ \\
+\bottomrule
+\end{tabular}
+\end{table}

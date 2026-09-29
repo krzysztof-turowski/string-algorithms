@@ -1,0 +1,50 @@
+\chapter{The Deterministic Convolution (Clifford-Clifford)}
+
+\section{Euclidean Distance Matching}
+While the approaches by Indyk and Kalai successfully broke the $\Omega(\log |\Sigma|)$ barrier by utilizing probabilistic methods, achieving an optimal deterministic bound without depending on the alphabet size remained an open question. This problem was first solved by Cole and Hariharan in 2002 \cite{cole2002}. However, their algorithm was very complex. A much simpler and more practical solution was later introduced by Clifford and Clifford in 2007 \cite{clifford2007}. Their algebraic approach forms the basis of this chapter.
+
+Instead of relying on boolean intersections or probabilistic weights, the Clifford-Clifford algorithm utilizes a purely algebraic approach based on calculating the sum of squared differences \cite{clifford2007}. By assigning unique non-zero integer values to the alphabet (e.g., standard ASCII codes) and strictly mapping the wildcard symbol to $0$, the exact string matching problem can be evaluated through the following algebraic equation \cite{clifford2007}:
+\begin{equation}
+    \sum_{j=0}^{m-1} P_j \cdot T_{i+j} \cdot (P_j - T_{i+j})^2 = 0
+\end{equation}
+
+This equation guarantees absolute deterministic correctness. If a character aligns perfectly ($T_{i+j} = P_j$), the squared difference evaluates to zero. If either the text or the pattern contains a wildcard at that index, the $0$ value assigned to the wildcard zeroes out the entire multiplication term. A positive value is generated if and only if two different concrete characters collide, forcing the final summation above zero. Thus, the sum equals $0$ if and only if there is an exact match with wildcards \cite{clifford2007}.
+
+\section{Expansion and Execution}
+To compute this summation efficiently across the entire string without traversing characters individually, the polynomial is expanded algebraically into \cite{clifford2007}:
+\begin{equation}
+    P_j \cdot T_{i+j} \cdot (P_j^2 - 2 P_j T_{i+j} + T_{i+j}^2) = P_j^3 T_{i+j} - 2 P_j^2 T_{i+j}^2 + P_j T_{i+j}^3
+\end{equation}
+
+Because this expansion segregates the text and pattern components linearly, the entire sequence can be evaluated using exactly three discrete convolutions \cite{clifford2007}:
+1. $T \circledast P^3$
+2. $T^2 \circledast P^2$
+3. $T^3 \circledast P$
+
+By executing exactly three Fast Fourier Transforms and accumulating their outputs with the constants defined in the expansion, the algorithm definitively identifies all exact matches wherever the signal converges to zero \cite{clifford2007}.
+
+\begin{algorithm}[H]
+\caption{Clifford-Clifford Exact Matching \cite{clifford2007}}
+\begin{algorithmic}[1]
+\Function{CliffordMatch}{$T$: string, $P$: string}
+    \State Replace each symbol in $P$ and $T$ by a unique non-zero integer
+    \State Replace all occurrences of the wildcard symbol `?' with 0
+    \State $L \gets 2^{\lceil \log_2(|T| + |P| - 1) \rceil}$
+    
+    \State $Z_1 \gets \text{\textsc{IFFT}}(\text{\textsc{FFT}}(T, L) \odot \text{\textsc{FFT}}(\text{\textsc{Reverse}}(P^3), L))$
+    \State $Z_2 \gets \text{\textsc{IFFT}}(\text{\textsc{FFT}}(T^2, L) \odot \text{\textsc{FFT}}(\text{\textsc{Reverse}}(P^2), L))$
+    \State $Z_3 \gets \text{\textsc{IFFT}}(\text{\textsc{FFT}}(T^3, L) \odot \text{\textsc{FFT}}(\text{\textsc{Reverse}}(P), L))$
+    
+    \State $A \gets Z_1 - 2 \cdot Z_2 + Z_3$
+    \State \textbf{return} $\{i \colon A[i] = 0\}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Clifford-Clifford Complexity \cite{clifford2007}]
+The algorithm operates strictly in $\mathcal{O}(n \log m)$ deterministic time.
+\end{theorem}
+
+\begin{proof}
+The raw evaluation requires exactly three independent FFT convolutions bounded by $\mathcal{O}(n \log n)$ \cite{clifford2007}. To reduce the time complexity to $\mathcal{O}(n \log m)$, Clifford and Clifford employ the exact same block-partitioning strategy used in Kalai's approach. By dividing the text into overlapping chunks of size $2m$, the $\mathcal{O}(m \log m)$ cost per chunk mathematically resolves to $\mathcal{O}(n \log m)$ across the entire text \cite{clifford2007}.
+\end{proof}
