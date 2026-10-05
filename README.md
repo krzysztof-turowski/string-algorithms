@@ -100,6 +100,7 @@ Collection of algorithms for _String Algorithms_ course (summer semesters 2019/2
 1. Fischer-Paterson bitwise algorithm
 1. Sperner optimization (Muthukrishnan-Palem) algorithm
 1. Indyk randomized binary projections algorithm
+1. Indyk randomized binary projections algorithm with multiplication over GF(2)
 1. Kalai randomized fingerprinting algorithm
 
 #### Approximate string matching with wildcards and Hamming distance

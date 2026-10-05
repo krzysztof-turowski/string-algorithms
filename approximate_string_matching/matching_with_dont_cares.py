@@ -1,10 +1,12 @@
 import itertools
 import math
-import scipy.signal
 import numpy as np
 import random
 
-def basic_fft(text, word, n, m):
+from common import gf2
+from common.fft import scipy_convolve
+
+def basic_fft(text, word, n, m, fft = scipy_convolve):
   if n < m:
     return
   A = set(list(text[1:] + word[1:])) - set('?')
@@ -14,16 +16,15 @@ def basic_fft(text, word, n, m):
     for second_letter in A:
       if first_letter != second_letter:
         masked_word = [int(c == second_letter) for c in reversed(word[1:])]
-        mismatches_ab = scipy.signal.convolve(
-            masked_text, masked_word, mode = 'valid', method = 'fft')
+        mismatches_ab = fft(masked_text, masked_word)
         mismatches = [x + y for x, y in zip(mismatches, mismatches_ab)]
   yield from (index + 1 for index, is_mismatch in enumerate(mismatches)
               if is_mismatch == 0)
 
-def clifford_clifford_parts(text, word, n, m):
+def clifford_clifford_parts(text, word, n, m, fft = scipy_convolve):
   def _compute_part(index, part):
     return [index * m + i
-            for i in clifford_clifford(part, word, len(part) - 1, m)]
+            for i in clifford_clifford(part, word, len(part) - 1, m, fft)]
 
   if n < m:
     return
@@ -32,7 +33,7 @@ def clifford_clifford_parts(text, word, n, m):
   results = (_compute_part(index, part) for index, part in enumerate(parts))
   yield from sorted(set(index for result in results for index in result))
 
-def clifford_clifford(text, word, n, m):
+def clifford_clifford(text, word, n, m, fft = scipy_convolve):
   def _times(x, y):
     return list(itertools.starmap(lambda a, b: a * b, zip(x, y)))
 
@@ -44,12 +45,9 @@ def clifford_clifford(text, word, n, m):
   text = [letter_mapping.get(c) for c in text[1:]]
   word = [letter_mapping.get(c) for c in word[:0:-1]]
 
-  first_component = scipy.signal.convolve(
-      _times(word, _times(word, word)), text, mode = 'valid', method = 'fft')
-  second_component = scipy.signal.convolve(
-      _times(word, word), _times(text, text), mode = 'valid', method = 'fft')
-  third_component = scipy.signal.convolve(
-      word, _times(text, _times(text, text)), mode = 'valid', method = 'fft')
+  first_component = fft(_times(word, _times(word, word)), text)
+  second_component = fft(_times(word, word), _times(text, text))
+  third_component = fft(word, _times(text, _times(text, text)))
   result = [first - 2 * second + third for first, second, third in
             zip(first_component, second_component, third_component)]
   yield from (index + 1 for index, value in enumerate(result) if value == 0)
@@ -116,7 +114,7 @@ def fischer_paterson(text, word, n, m):
             
     yield from (s + 1 for s in range(n - m + 1) if total_collisions[s + m - 1] == 0)
 
-def indyk(text, word, n, m, c=7):
+def indyk(text, word, n, m, c=7, fft=scipy_convolve):
     """
     Finds all occurrences of a pattern in a text using Indyk's randomized Monte Carlo algorithm.
     
@@ -131,6 +129,7 @@ def indyk(text, word, n, m, c=7):
     For benchmarking consistency with other algorithms in this repository, this implementation 
     uses standard FFT (`scipy.signal.convolve`) instead of polynomial multiplication over GF(2). 
     This results in a practical time complexity of O(n log^2 n) rather than the theoretical O(n log n).
+    The full version with polynomial multiplication over GF(2) is indyk_gf2.
     """
     if m == 0 or n < m:
         return
@@ -156,12 +155,51 @@ def indyk(text, word, n, m, c=7):
         text_mask = [g(char, k) for char in text_string]
         word_mask_reverse = [f(char, k) for char in reversed(word_string)]
         
-        convolution_result = scipy.signal.convolve(text_mask, word_mask_reverse, mode='valid', method='fft')
-        total_collisions += np.round(convolution_result.real)
+        convolution_result = fft(text_mask, word_mask_reverse)
+        total_collisions += np.round(np.real(convolution_result))
         
     yield from (s + 1 for s, value in enumerate(total_collisions) if value == 0)
 
-def sperner(text, word, n, m):
+def indyk_gf2(text, word, n, m, c=16):
+    """
+    Finds all occurrences of a pattern in a text using the full version of Indyk's randomized
+    Monte Carlo algorithm.
+
+    As in indyk, characters are mapped to random boolean values in d = O(log n) independent
+    projections, with wildcards projected to zero. Instead of standard FFT, each projection is
+    evaluated with a convolution over GF(2), computed by multiplying polynomials over GF(2) with
+    Cantor's method (common/gf2.py). Since a sum over GF(2) only gives the parity of collisions,
+    the pattern is masked with random bits (Freivalds' technique). The results of all projections
+    are combined with a logical OR, and a shift is reported as a match if no collision is found.
+    """
+    if m == 0 or n < m:
+        return
+
+    text_string, word_string = text[1:], word[1:]
+
+    alphabet = set(text_string) | set(word_string)
+    alphabet.discard('?')
+
+    d = int(math.ceil(c * math.log2(n if n > 1 else 2)))
+    random_projections = {char: random.getrandbits(d) for char in alphabet}
+
+    shifts_mask = (1 << (n - m + 1)) - 1
+    mismatches = 0
+
+    for k in range(d):
+        text_table = {char: str(1 - (random_projections[char] >> k & 1)) for char in alphabet}
+        word_table = {char: str(random_projections[char] >> k & 1) for char in alphabet}
+        text_table['?'] = word_table['?'] = '0'
+
+        text_bits = int(text_string.translate(str.maketrans(text_table))[::-1], 2)
+        word_bits = int(word_string.translate(str.maketrans(word_table)), 2)
+        word_bits &= random.getrandbits(m)
+
+        mismatches |= gf2.multiply(text_bits, word_bits) >> (m - 1) & shifts_mask
+
+    yield from (s + 1 for s in range(n - m + 1) if not mismatches >> s & 1)
+
+def sperner(text, word, n, m, fft=scipy_convolve):
     """
     Finds pattern matches in a text using Sperner's optimization and conflict graph reduction.
     
@@ -201,12 +239,12 @@ def sperner(text, word, n, m):
         text_mask = [1 if c != '?' and i in char_to_subset[c] else 0 for c in text_string]
         word_mask_reverse = [1 if c != '?' and i not in char_to_subset[c] else 0 for c in reversed(word_string)]
 
-        convolution_result = scipy.signal.convolve(text_mask, word_mask_reverse, mode='valid', method='fft')
-        total_collisions += np.round(convolution_result.real)
+        convolution_result = fft(text_mask, word_mask_reverse)
+        total_collisions += np.round(np.real(convolution_result))
 
     yield from (s + 1 for s, value in enumerate(total_collisions) if value == 0)
 
-def kalai(text, word, n, m):
+def kalai(text, word, n, m, fft=scipy_convolve):
     """
     Finds pattern matches in a text using Kalai's randomized fingerprinting algorithm.
     
@@ -235,7 +273,7 @@ def kalai(text, word, n, m):
     x_values = [0 if c == '?' else ord(c) for c in text_string]
     x_indicator = [0 if c == '?' else 1 for c in text_string]
 
-    S = scipy.signal.convolve(x_values, r_reverse, mode='valid', method='fft')
-    T = scipy.signal.convolve(x_indicator, yr_reverse, mode='valid', method='fft')
+    S = fft(x_values, r_reverse)
+    T = fft(x_indicator, yr_reverse)
 
     yield from (j + 1 for j, (s_value, t_value) in enumerate(zip(S, T)) if round(s_value.real - t_value.real) == 0)

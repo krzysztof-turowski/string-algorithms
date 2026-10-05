@@ -1,28 +1,53 @@
+import functools
 import itertools
 import os
+import random
 import unittest
 
 import parameterized
 
 from generator import rand
 from approximate_string_matching import matching_with_dont_cares
+from common.fft import integer_convolve
 
-DETERMINISTIC_ALGORITHMS = [
+def with_integer_fft(algorithms):
+  return [[name + ' with integer FFT',
+           functools.partial(algorithm, fft = integer_convolve)]
+          for name, algorithm in algorithms]
+
+FFT_DETERMINISTIC_ALGORITHMS = [
     [ 'basic FFT', matching_with_dont_cares.basic_fft ],
     [ 'Clifford-Clifford', matching_with_dont_cares.clifford_clifford ],
     [ 'Clifford-Clifford with split',
       matching_with_dont_cares.clifford_clifford_parts ],
-    [ 'Naive', matching_with_dont_cares.naive ],
-    [ 'Fischer-Paterson', matching_with_dont_cares.fischer_paterson ],
     [ 'Sperner', matching_with_dont_cares.sperner ],
 ]
 
-RANDOMIZED_ALGORITHMS = [
+FFT_RANDOMIZED_ALGORITHMS = [
     [ 'Indyk', matching_with_dont_cares.indyk ],
     [ 'Kalai', matching_with_dont_cares.kalai ],
 ]
 
+DETERMINISTIC_ALGORITHMS = FFT_DETERMINISTIC_ALGORITHMS + [
+    [ 'Naive', matching_with_dont_cares.naive ],
+    [ 'Fischer-Paterson', matching_with_dont_cares.fischer_paterson ],
+] + with_integer_fft(FFT_DETERMINISTIC_ALGORITHMS)
+
+RANDOMIZED_ALGORITHMS = FFT_RANDOMIZED_ALGORITHMS + [
+    [ 'Indyk over GF(2)', matching_with_dont_cares.indyk_gf2 ],
+] + with_integer_fft(FFT_RANDOMIZED_ALGORITHMS)
+
 ALL_ALGORITHMS = DETERMINISTIC_ALGORITHMS + RANDOMIZED_ALGORITHMS
+
+# exact algorithms only, floating-point FFT is inaccurate for long texts
+LONG_TEXT_ALGORITHMS = [
+    [ 'Fischer-Paterson', matching_with_dont_cares.fischer_paterson ],
+    [ 'Indyk over GF(2)', matching_with_dont_cares.indyk_gf2 ],
+] + with_integer_fft(FFT_DETERMINISTIC_ALGORITHMS + FFT_RANDOMIZED_ALGORITHMS)
+
+LARGE_ALPHABET_ALGORITHMS = [
+    [ name, algorithm ] for name, algorithm in LONG_TEXT_ALGORITHMS
+    if not name.startswith(('basic FFT', 'Fischer-Paterson'))]
 
 class TestExactMatchingWithDontCares(unittest.TestCase):
   run_large = unittest.skipUnless(
@@ -33,6 +58,7 @@ class TestExactMatchingWithDontCares(unittest.TestCase):
 
   @parameterized.parameterized.expand(ALL_ALGORITHMS)
   def test_examples(self, _, algorithm):
+    random.seed(0)
     self.check_matches('#abbabaaa', '#ab', 8, 2, [1, 4], algorithm)
     self.check_matches('#abbabaaa', '#??a', 8, 3, [2, 4, 5, 6], algorithm)
     self.check_matches('#aa', '#a', 2, 1, [1, 2], algorithm)
@@ -41,6 +67,37 @@ class TestExactMatchingWithDontCares(unittest.TestCase):
     self.check_matches('#aaaaa', '#a?a', 5, 3, [1, 2, 3], algorithm)
     self.check_matches('#xyzabcd', '#?bc?', 7, 4, [4], algorithm)
     self.check_matches('#test', '#t?st', 4, 4, [1], algorithm)
+
+  @parameterized.parameterized.expand(LONG_TEXT_ALGORITHMS)
+  @run_large
+  def test_long_unary_text(self, _, algorithm):
+    n, m = 40000, 20000
+    t, w = '#' + 'a' * n, '#' + 'a' * m
+    self.check_matches(t, w, n, m, list(range(1, n - m + 2)), algorithm)
+
+  @staticmethod
+  def random_instance(n, m, A):
+    '''Random text and its fragment with extra wildcards as the word'''
+    t = ''.join(random.choices(A + ['?'], [1] * len(A) + [0.2], k = n))
+    offset = random.randrange(n - m + 1)
+    w = ''.join(character if random.random() > 0.1 else '?'
+                for character in t[offset:offset + m])
+    return '#' + t, '#' + w, [offset + 1]
+
+  @parameterized.parameterized.expand(LONG_TEXT_ALGORITHMS)
+  @run_large
+  def test_long_random_text(self, _, algorithm):
+    n, m, A = 40000, 20000, ['a', 'b', 'c', 'd']
+    t, w, reference = self.random_instance(n, m, A)
+    self.check_matches(t, w, n, m, reference, algorithm)
+
+  @parameterized.parameterized.expand(LARGE_ALPHABET_ALGORITHMS)
+  @run_large
+  def test_long_random_text_large_alphabet(self, _, algorithm):
+    n, m = 40000, 20000
+    A = [chr(256 + i) for i in range(2000)]
+    t, w, reference = self.random_instance(n, m, A)
+    self.check_matches(t, w, n, m, reference, algorithm)
 
   @parameterized.parameterized.expand(ALL_ALGORITHMS)
   @run_large
