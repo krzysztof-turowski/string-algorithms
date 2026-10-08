@@ -1,0 +1,152 @@
+\appendix
+\chapter{Raw Benchmark Data}
+\label{sec:appendix_data}
+
+This appendix presents the numerical execution times collected during the empirical evaluation. Each measurement was repeated 5 times, and the values reported in the tables below represent the median runtime across those iterations. Entries marked as \texttt{TLE} (Time Limit Exceeded) indicate that the execution was terminated after exceeding the predefined benchmark time limit.
+
+\section{Text Length ($n$) and Proportional Scaling}
+
+\begin{table}[H]
+\centering
+\caption{Execution time (s) scaling text length $n$ (Average-Case, $m=5000, |\Sigma|=4$).}
+\label{tab:mean_n_data}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$n$ & Naive & FP Bitwise & Baseline FFT & Sperner & Indyk & Kalai & Clifford \\
+\midrule
+10000  & 0.028 & 1.948 & 0.146 & 0.013 & 0.240 & 0.043 & 0.044 \\
+50000  & 0.201 & 13.696 & 1.047 & 0.055 & 0.886 & 0.288 & 0.327 \\
+100000 & 0.371 & 32.694 & 2.106 & 0.160 & 2.531 & 0.485 & 0.970 \\
+250000 & 1.004 & {\footnotesize TLE}   & 6.043 & 0.273 & 4.842 & 1.134 & 1.745 \\
+500000 & 2.014 & {\footnotesize TLE}   & 10.526 & 0.783 & 14.401 & 2.149 & 3.350 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Execution time (s) scaling text length $n$ (Worst-Case, $m=5000, |\Sigma|=4$).}
+\label{tab:worst_n_data}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$n$ & Naive & FP Bitwise & Baseline FFT & Sperner & Indyk & Kalai & Clifford \\
+\midrule
+10000  & 20.112 & 0.187 & 0.023 & 0.007 & 0.197 & 0.039 & 0.038 \\
+50000  & 212.103 & 1.502 & 0.223 & 0.046 & 1.006 & 0.244 & 0.309 \\
+100000 & 366.096 & 3.261 & 0.365 & 0.085 & 1.746 & 0.456 & 0.628 \\
+250000 & {\footnotesize TLE}    & 17.554   & 0.933 & 0.214 & 5.310 & 1.240 & 1.815 \\
+500000 & {\footnotesize TLE}    & 65.743   & 2.326 & 0.443 & 12.342 & 2.222 & 3.274 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Proportional Scaling $m = 0.1n$ (Worst-Case, $|\Sigma|=4$).}
+\label{tab:prop_nm_data}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$n$ & $m$ & Naive & FP Bitwise & Baseline FFT & Sperner & Indyk & Kalai & Clifford \\
+\midrule
+10000  & 1000 & 5.810  & 0.138 & 0.035 & 0.009 & 0.154 & 0.042 & 0.061 \\
+50000  & 5000 & 170.136 & 1.414 & 0.181 & 0.042 & 0.835 & 0.283 & 0.354 \\
+100000 & 10000 & {\footnotesize TLE}   & 3.552 & 0.347 & 0.083 & 1.783 & 0.782 & 0.651 \\
+200000 & 20000 & {\footnotesize TLE}   & 12.720   & 0.730 & 0.193 & 4.005 & 0.911 & 1.266 \\
+400000 & 40000 & {\footnotesize TLE}   & 52.654   & 1.551 & 0.381 & 9.554 & 2.966 & 3.292 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+\section{Pattern Length ($m$) Scaling}
+
+\begin{table}[H]
+\centering
+\caption{Execution time (s) scaling Pattern Length $m$ (Average-Case, $n=100000, |\Sigma|=4$).}
+\label{tab:app_mean_m_data}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$m$ & Naive & FP Bitwise & Baseline FFT & Sperner & Indyk & Kalai & Clifford \\
+\midrule
+1000  & 0.439 & 25.040 & 3.502 & 0.166 & 2.578 & 0.651 & 0.654 \\
+5000  & 0.436 & 34.474 & 2.187 & 0.108 & 1.898 & 0.529 & 0.673 \\
+10000 & 0.377 & 40.377 & 2.804 & 0.165 & 2.391 & 0.458 & 0.790 \\
+25000 & 0.391 & 52.635 & 1.725 & 0.108 & 2.155 & 0.425 & 0.527 \\
+50000 & 0.193 & 77.412 & 1.300 & 0.100 & 2.471 & 0.400 & 0.369 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Execution time (s) scaling Pattern Length $m$ (Worst-Case, $n=100000, |\Sigma|=4$).}
+\label{tab:app_worst_m_data}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$m$ & Naive & FP Bitwise & Baseline FFT & Sperner & Indyk & Kalai & Clifford \\
+\midrule
+1000  & 67.368 & 2.677 & 0.376 & 0.087 & 2.135 & 0.453 & 0.677 \\
+5000  & 372.790 & 3.693 & 0.369 & 0.097 & 1.997 & 0.558 & 0.645 \\
+10000 & {\footnotesize TLE}   & 3.328 & 0.338 & 0.080 & 1.818 & 0.544 & 1.037 \\
+25000 & {\footnotesize TLE}   & 3.854 & 0.313 & 0.079 & 2.167 & 0.436 & 0.540 \\
+50000 & {\footnotesize TLE}   & 4.439 & 0.229 & 0.066 & 2.722 & 0.418 & 0.412 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+\section{Alphabet Size ($|\Sigma|$) and Wildcard Density}
+
+\begin{table}[H]
+\centering
+\caption{Execution time (s) scaling Alphabet Size $|\Sigma|$ (Average-Case, $n=5000, m=500$).}
+\label{tab:app_mean_sigma_data}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$|\Sigma|$ & Naive & FP Bitwise & Baseline FFT & Sperner & Indyk & Kalai & Clifford \\
+\midrule
+2  & 0.022 & 0.092   & 0.020 & 0.006 & 0.097 & 0.024 & 0.035 \\
+4  & 0.020 & 0.449   & 0.093 & 0.006 & 0.086 & 0.021 & 0.031 \\
+8  & 0.016 & 2.029   & 0.594 & 0.008 & 0.093 & 0.023 & 0.034 \\
+16 & 0.021 & 10.664  & 1.834 & 0.008 & 0.087 & 0.022 & 0.033 \\
+32 & 0.016 & 38.240  & 7.538 & 0.009 & 0.087 & 0.021 & 0.034 \\
+64 & 0.016 & 150.503 & 34.882 & 0.010 & 0.095 & 0.023 & 0.035 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Execution time (s) scaling Alphabet Size $|\Sigma|$ (Worst-Case, $n=5000, m=500$).}
+\label{tab:app_worst_sigma_data}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$|\Sigma|$ & Naive & FP Bitwise & Baseline FFT & Sperner & Indyk & Kalai & Clifford \\
+\midrule
+2  & 1.628 & 0.086 & 0.024 & 0.006 & 0.112 & 0.029 & 0.042 \\
+4  & 1.312 & 0.081 & 0.023 & 0.006 & 0.107 & 0.029 & 0.042 \\
+8  & 1.509 & 0.166 & 0.048 & 0.012 & 0.138 & 0.032 & 0.047 \\
+16 & 1.876 & 0.097 & 0.027 & 0.007 & 0.123 & 0.032 & 0.047 \\
+32 & 1.383 & 0.065 & 0.018 & 0.005 & 0.081 & 0.021 & 0.031 \\
+64 & 1.364 & 0.069 & 0.019 & 0.005 & 0.089 & 0.023 & 0.034 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Execution time (s) scaling Wildcard Probability $p$ ($n=100000, m=5000, |\Sigma|=4$).}
+\label{tab:app_density_data}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$p$ (\%) & Naive & FP Bitwise & Baseline FFT & Sperner & Indyk & Kalai & Clifford \\
+\midrule
+0.0  & 0.350 & 33.685 & 1.932 & 0.104 & 1.816 & 0.679 & 0.720 \\
+5.0  & 0.375 & 32.625 & 2.463 & 0.112 & 2.213 & 0.540 & 0.698 \\
+10.0 & 0.532 & 35.694 & 2.262 & 0.116 & 1.950 & 0.472 & 0.759 \\
+20.0 & 0.385 & 32.453 & 2.027 & 0.115 & 2.268 & 0.563 & 0.658 \\
+35.0 & 0.438 & 33.232 & 2.148 & 0.124 & 2.371 & 0.566 & 0.762 \\
+50.0 & 0.602 & 31.457 & 3.085 & 0.159 & 2.550 & 0.417 & 0.772 \\
+\bottomrule
+\end{tabular}
+\end{table}

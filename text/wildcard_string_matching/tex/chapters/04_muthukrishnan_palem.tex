@@ -1,0 +1,89 @@
+\chapter{Graph-Theoretic Reductions (Muthukrishnan-Palem)}
+
+\section{Non-standard Stringology Models}
+To fully understand the limits of wildcard matching, Muthukrishnan and Palem \cite{mp1994} formally defined this class of problems as non-standard stringology, where characters match based on custom rules instead of simple equality.
+
+They established that the traditional comparison model is too limited for these new rules. Under standard comparisons, any non-trivial matching problem inherently requires $\Omega(nm)$ operations \cite{mp1994}. To better capture the real computational effort, they introduced two evaluation frameworks:
+
+\begin{definition}[Boolean Convolution (BC) Model \cite{mp1994}]
+The Boolean Convolution Model is an evaluation framework where the computational complexity is measured by the total number of alignment queries evaluated via logical OR operations, determining if a valid match exists.
+\end{definition}
+
+\begin{definition}[Polynomial Convolution (PC) Model \cite{mp1994}]
+The Polynomial Convolution Model is an evaluation framework where the computational complexity is measured using arithmetic counting problems, determining exactly how many mismatches exist at any given shift.
+\end{definition}
+
+\section{Match Graphs}
+To abstract the relationships between symbols, they introduced the \textit{truly general string matching} problem. Every matching instance can be represented by a bipartite structure called a match graph, where an edge exists whenever a text element successfully matches a pattern element \cite{mp1994}. 
+
+Its complement is called the conflict graph. The researchers demonstrated that the computational complexity of wildcard matching is entirely governed by the cliques within these graphs. They proved that solving a non-standard matching problem requires a number of alignment queries exactly equal to the clique cover number of the conflict graph \cite{mp1994}.
+
+\section{Sperner's System Optimization}
+Applying this logic, Muthukrishnan and Palem managed to directly optimize the Fischer-Paterson algorithm. Instead of doing $|\Sigma|$ convolutions for every character, they proved that you only need $\mathcal{O}(\log |\Sigma|)$ convolutions \cite{mp1994}. 
+
+They achieved this by showing a direct link to combinatorial set theory. Finding the minimal clique cover for the conflict graph is mathematically equivalent to formulating a Sperner's system \cite{mp1994}.
+
+\begin{theorem}[Sperner's Theorem \cite{sperner1928}]
+In extremal combinatorics, a Sperner family (or antichain) is a family of subsets of a finite set $S$ in which none of the sets is a subset of another. If the universe $S$ has size $k$, the maximum number of sets in a Sperner family is exactly:
+\begin{equation*}
+    \binom{k}{\lfloor k/2 \rfloor}.
+\end{equation*}
+\end{theorem}
+
+By setting the universe size $k$ so that the formula accommodates the entire alphabet $\Sigma$, the algorithm assigns a unique, incomparable subset to each character. The key advantage of applying Sperner's theorem lies in the inherent property of antichains: because no subset is fully contained within another, for any two distinct characters $\sigma \neq \tau$, there must exist at least one integer $i \in \{1, \dots, k\}$ such that $i \in S_\sigma$ and $i \notin S_\tau$. 
+
+The algorithm leverages this mathematical property to perform parallel collision testing. During the $i$-th pass, it cross-references all text positions containing a character whose subset includes $i$, against all pattern positions containing a character whose subset explicitly excludes $i$. This guarantees that any mismatch between differing characters will trigger an arithmetic collision in at least one of the passes. Consequently, the $\mathcal{O}(|\Sigma|^2)$ pairwise comparisons are reduced to just $k = \Theta(\log |\Sigma|)$ parallel frequency-domain tests.
+
+Algorithm 4 demonstrates this combinatorial reduction step-by-step. The algorithm dynamically computes the optimal universe size $k$ (line 2) and generates the corresponding Sperner subsets (line 3). The main convolution loop runs exactly $k$ times (line 7). In each iteration, binary masks are constructed based on the subset inclusion rules (lines 8-9) and multiplied in the frequency domain (line 10). 
+
+\begin{algorithm}[H]
+\caption{Sperner Antichain Optimization (Muthukrishnan-Palem)}
+\begin{algorithmic}[1]
+\Function{SpernerMatch}{$T$: string, $P$: string, $\Sigma$: set}
+    \State $k \gets \min \{ x \in \mathbb{N} \colon \binom{x}{\lfloor x/2 \rfloor} \ge |\Sigma| \}$
+    \State $\mathcal{S} \gets \text{\textsc{GenerateSpernerSubsets}}(k, |\Sigma|)$
+    \State Map each $\sigma \in \Sigma$ to a unique subset $S_\sigma \in \mathcal{S}$
+    \State $L \gets 2^{\lceil \log_2(|T| + |P| - 1) \rceil}$
+    \State $Z[0 \dots L-1] \gets 0$
+    
+    \For{$i \gets 1$ \textbf{to} $k$}
+        \State $U \gets \text{\textsc{Mask}}(T, i \in S_\sigma, L)$
+        \State $V \gets \text{\textsc{Mask}}(\text{\textsc{Reverse}}(P), i \notin S_\sigma, L)$
+        \State $Z \gets Z + \text{\textsc{IFFT}}(\text{\textsc{FFT}}(U) \odot \text{\textsc{FFT}}(V))$
+    \EndFor
+    \State \textbf{return} $\{i \colon Z[i] = 0\}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Sperner Optimization Complexity \cite{mp1994}]
+The time complexity of the Sperner Antichain Optimization is reduced to $\mathcal{O}(\log |\Sigma| \cdot n \log n)$.
+\end{theorem}
+\begin{proof}
+The universe size $k$ generated to form the required Sperner subsets naturally scales logarithmically with respect to the alphabet size, yielding $k = \Theta(\log |\Sigma|)$. Because the primary FFT convolution loop executes exactly $k$ times, and each convolution takes $\mathcal{O}(n \log n)$ operations, the total asymptotic runtime is definitively bound by $\mathcal{O}(\log |\Sigma| \cdot n \log n)$. This requires an auxiliary space of $\mathcal{O}(n)$ for generating boolean indicator arrays.
+\end{proof}
+
+\section{Polynomial Convolution Model}
+As defined in Section 4.1, the Boolean Convolution (BC) model is great for answering a simple yes/no question: is there a match or not? However, if we want to know exactly \textit{how many} mismatches there are at a given shift, we need the Polynomial Convolution (PC) model. Instead of using logical OR operations, the PC model simply adds up the results to give us an exact mismatch count \cite{mp1994}.
+
+For these counting problems, Muthukrishnan and Palem proved that the algorithm needs exactly $cp(G_c)$ alignment queries. 
+
+\begin{definition}[Clique Partition Number \cite{mp1994}]
+The notation $cp(G_c)$ stands for the clique partition number, which represents the minimal manner of dividing the conflict graph into cliques that do not share any edges. 
+\end{definition}
+
+Why do these cliques have to be completely separated? The authors explained this using basic matrices. If two cliques shared a common edge, adding their results together would produce a sum of 2 at that specific spot in the matrix. In practice, this means the algorithm would count the exact same mismatch twice. To avoid this double-counting, the matrices—and therefore the cliques in the graph—must not overlap at all \cite{mp1994}.
+ 
+\section{RAM Model Reductions}
+To show how this works on standard computers (the RAM model), Muthukrishnan and Palem proved that wildcard matching is mathematically equivalent to a specific operation called ``truncated convolution'' \cite{mp1994}. While a standard convolution computes all possible overlap positions, a truncated convolution evaluates $\sum_{i<j} x_i y_{j-i}$. In practice, this means that it calculates the output only for valid shifts where the pattern fits completely inside the text, cutting off the invalid boundary alignments.
+
+Despite this restriction, truncated convolution and standard convolution are computationally equivalent. You can compute a truncated convolution by running a standard Fast Fourier Transform (FFT) and discarding the boundary values. On the other hand, a full convolution can be calculated using a truncated algorithm by padding the inputs with zeros.
+
+Because of this direct equivalence, wildcard matching is fundamentally bottlenecked by the complexity of convolution itself. Since convolutions are computed in $\mathcal{O}(n \log m)$ time, achieving a strictly faster wildcard matching algorithm is impossible without discovering a fundamentally faster method for polynomial multiplication \cite{mp1994}.
+
+\section{Inherent Alphabet Dependency}
+While the reduction to convolution dictates the speed of a single operation, another limitation arises when dealing with the alphabet. By linking character conflicts to Sperner families, the authors showed that any approach based on boolean convolutions requires at least $\Omega(\log |\Sigma|)$ convolutions to solve the problem deterministically \cite{mp1994}.
+
+Standard string matching algorithms, like Knuth-Morris-Pratt, run at the same speed regardless of how big the alphabet is. However, if an algorithm attempts to solve the wildcard problem by checking specific characters using boolean masks, it becomes strictly tied to the alphabet size $\Sigma$ \cite{mp1994}.  To distinguish all characters deterministically in a boolean framework, the algorithm must assign them unique binary signatures. By Dirichlet's box principle, if you try to use fewer than $\log |\Sigma|$ dimensions, you inevitably assign identical bit-signatures to at least two different letters. This guarantees that the algorithm will fail to distinguish a mismatch between those specific letters, resulting in a false positive.
+
+This explains why approaches relying on per-character boolean masks remain tied to the alphabet size. It also highlights the motivation behind the later chapters: both randomized approaches (Indyk, Kalai) and algebraic methods like Clifford-Clifford bypass this alphabet bottleneck entirely by abandoning individual character masks.

@@ -96,6 +96,11 @@ Collection of algorithms for _String Algorithms_ course (summer semesters 2019/2
 #### String matching with wildcards
 1. Basic algorithm based on FFT
 1. Clifford-Clifford algorithm
+1. Naive brute-force algorithm
+1. Fischer-Paterson bitwise algorithm
+1. Sperner optimization (Muthukrishnan-Palem) algorithm
+1. Indyk randomized binary projections algorithm (with FFT or GF(2) boolean convolution)
+1. Kalai randomized fingerprinting algorithm
 
 #### Approximate string matching with wildcards and Hamming distance
 1. Nonrecursive randomised algorithm (Clifford, Eremenko et al.)

@@ -1,0 +1,76 @@
+\chapter{The Fingerprinting Approach (Kalai)}
+
+\section{Conceptual Shift}
+Using random binary projections, Indyk uncoupled the complexity from the alphabet size. However, the next major step was an approach by Adam Kalai \cite{kalai2002}. 
+
+Instead of using complex boolean structures, Kalai adapted the idea of randomized rolling hashes from Karp and Rabin \cite{karp1987efficient} for strings with wildcards. This resulted in an efficient algebraic convolution process \cite{kalai2002}. 
+
+This method executes strictly in $\mathcal{O}(n \log m)$ operations. Kalai demonstrated that his approach reaches the theoretical lower bound for this class of problems \cite{kalai2002}. Because wildcard matching is fundamentally reducible to convolution, achieving any runtime better than $\mathcal{O}(n \log m)$ would require a mathematical breakthrough in the Fast Fourier Transform itself. This successfully closed the long-standing debate originating from Galil's open problems \cite{galil1985open}.
+
+\section{Single Convolution Fingerprinting}
+Kalai abstracts the matching constraints by assigning random arithmetic weights to the pattern characters, turning the verification process into a simple mathematical equation. 
+
+Algorithm 6 presents the algebraic fingerprinting process. The probability bound $N$ is defined (line 3), and random standard integers are uniquely assigned to pattern characters, while strictly zeroing out pattern-side wildcards (lines 4-5). The first convolution pass calculates the text alignment scores $s$ using FFT (lines 7-8). Subsequently, an indicator mask isolates non-wildcard characters in the text (line 10), allowing the second convolution to compute the target fingerprints $t$ (lines 11-12). Valid shifts are successfully identified where the difference between $s$ and $t$ is identically zero (line 14).
+
+\begin{algorithm}[H]
+\caption{Kalai Algebraic Fingerprinting}
+\begin{algorithmic}[1]
+\Function{KalaiMatch}{$T$: string, $P$: string}
+    \State $L \gets 2^{\lceil \log_2(|T| + |P| - 1) \rceil}$
+    \State $N \gets |T|^2$ \Comment{Probability bound modulus}
+    \State $R[0 \dots |P|-1] \gets \text{\textsc{RandomUniform}}(1, N)$ 
+    \State $R[j] \gets 0 \text{ if } P[j] = \text{`?'}$
+    \State $U_{text} \gets \text{\textsc{MapToInt}}(T)$ \Comment{Text wildcards mapped to 0}
+    \State $s \gets \text{\textsc{IFFT}}(\text{\textsc{FFT}}(U_{text}, L) \odot \text{\textsc{FFT}}(\text{\textsc{Reverse}}(R), L))$
+    \State $I_{text}[i] \gets 1 \text{ if } T[i] \neq \text{`?'} \text{ else } 0$
+    \State $V_{pattern} \gets \text{\textsc{MapToInt}}(P) \odot R$
+    \State $t \gets \text{\textsc{IFFT}}(\text{\textsc{FFT}}(I_{text}, L) \odot \text{\textsc{FFT}}(\text{\textsc{Reverse}}(V_{pattern}), L))$ 
+    
+    \State \textbf{return} $\{i \colon s[i] - t[i] = 0\}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Kalai Execution Bounds \cite{kalai2002}]
+The algebraic fingerprinting approach securely achieves the strict theoretical limit of $\mathcal{O}(n \log m)$ operations, requiring solely $\mathcal{O}(n)$ operational space.
+\end{theorem}
+
+\begin{proof}
+The raw evaluation of Kalai's algorithm requires computing the text fingerprint and the pattern baseline, which takes $\mathcal{O}(n \log n)$ time if executed as a single global FFT convolution. To reduce the time complexity to the $\mathcal{O}(n \log m)$ bound \cite{kalai2002}, the text is partitioned into overlapping chunks of length $2m$, overlapping by $m$ characters. The convolution is then performed independently on each substring, requiring $\mathcal{O}(m \log m)$ operations per chunk. Over $n/m$ chunks, the total execution resolves tightly to $\mathcal{O}((n/m) \cdot m \log m) = \mathcal{O}(n \log m)$. The space complexity remains strictly bounded by $\mathcal{O}(n)$.
+\end{proof}
+
+\section{Error Analysis and Modulo Arithmetic}
+A valid match will always produce the exact same fingerprint \cite{kalai2002}. Because where they successfully match, their assigned weights multiply equally on both sides of the transform. If either the text or the pattern contains a wildcard at that index, the weight effectively neutralizes the product to zero, maintaining absolute structural equality. The only risk is a false positive. 
+
+Kalai mathematically proves that in the event of an invalid alignment, there must exist at least one index where differing concrete characters intersect \cite{kalai2002}. Because the conflicting pattern character is not a wildcard, its assigned weight $r_i$ is non-zero. The collision equation reduces to possessing only a single, unique solution for that random weight \cite{kalai2002}. 
+
+This is a specific case of a broader mathematical rule known as the Schwartz-Zippel lemma.
+\begin{lemma}[Schwartz-Zippel \cite{schwartz1980}]
+Let $P(x_1, \dots, x_n)$ be a non-zero multivariate polynomial of total degree $d$ over a field $\mathbb{F}$. If elements $r_1, \dots, r_n$ are chosen independently and uniformly at random from a finite subset $S \subseteq \mathbb{F}$, then the probability that the polynomial evaluates to zero is bounded by:
+\begin{equation}
+    \mathbb{P}(P(r_1, \dots, r_n) = 0) \le \frac{d}{|S|}.
+\end{equation}
+\end{lemma}
+
+Because the difference between the actual and expected convolutions is a simple linear equation (degree $d=1$), and the weights are drawn uniformly from $N$ integers, the chance of accidentally picking a weight that creates a false positive at any single position $k$ is at most $1/N$:
+\begin{equation}
+    \mathbb{P}(s[k] - t[k] = 0 \mid s[k] \neq t[k] \text{ structurally}) \le \frac{1}{N}
+\end{equation}
+
+By scaling the algorithm's modulus to $N = n^2$, the chance of a false match at any specific shift is at most $1/n^2$. 
+
+\begin{theorem}[Global Error Bound \cite{kalai2002}]
+Applying the Union Bound across all $n$ valid shifts confirms that the global error rate for the entire text is safely kept strictly below $\mathcal{O}(1/n)$.
+\end{theorem}
+\begin{proof}
+The chance of a false match at any specific shift is bounded by $1/n^2$. Applying the Union Bound across all $n$ valid shifts yields $n \cdot (1/n^2) = 1/n$. Thus, the probability of encountering even a single false match is strictly bounded by $\mathcal{O}(1/n)$.
+\end{proof}
+
+To prevent integer overflow during this evaluation, Kalai advises executing all intermediate algebraic operations modulo an appropriately large prime number $p$ \cite{kalai2002}. This preserves true matches because $0 \bmod p$ is always $0$. A false match can only occur if a non-zero value (a mismatch) happens to be divisible by $p$. Since the values are bounded and have very few prime factors, picking a random prime from a large enough set makes the probability of such an error negligible.
+
+\section{Generalized Extension}
+While the basic fingerprinting framework primarily assumes wildcards are restricted to the pattern, the method naturally extends to the fully generalized problem, where wildcard symbols can appear in both the pattern and the text \cite{kalai2002}.
+
+Because any text wildcard must nullify the corresponding pattern character's contribution, the target fingerprint $t$ can no longer be a static number. Wildcards embedded in the text are numerically zeroed, and a second convolution is used to recalculate the target fingerprint for each window shift \cite{kalai2002}. 
+
+By executing this dual-convolution framework, Kalai proved that true matches always maintain structural equality, and generalized mismatches preserve the exact same uniform error bounds, safely contained below $1/N$ without slowing down the algorithm \cite{kalai2002}.

@@ -1,0 +1,91 @@
+\chapter{Randomized Projections (Indyk)}
+
+\section{The Deterministic Barrier}
+The algebraic approach initiated by Fischer and Paterson proved that wildcard matching can be solved in $\mathcal{O}(|\Sigma| \cdot n \log m)$ time. However, pushing this boundary further was highly challenging. Resolving the exact complexity of this problem remained an open problem, as noted by Galil in his famous list of challenges in stringology \cite{galil1985open}.
+
+To bypass the deterministic barrier established by Muthukrishnan and Palem, Indyk proposed a paradigm shift toward probabilistic methods. He introduced a Monte Carlo algorithm capable of resolving wildcard matches in exactly $\mathcal{O}(n \log n)$ time \cite{indyk1998}. This approach completely uncouples the complexity from the alphabet size.
+
+\section{Freivalds' Technique}
+To resolve the alphabet dependency, Indyk applied Freivalds' technique \cite{freivalds1977probabilistic} to boolean convolutions \cite{indyk1998}. Originally designed for matrix and vector verification, Freivalds' principle states that if two distinct vectors are multiplied by a random boolean vector, the probability of a false collision is at most $1/2$. Indyk adapted this mathematical concept directly to string matching.
+
+Instead of checking specific characters, the algorithm maps the entire alphabet into binary values $\{0, 1\}$ using a uniformly random function $f$.
+
+\begin{lemma}[Randomized Mismatch Detection \cite{indyk1998}]
+If a text character $t$ and a pattern character $p$ are different ($t \neq p$), the random projection $f$ will detect this mismatch with exactly a $50\%$ probability.
+\end{lemma}
+
+\begin{proof}
+Because $t$ and $p$ are different characters, the function $f$ assigns their binary values independently. There are four possible outcomes for the pair $(f(t), f(p))$: $(0,0)$, $(0,1)$, $(1,0)$, and $(1,1)$. In exactly two of these cases, $(0,1)$ and $(1,0)$, the bits differ, so their calculated difference is one. The probability of detecting the mismatch is exactly $1/2$, which satisfies Freivalds' theoretical bound. In contrast, if $t = p$, they receive the exact same bit, guaranteeing a difference of zero.
+\end{proof}
+
+To evaluate this efficiently, the algorithm computes the convolution algebraically over the Galois field $GF(2)$. In practice, this translates to executing the convolution using binary logic (XOR instead of standard addition, and AND instead of multiplication). Standard FFT algorithms operate on floating-point numbers, which breaks this binary execution model. To bypass this, Indyk utilizes Cantor's algebraic method \cite{cantor1989}, a specialized algorithm for fast polynomial multiplication over finite fields. As formally proven later in Theorem 5.1, keeping operations strictly within the binary domain is what allows the algorithm to pack multiple projections together and achieve the $\mathcal{O}(n \log n)$ time complexity.
+
+\section{Application and Theoretical Complexity}
+While a single projection guarantees a $50\%$ mismatch detection rate, this baseline is insufficient. To address this, the algorithm generates $d = \mathcal{O}(\log n)$ independent random binary functions. If a mismatch exists, the probability of missing it across all $d$ projections is bounded by $\mathcal{O}(1/n)$ \cite{indyk1998}.
+
+Algorithm 5 formalizes the logical execution of this process. While achieving the final time complexity requires the bit-packing technique, the sequential logic of multiple projections is most naturally represented using standard FFT operations. The required projection dimensions $d$ are calculated to bound the error rate (line 2). For each independent trial, independent uniformly random mapping functions are generated (line 6). The text and pattern are projected into binary vectors, implicitly erasing wildcards by replacing them with zeros (lines 7-8). The results of the FFT convolutions are aggregated using a logical OR operation (line 10), ensuring that any detected mismatch permanently invalidates that shift index.
+
+\begin{algorithm}[H]
+\caption{Indyk Randomized Binary Projections}
+\begin{algorithmic}[1]
+\Function{IndykMatch}{$T$: string, $P$: string, $c$: const}
+    \State $d \gets \lceil c \log_2(|T|) \rceil$ \Comment{Number of required dimensions}
+    \State $L \gets 2^{\lceil \log_2(|T| + |P| - 1) \rceil}$
+    \State $Z_{\text{total}}[0 \dots L-1] \gets 0$
+    
+    \For{$i \gets 1$ \textbf{to} $d$}
+        \State Generate independent uniformly random $f, g: \Sigma \to \{0, 1\}$
+        \State $U \gets \text{\textsc{ProjectAndZeroWildcards}}(T, g, L)$
+        \State $V \gets \text{\textsc{ProjectAndZeroWildcards}}(\text{\textsc{Reverse}}(P), f, L)$
+        \State $Z_i \gets \text{\textsc{IFFT}}(\text{\textsc{FFT}}(U) \odot \text{\textsc{FFT}}(V))$
+        \State $Z_{\text{total}} \gets Z_{\text{total}} \lor Z_i$ \Comment{Logical OR accumulator}
+    \EndFor
+    \State \textbf{return} $\{i \colon Z_{\text{total}}[i] = 0\}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Indyk Projection Complexity \cite{indyk1998}]
+Indyk's randomized projection algorithm operates theoretically in $\mathcal{O}(n \log n)$ time.
+\end{theorem}
+
+\begin{proof}
+Iterating standard FFT convolutions $\mathcal{O}(\log n)$ times naturally yields a total time of $\mathcal{O}(n \log^2 n)$. Because standard FFT relies on floating-point arithmetic, it prevents the parallelization of independent dimensions. To break this limit, Indyk mathematically replaces the FFT operations with Cantor's method \cite{cantor1989} over $GF(2)$. Indyk applies a bit-packing technique. In the standard RAM computational model, a machine word consists of $\mathcal{O}(\log n)$ bits. The algorithm packs all $\mathcal{O}(\log n)$ random projections into a single machine word. This structural advantage allows Cantor's algorithm to process all $d$ projections simultaneously in a single pass, reducing the theoretical time complexity to $\mathcal{O}(n \log n)$ \cite{indyk1998}.
+\end{proof}
+
+\section{Threshold Matching}
+\begin{definition}[$\epsilon$-Threshold Matching \cite{indyk1998}]
+The threshold matching problem requires determining whether the number of mismatches between the text and the pattern is $\le k$ or $\ge (1 + \epsilon)k$.
+\end{definition}
+
+Beyond exact matching, randomized projections can be applied to the approximate matching problem. By aggregating the results of multiple independent projections, the algorithm can estimate the total Hamming distance (the exact number of mismatches) between the text and the pattern \cite{indyk1998}.
+
+\begin{lemma}[Statistical Distance Estimation \cite{indyk1998}]
+By treating each random projection as an independent Bernoulli trial \cite{motwani1995}, the algorithm bounds the estimation error of the Hamming distance using Chernoff bounds \cite{motwani1995}, allowing it to distinguish between $k$ and $(1+\epsilon)k$ mismatches.
+\end{lemma}
+
+\begin{proof}
+Let $H$ denote the true Hamming distance for a given sequence alignment. Each of the $d$ randomized projections acts as an independent Bernoulli trial \cite{motwani1995} that detects a specific mismatch with a probability of $p = 1/2$. Consequently, the total number of detected mismatches follows a Binomial distribution with an expected mean value of $\mu = d \cdot H / 2$. 
+
+According to Chernoff bounds \cite{motwani1995}, the probability that the sum of these independent trials deviates from the expected mean $\mu$ by more than a factor of $(1 \pm \epsilon)$ decays exponentially as the number of trials $d$ increases. By executing $d$ projections, the algorithm guarantees that its estimate closely approximates the true distance $H$, ensuring the error stays within the chosen $\epsilon$ margin \cite{indyk1998}.
+\end{proof}
+
+By replacing exact mismatch counting with statistical estimation, the algorithm bypasses slower dynamic programming techniques. However, achieving this $\epsilon$-bounded accuracy requires executing the base $\mathcal{O}(n \log n)$ projection algorithm multiple times. The total number of iterations scales by a factor of $1/\epsilon^3$, which decomposes into two distinct requirements: $1/\epsilon^2$ and $1/\epsilon$.
+
+First, $1/\epsilon^2$ is a fundamental statistical requirement dictated by Chernoff bounds \cite{motwani1995}. Because the variance in a series of Bernoulli trials scales quadratically with the desired precision, bounding the estimation error by $\epsilon$ requires executing $\mathcal{O}(1/\epsilon^2)$ independent projections.
+
+Second, the remaining $1/\epsilon$ factor acts as a structural multiplier. To distinguish between $k$ and $(1+\epsilon)k$ mismatches across the entire text, the algorithm divides the evaluation process into $\mathcal{O}(1/\epsilon)$ distinct layers. Running the $\mathcal{O}(1/\epsilon^2)$ statistical trials inside each of these layers directly multiplies the total number of projections to $\mathcal{O}(1/\epsilon^3)$.
+
+Multiplying this iteration count by the base evaluation time yields the final theoretical complexity of $\mathcal{O}(n \log n / \epsilon^3)$. Ultimately, because $\epsilon$ is a predefined constant, this scaling factor allows the algorithm to compute approximate distances in near-linear time \cite{indyk1998}.
+
+\section{False Positive Bounds and Error Rate}
+Because the algorithm relies on randomized boolean mapping, it carries a non-zero probability of reporting a false positive—indicating a match where a structural mismatch actually exists. To find the total error rate across the entire text, we must accumulate the error probabilities for every possible shift using the Union Bound.
+
+\begin{lemma}[Union Bound / Boole's Inequality \cite{motwani1995}]
+For any finite or countably infinite set of events $A_1, A_2, \dots, A_k$, the probability that at least one of the events happens is no greater than the sum of the probabilities of the individual events:
+\begin{equation}
+    \mathbb{P}\left( \bigcup_{i=1}^k A_i \right) \le \sum_{i=1}^k \mathbb{P}(A_i)
+\end{equation}
+\end{lemma}
+
+In Indyk's algorithm, a false positive occurs at a specific shift $k$ only if every single independent hash trial produces a collision. Over $d = c \log_2 n$ independent dimensions, this probability is strictly bounded by $n^{-c}$. Applying the Union Bound over all $n$ possible text shifts yields a global error bound of $n^{-(c-1)}$. By statically setting the constant $c \ge 2$, the algorithm mathematically guarantees that the probability of encountering even a single false match across the entire execution is firmly bounded by $\mathcal{O}(1/n)$.

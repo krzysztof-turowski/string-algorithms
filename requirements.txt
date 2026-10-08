@@ -3,3 +3,4 @@ numpy
 parameterized
 pylint
 scipy
+sympy
