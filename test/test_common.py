@@ -32,6 +32,25 @@ class TestCommon(unittest.TestCase):
         product ^= first << bit
     return product
 
+  def test_fft_round_trip(self):
+    for size in (1, 2, 4, 8, 16):
+      with self.subTest(size = size):
+        sequence = list(range(size))
+        root = pow(3, 16 // size, 17)
+        self.assertEqual(fft.ifft(fft.fft(sequence, 17, root), 17, root),
+                         sequence)
+
+  def test_fft_rejects_invalid_lengths(self):
+    for transform in (fft.fft, fft.ifft):
+      for size in (0, 3, 5, 6, 7, 9):
+        with self.subTest(transform = transform.__name__, size = size):
+          with self.assertRaisesRegex(ValueError, 'power of two'):
+            transform([0] * size, 17, 3)
+
+  def test_gf2_field_cache(self):
+    # pylint: disable=protected-access
+    self.assertIs(gf2._field(16), gf2._field(16))
+
   def test_integer_convolve(self):
     self.assertEqual(fft.integer_convolve([1, 2, 3, 4], [1, 1]), [3, 5, 7])
     self.assertEqual(fft.integer_convolve([1, 1], [1, 2, 3, 4]), [3, 5, 7])

@@ -33,9 +33,9 @@ def fft(sequence, prime, root):
 
 def ifft(sequence, prime, root):
   '''Inverse of fft'''
+  transformed = _transform(sequence, pow(root, -1, prime), prime)
   size_inverse = pow(len(sequence), -1, prime)
-  return [value * size_inverse % prime
-          for value in _transform(sequence, pow(root, -1, prime), prime)]
+  return [value * size_inverse % prime for value in transformed]
 
 def _find_prime(size, lower_bound):
   '''Returns prime = multiplier * size + 1 >= lower_bound and a root of
@@ -50,7 +50,10 @@ def _find_prime(size, lower_bound):
                      if pow(root, size // 2, prime) == prime - 1)
 
 def _transform(sequence, root, prime):
-  size, sequence = len(sequence), list(sequence)
+  size = len(sequence)
+  if size == 0 or size & (size - 1):
+    raise ValueError('Sequence length must be a positive power of two')
+  sequence = list(sequence)
   reversed_index = 0
   for index in range(1, size):
     bit = size >> 1
@@ -65,16 +68,15 @@ def _transform(sequence, root, prime):
   while block_length <= size:
     half_length = block_length // 2
     block_root = pow(root, size // block_length, prime)
-    twiddle_factors = [1] * half_length
-    for offset in range(1, half_length):
-      twiddle_factors[offset] = twiddle_factors[offset - 1] * block_root % prime
     for block_start in range(0, size, block_length):
+      twiddle_factor = 1
       for offset in range(half_length):
         even_value = sequence[block_start + offset]
         odd_value = (sequence[block_start + offset + half_length]
-                     * twiddle_factors[offset] % prime)
+                     * twiddle_factor % prime)
         sequence[block_start + offset] = (even_value + odd_value) % prime
         sequence[block_start + offset + half_length] = \
             (even_value - odd_value) % prime
+        twiddle_factor = twiddle_factor * block_root % prime
     block_length <<= 1
   return sequence

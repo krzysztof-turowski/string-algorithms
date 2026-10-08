@@ -8,11 +8,13 @@ import parameterized
 
 from generator import rand
 from approximate_string_matching import matching_with_dont_cares
-from common.fft import integer_convolve
+from common.fft import integer_convolve, scipy_convolve
 
 def with_integer_fft(algorithms):
   return [[name + ' with integer FFT',
-           functools.partial(algorithm, fft = integer_convolve)]
+           functools.partial(algorithm, **{
+               'convolve' if algorithm is matching_with_dont_cares.kalai
+               else 'fft': integer_convolve})]
           for name, algorithm in algorithms]
 
 FFT_DETERMINISTIC_ALGORITHMS = [
@@ -42,6 +44,7 @@ ALL_ALGORITHMS = DETERMINISTIC_ALGORITHMS + RANDOMIZED_ALGORITHMS
 # exact algorithms only, floating-point FFT is inaccurate for long texts
 LONG_TEXT_ALGORITHMS = [
     [ 'Fischer-Paterson', matching_with_dont_cares.fischer_paterson ],
+    [ 'Kalai', matching_with_dont_cares.kalai ],
     [ 'Indyk over GF(2)', matching_with_dont_cares.indyk_gf2 ],
 ] + with_integer_fft(FFT_DETERMINISTIC_ALGORITHMS + FFT_RANDOMIZED_ALGORITHMS)
 
@@ -54,7 +57,56 @@ class TestExactMatchingWithDontCares(unittest.TestCase):
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_matches(self, t, w, n, m, reference, algorithm):
-    self.assertEqual(list(algorithm(t, w, n, m)), reference)
+    underlying = algorithm.func if isinstance(algorithm, functools.partial) \
+        else algorithm
+    if underlying in (matching_with_dont_cares.indyk,
+                      matching_with_dont_cares.indyk_gf2,
+                      matching_with_dont_cares.kalai):
+      self.check_monte_carlo_matches(t, w, n, m, reference, algorithm)
+    else:
+      self.assertEqual(list(algorithm(t, w, n, m)), reference)
+
+  def check_monte_carlo_matches(self, t, w, n, m, reference, algorithm, k = 5):
+    # These algorithms may report extra matches, but must keep all true matches.
+    best = None
+    for _ in range(k):
+      matches = list(algorithm(t, w, n, m))
+      self.assertTrue(set(reference).issubset(matches))
+      self.assertEqual(matches, sorted(set(matches)))
+      self.assertTrue(all(1 <= index <= n - m + 1 for index in matches))
+      if best is None or len(matches) < len(best):
+        best = matches
+      if best == reference:
+        break
+    self.assertEqual(best, reference)
+
+  def test_monte_carlo_retries(self):
+    results = iter(([1, 2], [1]))
+    self.check_monte_carlo_matches(
+        '#ab', '#a', 2, 1, [1], lambda *_: next(results))
+
+  def test_monte_carlo_rejects_persistent_false_positives(self):
+    with self.assertRaises(AssertionError):
+      self.check_monte_carlo_matches(
+          '#ab', '#a', 2, 1, [1], lambda *_: [1, 2])
+
+  def test_kalai_scipy_convolve(self):
+    random.seed(0)
+    algorithm = functools.partial(matching_with_dont_cares.kalai,
+                                  convolve = scipy_convolve)
+    self.check_matches('#abbabaaa', '#ab', 8, 2, [1, 4], algorithm)
+
+  def test_monte_carlo_rejects_false_negatives(self):
+    with self.assertRaises(AssertionError):
+      self.check_monte_carlo_matches('#ab', '#a', 2, 1, [1], lambda *_: [])
+
+  def test_kalai_long_unary_text(self):
+    random.seed(0)
+    n, m = 40000, 20000
+    text, word = '#' + 'a' * n, '#' + 'a' * m
+    matches = list(matching_with_dont_cares.kalai(text, word, n, m))
+    self.assertEqual(len(matches), 20001)
+    self.assertEqual(matches, list(range(1, 20002)))
 
   @parameterized.parameterized.expand(ALL_ALGORITHMS)
   def test_examples(self, _, algorithm):
@@ -71,6 +123,7 @@ class TestExactMatchingWithDontCares(unittest.TestCase):
   @parameterized.parameterized.expand(LONG_TEXT_ALGORITHMS)
   @run_large
   def test_long_unary_text(self, _, algorithm):
+    random.seed(0)
     n, m = 40000, 20000
     t, w = '#' + 'a' * n, '#' + 'a' * m
     self.check_matches(t, w, n, m, list(range(1, n - m + 2)), algorithm)

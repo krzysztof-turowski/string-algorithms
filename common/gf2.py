@@ -106,12 +106,9 @@ class _Field:
     return functools.reduce(operator.xor, (
         power for bit, power in enumerate(powers) if level & bit == bit), 0)
 
-_FIELDS = {}
-
+@functools.cache
 def _field(degree):
-  if degree not in _FIELDS:
-    _FIELDS[degree] = _Field(degree)
-  return _FIELDS[degree]
+  return _Field(degree)
 
 def _subspace_exponents(level):
   return [1 << bit for bit in range(level + 1) if level & bit == bit]
