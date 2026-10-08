@@ -4,6 +4,7 @@ Indyk's algorithm)'''
 import functools
 import itertools
 import operator
+import random
 
 import sympy
 
@@ -205,3 +206,21 @@ def multiply(first, second):
       block.to_bytes(2 * block_bytes, 'little')
       for block in product_blocks[1::2]), 'little')
   return even ^ (odd << (8 * block_bytes))
+
+def gf2_boolean(first_sequence, second_sequence):
+  """Randomized Boolean convolution of nonempty binary sequences, valid mode.
+
+  Zeros stay zero; a nonempty collision sum is detected with probability 1/2.
+  """
+  def _pack(sequence):
+    return int(''.join(str(int(value)) for value in reversed(sequence)), 2)
+
+  if len(first_sequence) < len(second_sequence):
+    first_sequence, second_sequence = second_sequence, first_sequence
+  n, m = len(first_sequence), len(second_sequence)
+  first_bits = _pack(first_sequence)
+  second_bits = _pack(second_sequence) & random.getrandbits(m)
+  # Independent masking prevents an even number of collisions always cancelling.
+  result = multiply(first_bits, second_bits) >> (m - 1)
+  result &= (1 << (n - m + 1)) - 1
+  return [bit == '1' for bit in bin(result)[2:].zfill(n - m + 1)[::-1]]

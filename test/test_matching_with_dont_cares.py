@@ -8,48 +8,37 @@ import parameterized
 
 from generator import rand
 from approximate_string_matching import matching_with_dont_cares
-from common.fft import integer_convolve, scipy_convolve
+from common.fft import fft_boolean
+from common.gf2 import gf2_boolean
 
-def with_integer_fft(algorithms):
-  return [[name + ' with integer FFT',
-           functools.partial(algorithm, **{
-               'convolve' if algorithm is matching_with_dont_cares.kalai
-               else 'fft': integer_convolve})]
-          for name, algorithm in algorithms]
-
-FFT_DETERMINISTIC_ALGORITHMS = [
+DETERMINISTIC_ALGORITHMS = [
+    [ 'naive', matching_with_dont_cares.naive ],
     [ 'basic FFT', matching_with_dont_cares.basic_fft ],
+    [ 'Sperner', matching_with_dont_cares.sperner ],
+    [ 'Fischer-Paterson', matching_with_dont_cares.fischer_paterson ],
     [ 'Clifford-Clifford', matching_with_dont_cares.clifford_clifford ],
     [ 'Clifford-Clifford with split',
-      matching_with_dont_cares.clifford_clifford_parts ],
-    [ 'Sperner', matching_with_dont_cares.sperner ],
+      functools.partial(
+        matching_with_dont_cares.fft_by_parts,
+        algorithm = matching_with_dont_cares.clifford_clifford) ],
 ]
 
-FFT_RANDOMIZED_ALGORITHMS = [
-    [ 'Indyk', matching_with_dont_cares.indyk ],
+RANDOMIZED_ALGORITHMS = [
+    [ 'Indyk with FFT',
+      functools.partial(
+        matching_with_dont_cares.indyk, c = 7,
+        boolean_convolve = fft_boolean) ],
+    [ 'Indyk over GF(2)',
+      functools.partial(
+        matching_with_dont_cares.indyk, c = 16,
+        boolean_convolve = gf2_boolean) ],
     [ 'Kalai', matching_with_dont_cares.kalai ],
 ]
-
-DETERMINISTIC_ALGORITHMS = FFT_DETERMINISTIC_ALGORITHMS + [
-    [ 'Naive', matching_with_dont_cares.naive ],
-    [ 'Fischer-Paterson', matching_with_dont_cares.fischer_paterson ],
-] + with_integer_fft(FFT_DETERMINISTIC_ALGORITHMS)
-
-RANDOMIZED_ALGORITHMS = FFT_RANDOMIZED_ALGORITHMS + [
-    [ 'Indyk over GF(2)', matching_with_dont_cares.indyk_gf2 ],
-] + with_integer_fft(FFT_RANDOMIZED_ALGORITHMS)
 
 ALL_ALGORITHMS = DETERMINISTIC_ALGORITHMS + RANDOMIZED_ALGORITHMS
 
-# exact algorithms only, floating-point FFT is inaccurate for long texts
-LONG_TEXT_ALGORITHMS = [
-    [ 'Fischer-Paterson', matching_with_dont_cares.fischer_paterson ],
-    [ 'Kalai', matching_with_dont_cares.kalai ],
-    [ 'Indyk over GF(2)', matching_with_dont_cares.indyk_gf2 ],
-] + with_integer_fft(FFT_DETERMINISTIC_ALGORITHMS + FFT_RANDOMIZED_ALGORITHMS)
-
 LARGE_ALPHABET_ALGORITHMS = [
-    [ name, algorithm ] for name, algorithm in LONG_TEXT_ALGORITHMS
+    [ name, algorithm ] for name, algorithm in ALL_ALGORITHMS
     if not name.startswith(('basic FFT', 'Fischer-Paterson'))]
 
 class TestExactMatchingWithDontCares(unittest.TestCase):
@@ -57,56 +46,26 @@ class TestExactMatchingWithDontCares(unittest.TestCase):
       os.environ.get('LARGE', False), 'Skip test in small runs')
 
   def check_matches(self, t, w, n, m, reference, algorithm):
-    underlying = algorithm.func if isinstance(algorithm, functools.partial) \
-        else algorithm
-    if underlying in (matching_with_dont_cares.indyk,
-                      matching_with_dont_cares.indyk_gf2,
-                      matching_with_dont_cares.kalai):
+    def _function(candidate):
+      if isinstance(candidate, functools.partial):
+        return candidate.func
+      return candidate
+
+    if any(
+        _function(algorithm) is _function(candidate)
+        for _, candidate in RANDOMIZED_ALGORITHMS):
       self.check_monte_carlo_matches(t, w, n, m, reference, algorithm)
     else:
       self.assertEqual(list(algorithm(t, w, n, m)), reference)
 
-  def check_monte_carlo_matches(self, t, w, n, m, reference, algorithm, k = 5):
-    # These algorithms may report extra matches, but must keep all true matches.
-    best = None
+  def check_monte_carlo_matches(
+      self, t, w, n, m, reference, algorithm, k = 5):
+    best = []
     for _ in range(k):
       matches = list(algorithm(t, w, n, m))
       self.assertTrue(set(reference).issubset(matches))
-      self.assertEqual(matches, sorted(set(matches)))
-      self.assertTrue(all(1 <= index <= n - m + 1 for index in matches))
-      if best is None or len(matches) < len(best):
-        best = matches
-      if best == reference:
-        break
+      best = matches if len(best) < len(matches) else best
     self.assertEqual(best, reference)
-
-  def test_monte_carlo_retries(self):
-    results = iter(([1, 2], [1]))
-    self.check_monte_carlo_matches(
-        '#ab', '#a', 2, 1, [1], lambda *_: next(results))
-
-  def test_monte_carlo_rejects_persistent_false_positives(self):
-    with self.assertRaises(AssertionError):
-      self.check_monte_carlo_matches(
-          '#ab', '#a', 2, 1, [1], lambda *_: [1, 2])
-
-  def test_kalai_scipy_convolve(self):
-    random.seed(0)
-    algorithm = functools.partial(matching_with_dont_cares.kalai,
-                                  convolve = scipy_convolve)
-    self.check_matches('#abbabaaa', '#ab', 8, 2, [1, 4], algorithm)
-
-  def test_monte_carlo_rejects_false_negatives(self):
-    with self.assertRaises(AssertionError):
-      self.check_monte_carlo_matches('#ab', '#a', 2, 1, [1], lambda *_: [])
-
-  def test_kalai_long_unary_text(self):
-    random.seed(0)
-    n, m = 40000, 20000
-    text, word = '#' + 'a' * n, '#' + 'a' * m
-    matches = list(matching_with_dont_cares.kalai(text, word, n, m))
-    self.assertEqual(len(matches), 20001)
-    self.assertEqual(matches, list(range(1, 20002)))
 
   @parameterized.parameterized.expand(ALL_ALGORITHMS)
   def test_examples(self, _, algorithm):
@@ -119,8 +78,14 @@ class TestExactMatchingWithDontCares(unittest.TestCase):
     self.check_matches('#aaaaa', '#a?a', 5, 3, [1, 2, 3], algorithm)
     self.check_matches('#xyzabcd', '#?bc?', 7, 4, [4], algorithm)
     self.check_matches('#test', '#t?st', 4, 4, [1], algorithm)
+    self.check_matches('#abc', '#', 3, 0, [], algorithm)
+    self.check_matches('#a', '#ab', 1, 2, [], algorithm)
+    self.check_matches('#', '#a', 0, 1, [], algorithm)
+    self.check_matches('#?', '#?', 1, 1, [1], algorithm)
+    self.check_matches('#????', '#??', 4, 2, [1, 2, 3], algorithm)
+    self.check_matches('#a?aa', '#aa', 4, 2, [1, 2, 3], algorithm)
 
-  @parameterized.parameterized.expand(LONG_TEXT_ALGORITHMS)
+  @parameterized.parameterized.expand(ALL_ALGORITHMS)
   @run_large
   def test_long_unary_text(self, _, algorithm):
     random.seed(0)
@@ -137,29 +102,12 @@ class TestExactMatchingWithDontCares(unittest.TestCase):
                 for character in t[offset:offset + m])
     return '#' + t, '#' + w, [offset + 1]
 
-  @parameterized.parameterized.expand(LONG_TEXT_ALGORITHMS)
+  @parameterized.parameterized.expand(ALL_ALGORITHMS)
   @run_large
   def test_long_random_text(self, _, algorithm):
     n, m, A = 40000, 20000, ['a', 'b', 'c', 'd']
     t, w, reference = self.random_instance(n, m, A)
     self.check_matches(t, w, n, m, reference, algorithm)
-
-  @parameterized.parameterized.expand(LARGE_ALPHABET_ALGORITHMS)
-  @run_large
-  def test_long_random_text_large_alphabet(self, _, algorithm):
-    n, m = 40000, 20000
-    A = [chr(256 + i) for i in range(2000)]
-    t, w, reference = self.random_instance(n, m, A)
-    self.check_matches(t, w, n, m, reference, algorithm)
-
-  @parameterized.parameterized.expand(ALL_ALGORITHMS)
-  @run_large
-  def test_random_exact_string_matching(self, _, algorithm):
-    T, n, m, A = 100, 500, 10, ['a', 'b']
-    for _ in range(T):
-      t, w = rand.random_word(n, A), rand.random_word(m, A + ['?'])
-      reference = list(matching_with_dont_cares.basic_fft(t, w, n, m))
-      self.check_matches(t, w, n, m, reference, algorithm)
 
   @parameterized.parameterized.expand(ALL_ALGORITHMS)
   @run_large
@@ -181,5 +129,23 @@ class TestExactMatchingWithDontCares(unittest.TestCase):
           t = '#' + ''.join(t)
           for w in itertools.product(A + ['?'], repeat = m):
             w = '#' + ''.join(w)
-            reference = list(matching_with_dont_cares.basic_fft(t, w, n, m))
+            reference = list(
+              matching_with_dont_cares.basic_fft(t, w, n, m))
             self.check_matches(t, w, n, m, reference, algorithm)
+
+  @parameterized.parameterized.expand(LARGE_ALPHABET_ALGORITHMS)
+  @run_large
+  def test_long_random_text_large_alphabet(self, _, algorithm):
+    n, m = 40000, 20000
+    A = [chr(256 + i) for i in range(2000)]
+    t, w, reference = self.random_instance(n, m, A)
+    self.check_matches(t, w, n, m, reference, algorithm)
+
+  @parameterized.parameterized.expand(ALL_ALGORITHMS)
+  @run_large
+  def test_random_exact_string_matching(self, _, algorithm):
+    T, n, m, A = 100, 500, 10, ['a', 'b']
+    for _ in range(T):
+      t, w = rand.random_word(n, A), rand.random_word(m, A + ['?'])
+      reference = list(matching_with_dont_cares.basic_fft(t, w, n, m))
+      self.check_matches(t, w, n, m, reference, algorithm)

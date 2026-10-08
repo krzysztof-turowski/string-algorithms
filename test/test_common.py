@@ -1,6 +1,7 @@
 import os
 import random
 import unittest
+from unittest import mock
 
 from common import fft, gf2, prefix
 
@@ -50,6 +51,39 @@ class TestCommon(unittest.TestCase):
   def test_gf2_field_cache(self):
     # pylint: disable=protected-access
     self.assertIs(gf2._field(16), gf2._field(16))
+
+  def test_fft_boolean(self):
+    for first, second in (([1, 0, 1, 1, 0], [0, 1, 1]),
+                          ([0, 1, 1], [1, 0, 1, 1, 0]),
+                          ([1, 1, 1, 1], [1, 1]),
+                          ([0, 0, 0], [1, 1]),
+                          ([1], [1]), ([1, 0, 1], [1])):
+      with self.subTest(first = first, second = second):
+        reference = [bool(value) for value in
+                     self.naive_convolution(first, second)]
+        self.assertEqual(fft.fft_boolean(first, second), reference)
+
+  def test_gf2_boolean_masks(self):
+    # Enumerate every mask: a nonzero Boolean coefficient is detected half
+    # the time, including when the unmasked GF(2) coefficient would be zero.
+    for first, second in (([1, 0, 1, 1, 0], [0, 1, 1]),
+                          ([0, 1, 1], [1, 0, 1, 1, 0]),
+                          ([1, 1, 1, 1], [1, 1]),
+                          ([0, 0, 0], [1, 1]),
+                          ([1], [1]), ([1, 0, 1], [1])):
+      with self.subTest(first = first, second = second):
+        reference = self.naive_convolution(first, second)
+        counts = [0] * len(reference)
+        mask_bits = min(len(first), len(second))
+        for mask in range(1 << mask_bits):
+          with mock.patch('common.gf2.random.getrandbits', return_value = mask):
+            result = gf2.gf2_boolean(first, second)
+          self.assertEqual(len(result), len(reference))
+          self.assertTrue(all(not detected or value != 0
+                              for detected, value in zip(result, reference)))
+          counts = [count + detected for count, detected in zip(counts, result)]
+        self.assertEqual(counts, [1 << (mask_bits - 1) if value else 0
+                                  for value in reference])
 
   def test_integer_convolve(self):
     self.assertEqual(fft.integer_convolve([1, 2, 3, 4], [1, 1]), [3, 5, 7])

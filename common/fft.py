@@ -27,6 +27,11 @@ def integer_convolve(first_sequence, second_sequence):
   return [value - prime if value > prime // 2 else value
           for value in convolution[shorter_length - 1:longer_length]]
 
+def fft_boolean(first_sequence, second_sequence):
+  """Exact Boolean convolution of nonempty binary sequences, in valid mode."""
+  return [value != 0 for value in
+          integer_convolve(first_sequence, second_sequence)]
+
 def fft(sequence, prime, root):
   '''FFT modulo prime, root has to have order len(sequence) modulo prime'''
   return _transform(sequence, root, prime)
@@ -46,8 +51,8 @@ def _find_prime(size, lower_bound):
   prime = multiplier * size + 1
   roots = (pow(generator, multiplier, prime)
            for generator in itertools.count(2))
-  return prime, next(root for root in roots
-                     if pow(root, size // 2, prime) == prime - 1)
+  return prime, next(
+    root for root in roots if pow(root, size // 2, prime) == prime - 1)
 
 def _transform(sequence, root, prime):
   size = len(sequence)
