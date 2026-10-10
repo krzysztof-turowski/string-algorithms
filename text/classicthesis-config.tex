@@ -1,0 +1,170 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Classicthesis Typographic Thesis
+% Configuration File
+%
+% Original author:
+% André Miede (http://www.miede.de) with extensive commenting changes by:
+% Vel (vel@LaTeXTemplates.com)
+%
+% License:
+% GNU General Public License (v2)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\PassOptionsToPackage{utf8}{inputenc}
+\usepackage{inputenc}
+
+\PassOptionsToPackage{pdfspacing,subfig,beramono,eulermath,tocaligned,eulerchapternumbers,manychapters}{classicthesis}
+
+\newcommand{\myTitle}{Algorytmy tekstowe\xspace}
+\newcommand{\mySubtitle}{\xspace}
+\newcommand{\myDegree}{dr inż.\xspace}
+\newcommand{\myName}{Krzysztof Turowski\xspace}
+\newcommand{\myFaculty}{Wydział Matematyki i Informatyki\xspace}
+\newcommand{\myDepartment}{Instytut Informatyki Analitycznej\xspace}
+\newcommand{\myUni}{Uniwersytet Jagielloński\xspace}
+\newcommand{\myLocation}{Gdańsk-Kraków\xspace}
+\newcommand{\myTime}{Semestr letni 2019/2020\xspace}
+\newcommand{\myVersion}{wersja 1.0\xspace}
+
+\newcounter{dummy}
+
+\usepackage{classicthesis}
+\usepackage[
+    type={CC},
+    modifier={by},
+    version={4.0},
+    lang={Polish},
+    imagedistance={5em},
+    imagemodifier={-eu-80x15}
+]{doclicense}
+
+\areaset[current]{411pt}{761pt}
+\setlength{\marginparwidth}{72pt}
+\setlength{\marginparsep}{0em}
+\setlength{\oddsidemargin}{20pt}
+\setlength{\evensidemargin}{0pt}
+\setlength{\hoffset}{11pt}
+
+\usepackage{csquotes}
+\PassOptionsToPackage{
+backend=bibtex8,bibencoding=ascii,language=auto,
+style=authoryear-comp,
+bibstyle=authoryear,dashed=true
+sorting=ynt,
+maxbibnames=10,
+natbib=true
+}{biblatex}
+\usepackage{biblatex}
+
+\PassOptionsToPackage{fleqn}{amsmath}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\PassOptionsToPackage{polish}{babel}
+\usepackage{babel}
+\PassOptionsToPackage{T1}{fontenc}
+\usepackage{fontenc}
+\usepackage{textcomp}
+\usepackage{xspace}
+\usepackage{lipsum}
+\usepackage{todonotes}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\setlist{nosep}
+
+\PassOptionsToPackage{pdftex}{graphicx}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\setlength{\extrarowheight}{3pt}
+\newcommand{\tableheadline}[1]{\multicolumn{1}{c}{\spacedlowsmallcaps{#1}}}
+\newcommand{\myfloatalign}{\centering}
+\usepackage{caption}
+\captionsetup{font=small}
+\usepackage{subfig}
+
+\PassOptionsToPackage{pdftex,hyperfootnotes=false,pdfpagelabels}{hyperref}
+\usepackage{hyperref}
+\pdfcompresslevel=9
+\pdfadjustspacing=1
+\hypersetup{
+colorlinks=true, linktocpage=true, pdfstartpage=3, pdfstartview=FitV,
+%colorlinks=false, linktocpage=false, pdfborder={0 0 0}, pdfstartpage=3, pdfstartview=FitV, 
+breaklinks=true, pdfpagemode=UseNone, pageanchor=true, pdfpagemode=UseOutlines,%
+plainpages=false, bookmarksnumbered, bookmarksopen=true, bookmarksopenlevel=1,%
+hypertexnames=true, pdfhighlight=/O,%nesting=true,
+frenchlinks,%
+urlcolor=webbrown, linkcolor=RoyalBlue, citecolor=webgreen, %pagecolor=RoyalBlue,%
+    %urlcolor=Black, linkcolor=Black, citecolor=Black, %pagecolor=Black,%
+%------------------------------------------------
+% PDF file meta-information
+pdftitle={\myTitle},
+pdfauthor={\textcopyright\ \myName},
+pdfsubject={},
+pdfkeywords={},
+pdfcreator={pdfLaTeX},
+pdfproducer={LaTeX classicthesis}
+}
+\usepackage{cleveref}
+
+\theoremstyle{plain}
+\newtheorem{theorem-thm}{Twierdzenie}[section]
+\newtheorem{lemma-thm}[theorem-thm]{Lemat}
+\theoremstyle{definition}
+\newtheorem{definition-thm}[theorem-thm]{Definicja}
+\newtheorem{corollary-thm}[theorem-thm]{Wniosek}
+\newtheorem{remark-thm}[theorem-thm]{Obserwacja}
+\newtheorem{problem-thm}{Problem}[section]
+
+\newenvironment{theorem}[2]
+  {\ifthenelse{\not\equal{#1}{}}{\begin{theorem-thm}[{\citealt[#2]{#1}}]}{\begin{theorem-thm}}}
+  {\end{theorem-thm}}
+
+\newenvironment{lemma}[2]
+  {\ifthenelse{\not\equal{#1}{}}{\begin{lemma-thm}[{\citealt[#2]{#1}}]}{\begin{lemma-thm}}}
+  {\end{lemma-thm}}
+
+\newenvironment{definition}[2]
+  {\ifthenelse{\not\equal{#1}{}}{\begin{definition-thm}[{\citealt[#2]{#1}}]}{\begin{definition-thm}}}
+  {\end{definition-thm}}
+
+\newenvironment{corollary}[2]
+  {\ifthenelse{\not\equal{#1}{}}{\begin{corollary-thm}[{\citealt[#2]{#1}}]}{\begin{corollary-thm}}}
+  {\end{corollary-thm}}
+
+\newboolean{show-problem-refs}
+\setboolean{show-problem-refs}{false}
+\newenvironment{problem}[2]
+  {\ifthenelse{\boolean{show-problem-refs} \and \not\equal{#1}{} }{\begin{problem-thm}[{\citealt[#2]{#1}}]}{\begin{problem-thm}}}
+  {\end{problem-thm}}
+
+\usepackage[cache=false,newfloat]{minted}
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Algorytm}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage[titlenumbered,ruled]{algorithm2e}
+\usepackage{algpseudocode}
+\renewcommand*{\algorithmcfname}{Problem}
+\SetKwInOut{Input}{Wejście}
+\SetKwInOut{Output}{Wyjście}
+
+\usepackage{tikz}
+\usepackage{xcolor}
+\usetikzlibrary{chains,fit,shapes,decorations.pathreplacing}
+\tikzstyle{tmtape}=[draw,minimum size=0.6cm]
+\definecolor{lightgrey}{RGB}{192,192,192}
+
+% Various notations
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\cN}{\mathcal{N}}
+\newcommand{\N}{\mathbb{N}}
+\renewcommand{\Re}{\mathbb{R}}
+\newcommand{\rank}[1]{\ensuremath{\textrm{rank}({#1})}}
+\DeclareMathOperator{\A}{\mathcal{A}}
+\DeclareMathOperator{\B}{\mathcal{B}}
+
+% Function names with hyphens
+\mathchardef\mhyphen="2D
+\newcommand{\getmin}{get\mhyphen min}
+\newcommand{\removemin}{remove\mhyphen min}
+\newcommand{\decreasekey}{decrease\mhyphen key}
+\newcommand{\insertfront}{insert\mhyphen front}

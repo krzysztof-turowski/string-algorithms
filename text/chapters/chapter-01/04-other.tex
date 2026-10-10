@@ -1,0 +1,181 @@
+\section{Algorytm \emph{fast-on-average}}
+
+\begin{code}
+\captionof{listing}{Algorytm \emph{fast-on-average}}
+\inputminted{python}{code/exact-string-matching/fast-on-average.py}
+\label{alg:exact-string-matching-fast-on-average}
+\end{code}
+
+\begin{theorem}{crochemore2002jewels}{Theorem 2.5}
+  Algorytm \ref{alg:exact-string-matching-fast-on-average} działa w czasie oczekiwanym $O\left(n \frac{\log{m}}{m}\right)$ i pesymistycznym $O(n)$. Przetwarzanie wstępne wzorca wymaga czasu $O(m)$.
+\end{theorem}
+
+\begin{proof}
+  Stworzenie struktury do sprawdzania, czy słowo $t[(i - r)..i]$ jest podsłowem $w$ (np. drzewa sufiksowego lub DAWG) wymaga czasu $O(m)$.
+  
+  Jeśli $t[(i - r)..i]$ nie jest podsłowem $w$, to $w$ nie może być podsłowem $t$ rozpoczynającym się na żadnej z pozycji od $i - m + 1$ do $i - r$.
+  
+  Słowo $t[(i - r)..i]$ ma $2^{r + 1} \ge m^2$ możliwych wartości. Z drugiej strony, wiemy że $w$ zawiera mniej niż $m$ podsłów długości $r + 1$.
+  Jeśli $t$ jest losowy, to prawdopodobieństwo, że $t[(i - r)..i]$ jest podsłowem $w$ jest mniejsze niż $\frac{1}{m}$.
+  Wobec tego po sprawdzeniu czy słowo $t[(i - r)..i]$ jest podsłowem $w$ (w czasie $O(r)$) jedynie z prawdopodobieństwem mniejszym niż $\frac{1}{m}$ będziemy musieli wykonać algorytm KMP na tekście $t[(i - m + 1)..(i - r + m - 1)]$ oraz wzorcu $w$ (w czasie $O(m)$). Łączny oczekiwany czas działania tej procedury jest równy zatem $O(r)$, natomiast pesymistyczny $O(m)$.
+  
+  Każda pojedyncza iteracja rozstrzyga dopasowanie dla $m - r$ możliwych początków indeksów. Wystarczy zatem uruchamiać algorytm dla $i = 1, m - r + 1, 2 (m - r) + 1, \ldots$ -- a zatem $O\left(\frac{n}{m}\right)$ razy -- i rozwiązać problem niezależnie dla każdego podprzypadku.
+\end{proof}
+
+\section{Algorytm \emph{two-way}}
+
+\begin{definition}{}{}
+  Dla dowolnych słów $u$, $v$ niepuste słowo $w$ jest \emph{powtórzeniem} (repetition) $(u, v)$, jeśli:
+  \begin{itemize}
+    \item $w$ jest sufiksem $u$ lub $u$ jest sufiksem $w$,
+    \item $w$ jest prefiksem $v$ lub $v$ jest prefiksem $w$.
+  \end{itemize}
+\end{definition}
+Zwróćmy uwagę, że dla dowolnych słów $u$, $v$ zawsze istnieje co najmniej jedno powtórzenie $(u, v)$: $w = vu$.
+
+\begin{definition}{}{}
+  Dla dowolnych słów $u$, $v$ lokalny okres jest zdefiniowany jako minimalna długość słowa będącego powtórzeniem $(u, v)$.
+
+  \begin{align*}
+    lp(u, v) = \min\{|w|: \text{$w$ jest powtórzeniem $(u, v)$}\}
+  \end{align*}
+\end{definition}
+
+\begin{problem}{}{}
+  Pokaż, że $1 \le lp(u, v) \le p(uv)$ dla dowolnych słów $u$, $v$.
+\end{problem}
+
+\begin{proof}
+Pierwsza nierówność wynika z niepustości powtórzenia. 
+
+Rozważmy teraz $o$ - najmniejszy okres słowa $uv$. Rozważmy pokrycie słowa $uv$ przez $o$. Jeżeli ostatnie wystąpienie $o$ zaczynające się w $u$ kończy się wraz z końcem $u$, to $o$ jest sufiksem $u$ oraz $v$ jest sufiksem $o$ lub $o$ jest sufiksem $v$ (w zależności czy $v$ jest pokryte przez jedno czy więcej wystąpień $o$).
+
+Załóżmy, więc że w pokryciu $uv$ przez $o$ ostatnie wystąpienie $o$ zaczynające się w $u$ przecina początek $v$. Niech $o=ab$ to podział tego wystąpienia na część z $u$ i część z $v$. Czyli 
+$$uv = \underbrace{o^{x} a}_{u} \underbrace{b o^{y} c}_{v},$$
+gdzie $c$ jest prefiksem $o$.
+Pokażemy teraz, że $ba$ jest powtórzeniem dla $u, v$.
+
+Jeżeli $x=0$, to $u$ jest sufiksem $ba$, jeżeli natomiast $x>0$, to oczywiście $ba$ jest sufiksem $u$.
+ 
+Jeżeli $y>0$, to $ba$ jest prefiksem $v$, jeżeli natomiast $y=0$ to długość $c$ decyduje o tym czy $v$ jest prefiksem $ba$, czy przeciwnie. 
+ 
+Zatem najmniejsze powtórzenie jest długości co najwyżej 
+$$|ba| = |ab|,$$
+co kończy dowód.
+\end{proof}
+
+\begin{problem}{}{}
+  Pokaż jak w czasie $O(n)$ dla dowolnego słowa $w$ obliczyć tablicę $lp(u, v)$ dla wszystkich $u$, $v$ takich, że $w = uv$.
+\end{problem}
+% Obliczanie lokalnych okresów w czasie liniowym: [Duval, Kolpakov, Kucherov, Lecroq, Lefebvre, 2003]
+
+\begin{definition}{}{}
+  Faktoryzacją krytyczną słowa $w$ nazywamy parę słów $(u, v)$ takich, że $uv = w$ i $lp(u, v) = p(w)$.
+\end{definition}
+
+\begin{problem}{galil1997pattern}{Theorem 1.17, s. 40}
+  Pokaż, że dla dowolnego niepustego słowa $w$ istnieje faktoryzacja krytyczna $(u, v)$ spełniająca $|u| < p(w)$.
+\end{problem}
+
+Potrzebne będzie znalezienie faktoryzacji krytycznej. Okazuje się, że można to zrobić na bazie algorytmu znajdującego maksymalny sufiks słowa.
+
+\begin{code}
+\captionof{listing}{Wyznaczanie faktoryzacji krytycznej dla tekstu $t$}
+\inputminted{python}{code/factorization/critical-factorization.py}
+\label{alg:critical-factorization}
+\end{code}
+
+\begin{theorem}{galil1997pattern}{Theorem 1.18, s. 40}
+  Algorytm \ref{alg:critical-factorization} zwraca faktoryzację krytyczną $(u, v)$ dla słowa $w$. Dodatkowo, $|u| < p(w)$.
+\end{theorem}
+
+\begin{proof}
+  Niech $\le$ będzie porządkiem leksykograficznym zgodnym z kolejnością liter w alfabecie, natomiast $\le^*$ porządkiem leksykograficznym zgodnym z odwrotną kolejnością liter w alfabecie.
+
+  Dla dowolnego niepustego słowa $w$ niech $w = uv$ z $v$ jako maksymalnym sufiksem według $\le$ oraz $w = u'v'$ z $v'$ jako maksymalnym sufiksem według $\le^*$.
+
+  Jeśli $w = a^n$ dla pewnego $a \in \A$, to każde $(u, v)$ takie, że $w = uv$ jest faktoryzacją krytyczną.
+  Jeśli nie, to $v \neq v'$. Bez straty ogólności załóżmy, że $|v| < |v'|$.
+
+  Niech $x$ będzie najkrótszym powtórzeniem dla $(u, v)$.
+  Wystarczy tylko dowieść, że $|x|$ jest okresem $w$, bo z lematu wyżej wiadomo, że $|x| = lp(u, v) \le p(w)$.
+
+  Możemy wyróżnić cztery przypadki:
+  \begin{enumerate}
+    \item $x$ jest sufiksem $u$, $v$ jest prefiksem $x$ -- ale wtedy $v < x < xv$ i $xv$ jest sufiksem $w$, więc $v$ nie byłoby maksymalnym sufiksem $w$,
+    \item $x$ jest sufiksem $u$, $x$ jest właściwym prefiksem $v$ z $v = xz$ dla pewnego $z \in \A^+$ -- wtedy $z$ jest również sufiksem $w$, wobec tego $z < v$ i $v = x z < x v$, więc $v$ nie byłoby maksymalnym sufiksem $w$,
+    \item $u$ jest właściwym sufiksem $x$, $v$ jest prefiksem $x$ -- wtedy $|x|$ jest okresem $w$,
+    \item $u$ jest właściwym sufiksem $x$, $x$ jest właściwym prefiksem $v$ z $v = x z$ dla pewnego $z \in \A^+$ -- wtedy $v' = y v$ dla pewnego $y \in \A^+$. Skoro $v'$ jest sufiksem $w = u v$, to $y$ jest sufiksem $u$, a zatem jest też sufiksem $x$. Wobec tego $y z$ jest sufiksem $v$ oraz całego $w$, a więc $y z \le^* v' = y v$, czyli $z \le^* v$. Zarazem $z \le v$, bo z definicji $z$ też jest sufiksem $w$ -- a zatem $z$ jest prefiksem $v$. Wobec tego $z$ jest prefikso-sufiksem $v$ a $|x|$ jest okresem $v$. $|x|$ jest ostatecznie okresem całego $w$, bo $w$ jest podsłowem $x^2 z$.
+  \end{enumerate}
+
+  Ponieważ pierwsze dwa przypadki kończą się sprzecznością, to wiemy, że $u$ jest właściwym sufiksem $x$ -- a więc $|u| < |x| = p(w)$.
+\end{proof}
+
+Powyższe obserwacje stały się podstawą pierwszego optymalnego (tj. działającego w czasie liniowym i ze stałą dodatkową pamięcią) algorytmu wyszukiwania wzorca z tekście, tzw. \emph{two-way algorithm}.
+
+Załóżmy, że mamy $(u, v)$, faktoryzację krytyczną wzorca $w$. Wówczas możemy najpierw sprawdzać dopasowanie odpowiedniej części tekstu do $v$ od lewej do prawej (jak w algorytmie Morrisa-Pratta), a następnie sprawdzać dopasowanie wcześniejszej części do $u$ od prawej do lewej (jak w algorytmie Boyera-Moore'a). Jak zwykle, w razie niedopasowania wykonujemy odpowiednie przesunięcia.
+
+\begin{code}
+\captionof{listing}{Algorytm Two-Way}
+\inputminted{python}{code/exact-string-matching/two-way.py}
+\label{alg:exact-string-matching-two-way}
+\end{code}
+
+Jak widać, dla jednego z przypadków zostało wykorzystane zapamiętywanie dopasowania, analogicznie jak w algorytmie Boyera-Moore'a-Galila.
+Okazuje się, że dla drugiego nie jest ono potrzebne, ponieważ okres wzorca jest dostatecznie długi.
+
+\begin{lemma}{galil1997pattern}{Lemma 1.19, s. 43}
+  Niech $(u, v)$ jest faktoryzacją krytyczną $w$ taką, że $|u| < p(w)$. Jeśli $u$ nie jest sufiksem $v[1 \ldots p(v)]$, to $u$ występuje dokładnie raz w $w$.
+\end{lemma}
+
+\begin{proof}
+  Załóżmy, że $u$ nie jest sufiksem $v[1 \ldots p(v)]$, ale występuje w $w$ drugi raz.
+  Z okresowości $v$ wiemy, że $v$ musi zaczynać się pewnym sufiksem $u$ -- ale wtedy $lp(u, v) \le |u|$.
+  To przeczy jednak założeniu, że $(u, v)$ jest faktoryzacją krytyczną, a więc $lp(u, v) = p(w) > |u|$.
+\end{proof}
+
+\begin{corollary}{}{}
+  \label{col:long-period}
+  Niech $(u, v)$ jest faktoryzacją krytyczną $w$ taką, że $|u| < p(w)$. Jeśli $u$ nie jest sufiksem $v[1 \ldots p(v)]$, to
+  \begin{align*}
+    p(w) \ge \max\{|u|, |v|\} + 1 > \frac{|w|}{2}.
+  \end{align*}
+\end{corollary}
+
+\begin{proof}
+  Wprost z założenia wynika, że $p(w) \ge |u| + 1$.
+  Z poprzedniego lematu wiemy, że $u$ występuje dokładnie raz w $w$, a zatem największy możliwy prefikso-sufiks $w$ jest nie dłuższy niż $|u| - 1$.
+  Wobec tego $p(w) \ge |w| - (|u| - 1) = |v| + 1$.
+  
+  Druga nierówność jest oczywista na mocy faktu $w = uv$.
+\end{proof}
+
+\begin{theorem}{galil1997pattern}{Theorem 1.18, s. 43}
+  Algorytm \ref{alg:exact-string-matching-two-way} zwraca poprawnie wszystkie wystąpienia podsłów w tekście.
+\end{theorem}
+
+\begin{proof}
+  Przy przeglądaniu w prawo w razie niedopasowania po prostu przesuwamy wzorzec o tyle znaków, ile przejrzeliśmy.
+  %\todo[inline]{Zrekonstruować dowód}
+
+  Przy przeglądaniu w lewo mamy dwa przypadki, w zależności od tego, czy dla wzorca $w$ i jego faktoryzacji krytycznej $(u, v)$ rzeczywiście $u$ jest sufiksem $v[1 \ldots p(v)]$.
+  Jeśli tak, to postępujemy dokładnie jak w algorytmie \ref{alg:exact-string-matching-boyer-moore-galil}. W tym przypadku zachodzi $p(w) = p(v)$.
+
+  Jeśli nie, to z \ref{col:long-period} wiemy, że $p(w) \ge \max\{|u|, |v|\} + 1$ -- a zatem możemy ustawić minimalne przesunięcie na tę drugą wartość.
+  Gwarantuje to zarazem, że nie musimy się martwić o przypadek nakładających się wystąpień wzorca na siebie, więc nie potrzebujemy zapamiętywania prefiksu zgodnie z regułą Galila.
+\end{proof}
+
+% galil-apostolico s. 43-...
+\begin{theorem}{}{}
+  Algorytm \ref{alg:exact-string-matching-two-way} działa w czasie $O(n + m)$ i wymaga $O(1)$ dodatkowej pamięci.
+\end{theorem}
+
+\begin{proof}
+  W dowodzie zakładamy, że wyznaczanie maksymalnego sufiksu jest wykonywane w czasie $O(n + m)$ i w $O(1)$ dodatkowej pamięci np. wykorzystując \ref{alg:maximum-suffix-constant-space}. Wykorzystanie pamięci $O(1)$ przez cały algorytm jest oczywiste.
+
+  Jeśli patrzymy na pozycje tekstu $t$ porównywane tylko przy przeglądaniu w prawo w ciągu całego algorytmu, to tworzą one ciąg rosnący. Wobec tego takich porównań mamy co najwyżej $n$.
+  % TODO: rozszerzyć
+
+  Jeśli patrzymy na pozycje tekstu $t$ porównywane tylko przy przeglądaniu w prawo w ciągu całego algorytmu, to żadna nie zostanie porównana dwa razy, ponieważ między kolejnymi iteracjami głównej pętli przesuwamy okno o $p > |u|$ (na mocy dodatkowego warunku dla faktoryzacji krytycznej), a w każdym oknie sprawdzamy co najwyżej $|u|$ znaków w ten sposób.
+  Takich porównań również mamy co najwyżej $n$.
+\end{proof}

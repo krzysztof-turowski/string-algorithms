@@ -1,0 +1,57 @@
+\section{Details of preprocessing for FM-Index}
+
+The creation of FM-Index will require the text $t$, Burrows-Wheeler transform $BWT$ of $t$, suffix array $SA$ of $t$, $RankSearcher$ structure, which can perform $\texttt{prefix\_rank(i, c)}$ query and $Beginnings$ structure which will help to get a range in which character $c$ occurs in a given array.
+
+\subsection[Creation of F and L]{Creation of F and L}
+
+The array $F$ will correspond to the first column of the matrix which was shown in \Cref{subsection:IdeaOfFMAlgo}, which is array of character created from the suffix array as $F[i+1] = t[SA[i]]$ and $F[0] = \$$. The array $L$ corresponds to the last column of the previous matrix and will be equal to $BWT$. This stage takes at most $\bigO(n)$ time and space.
+
+\subsection{Creation of range mapping for character}
+
+The next structure, denoted as $MAP$, is a dictionary that maps characters from set $\{\$\}$ $\cup$ $\mathcal{A}$ to indices in the range $[0, |\mathcal{A}|]$. It can be done by iterating over $L$ and assigning the first unused index for each distinct character.
+\newline \newline \newline
+The next step involves a construction of mapping from range $[0, |\mathcal{A}| + 1]$ to the first occurrence of that character in $F$ denoted as $FIRST$. It is known that all the same characters are in consistent range because, $F$ was created based on suffix array. We built it by iterating over $F$ and for each mapped character assign current index in $F$ to our structure unless that character already has assigned index in mapping. Without loss of generality, we define $FIRST[|\mathcal{A}|] = n + 1$ to handle edge case where a character is the last one in mapping. On that index the character does not exist, but will mark the end of previous character occurrences. Therefore, the range in which character $c$ exists in $L$ is confined to $[ FIRST[ MAP[ c ] ], 
+ [ FIRST[ MAP[ c ] + 1 ] ] - 1 ]$
+
+\subsection{Creation of Beginnings structure}
+The next structure is very simple due to the dependence on the array $F$ where all first letters are sorted. It is sufficient to iterate over the suffix array and assign the proper values.
+
+\begin{minted}[xleftmargin=20pt, linenos]{python}
+def create_beginnings_structure(F, n):
+    beginnings = [2]
+    last = F[2]
+    for i in range(3, n+2):
+      if F[i] != last:
+        last = F[i]
+        beginnings.append(i)
+    return beginnings
+\end{minted}
+\subsection{Creation of RangeSearcher}
+
+Here we will focus on the approach based on prefix array. In practice the alphabet is small, so this approach can be faster than using Wavelet Tree. To save some space we can also compute the prefix array only for some selected indices, so during the query we will have to expand our range like in naive the approach. 
+\newline
+\newline
+
+The code creating that data structure can be written as follows:
+\begin{minted}[xleftmargin=20pt, linenos]{python}
+# t - text, n - lenght of t, A - alphabet of t
+def create_range_searcher(t, n, A):
+  result = dict()
+  for character in A:
+    prefix = []
+    prefix.append(1 if t[0] == character else 0)
+    for i in range(1, n+1):
+      prefix.append(prefix[i-1] + (1 if t[i] == character else 0)
+    result[character] = prefix
+  return result     
+\end{minted}
+
+The query for that structure will look like on typical prefix array.
+
+\begin{minted}{python}
+    def rank(self, i, c):
+        return self.prefix[c][i]
+\end{minted}
+
+
+By combining all the algorithms above we obtain a complete FM-index structure.

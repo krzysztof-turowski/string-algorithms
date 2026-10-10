@@ -1,0 +1,37 @@
+\section{Details of querying on FM-Index}
+
+The main function of FM-index is $\texttt{\_get\_range\_of\_occurrences(s, k)}$ which will return range $[i, j]$ in suffix array where pattern $s$ occurs. Like was described in the idea of that algorithm we will iterate over $s$ backward and will store the proper range for current suffix of $s$. The only thing to explain is how to expand the current suffix of $s$. Let us suppose that we are currently at the index $i > 1$ in $s$ and the current range is $[a, b]$. Then we:
+
+\begin{enumerate}
+    \item Get the next character $c = s[i-1]$.
+    \item Check if $c$ exists in $t$, it can be done using character mapper.
+    \item Get number of characters $c$ which are before $l$ which is $x = \texttt{prefix\_rank(l-1, c)}$ and number of characters $c$ that are in prefix of length $r$ which is $y = \texttt{prefix\_rank(r, c)}$, if $x = y$ that means that there is no character $c$ in our range, so it can be stopped here.
+    \item Set $a = \texttt{beginnings[mapper[i]]} + x$, $b = \texttt{beginnings[mapper[i]]} + y - 1$ as the new range and decrement $i$.
+\end{enumerate}
+
+Using that procedure we can now start properly for the first character and execute that procedure in loop to get an answer.
+
+\begin{minted}[xleftmargin=20pt, linenos]{python}
+def _get_range_of_occurrences(FM, p, size):
+  if size > FM.n or size == 0:
+    return -1, -1
+  if p[-1] not in FM.mapper_of_chars:
+    return -1, -1
+  map_idx = FM.mapper_of_chars[p[-1]]
+  l= FM.beginnings[map_idx]
+  r = (FM.beginnings[map_idx + 1] - 1
+    if map_idx != FM.len_of_alphabet - 1 else FM.n + 1)
+  for c in p[-2:0:-1]:
+    if c not in FM.mapper_of_chars:
+      return -1, -1
+    occurrences_before = FM.rank_searcher.prefix_rank(c, l - 1)
+    occurrences_after = FM.rank_searcher.prefix_rank(c, r)
+    if occurrences_before == occurrences_after:
+      return -1, -1
+    map_idx = FM.mapper_of_chars[c]
+    l = FM.beginnings[map_idx] + occurrences_before
+    r = FM.beginnings[map_idx] + occurrences_after - 1
+    if r < l:
+      return -1, -1
+  return l, r
+\end{minted}

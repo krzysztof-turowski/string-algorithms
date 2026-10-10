@@ -1,0 +1,39 @@
+\section{Simple algorithms for string-searching}
+
+%Naive serach section
+\subsection{Naive search}
+Most natural approach to solve string-searching is naive search where for each index $i$ in text $t$ we compare a substring $t[i : i+m]$ with the pattern. This algorithm can be written as follows:
+\begin{minted}[xleftmargin=20pt, linenos]{python}
+# t - text, s - pattern, n - length of t, m - length of s
+def naive_search(t, s, n, m):
+    for i in range(0, n-m):
+        equals_on_index = True
+        for j in range(0,m):
+            if t[i+j] != s[j]:
+                equals_on_index = False
+                break
+        if equals_on_index:
+            return True
+    return False
+\end{minted}
+It is very simple algorithm, but in the worst case it can be very slow. For example $t = a^n$, $s = a^{m-1}b$ requires $(n-m) \cdot m$ operations. It is easy to observe that the worst time complexity will be $\bigO (n \cdot m)$. For version with multiple patterns we have to run this algorithm for each pattern independently, which results in $\bigO(n \cdot \sum m_i)$ running time. \newline
+
+However, if the patterns are generated randomly and the size of the alphabet is greater than $1$, this algorithm is quite fast. We observe that with such assumptions the expected number of comparisons in inner loop will be constant and for version with $q$ patterns we obtain $\bigO(q \cdot n)$ running time. 
+\newline
+\begin{table}[!htb]
+\begin{center}
+\caption{Comparison of simple algorithms}
+\label{table:simpleAlgos}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0} 
+Algorithm          & Average case & Worst case & Additional space \\ \hline
+Naive algorithm    & $\bigO(n)$       & $\bigO(n\cdot m)$     & $\bigO(1)$           \\ \hline
+Rabin-Karp \cite{rabinKarp}        & $\bigO(n)$       & $\bigO(n\cdot m)$     & $\bigO(1)$           \\ \hline
+Knuth-Morris-Pratt \cite{KMP} & $\bigO(n)$       & $\bigO(n)$     & $\bigO(m)$           \\ \hline
+Two-way algorithm \cite{twoWayAlgo}  & $\bigO(n)$         & $\bigO(n)$       & $\bigO(\log m)$       \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+If the average complexity of a naive algorithm is not enough in specific case there are some algorithms mentioned in table \ref{table:simpleAlgos}, which for single pattern achieves optimal running time.

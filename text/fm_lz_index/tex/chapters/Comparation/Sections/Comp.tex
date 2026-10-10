@@ -1,0 +1,476 @@
+\section{Implementation}
+The algorithms discussed in this work were implemented in python. The source code of the implementation is publicly available in the \textbf{string-algorithms} GitHub repository and can be accessed at \url{https://github.com/krzysztof-turowski/string-algorithms/pull/57}. 
+
+\subsection{Implementation details}
+Implementation of discussed structures is split into files. We outline the primary files, their content and usages below:
+\begin{itemize}
+    \item $\texttt{common/wavelet\_tree.py}$ -- File containing the implementation of Wavelet Tree structure.
+    \item $\texttt{string\_indexing/fm\_index.py}$ -- File containing the FM-Index implementation, all required classes and creation methods.
+    \item $\texttt{string\_indexing/lz\_index.py}$ --  File containing the implementation of the LZ-Index, all required structures and creation methods.
+    \item $\texttt{test/test\_wavelet\_tree.py}$ -- Unit tests that ensure the correctness of the wavelet tree.
+    \item $\texttt{test/test\_exact\_string\_matching.py}$ -- Unit tests that ensure the correctness of implemented string-matching algorithms.
+\end{itemize}
+
+\section{Comparison of FM-Index and LZ-Index}
+
+We will compare FM-Index and LZ-Index in terms of peak memory used, time needed and accesses to their structures. As for test cases, we will use test cases with different sizes of alphabet, size of inputs and with non-uniform characters distributions. Details description of all test cases are as follows:
+\begin{itemize}
+    \item Small alphabet -- In that test case we will focus on properties that described structures hold for small alphabet. In practice, we set the size of alphabet to $4$ and generate strings over that alphabet.
+    \item Medium alphabet -- In that test case, we generate the words over the alphabet of size $16$. We also choose characters of text and patterns with uniform distribution over $\mathcal{A}$. That test case will also provide the differences in performance in comparison to the small alphabet.
+    \item Large alphabet -- That test case have the size of alphabet fixed to $64$. The text and patterns were still chosen randomly with uniform distribution over $\mathcal{A}$. It also provides data of comparison to smaller sizes of alphabets.
+    \item Alphabet with non-uniform distribution with parameter 1/2 -- That test case will stand out from the previous in terms of the probability, that each character is chosen from the alphabet to text and patterns. The alphabet used here will be infinite and the probability of choosing the $i$-th character form the alphabet is $(\frac{1}{2})^i$.
+    \item Alphabet with non-uniform distribution with parameter 1/3 -- This test case is similar to the previous test case. The only difference is that all characters from the alphabet are chosen with probability $(\frac{1}{3})^i$, for $i > 1$, and $\frac{5}{6}$, for $i = 1$, to ensure that the sum of probabilities is equal to $1$.
+\end{itemize}
+
+\subsection{Tests for small alphabet}
+\subsubsection{Peak memory comparison}
+As for the peak memory for the creation of structures and the search, the results are as follows:
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during structure creation for small alphabet}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 103 KB & 116 KB & 38 KB \\ \hline
+$10^{3}$ & 765 KB & 921 KB & 392 KB \\ \hline
+$10^{4}$ & 6 MB & 8 MB & 4 MB \\ \hline
+$10^{5}$ & 58 MB & 77 MB & 41 MB \\ \hline
+$10^{6}$ & 534 MB & 708 MB & 391 MB \\ \hline
+$3 \cdot 10^{6}$ & 2018 MB & 2103 MB & 1154 MB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Summarizing the result of this case for memory performance, all of these structures require nearly the same memory for creation. The exception is FM-Index with Wavelet Tree implementation, which uses around 2 times less memory.
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during search for small alphabet}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 6 KB & 1443 B & 1056 B \\ \hline
+$10^{3}$ & $10^{1}$ & 6 KB & 1530 B & 1059 B \\ \hline
+$10^{3}$ & $10^{2}$ & 194 KB & 1623 B & 1152 B \\ \hline
+$10^{4}$ & $10^{1}$ & 6 KB & 1601 B & 1220 B \\ \hline
+$10^{4}$ & $10^{2}$ & 195 KB & 1688 B & 1300 B \\ \hline
+$10^{5}$ & $10^{2}$ & 203 KB & 1693 B & 1311 B \\ \hline
+$10^{6}$ & $10^{2}$ & 204 KB & 1694 B & 1309 B \\ \hline
+$10^{6}$ & $10^{3}$ & 15 MB & 2 KB & 2 KB \\ \hline
+$10^{6}$ & $10^{4}$ & 1533 MB & 11 KB & 10 KB \\ \hline
+$3 \cdot 10^{6}$ & $10^{4}$ & 1533 MB & 11 KB & 10 KB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Memory performance of searching in this case shows that both implementations of FM-Index needs nearly the same amount of memory. However, the LZ-Index search always requires $\bigO(m^2)$ space, which results in much more memory used in practice.
+
+
+\subsubsection{Time comparison}
+The time needed for creation of structures and the search presents as follows:
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to create structures for small alphabet}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 2 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & 21 ms & 8 ms & 8 ms \\ \hline
+$10^{4}$ & 187 ms & 96 ms & 131 ms \\ \hline
+$10^{5}$ & 1859 ms & 1027 ms & 1319 ms \\ \hline
+$10^{6}$ & 19.45 s & 9.8 s & 15.13 s \\ \hline
+$3 \cdot 10^{6}$ & 76.83 s & 30.47 s & 44.68 s \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Time needed for construction standard FM-Index is the lowest and is $2$ times faster than construction the LZ-Index and almost $1.5$ faster than construction of the FM-Index with Wavelet Tree implementation.
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to perform search for small alphabet}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 1 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & $10^{1}$ & 1 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & $10^{2}$ & 2 ms & 1 ms & 1 ms \\ \hline
+$10^{4}$ & $10^{1}$ & 2 ms & 1 ms & 1 ms \\ \hline
+$10^{4}$ & $10^{2}$ & 3 ms & 1 ms & 1 ms \\ \hline
+$10^{5}$ & $10^{2}$ & 3 ms & 1 ms & 1 ms \\ \hline
+$10^{6}$ & $10^{2}$ & 3 ms & 1 ms & 1 ms \\ \hline
+$10^{6}$ & $10^{3}$ & 759 ms & 2 ms & 2 ms \\ \hline
+$10^{6}$ & $10^{4}$ & 76.61 s & 3 ms & 2 ms \\ \hline
+$3 \cdot 10^{6}$ & $10^{4}$ & 79.03 s & 3 ms & 3 ms \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Time performance of both implementation of the FM-Index is the same. Unfortunately, time needed by the LZ-Index to find all occurrences is huge due to at least $\bigO(m^2)$ time complexity in the best case.
+
+\subsection{Alphabet of medium size}
+
+\subsubsection{Peek memory comparison}
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during structure creation for medium alphabet}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 666 KB & 939 KB & 676 KB \\ \hline
+$10^{3}$ & 2 MB & 5 MB & 7 MB \\ \hline
+$10^{4}$ & 7 MB & 41 MB & 70 MB \\ \hline
+$10^{5}$ & 26 MB & 337 MB & 685.0 MB \\ \hline
+$10^{6}$ & 129 MB & 3.12 GB & 6.52 GB \\ \hline
+$3 \cdot 10^{6}$ & 302 MB & 9.01 GB & 16.89 GB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The result of memory performance for medium alphabet are very different from for small alphabet. In that case memory used to construct the LZ-Index is around $30$ times smaller than for the standard FM-Index and around $60$ times smaller than for the FM-Index with Wavelet Tree implementation. 
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during search for medium alphabet}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 524 KB & 2 KB & 2 KB \\ \hline
+$10^{3}$ & $10^{1}$ & 757 KB & 17 KB & 17 KB \\ \hline
+$10^{3}$ & $10^{2}$ & 44 MB & 15 KB & 15 KB \\ \hline
+$10^{4}$ & $10^{1}$ & 1289 KB & 162 KB & 162 KB \\ \hline
+$10^{4}$ & $10^{2}$ & 52 MB & 161 KB & 161 KB \\ \hline
+$10^{5}$ & $10^{2}$ & 85 MB & 1563 KB & 1563 KB \\ \hline
+$10^{6}$ & $10^{2}$ & 89 MB & 1590 KB & 1591 KB \\ \hline
+$10^{6}$ & $10^{3}$ & 1.2 GB & 2 MB & 2 MB \\ \hline
+$10^{6}$ & $10^{4}$ & 13.4 GB & 4 MB & 4 MB \\ \hline
+$3 \cdot 10^{6}$ & $10^{4}$ & 15 GB & 4.2 MB & 4.1 MB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Memory performance of obtaining all occurrences for both implementation of the FM-Index are similar, but for the LZ-Index it is still huge amount of memory needed.  
+
+\subsubsection{Time comparison}
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to create structures for medium alphabet}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 18 ms & 34 ms & 25 ms \\ \hline
+$10^{3}$ & 81 ms & 367 ms & 335 ms \\ \hline
+$10^{4}$ & 409 ms & 3.92 s & 3.6 s \\ \hline
+$10^{5}$ & 2.79 s & 39.91 s & 38.11 s \\ \hline
+$10^{6}$ & 22.3 s & 390 s & 378 s \\ \hline
+$3 \cdot 10^{6}$ & 56.3 s & 18.9 min & 16.76 min \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+In this case, time needed for construction of the LZ-Index is around $17$ time less than both implementations of the FM-Index. It is very different in comparison with the construction for the small alphabet.
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to perform search for medium alphabet}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 6 ms & 3 ms & 2 ms \\ \hline
+$10^{3}$ & $10^{1}$ & 36 ms & 4 ms & 3 ms \\ \hline
+$10^{3}$ & $10^{2}$ & 2.41 s & 28 ms & 19 ms \\ \hline
+$10^{4}$ & $10^{1}$ & 164 ms & 14 ms & 12 ms \\ \hline
+$10^{4}$ & $10^{2}$ & 3.53 s & 39 ms & 29 ms \\ \hline
+$10^{5}$ & $10^{2}$ & 5.64 s & 76 ms & 62 ms \\ \hline
+$10^{6}$ & $10^{2}$ & 6.21 s & 82 ms & 71 ms \\ \hline
+$10^{6}$ & $10^{3}$ & 43 s & 120 ms & 92 ms \\ \hline
+$10^{6}$ & $10^{4}$ & 392 s & 124 ms & 93 ms \\ \hline
+$3 \cdot 10^{6}$ & $10^{4}$ & 417 s & 124 ms & 94 ms \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Time performance of searching in medium alphabet for both implementations of the FM-Index are quite similar, but it is much higher than for small alphabet. That is probably connected with the high memory usage. As for the LZ-Index, the time needed is around $5$ times higher than in small alphabet case.
+
+\subsection{Alphabet of large size}
+\subsubsection{Peek memory comparison}
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during structure creation for large alphabet}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 2 MB & 4.0 MB & 3.0 MB \\ \hline
+$10^{3}$ & 11 MB & 23.0 MB & 41.0 MB \\ \hline
+$10^{4}$ & 33 MB & 169.0 MB & 406.0 MB \\ \hline
+$10^{5}$ & 115.0 MB & 1352.0 MB & 1.1 GB \\ \hline
+$10^{6}$ & 402 MB & 9.32 GB & 8.52 GB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Space used by the LZ-Index in that case is still much less than used by both FM-Index implementations. The interesting fact is that the FM-Index with Wavelet Tree for greater text length will use less space than the standard FM-Index implementation.
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during search for large alphabet}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 6 MB & 2 KB & 2 KB \\ \hline
+$10^{3}$ & $10^{1}$ & 8 MB & 17 KB & 17 KB \\ \hline
+$10^{3}$ & $10^{2}$ & 648 MB & 15 KB & 15 KB \\ \hline
+$10^{4}$ & $10^{1}$ & 10 MB & 162 KB & 162 KB \\ \hline
+$10^{4}$ & $10^{2}$ & 681 MB & 161 KB & 161 KB \\ \hline
+$10^{5}$ & $10^{2}$ & 822 MB & 1563 KB & 1614 KB \\ \hline
+$10^{6}$ & $10^{2}$ & 894 MB & 2 MB & 2 MB \\ \hline
+$10^{6}$ & $10^{3}$ & 10.2 GB & 11.2 MB & 11.1 MB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Memory performance result of searching in this case are nearly the same as the results of searching for medium alphabet. We can conclude that the size of alphabet does not have high influence on memory during search for all these structures.
+
+\subsubsection{Time comparison}
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to create structures for large alphabet}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 73 ms & 521 ms & 129 ms \\ \hline
+$10^{3}$ & 324 ms & 5.25 s & 1916 ms \\ \hline
+$10^{4}$ & 1907 ms & 58.18 s & 22.56 s \\ \hline
+$10^{5}$ & 8.2 s & 9.4 min & 3.2 min \\ \hline
+$10^{6}$ & 63 s & 89.9 min & 29.5 min \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Time performance of construction these structures differs a lot in comparison to previous cases. The size of alphabet has high influence for both FM-Index implementations, but small influence for the LZ-Index. In the largest case, creation of LZ-Index is almost $30$ times faster than the FM-Index.
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to perform search for large alphabet}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 297 ms & 10 ms & 7 ms \\ \hline
+$10^{3}$ & $10^{1}$ & 458 ms & 12 ms & 14 ms \\ \hline
+$10^{3}$ & $10^{2}$ & 32.61 s & 116 ms & 98 ms \\ \hline
+$10^{4}$ & $10^{1}$ & 952 ms & 22 ms & 21 ms \\ \hline
+$10^{4}$ & $10^{2}$ & 38.89 s & 156 ms & 135 ms \\ \hline
+$10^{5}$ & $10^{2}$ & 41.2 s & 172 ms & 149 ms \\ \hline
+$10^{6}$ & $10^{2}$ & 44.7 s & 183 ms & 158 ms \\ \hline
+$10^{6}$ & $10^{3}$ & 7.2 min & 382 ms & 331 ms \\ \hline
+$10^{6}$ & $10^{4}$ & 81.3 min & 472 ms & 403 ms \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+In contrast to the memory performance, the time performance of that structures depends a lot on the size of the alphabet. The time needed to obtain all occurrences for LZ-Index is almost $12$ times higher than for medium size alphabet.
+
+\subsection{Non-uniform character distribution with parameter 1/2}
+
+
+\subsubsection{Peek memory comparison}
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during structure creation for non-uniform distribution with parameter 1/2}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 101 KB & 114 KB & 45 KB \\ \hline
+$10^{3}$ & 740 KB & 897 KB & 502 KB \\ \hline
+$10^{4}$ & 6 MB & 8 MB & 5 MB \\ \hline
+$10^{5}$ & 58 MB & 78 MB & 57 MB \\ \hline
+$10^{6}$ & 534 MB & 717 MB & 591 MB \\ \hline
+$3 \cdot 10^{6}$ & 5.21 GB & 7.01 GB & 6.05 GB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Memory performance results of construction the structures for non-uniform distribution are quite similar to the results for small alphabet. However, the results here for each structure are even more similar.
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during search for non-uniform distribution with parameter 1/2}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 5 KB & 1433 B & 1056 B \\ \hline
+$10^{3}$ & $10^{1}$ & 6 KB & 1551 B & 1148 B \\ \hline
+$10^{3}$ & $10^{2}$ & 195 KB & 1620 B & 1175 B \\ \hline
+$10^{4}$ & $10^{1}$ & 6 KB & 1602 B & 1249 B \\ \hline
+$10^{4}$ & $10^{2}$ & 198 KB & 1691 B & 1342 B \\ \hline
+$10^{5}$ & $10^{2}$ & 200 KB & 1693 B & 1327 B \\ \hline
+$10^{6}$ & $10^{2}$ & 206 KB & 1694 B & 1366 B \\ \hline
+$10^{6}$ & $10^{3}$ & 15 MB & 2 KB & 2 KB \\ \hline
+$10^{6}$ & $10^{4}$ & 1533 MB & 11 KB & 10 KB \\ \hline
+$3 \cdot 10^{6}$ & $10^{4}$ & 1535 MB & 11 KB & 11 KB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The results for the memory performance during search are exactly the same as the results of the memory performance during search for small alphabet.
+
+
+\subsubsection{Time comparison}
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to create structures for non-uniform distribution with parameter 1/2}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 3 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & 21 ms & 19 ms & 10 ms \\ \hline
+$10^{4}$ & 218 ms & 234 ms & 210 ms \\ \hline
+$10^{5}$ & 1906 ms & 2.84 s & 2.32 s \\ \hline
+$10^{6}$ & 22.44 s & 34.21 s & 29.25 s \\ \hline
+$3 \cdot 10^{6}$ & 57.2 s & 98.8 s & 94.3 s \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+The first bigger difference of the results for alphabet with non-uniform distribution and small alphabet can be seen in time performance for the structures construction. In non-uniform distribution with parameter 1/2, the creation of the both FM-Index implementations are $2$ times slower comparing to LZ-Index.
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to perform search for non-uniform distribution with parameter 1/2}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 1 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & $10^{1}$ & 1 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & $10^{2}$ & 1 ms & 1 ms & 1 ms \\ \hline
+$10^{4}$ & $10^{1}$ & 1 ms & 1 ms & 1 ms \\ \hline
+$10^{4}$ & $10^{2}$ & 2 ms & 1 ms & 1 ms \\ \hline
+$10^{5}$ & $10^{2}$ & 3 ms & 1 ms & 1 ms \\ \hline
+$10^{6}$ & $10^{2}$ & 5 ms & 1 ms & 1 ms \\ \hline
+$10^{6}$ & $10^{3}$ & 851 ms & 1 ms & 1 ms \\ \hline
+$10^{6}$ & $10^{4}$ & 79.9 s & 4 ms & 4 ms \\ \hline
+$3 \cdot 10^{6}$ & $10^{4}$ & 82.3 s & 4 ms & 4 ms \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Time performance of search in this case is exactly the same as in the case with small alphabet.
+
+\subsection{Non-uniform character distribution with parameter 1/3}
+
+\subsubsection{Peak memory comparison}
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during structure creation for non-uniform distribution with parameter 1/3}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 60 KB & 74 KB & 34 KB \\ \hline
+$10^{3}$ & 429 KB & 595 KB & 432 KB \\ \hline
+$10^{4}$ & 3 MB & 5 MB & 4 MB \\ \hline
+$10^{5}$ & 29 MB & 48 MB & 52 MB \\ \hline
+$10^{6}$ & 267 MB & 446 MB & 536 MB \\ \hline
+$3 \cdot 10^{6}$ & 713 MB & 1281 MB & 1513 MB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The results of space performance for non-uniform distribution with parameter 1/3 are quite different from for non-uniform distribution with parameter 1/2. The space needed for creation of LZ-Index is almost $2$ times less than need for creation of FM-Index.
+
+\begin{table}[H]
+\begin{center}
+\caption{Memory peak during search for non-uniform distribution with parameter 1/3}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 6 KB & 1445 B & 1072 B \\ \hline
+$10^{3}$ & $10^{1}$ & 8 KB & 1866 B & 1573 B \\ \hline
+$10^{3}$ & $10^{2}$ & 206 KB & 1668 B & 1271 B \\ \hline
+$10^{4}$ & $10^{1}$ & 32 KB & 12 KB & 12 KB \\ \hline
+$10^{4}$ & $10^{2}$ & 216 KB & 1692 B & 1310 B \\ \hline
+$10^{5}$ & $10^{2}$ & 227 KB & 1693 B & 1343 B \\ \hline
+$10^{6}$ & $10^{2}$ & 231 KB & 1694 B & 1344 B \\ \hline
+$10^{6}$ & $10^{3}$ & 16 MB & 2 KB & 2 KB \\ \hline
+$10^{6}$ & $10^{4}$ & 1539 MB & 11 KB & 11 KB \\ \hline
+$3 \cdot 10^{6}$ & $10^{4}$ & 1544 MB & 11 KB & 11 KB \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Unfortunately, the space performance during searching in this case is exactly the same as for the small alphabet case and for the non-uniform distribution with parameter 1/2, so we cannot observe any interesting properties here.
+
+\subsubsection{Time comparison}
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to create structures for non-uniform distribution with parameter 1/3}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & 2 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & 13 ms & 13 ms & 14 ms \\ \hline
+$10^{4}$ & 116 ms & 137 ms & 161 ms \\ \hline
+$10^{5}$ & 1041 ms & 1829 ms & 1969 ms \\ \hline
+$10^{6}$ & 10.83 s & 24.37 s & 26.54 s \\ \hline
+$3 \cdot 10^{6}$ & 100.2 s & 274 s & 269 s \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The results of time performance for construction of structures are quite similar to the results for non-uniform distribution with parameter 1/2. The only difference is that all the results here are multiplied by $2$.
+
+\begin{table}[H]
+\begin{center}
+\caption{Time needed to perform search for non-uniform distribution with parameter 1/3}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor[HTML]{C0C0C0}
+n & m & LZ-Index & Standard FM-Index & FM-Index with Wavelet Tree \\ \hline
+$10^{2}$ & $10^{1}$ & 1 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & $10^{1}$ & 1 ms & 1 ms & 1 ms \\ \hline
+$10^{3}$ & $10^{2}$ & 2 ms & 1 ms & 1 ms \\ \hline
+$10^{4}$ & $10^{1}$ & 3 ms & 1 ms & 1 ms \\ \hline
+$10^{4}$ & $10^{2}$ & 4 ms & 1 ms & 1 ms \\ \hline
+$10^{5}$ & $10^{2}$ & 4 ms & 1 ms & 1 ms \\ \hline
+$10^{6}$ & $10^{2}$ & 5 ms & 1 ms & 1 ms \\ \hline
+$10^{6}$ & $10^{3}$ & 844 ms & 1 ms & 1 ms \\ \hline
+$10^{6}$ & $10^{4}$ & 87.4 s & 2 ms & 2 ms \\ \hline
+$3 \cdot 10^{6}$ & $10^{4}$ & 92.3 s & 2 ms & 2 ms \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+As for the time performance for searching, the result does not differ at all from small alphabet and non-uniform distribution with parameter 1/2.
+
+\subsection{Summary}
+The advantage of LZ-Index is its memory usage and time needed for construction when working with large or medium alphabet. The differences in that case are huge and can reach even $25$ time less memory used and $30$ times less time for construction. In the other cases the results for construction are quite similar. However, time and memory needed to find occurrences for long pattern is large and may be over 100 times higher than both implementation of FM-Index. Summarizing that, LZ-Index will be better for short patterns with large alphabet.
+\\
+\\
+In comparison of both implementation of FM-Index, they do not differ a lot. Time performances for searching for a pattern are exactly the same besides when the alphabet is large. However, there are difference is in its construction. Implementation based on Wavelet Tree uses less memory, but requires more time. The differences are rather small except the large alphabet when implementation based on Wavelet Tree is constructed $3$ times faster. In summary, described FM-Index implementation similar in performance, but in case with large alphabet it is better to use implementation based on Wavelet Tree.

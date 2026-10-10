@@ -1,0 +1,28 @@
+Problem dopasowania ciągów (\textit{string searching} / \textit{string matching}) jest jednym z najbardziej podstawowych problemów związanych z przetwarzaniem tekstu. Problem ten polega na znalezieniu wystąpienia (zwykle pierwszego lub wszystkich) zadanego słowa (nazywanego wzorcem) jako podsłowo w innym słowie (nazywanym tekstem) i zwróceniu pozycji tegoż dopasowania. 
+
+Praca z tekstem praktycznie implikuje napotkanie tego problemu, a tekst jest wciąż jednym z najpowszechniejszych sposobów przechowywania i przekazywania informacji. Wynika z tego, że dopasowanie ciągów może być bezpośrednio stosowane w wielu dziedzinach -- od mocno związanych z przetwarzaniem tekstu takich jak lingwistyka, przez informatykę, w tym w szczególności w problemach związanych z sieciami komputerowymi \cite{10.5555/788015.788577}, czy bezpieczeństwem \cite{10.1145/1015047.1015055}, aż do biologii \cite{RYU2020137}.
+
+Powstało wiele algorytmów rozwiązujących problem dopasowania ciągów. Jednym z pierwszych ulepszeń algorytmu naiwnego, wykonującego w pesymistycznym przypadku $O(len(text) \cdot len(pat))$ porównań, był algorytm przedstawiony przez D. E. Knutha, J. H. Morrisa Jr. i V. R. Pratta, wykonujący w pesymistycznym przypadku $O(len(text))$ porównań i wykorzystujący $O(len(pat))$ dodatkowej pamięci \cite{KMP}. Inne podejście zaproponowali R. S. Boyer i J. S. Moore w \cite{BM}. Ich algorytm (także wykorzystujący $O(len(pat))$ dodatkowej pamięci) w pesymistycznym przypadku wykonywał, podobnie do podejścia naiwnego, $O(len(text) \cdot len(pat))$ porównań, ale optymistycznie jedynie $O(len(text)/len(pat))$. Wersje tego algorytmu ograniczające pesymistyczną liczbę porównań do $O(len(text))$ zaproponowali m.in.: Z. Galil \cite{10.1145/359146.359148} oraz A. Apostolico i R. Giancarlo \cite{AG}. Warto zwrócić uwagę jeszcze na istnienie algorytmów wykorzystujących jedynie $O(1)$ dodatkowej pamięci i $O(len(text))$ porównań (\cite{Cr-or}, \cite{GS}, \cite{TW}).
+
+Poniższa praca składa się z dwóch części. W rozdziale 2. zostaną przedstawione wybrane algorytmy dopasowania ciągów - szkice ich działania, pseudokody i ograniczenia wykonywanych porównań znaków. W rozdziale 3. zostaną przedstawione wyniki pomiarów liczby porównań znaków wykonywanych przez dane algorytmy dla różnych klas wzorców i tekstów. Liczba porównań znaków jest dobrym miernikiem wydajności, gdyż wszystkie wybrane algorytmy wykonują liniową liczbę operacji elementarnych względem wykonanej liczby porównań znaków.
+
+\section{Oznaczenia i definicje}
+Poniżej przedstawione zostały oznaczenia i definicje powtarzających się pojęć:
+\begin{itemize}
+    \item \textbf{pat} -- wzorzec
+    \item \textbf{text} -- tekst
+    \item $\mathcal{A}$ -- alfabet
+    \item $w[i]$ -- $i$-ty znak słowa $w$
+    \item $w[i:j]$ -- podsłowo słowa $w$ zaczynające się na pozycji $i$ (włącznie), a kończące na pozycji $j$ (włącznie)
+    \item $wv$ -- słowo złożone ze wszystkich znaków słowa $w$ po których występują wszystkie znaki słowa $v$
+    \item $w^{e}$ -- słowo złożone z $e$-krotnego powtórzenia słowa $w$
+    \item \textbf{len}($w$) -- długość słowa $w$
+    \item \textbf{podsłowo} słowa $w$ -- takie słowo $u$, że istnieją słowa $v'$ i $v''$ dla których $w=v'uv''$
+    \item \textbf{prefiks} słowa $w$ -- podsłowo słowa $w$ postaci $w[1:i]$ (tj. podsłowo z $v'$ pustym)
+    \item \textbf{prefiks właściwy} słowa $w$ -- prefiks słowa $w$ różny od całego słowa $w$ (tj. podsłowo z $v'$ pustym i $v''$ niepustym)
+    \item \textbf{sufiks} słowa $w$ -- podsłowo słowa $w$ postaci $w[i:len(w)]$ (tj. podsłowo z $v''$ pustym)
+    \item \textbf{sufiks właściwy} słowa $w$ -- sufiks słowa $w$ różny od całego słowa $w$ (tj. podsłowo z $v''$ pustym i $v'$ niepustym)
+    \item \textbf{okres} słowa $w$ -- takie słowo $u$, że $w=u^{e}u'$, $e \geq 1$ i $u'$ jest właściwym prefiksem słowa $u$
+    \item \textbf{per}($w$) -- długość najkrótszego okresu słowa $w$
+    \item słowo $w$ jest \textbf{podstawowe} -- nie istnieje słowo $u$, takie że $w=u^{e}$ oraz $e$ jest liczbą naturalną większą od 1
+\end{itemize}

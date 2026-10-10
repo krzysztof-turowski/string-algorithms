@@ -1,0 +1,76 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Classicthesis Typographic Thesis
+% LaTeX Template
+% Version 1.4 (1/1/16)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% André Miede (http://www.miede.de) with commenting modifications by:
+% Vel (vel@LaTeXTemplates.com)
+%
+% License:
+% GNU General Public License (v2)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[
+		twoside,titlepage,headinclude,
+	 	footinclude=true,cleardoublepage=empty,dottedtoc,
+		BCOR=5mm,paper=a4,fontsize=11pt,
+		ngerman,american,polish]{scrreprt}
+\input{classicthesis-config}
+
+\addbibresource{bibliography/bibliography.bib}
+
+%\hyphenation{Put special hyphenation here}
+
+\begin{document}
+
+\frenchspacing
+\raggedbottom
+\selectlanguage{polish}
+\renewcommand*{\bibname}{References}
+\pagenumbering{roman}
+\pagestyle{plain}
+
+\input{text/front-back/titlepage.tex}
+% \cleardoublepage
+% \input{text/front-back/dedication.tex}
+% \cleardoublepage
+% \input{text/front-back/foreword.tex}
+% \cleardoublepage
+% \input{text/front-back/acknowledgments.tex}
+
+\pagestyle{scrheadings}
+\cleardoublepage
+\input{text/front-back/Contents}
+\cleardoublepage
+\input{text/chapters/introduction/00-main.tex}
+\cleardoublepage
+\pagenumbering{arabic}
+\cleardoublepage
+
+\input{text/chapters/chapter-01/00-main.tex}
+\cleardoublepage
+%\chapter{Dokładne dopasowanie wielu wzorców}
+%\include{text-new/chapters/chapter-01/00-main.tex}
+%\cleardoublepage
+%\chapter{Indeksowanie tekstu: drzewa sufiksowe}
+%\cleardoublepage
+%\chapter{Indeksowanie tekstu: tablice sufiksowe}
+%\cleardoublepage
+%\chapter{Dopasowanie wzorca z wieloznacznikami}
+%\cleardoublepage
+%\part{Przybliżone dopasowanie wzorca}
+%\cleardoublepage
+%\part{Najdłuższy wspólny podciąg}
+%\cleardoublepage
+%\part{Najkrótsze wspólne nadsłowo}
+%\cleardoublepage
+%\part{Kompresja tekstu}
+%\cleardoublepage
+
+% \input{text/front-back/colophon.tex}
+
+\end{document}

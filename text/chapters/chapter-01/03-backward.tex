@@ -1,0 +1,392 @@
+\section{Algorytm Boyera-Moore'a}
+
+Algorytm Boyera-Moore'a polega na ulepszeniu naiwnego dopasowywania wzorca od prawej do lewej.
+Schemat jest taki sam jak dla algorytmów Morrisa-Pratta i Knutha-Morrisa-Pratta: wykonujemy dopasowanie dla danej pozycji okna, w razie znalezienia niedopasowania przesuwamy okno o pewną wartość.
+
+Sprawdzanie dopasowania wzorca od prawej do lewej umożliwia, żeby algorytm wykonał $O\left(\frac{m}{n}\right)$ porównań np. dla $t = 0^n$, $w = 0^{m - 1}1$. Wystarczy np. wiedzieć, że wzorzec nie jest okresowy tj. $p(w) = |w|$ oraz że zachodzi $t[i] \neq w[m]$, aby następne sprawdzanie rozpocząć od pozycji $i + m$. Zauważmy, że w algorytmie KMP zawsze musimy porównać każdą literę tekstu ze wzorcem.
+
+W praktyce to powoduje, że algorytm Boyera-Moore'a jest zauważalnie szybszy niż KMP lub MP.
+
+Sednem algorytmu Boyera-Moore'a są 2 niezmienniki:
+\begin{itemize}
+  \item $cond_1(j, s)$ -- dla każdego $j  < k \le m$ zachodzi $s \ge k$ lub $w[k - s] = w[k]$,
+  \item $cond_2(j, s)$ -- dla $s < j$ zachodzi $w[j - s] \neq w[j]$.
+\end{itemize}
+
+Wówczas możemy zdefiniować tablicę $BM$ w następujący sposób:
+\begin{align*}
+  BM[j] =
+  \begin{cases}
+    \min \{s > 0: cond_1(j, s) \land cond_2(j, s)\} & \text{dla $1 \le j < m$}, \\
+    p(w) & \text{dla $j \in \{0, m\}$}.
+  \end{cases}
+\end{align*}
+Tablica ta, podobnie jak tablica silnych prefikso-sufiksów w algorytmie KMP, określa o ile możemy przesunąć wzorzec względem tekstu w razie niedopasowania -- tylko od końca.
+
+Aby efektywnie obliczyć tablicę $BM$ będzie potrzebna tablica prefikso-prefiksów:
+\begin{align*}
+  PREF[j] =
+  \begin{cases}
+    \max \{s \ge 0: \text{$w[j:j + s - 1]$ jest prefiksem $w$}\} & \text{dla $1 \le j \le m$}, \\
+    -1 & \text{dla $j = 0$}.
+  \end{cases}
+\end{align*}
+
+\begin{code}
+\captionof{listing}{Tablica prefiksowo-prefiksowa}
+\inputminted{python}{code/other/prefix-prefix.py}
+\label{alg:prefix-prefix}
+\end{code}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:prefix-prefix} wyznacza poprawną tablicę prefikso-prefiksów dla słowa $w$ długości $m$.
+\end{theorem}
+
+\begin{proof}
+  Niech tablica $PREF$ będzie poprawnie wypełniona dla wszystkich $2 \le j < i$ oraz niech $1 \le s < i$ będzie wartością, dla której $s + PREF[s]$ jest maksymalne.
+  Niech ponadto $s_{max} = s + PREF[s] - 1$, $k = i - s + 1$ oraz $r = PREF[k]$
+  
+  Wówczas mamy 3 sytuacje:
+  \begin{enumerate}
+      \item $s + PREF[s] < i$ -- wówczas obliczamy wartość $PREF[i]$ naiwnie porównując $w$ i $w[i:m]$,
+      \item $s + PREF[s] \ge i$ oraz $PREF[k] + k - 1 < PREF[s]$ dla $k = i - s + 1$ -- wówczas z definicji $s$ wiemy, że $w[s:s_{max}] = w[1:(s_{max} - s + 1)]$ oraz $i \in [s, s_{max}]$ (z pierwszego) oraz $w[1:r] = w[k:(r + k - 1)]$, $w[r + 1] \neq w[r + k]$ (z drugiego), wobec czego również $w[1:r] = w[i:(r + i - 1)]$ i $w[r + 1] \neq w[r + i]$, a więc $PREF[i] = r$,
+      \item $s + PREF[s] \ge i$ oraz $PREF[k] + k - 1 \ge PREF[s]$ dla $k = i - s + 1$ -- wówczas podobnie jak powyżej mamy $w[1:(s_{max} - i + 1)] = w[i:s_{max}]$, więc sprawdzamy wydłużanie zgodności, naiwnie porównując $w[s_{max} - i:m]$ oraz $w[s_{max} + 1:m]$.
+  \end{enumerate}
+\end{proof}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:prefix-prefix} dla słowa długości $m$ działa w czasie $O(m)$.
+\end{theorem}
+
+\begin{proof}
+  Wystarczy zauważyć, że w funkcji \texttt{naive\_scan} kolejne wartości $j + r$ w ramach wszystkich wywołań tworzą ciąg rosnący.
+\end{proof}
+
+\begin{code}
+\captionof{listing}{Tablica maksymalnych sufiksów}
+\inputminted{python}{code/other/maximum-suffixes.py}
+\label{alg:maximum-suffixes}
+\end{code}
+
+\begin{code}
+\captionof{listing}{Tablica przesunięć według dobrych sufiksów}
+\inputminted{python}{code/other/boyer-moore-shift.py}
+\label{alg:boyer-moore-shift}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż, że Algorytm \ref{alg:boyer-moore-shift} poprawnie oblicza wartości tablicy $BM$ w czasie $O(m)$.
+\end{problem}
+
+% Fakt: jeśli $BM[j] = m - k < j$, to $S[k] = m - j$.
+
+\begin{problem}{}{}
+    Pokaż, jak policzyć tablicę $wBM = \min\{s > 0: cond_1(j, s)\}$ w czasie $O(m)$.
+\end{problem}
+
+\begin{code}
+\captionof{listing}{Algorytm Boyera-Moore'a}
+\inputminted{python}{code/exact-string-matching/boyer-moore.py}
+\label{alg:exact-string-matching-boyer-moore}
+\end{code}
+
+\begin{problem}{crochemore2002jewels}{s. 41}
+  Pokaż, że dla wszystkich $n$, $m$ istnieje tekst $t$ i wzorzec $w$ ($|t| = n$, $|w| = m$) takie, że wyszukanie wzorca $w$ w tekście $t$
+  z użyciem algorytmu Boyera-Moore'a wymaga czasu $O(n + m)$ a dla algorytmu wykorzystującego tablicę $wBM = \min\{s > 0: cond_1(j, s)\}$ zamiast $BM$ wymaga czasu $\Omega(n m)$.
+\end{problem}
+
+%Odpowiedź: w = ca(ba)^k, t = a^{2k + 2}ba
+
+\subsection{Znajdowanie wszystkich wystąpień wzorca}
+
+Tak jak algorytm KMP, tak algorytm BM można łatwo zmodyfikować, by zwracał wszystkie wystąpienia wzorca w tekście. Wystarczy przyjąć, że $BM[0] = p(w)$.
+\begin{problem}{}{}
+  Pokaż, że jeśli tekst $t$ zawiera $r$ wystąpień wzorca $w$, to czas działania algorytmu Boyera-Moore'a wynosi $\Omega(r m)$.
+\end{problem}
+
+\begin{corollary}{}{}
+  Jeśli wzorzec występuje w tekście $\Theta(n)$ razy, to czas działania algorytmu Boyera-Moore'a wynosi $\Omega(n m)$.
+\end{corollary}
+
+Rozwiązaniem jest wykorzystanie zmiennej $memory$, zawierającej numer pierwszego indeksu, którego nie musimy sprawdzać.
+W większości obrotów pętli $memory = 0$, jedynym wyjątkiem jest sytuacja, gdy zaszło dopasowanie -- wtedy wiemy, że $m - p(w)$ pierwszych symboli już jest dopasowanych i wystarczy porównać $w[(m - p(w) + 1)..m]$ z tekstem.
+
+\begin{code}
+\captionof{listing}{Algorytm Boyera-Moore'a-Galila}
+\inputminted{python}{code/exact-string-matching/boyer-moore-galil.py}
+\label{alg:exact-string-matching-boyer-moore-galil}
+\end{code}
+
+\subsection{Dowód liniowej złożoności algorytmu}
+
+\todo[inline]{Dowód Cole'a}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:exact-string-matching-boyer-moore} wymaga $O(n' + m)$ czasu do stwierdzenia pierwszego wystąpienia wzorca $w$ z tekście $t$, gdy to wystąpienie zostało znalezione na pozycji $n'$.
+\end{theorem}
+
+\begin{corollary}{}{}
+  Algorytm \ref{alg:exact-string-matching-boyer-moore} wymaga $O(n + m)$ czasu do stwierdzenia, czy słowo $t$ zawiera podsłowo $w$.
+\end{corollary}
+
+\begin{theorem}{}{}
+  Algorytm \ref{alg:exact-string-matching-boyer-moore-galil} działa w czasie $O(n + m)$.
+\end{theorem}
+
+\begin{proof}
+  Z poprzedniego twierdzenia łatwo wykazać, że znalezienie wszystkich wystąpień wymaga czasu $O(n + r m)$ dla $r$ wystąpień wzorca w tekście dla Algorytmu \ref{alg:exact-string-matching-boyer-moore}, a więc również dla Algorytmu \ref{alg:exact-string-matching-boyer-moore-galil}.
+  
+  Jeśli $p(w) \ge \frac{m}{2}$, to z faktu $r \le \frac{n}{p(w)}$ wynika, że całkowita złożoność wynosi $O(n)$.
+  
+  Jeśli $p(w) < \frac{m}{2}$, to możemy pogrupować wystąpienia wzorca jeśli dwa kolejne w ciągu są odległe o $p(w)$. W każdym takim łańcuchu w Algorytmie \ref{alg:exact-string-matching-boyer-moore-galil} przejrzymy każdy symbol w łańcuchu tylko raz.
+  Jeśli natomiast wykryjemy niedopasowanie, to wiemy, że następne przesuniecie zgodnie z dobrym sufiksem wynosi $|w| - p(w) \ge \frac{m}{2}$. Wobec każdy symbol poza łańcuchami odczytamy co najwyżej $2$ razy, a zatem złożoność również będzie liniowa.
+\end{proof}
+
+\subsection{Heurystyka \emph{occurrence shift}}
+
+W oryginalnym artykule Boyera i Moore'a zaproponowano również dodatkową heurystykę \emph{occurrence shift}, opartą na znajomości wystąpień liter z alfabetu we wzorcu.
+
+Zdefiniujmy tablicę $LAST$ w następujący sposób:
+\begin{align*}
+  L[x] =
+  \begin{cases}
+    \max \{1 \le i \le m: w[i] = x \land \forall_{i < j \le m} w[j] \neq m\} & \text{gdy $x$ występuje w $w$}, \\
+    0 & \text{w przeciwnym przypadku}.
+  \end{cases}
+\end{align*}
+Jeśli wiemy, że niedopasowanie nastąpiło na $w[j] \neq t[i + j]$, to wiemy również, że nie ma sensu sprawdzać przesunięć krótszych niż $j - LAST[t[i + j]]$. Mówiąc prościej, jeśli $t[i + j] = x$ oraz $x$ występuje w $w$ najpóźniej na pozycji $k$ (tj. $k = LAST[t[i + j]]$), to mamy 2 sytuacje:
+\begin{itemize}
+  \item albo $k > j$, wtedy wiedza z tablicy $LAST$ nam nic nie pomaga,
+  \item albo $k < j$, wtedy wiemy, że pierwszą okazją na znalezienie dopasowania jest zestawienie ze sobą $w[k]$ i $t[i + j]$ -- czyli właśnie przesunięcie o $j - k$.
+\end{itemize}
+Dla znanego, skończonego alfabetu widać wprost, że wyznaczenie tablicy $LAST$ wymaga czasu i pomięci $O(m + |\A|)$.
+
+Ponieważ heurystyka nie wyklucza się z obserwacjami dokonanymi na bazie tablicy $BM$, jej zastosowanie polega na zastąpieniu przesunięć o $BM[j]$ przesunięciami o $\max\{BM[j], j - LAST[t[i + j]]\}$.
+
+W praktyce heurystyka ma sens wtedy, gdy alfabety są większe, ale dla alfabetu binarnego jest mało skuteczna.
+Co ciekawe, brakuje teoretycznych analiz skuteczności użycia tej heurystyki np. względem podstawowego algorytmu Boyera-Moore'a.
+
+\begin{problem}{}{}
+  Niech w Algorytmie \ref{alg:exact-string-matching-boyer-moore} w linii ??? będzie miał zamiast $i = i + BM[j]$ polecenie $i = i + \max\{1, j - LAST[t[i + j]]\}$.
+  Pokaż dla dowolnych $n$ i $m$ przykłady słów $t$ i $w$ ($|t| = n$, $|w| = m$) takich, że zmodyfikowany algorytm wymaga $\Omega(n m)$ porównań.
+\end{problem}
+
+Ten sam pomysł pojawia się u Horspoola, który postanowił korzystać tylko z przesuwania o \emph{occurrence shift} zgodnie z ostatnim znakiem aktualnie przetwarzanego tekstu.
+
+\begin{code}
+\captionof{listing}{Algorytm Horspoola}
+\inputminted{python}{code/exact-string-matching/horspool.py}
+\label{alg:exact-string-matching-horspool}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż dla dowolnych $n$ i $m$ przykłady słów $t$ i $w$ ($|t| = n$, $|w| = m$) takich, że algorytm Horspoola wymaga $\Omega(n m)$ porównań.
+\end{problem}
+
+Raita zaproponował dodatkowo, żeby zamiast przechodzić do porównania tekstu z wzorcem za każdym razem wykonać najpierw porównanie symbolu ostatniego, pierwszego i środkowego.
+Uzasadniał to tym, że wyszukiwanie słów w językach naturalnych często natrafia na problem częstych sufiksów (np. w angielskim \emph{-ing}, \emph{-ion}, \emph{-ed}) \cite{raita1992tuning}, aczkolwiek dalsze eksperymenty na tekstach losowych również przyniosły podobne rezultaty, co sugeruje że korzyści mogą być spowodowane czymś innym \cite{smith1994tuning}.
+
+\subsection{Quick search}
+
+Można zaproponować również inną heurystykę opartą o \emph{occurrence shift}: jeśli zaszło niedopasowanie na fragmencie tekstu $t[(i - j)..(i - 1)]$, to wiemy, że następne porównanie tekstu z wzorcem będzie zawierało $t[i]$. Wobec tego można od razu przesunąć tekst tak, aby uzgodnić ostatnie wystąpienie litery $t[i]$ we wzorcu z tekstem.
+
+\begin{code}
+\captionof{listing}{Algorytm \emph{quick search}}
+\inputminted{python}{code/exact-string-matching/quick-search.py}
+\label{alg:exact-string-matching-quick-search}
+\end{code}
+
+Smith zauważył, że można połączyć podejście Horspoola i Quick Search tj. brać maksimum z obu zalecanych przesunięć, aby otrzymać praktyczne przyspieszenie algorytmu \cite{smith1991experiments}.
+
+\section{Algorytm Turbo~BM}
+
+Algorytm Turbo~BM jest modyfikacją algorytmu Boyera-Moore'a, która zużywa tylko stałą dodatkową pamięć oraz przyspiesza złożoność pesymistyczną do $2n$. Nie będziemy wykonywać żadnego dodatkowego przetwarzania wstępnego -- tak jak w oryginalnym algorytmie korzystać będziemy z tablicy $BM$ obliczonej dla wzorca.
+  
+Sam pomysł algorytmu Turbo~BM jest bardzo prosty -- podczas skanowania będziemy zapisywać jedno podsłowo wzorca (\emph{memory}), o którym wiemy że pasuje do tekstu na obecnej pozycji. Dzięki temu możemy pominąć ten fragment przy sprawdzaniu dopasowania, oraz w przypadku jego braku możemy wykonać tzw. \emph{Turbo-shift}.
+
+Opiszmy sytuację, w której możemy wykonać Turbo-shift. Niech $x$ będzie najdłuższym sufiksem wzorca, który pasuje do tekstu na danej pozycji, $a$ będzie pierwszą literą wzorca która nie pasuje, a niech $y$ ($memory$) będzie poprzednio zapamiętanym podsłowem, które również pasuje do wzorca (patrz fig. \ref{turboshift}). Załóżmy również, że $x$ i $y$ są rozłączne i $y$ jest dłuższy od $x$. Po wykonaniu Turbo-shift zapominamy o $y$ (patrz kod \emph{boyer\_moore\_turbo}), więc w poprzednim kroku wykonaliśmy zwykłe przesunięcie (zgodnie z tablicą $BM$), znane z algorytmu Boyera-Moore'a. W tej sytuacji $ax$ jest suffixem $y$, oraz litery $a$ i $b$ tekstu są o siebie oddalone o $|y|$. Ale suffix $y\ldots x$ ma okres długości $|y|$ (z definicji $BM$). Możemy więc przesunąć wzorzec o $|y| - |x|$ do przodu i to właśnie przesunięcie nazywać będziemy \emph{Turbo-shift}.
+
+\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}
+		\begin{scope}[shift={(0,0)}, start chain=1 going right,node distance=0mm]
+			\node [on chain=1,tmtape, minimum width=1.2cm, dashed] {text};
+			\node [on chain=1,tmtape, minimum width=1.1cm, label={[xshift=-.35cm]below:$i$}] (textStart) {};
+			\node [on chain=1,tmtape, minimum width=1.7cm, fill=lightgrey] {};
+			\node [on chain=1,tmtape] (textA) {$a$};
+			\node [on chain=1,tmtape, minimum width=1.2cm, fill=lightgrey]  {$x$};
+			\node [on chain=1,tmtape, minimum width=1.8cm] (textMemEnd) {};
+			\node [on chain=1,tmtape, label={below:$i+j-1$}] (textMatchStart) {$b$};
+			\node [on chain=1,tmtape, minimum width=1.2cm, fill=lightgrey] (textEnd) {$x$};
+			\node [on chain=1,tmtape, minimum width=1cm] (textMatchEnd) {};
+			\node [on chain=1,tmtape, minimum width=2cm, dashed] {};
+						
+			\draw[decorate,decoration={brace,amplitude=5pt,raise=.4cm}] (textStart) -- (textMemEnd) node [midway, yshift=.8cm] {y};
+						
+			% \draw[decorate,decoration={brace,amplitude=5pt,raise=.4cm}] (textMatchStart) -- (textMatchEnd) node [midway, yshift=.8cm] {match};
+		\end{scope}
+		\begin{scope}[shift={(0,-1.5)}, start chain=1 going right,node distance=0mm]
+			\node [on chain=1,tmtape, minimum width=1.2cm, draw=none] {pat};
+			\node [on chain=1,tmtape, minimum width=1.1cm] (patStart) {};
+			\node [on chain=1,tmtape, minimum width=1.7cm, fill=lightgrey] {};
+			\node [on chain=1,tmtape] (patA) {$a$};
+			\node [on chain=1,tmtape, minimum width=1.2cm, fill=lightgrey] (patAEnd) {$x$};
+			\node [on chain=1,tmtape, minimum width=1.8cm] {};
+			\node [on chain=1,tmtape, label={below:$j$}] {$a$};
+			\node [on chain=1,tmtape, minimum width=1.2cm, fill=lightgrey] (patEnd) {$x$};
+						
+			\draw[decorate,decoration={brace,amplitude=5pt,mirror,raise=.4cm}] (patStart) -- (patAEnd) node [midway, yshift=-.8cm] {turbo\_shift};
+		\end{scope}
+				
+		\draw[dashed,transform canvas={xshift=0.3cm}] (textA) -- (patA);
+		\draw[dashed,transform canvas={xshift=-0.55cm}] (textStart) -- (patStart);
+		\draw[dashed,transform canvas={xshift=0.6cm}] (textEnd) -- (patEnd);
+				
+		\begin{scope}[shift={(2.34,-3)}, start chain=1 going right,node distance=0mm]
+			\node [on chain=1,tmtape, minimum width=1.2cm, draw=none] {pat};
+			\node [on chain=1,tmtape, minimum width=1.1cm] (pat2Start) {};
+			\node [on chain=1,tmtape, minimum width=1.7cm, fill=lightgrey] {};
+			\node [on chain=1,tmtape] (pat2A) {$a$};
+			\node [on chain=1,tmtape, minimum width=1.2cm, fill=lightgrey] {$x$};
+			\node [on chain=1,tmtape, minimum width=1.8cm] {};
+			\node [on chain=1,tmtape] {$a$};
+			\node [on chain=1,tmtape, minimum width=1.2cm, fill=lightgrey] (pat2End) {$x$};
+		\end{scope}
+				
+		\draw[dashed,transform canvas={xshift=0.3cm}] (patA) -- (3.75cm,-2.7cm);
+	\end{tikzpicture}
+		
+  \caption{Turbo-shift}
+  \label{turboshift}
+\end{figure}
+
+Analiza złożoności algorytmu Turbo~BM jest dużo prostsza niż analiza algorytmu Boyera Moore'a bez żadnych modyfikacji.
+
+\begin{theorem}{}{}
+	Algorytm Turbo~BM wykonuje co najwyżej $2n$ porównań.
+\end{theorem}
+
+\begin{proof}
+	Podzielimy wyszukiwanie wzorca na etapy, każdy etap będzie się składał z dwóch operacji: skanowania i przesuwania wzorca. Podczas etapu $k$ niech $Suf_k$ oznacza suffix wzorca, który pasuje do tekstu, a $shift_k$ niech oznacza długość o którą przesuniemy wzorzec podczas etapu $k$.
+
+	Przsunięcie na etapie $k$ nazwiemy \emph{krótkim}, gdy $2*shift_k < |Suf_k| + 1$. Wyróżnimy 3 typy etapów:
+	\begin{itemize}
+		\item[(1)] Etap, po którym następuje przeskok przy skanowaniu dzięki $memory$.
+		\item[(2)] (1) nie zachodzi i wykonujemy długie przesunięcie.
+		\item[(3)] (1) nie zachodzi i wykonujemy krótkie przesunięcie. 
+	\end{itemize}
+
+	Zastosujemy analizę kosztu zamortyzowanego. Zdefiniujmy $cost_k$: dla etapu typu (1) $cost_k = 1$ -- będzie to tylko koszt porównania litery, która się nie zgadza. Resztę kosztu przenosimy na pozostałe typy etapów. Dla etapów (2) i (3) $cost_k = |Suf_k| + 1$. Wystarczy nam pokazać, że $\sum_k cost_k < 2* \sum_k shift_k$. To nam wystarczy, bo $\sum_k shift_k \leq |t|$.
+
+	Dla etapu $k$ typu (1) $cost_k = 1$ jest trywialnie mniejszy od $2 * shift_k$. Dla etapu $k$ typu (2) $cost_k = |Suf_k| + 1 \leq 2 * shift_k$ z definicji długiego przesunięcia.
+
+	Wystarczy rozważyć etapy typu (3). Jedyna możliwość wykonania krótkiego przesunięcia zachodzi, gdy nie wykonujemy Turbo-shiftu. Ustawiamy wtedy zmienną $memory$, co prowadzi do potencjalnego Turbo-shiftu na etapie $k+1$. Rozważmy dwa przypadki etapu (3):
+	\begin{itemize}
+		\item [(a)] $|Suf_k| + shift_k \leq |pat|$. Wtedy z definicji Turbo-shifta mamy: $|Suf_k| - |Suf_{k+1}| \leq shift_{k+1}$, a więc: $cost_k = |Suf_{k}|+1 \leq |Suf_{k+1}| + shift_{k+1} + 1 \leq shift_k + shift_{k+1}$.
+		\item [(b)] $|Suf_k| + shift_k > |pat|$. Wtedy mamy: $|Suf_{k+1}| + shift_k + shift_{k+1} \geq |pat|$, oraz: $cost_k \leq |pat| \leq 2 * shift_k -1 + shift_{k+1}$.
+	\end{itemize}
+
+	Możemy założyć, że na etapie $k+1$ zachodzi przypadek (b), bo daje on gorsze ograniczenie na $cost_k$. Jeśli etap $k+1$ jest typu (1), mamy: $cost_k + cost_{k+1} \leq 2 * shift_k + shift_{k+1}$. Gdy na etapie $k+1$ zachodzi nierówność $|Suf_{k+1}| \leq shift_{k+1}$ wtedy mamy: $cost_k + cost_{k+1} \leq 2 * shift_k + 2* shift_{k+1}$.
+
+	Wystarczy rozważyć sytuację, gdy na etapie $k+1$ mamy $|Suf_{k+1}| > shift_{k+1}$. To oznacza, że na etapie $k+1$ wykonujemy standardowe przesunięcie (a nie Turbo-shift). Wtedy aplikujemy indukcyjnie nasze powyższe rozumowanie do etapu $k+1$, a ponieważ wtedy może zajść tylko przypadek (a) otrzymujemy: $cost_{k+1} \leq shift_{k+1} + shift_{k+2}$, a więc: $cost_k + cost_{k+1} \leq 2 * shift_k + 2*shift_{k+1} + shift_{k+2}$.
+
+	Musimy jeszcze tylko domknąć indukcję: jeśli na wszystkich etapach $i$ od $k$ do $k+j$ mamy $|Suf_i| > shift_i$, wtedy: $cost_k + \ldots + cost_{k+j} \leq 2*shift_k + \ldots + 2*shift_{k+j} + shift_{k+j+1}$.
+
+	Niech $k'$ będzie pierwszym etapem po etapie $k$ na którym $|Suf_{k'}| \leq shift_{k'}$. Wtedy otrzymujemy $cost_k + \ldots + cost_{k'} \leq 2*shift_k + \ldots + 2*shift_{k'}$ co kończy dowód.
+\end{proof}
+
+\section{Algorytm Galila–Seiferasa}
+
+Algorytm G--S jest algorytmem wyszukiwania wzorca który wymaga jedynie stałej pamięci dodatkowej (eliminując tablicę ,,mismatch'' używaną przez algorytmy typu Morrisa–Pratta) a jednocześnie wciąż działa w asymptotycznym czasie liniowym — osiągając tym samym teoretyczne optimum pod względem zarówno czasu jaki i pamięci.
+
+W tym opisie, tak samo jak w załączonej implementacji algorytmu, stringi indeksowane są od 1. Wszelki kod należy interpretować zgodnie z semantyką języka Python.
+
+Niech \texttt{m = len(word)}, \texttt{n = len(text)}. Rozważmy schemat algorytmu dopasowania wzorca
+\begin{verbatim}
+p,q= 0,0
+\textbf{while} True:
+  \textbf{while} text[p+q+1] == word[q+1]: q+= 1
+  \textbf{if} q == m: \textbf{yield} p+1
+  p,q= \textit{p'},\textit{q'}
+\end{verbatim}
+W powyższym pseudokodzie \texttt{p} to jest obecny kandydat na pozycję wzorca, a \texttt{q} to prefiks o którym wiemy że się zgadza.
+
+Naiwny algorytm \textit{brute-force} używa $p'= p+1$, $q'= 0$. Ponieważ wiemy jednak że $text[p+1:p+q+1] == word[1:q+1]$ to rozważanie $p'= p+x$ ma sens tylko jeśli $word[1:q-x+1] == word[x+1:q+1]$. Na tej obserwacji jest oparty algorytm Knutha–Morrisa–Pratta, obliczający $p'= p+shift[q]$, $q'= q-shift[q]$ if $q>0$ else $0$, gdzie \texttt{shift[q]} jest długością najkrótszego okresu \texttt{word[1:q+1]}.
+
+Algorytm Galila–Seiferasa jest oparty na tym schemacie oraz następującym twierdzeniu:
+\begin{theorem}{}{O dekompozycji}
+Dla ustalonego (odpowiednio dużego) \(k\), każde słowo \texttt{x} można przedstawić jako \texttt{u+v}, gdzie \texttt{v} ma co najwyżej jeden \textit{\(k\)-okres prefiksu} a \texttt{u} jest długości $O(period(v))$. 
+\end{theorem}
+Słowo \texttt{z} nazywamy \(k\)-okresem prefiksu słowa \texttt{w} jeśli \texttt{z} jest słowem pierwotnym a \texttt{z\textsuperscript{k}} jest prefiksem \texttt{w}.
+
+Do skonstruowania tej dekompozycji przyda nam się następujący lemat:
+\begin{lemma}{}{}
+Dla słowa \textit{pierwotnego} \texttt{w} istnieje dekompozycja \texttt{w == w1 + w2} taka że dla dowolnego słowa \texttt{w'}, słowo \texttt{w2 + w\textsuperscript{k-1} + w'} nie ma \(k\)-okresu prefiksu krótszego niż \texttt{len(w)}.
+\end{lemma}
+
+Pierwsza część algorytmu jest poświęcona znalezieniu dekompozycji wzorca takiej jak w twierdzeniu o dekompozycji.
+\begin{verbatim}
+s= 0
+\textbf{while} word[s+1:] \textit{ma więcej niż jeden k-okres prefiksu}:
+  p2= \textit{długość drugiego najkrótszego k-okresu prefiksu}
+  \textit{Korzystając z lematu, znajdź}
+   s' < s + p2 \textit{takie że} word[s'+1:] \textit{nie ma k-okresu prefiksu krótszego niż} p2
+  s= s'
+\end{verbatim}
+Niech \texttt{l(s)} będzie długością najkrótszego okresu \texttt{word[s+1:]} a \texttt{p1(s)} długością najkrótszego \(k\)-okresu prefiksu. Indukcyjnie można dowieść, że w każdej iteracji pętli \texttt{s < c * min(l(s), p1(s))} dla \texttt{c = (k-1)/(k-2)} — więc w szczególności na końcu \texttt{len(u) < c * l(s)}.
+
+W szczególności istnieje następujący prosty algorytm znajdowania \texttt{s'}:
+\begin{verbatim}
+s'= s
+\textbf{while} word[s'+1:] \textit{ma k-okres prefiksu krótszy niż p2}:
+  usuń najkrótszy okres prefiksu
+\end{verbatim}
+Przeanalizujmy złożoność ostatecznego kodu programu:
+\begin{verbatim}
+K= 4
+s,p1,q1= 0,1,0
+p2,q2= 0,0
+mode=0
+\textbf{while} True:
+  \textbf{if} mode==1:
+    \textit{#Znajdź najkrótszy k-okres prefiksu word[s+1:]}
+    \textbf{while} s+p1+q1 < m \textbf{and} word[s+p1+q1+1] == word[s+q1+1]: q1+= 1
+    \textbf{if} p1+q1 >= p1*K: p2, q2= q1,0; mode=2; \textbf{continue}
+    \textbf{if} s+p1+q1 == m: \textbf{break}
+    p1+= (1 \textbf{if} q1==0 \textbf{else} (q1+K-1)//K); q1= 0
+  \textbf{elif} mode==2:
+    \textit{#Znajdź drugi najkrótszy k-okres prefiksu word[s+1:].}
+    \textit{#Jeśli nie istnieje to przejdź do drugiej fazy algorytmu.}
+    \textbf{while} s+p2+q2 < m \textbf{and} word[s+p2+q2+1] == word[s+q2+1] \textbf{and} p2+q2 < p2*K: q2+= 1
+    \textbf{if} p2+q2 == p2*K: mode= 0; \textbf{continue};
+    \textbf{if} s+p2+q2 == m: \textbf{break}
+    \textbf{if} q2 == p1+q1:
+      p2+= p1; q2-= p1;
+    \textbf{else}:
+      p2+= (1 \textbf{if} q2==0 \textbf{else} (q2+K-1)//K); q2= 0
+  \textbf{else}:
+    \textit{#Zinkrementuj s}
+    \textbf{while} s+p1+q1 < m \textbf{and} word[s+p1+q1+1] == word[s+q1+1]: q1+= 1
+    \textbf{while} p1+q1 >= p1*K: s+= p1; q1-= p1;
+    p1+= (1 \textbf{if} q1==0 \textbf{else} (q1+K-1)//K); q1= 0
+    \textbf{if} p1 >= p2: mode= 1
+\end{verbatim}
+W celu przeanalizowania złożoności tej części algorytmu rozważmy wyrażenie
+\[
+2s+{\left(k+1\right)}p_1+q_1+{\left(k+1\right)}p_2+q_2
+\]
+Jego wartość jest zawsze $O{\left(\texttt{len(word)}\right)}$ a każde przypisanie ją zwiększa.
+\begin{verbatim}
+p2,q2= 0,0
+\textbf{while} True:
+  \textbf{while} p2+s+q2 < n \textbf{and} s+q2 < m \textbf{and} text[p2+s+q2+1] == word[s+q2+1]: q2+= 1
+  \textbf{if} q2 == m-s \textbf{and} text[p2+1 : p2+s+1] == word[1 : s+1]:
+    yield p2+1
+  \textbf{if} q2 == p1+q1:
+    p2+= p1; q2-= p1
+  \textbf{else}:
+    p2+= (1 \textbf{if} q2==0 \textbf{else} (q2+K-1)//K); q2= 0
+  \textbf{if} p2+s > n: \textbf{return}
+\end{verbatim}
+Przed wykonaniem drugiej części algorytmu jeśli \texttt{word[s+1:]} ma \(k\)-okres prefiksu, to jego długość wynosi \(p_1\).
+Ponadto twierdzimy, że \(s<{\left(k-1\right)}p_1/{\left(k-2\right)}\) co nam zagwarantuje że bezpośrednie sprawdzanie równości podciągów zajmie łącznie $O{\left(\texttt{len(text)}\right)}$ czasu.

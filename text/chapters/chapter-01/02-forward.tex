@@ -1,0 +1,97 @@
+\section{Algorytm Morrisa-Pratta}
+
+Algorytm naiwny dokonuje w razie wykrycia niedopasowania przesunięcia wzorca tekstu o $1$.
+Załóżmy, że zachodzi $t[i + k + 1] = w[k + 1]$ dla pewnego $k$ oraz $t[i + j] = w[j]$ dla $1 \le j \le k$ tj. mamy zgodność wzorca z tekstem na $k$ literach.
+
+Jasne jest jednak, że jeśli $v$ nie jest prefikso-sufiksem $w[1..k]$, to istnieje pozycja $0 \le l \le k - 1$ taka, że $v[|v| - l] \neq w[k - l] = t[i + k - l]$ -- a zatem nie ma sensu dopasowywać $w$. Z kolei jeśli $v$ jest prefikso-sufiksem $w[1..k]$, to z góry wiemy, że jest zgodne z $t[(i + k - |v|)..(i + k)]$.
+
+Wobec tego najmniejsze sensowne przesunięcie to przejście do sprawdzania dla największego prefikso-sufisku $w[1..k]$ -- czyli przesunięcie o $p(w[1..k])$.
+
+Dla słowa $w$ można zdefiniować tablice najdłuższych prefikso-sufiksów dla każdego prefiksu:
+\begin{align*}
+  B[i] = 
+  \begin{cases}
+    -1 & \text{dla $i = 0$,} \\
+    \max\{k \ge 0:\text{$w[1 \ldots k]$ jest właściwym sufiksem $w[1\ldots i]$}\} & \text{dla $1 \le i \le |w|$.}
+  \end{cases}
+\end{align*}
+
+\begin{lemma}{}{}
+  \label{lem:pref-suf}
+  Jeśli $u$ jest prefikso-sufiksem $v$ i $v$ jest prefikso-sufiksem $w$, to $u$ jest prefikso-sufiksem $w$.
+\end{lemma}
+
+\begin{corollary}{}{}
+  Ciąg $(B[|w|], B[B[|w|]], \ldots, 0)$ zawiera długości wszystkich prefikso-sufiksów słowa $w$ w kolejności malejącej.
+\end{corollary}
+
+\begin{corollary}{}{}
+  Ciąg $(|w|, \ldots, |w| - B[B[|w|]], |w| - B[|w|])$ zawiera długości wszystkich okresów słowa $w$ w kolejności malejącej.
+\end{corollary}
+
+\begin{code}
+\captionof{listing}{Tablica prefikso-sufiksów}
+\inputminted{python}{code/other/prefix-suffix.py}
+\label{alg:prefix-suffix}
+\end{code}
+
+\begin{problem}{crochemore2002jewels}{Lemma 3.1, s. 34-35}
+  Pokaż, jaki dokładny pesymistyczny czas działania ma \Cref{alg:prefix-suffix}.
+\end{problem}
+
+%$2m-3$. Wynik osiągalny dla $pat = 010^{m-2}$.
+
+\begin{code}
+\captionof{listing}{Algorytm Morrisa-Pratta}
+\inputminted{python}{code/exact-string-matching/morris-pratt.py}
+\label{alg:exact-string-matching-morris-pratt}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż, ile razy w najgorszym razie pojedynczy symbol tekstu $t$ może zostać porównany z wzorcem w Algorytmie \ref{alg:exact-string-matching-morris-pratt}.
+\end{problem}
+
+\begin{problem}{}{}
+  Pokaż, ile dokładnie porównań wykonuje w najgorszym przypadku zmodyfikowany \Cref{alg:exact-string-matching-morris-pratt}, zwracający wszystkie wystąpienia (tj. pozycje indeksów początkowych) $w$ w $t$.
+\end{problem}
+
+\section{Algorytm Knutha-Morrisa-Pratta}
+
+Przesunięcie o $p(w[1..k]) = k - B[k]$ nie musi być najlepsze możliwe. Jeśli niedopasowanie zaszło na znakach $t[i + k + 1] \neq w[j + 1]$ oraz wiadomo z analizy wzorca, że $w[k + 1] = w[k - p(w) + 1]$, to wiadomo, że nie znajdziemy wzorca przez przesunięcie tylko o $p(w)$. Za to możemy szukać prefikso-sufiksu $w'$ dla słowa $w[1..j]$ takiego, że następuje po nim znak inny niż $w[j + 1]$ -- czyli tzw. silnego prefikso-sufiksu.
+
+Dla słowa $w$ można zdefiniować tablice silnych prefikso-sufiksów następująco:
+\begin{align*}
+  sB[i] = 
+  \begin{cases}
+    \max\{0 \le k < i:\text{$w[1 \ldots k]$ jest sufiksem $w[1\ldots i]$} & \text{dla $1 \le i \le |w| - 1$,} \\
+    \qquad\qquad\quad\text{i $w[k + 1] = w[i + 1]$}\} \\
+    B[i] & \text{dla $i = |w|$,} \\
+    -1 & \text{w pozostałych przypadkach.}
+  \end{cases}
+\end{align*}
+
+\begin{code}
+\captionof{listing}{Tablica silnych prefikso-sufiksów}
+\inputminted{python}{code/other/strong-prefix-suffix.py}
+\label{alg:strong-prefix-suffix}
+\end{code}
+
+\begin{problem}{}{}
+  Pokaż, jaki dokładny pesymistyczny czas działania ma \Cref{alg:strong-prefix-suffix}.
+\end{problem}
+
+%$3m-5$. Wynik osiągalny dla $pat = 010^{m-2}$.
+
+\begin{code}
+\captionof{listing}{Algorytm Knutha-Morrisa-Pratta}
+\inputminted{python}{code/exact-string-matching/knuth-morris-pratt.py}
+\label{alg:exact-string-matching-knuth-morris-pratt}
+\end{code}
+
+\begin{problem}{galil1997pattern}{}
+  Pokaż, ile razy w najgorszym razie pojedynczy symbol tekstu $t$ może zostać porównany z wzorcem w Algorytmie \ref{alg:exact-string-matching-knuth-morris-pratt}.
+\end{problem}
+
+\begin{problem}{galil1997pattern}{}
+  Pokaż, ile dokładnie porównań wykonuje w najgorszym przypadku zmodyfikowany \Cref{alg:exact-string-matching-knuth-morris-pratt}, zwracający wszystkie wystąpienia (tj. pozycje indeksów początkowych) $w$ w $t$.
+\end{problem}

@@ -1,0 +1,95 @@
+\section{Okresy i słowa pierwotne}
+
+\begin{definition}{}{}
+  Liczba $p \in \N_+$ jest \textbf{\textit{okresem}} słowa $w$, jeśli dla każdego $1 \le i \le |w| - p$ zachodzi $w[i] = w[i + p]$.
+  \\
+  Najmniejszy okres słowa $w$ oznaczamy przez $p(w)$. Z definicji $|w|$ jest okresem słowa, więc $p(w)$ jest dobrze zdefiniowane.
+\end{definition}
+
+% Zbiór wszystkich okresów słowa $w$ oznaczamy przez $\Pi(w)$.
+
+\begin{definition}{}{}
+  Słowo $u$ jest \textbf{\textit{prefikso-sufiksem}} (ang. \emph{border}) słowa $w$, jeśli istnieją słowa $v_1, v_2$ takie, że $w = u v_1 = v_2 u$.
+\end{definition}
+Z definicji $\varepsilon$ jest prefikso-sufiksem każdego słowa $w$.
+
+\begin{problem}{crochemore2002jewels}{s. 12}
+  Pokaż, że następujące warunki są równoważne:
+  \begin{enumerate}[label=(\roman*)]
+    \item $w$ ma okres $p$,
+    \item $w$ jest podsłowem pewnego $v^k$ dla $|v| = p$ i $k \ge 1$,
+    \item $w = (uv)^kv$ dla $|uv| = p$, $v \neq \varepsilon$ i $k \ge 1$,
+    \item $w$ ma prefikso-sufiks długości $|w| - p$.
+  \end{enumerate} 
+\end{problem}
+
+\begin{definition}{}{}
+  Słowo $w$ jest \textbf{\textit{pierwotne}}, jeśli nie istnieje słowo $v$ oraz liczba całkowita $k \ge 2$ takie, że $w = v^k$.
+\end{definition}
+
+\begin{problem}{lothaire2002algebraic}{Problem 1.2.1, s. 40}
+  Słowo $w$ jest słowem pierwotnym wtedy i tylko wtedy, gdy $p(w) = |w|$ lub $p(w)$ nie dzieli $|w|$.
+\end{problem}
+
+\begin{problem}{lothaire2002algebraic}{Problem 8.1.6}
+  Pokaż, że następujące twierdzenia są równoważne:
+  \begin{enumerate}[label=(\roman*)]
+    \item $p(w^2) = |w|$,
+    \item $w$ jest słowem pierwotnym,
+    \item $w^2$ zawiera dokładnie dwa wystąpienia $w$.
+  \end{enumerate} 
+\end{problem}
+
+\begin{theorem-thm}[Słaby lemat o okresowości]
+  Jeśli słowo $w$ ma okresy $p$ i $q$ takie, że $|w| \ge p + q$, to $w$ ma również okres $NWD(p, q)$.
+\end{theorem-thm}
+
+\begin{proof}
+  Bez straty ogólności załóżmy, że $p \ge q$.
+  Najpierw wykażemy, że jeżeli słowo $w$ ma okresy $p$ i $q$ oraz $|w| \ge p + q$, to $w$ ma również okres $p - q$.
+  
+  Dla $1 \le i \le q$ mamy $a[i] = a[i + p] = a[i + p - q]$, ponieważ $1 \le i \le i + p - q \ge i + p \le |w|$.
+  Podobnie dla $q + 1 \le i \le |w| - (p - q)$ mamy $a[i] = a[i - q] = a[i + p - q]$, ponieważ $1 \le i - q \le i + p - q \ge |w|$.
+
+  Z algorytmu Euklidesa wynika wprost, że iterując to rozumowanie możemy pokazać, że $w$ ma również okres $NWD(p, q)$.
+\end{proof}
+
+\begin{theorem-thm}[Silny lemat o okresowości]
+  Jeśli słowo $w$ ma okresy $p$ i $q$ takie, że $|w| \ge p + q - NWD(p, q)$, to $w$ ma również okres $NWD(p, q)$.
+\end{theorem-thm}
+
+\begin{proof}%[\citealx{Theorem 8.1.4, s. 272}{lothaire2002algebraic}}]
+  Po pierwsze, jeśli słowo $w$ ma okresy $0 < q < p \le |w|$, to prefiks i sufiks $w$ o długości $|w| - q$ mają okresy $p - q$.
+  Dla prefiksu wystarczy zauważyć, że dla dowolnego $1 \le i \le |w| - p$ zachodzi $w[i] = w[i + p] = w[i + p - q]$ -- a to właśnie jest definicja okresu dla słowa $w[1..(|w| - q)]$. 
+
+  Po drugie, jeśli $w$ ma okres $q$ i istnieje podsłowo $v$ słowa $w$ z $|v| \ge q$ takim, że $r$ jest okresem $v$ i $r$ dzieli $q$, to $w$ ma okres $r$.
+  
+  Niech $r = NWD(p, q)$. Dowód przebiega przez indukcję ze względu na $s = \frac{p + q}{r}$. Dla $p = q = r$ -- więc twierdzenie jest oczywiście spełnione np. dla $s = 2$.
+  
+  Dla $s > 2$ i $q < p$ weźmy słowo $w$ mające okresy $p$ i $q$ takie, że $|w| \ge p + q - r$. Niech $u = w[1..q]$ oraz $w = uv$. Wówczas z pierwszego faktu wiemy, że $v$ ma okres $p - q$.
+  Jednocześnie $v$ jest podsłowem $w$ oraz $|v| = |w| - q \ge p - r \ge q$, więc $v$ ma również okres $q$.
+  
+  Dalej wiemy, że $r = NWD(p - q, q)$, $s > \frac{(p - q) + q}{r}$ oraz
+  \begin{align*}
+    |v| = |w| - q \ge (p + q - r) - q = (p - q) + q - NWD(p - q, q).
+  \end{align*}
+  Z założenia indukcyjnego $v$ ma zatem okres $r$. Ostatecznie z drugiego faktu wiemy, że $w$ ma też okres $r$.
+\end{proof}
+
+\begin{problem}{lothaire2002algebraic}{Remark 8.1.5, s. 272}
+  Korzystając ze słów Fibonacciego pokaż, że warunku $|w| \ge p + q - NWD(p, q)$ w silnym lemacie o okresowości nie da się poprawić.
+\end{problem}
+
+\begin{definition}{}{}
+  Liczba $ord(w)$ jest \textbf{\textit{rzędem}} słowa $w$, jeśli $ord(w) = |w|/p(w)$.
+\end{definition}
+
+\begin{problem}{}{}
+  Pokaż, że słowo Fibonacciego jest słowem pierwotnym.
+\end{problem}
+
+\begin{proof}
+Załóżmy, że istnieją $u, k: u^k = Fib_i, k > 1$. Wprowadźmy oznaczenie $u = st$ gdzie $s = u[1\ldots|u|-2]$ oraz $t = u[|u|-1,|u|]$. 
+
+Na podstawie poprzedniego zadania wiemy, że słowa Fibonacciego bez ostatnich dwu znaków są palindromem. Dlatego $(st)^{k-1}s$ powinno też być palindromem. Z~tego wynika, że $s = \overline{s}$ oraz $t = \overline{t}$. To może zachodzić tylko dla dwu przypadków: $t = 00$ i $t = 11$. Na ćwiczeniach jednak zostało pokazane, że dla słów Fibonacciego jedyne dwie opcje są $t = 01$ i $t = 10$. Otrzymujemy sprzeczność, która pokazuje, że żadne słowo Fibonacciego nie można zapisać jako $u^k, k > 1$, więc każde słowo Fibonacciego jest słowem pierwotnym.
+\end{proof}

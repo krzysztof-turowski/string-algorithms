@@ -1,0 +1,62 @@
+\documentclass[11pt]{report}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{csquotes}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage[width=150mm,top=30mm,bottom=25mm,bindingoffset=6mm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{svg}
+\usepackage{booktabs}
+\usepackage{tabulary}
+\usepackage[section]{placeins}
+\makeatletter
+\renewcommand{\ALG@name}{Algorytm}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definicja}[section]
+
+\pagestyle{fancyplain}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\headheight}{14pt}
+
+\usepackage[sorting=ynt, style=ieee]{biblatex}
+\addbibresource{references.bib}
+
+\begin{document}
+\pagenumbering{roman} 
+
+\input{titlepage}
+
+\tableofcontents
+
+\setstretch{1.1}
+\chapter{Wprowadzenie}
+\pagenumbering{arabic} 
+\input{chapters/introduction}
+
+\chapter[Opis wybranych algorytmów]{Opis wybranych algorytmów}
+\input{chapters/chapter02}
+
+\chapter[Pomiary liczby porównań]{Pomiary liczby porównań}
+\input{chapters/chapter03}
+
+\appendix
+\chapter{Wadliwa implementacja algorytmu AG}
+\input{chapters/appendix}
+
+\singlespacing
+\printbibliography
+
+\end{document}
